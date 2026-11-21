@@ -41,6 +41,8 @@ where `scripts/` sits at the root — it is `<repo>/prompts/`, which
 `bootstrap.py` copies. An in-process caller passing an unrelated temp root
 therefore still resolves the shipped template.
 
+Component: CMP-008
+
 Contracts: IF-097, IF-098, IF-099, IF-100, IF-113 — the interface seams this
 module declares (process.md §8; rows of record in
 docs/requirements/interfaces.toml).

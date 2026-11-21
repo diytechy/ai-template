@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
+# Component: CMP-009
+#
 # Stage-0 onboarder (Linux) — the first rung of the onboarding ladder
 # (process.md §7):
 #

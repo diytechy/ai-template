@@ -47,6 +47,8 @@ Examples:
     python scripts/gen_cases.py --spec "size=range[0..2GiB]; field=set{plain,comma,quote,newline}; enc=set{utf8,utf16}"
     python scripts/gen_cases.py --spec "mode=set{Mirror,HashAddressed}; compress=bool; count=range[0..1e6]" --format params
 
+Component: CMP-009
+
 Contracts: IF-017 — the interface seam this module declares (process.md §8;
 row of record in docs/requirements/interfaces.toml).
 

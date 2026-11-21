@@ -34,6 +34,8 @@ divergences are deliberate contracts their call sites depend on:
 
 Making them adapters over one rule is what the pins were standing in for: the
 copies can no longer disagree, so drift is UNREPRESENTABLE rather than detected.
+
+Component: CMP-006
 """
 
 import configparser

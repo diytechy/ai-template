@@ -53,6 +53,8 @@ Materialized per-agent by `bootstrap.py --agents claude` (wired as a PreToolUse
 hook in `.claude/settings.json.example`); the agent-neutral floor stays git+CI.
 Adapted — stdlib re-implementation — from brefledev/stop-subagent-fanout (MIT).
 
+Component: CMP-007
+
 Contracts: IF-020, IF-151, IF-169, IF-170 — the interface seams this module
 declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 

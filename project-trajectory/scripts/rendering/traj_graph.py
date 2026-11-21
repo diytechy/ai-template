@@ -3,6 +3,8 @@
 The layered (Sugiyama-lite) rank/order/coordinate pipeline and the
 obstacle-aware wire router every layered emitter calls. WI-280 split of
 gen_trajectory.py; the facade re-exports, so consumers are unchanged.
+
+Component: CMP-009
 """
 
 from dataclasses import dataclass

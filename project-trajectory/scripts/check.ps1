@@ -1,3 +1,5 @@
+# Component: CMP-007
+#
 # Thin launcher for the check harness on Windows (PowerShell). Prefers the
 # project venv, then any Python 3.11+ on PATH. All arguments pass to check.py,
 # e.g.:  .\scripts\check.ps1 --tier smoke

@@ -30,6 +30,8 @@ from git, never from a worktree, so an ignored file or a stale cache is never
 counted. Every unread tree or range refuses, naming the read: an unread delta
 is not an empty one. Nothing here writes a ref or the index (`git write-tree`
 only adds the object naming what is staged).
+
+Component: CMP-008
 """
 
 import tomllib

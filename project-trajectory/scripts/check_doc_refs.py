@@ -74,6 +74,8 @@ unless --strict; NOT wired into check.py's required floor. Opt in per repo:
 Scan surface = root *.md + docs/**/*.md (the check_docs surface) + the spine
 registries' Evidence-class cells (tier 3). Stdlib only.
 
+Component: CMP-007
+
 Contracts: IF-008, IF-087 — the interface seams this module declares
 (process.md §8; rows of record in docs/requirements/interfaces.toml).
 

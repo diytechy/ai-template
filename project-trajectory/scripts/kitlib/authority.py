@@ -47,6 +47,8 @@ rung, which only ever asks the operator for more.
 Pure data and comparisons over `kitlib.ladder`, plus one git read (`dial_at`,
 through `kitlib.git`); no argv, and nothing printed.
 
+Component: CMP-006
+
 Contracts: IF-195 — the interface seam this module declares (process.md §8;
 row of record in docs/requirements/interfaces.toml).
 

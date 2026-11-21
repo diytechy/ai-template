@@ -29,6 +29,8 @@ Usage:
     python scripts/gen_prompt_catalog.py            # write prompts/CATALOG.md
     python scripts/gen_prompt_catalog.py --check    # exit 1 if stale
     python scripts/gen_prompt_catalog.py --print    # write nothing, print it
+
+Component: CMP-009
 """
 
 import argparse

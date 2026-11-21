@@ -1220,8 +1220,11 @@ def write_cmps(root, body):
 
 
 def write_tagged_llrs(root, pairs):
-    """`pairs` = [(module, CMP-id)]; writes an LLR csv (Component column) so a
-    module joins its CMP through its LLR's Component tag (the AXES membership)."""
+    """`pairs` = [(module, CMP-id)]: each module's `Component:` header, written
+    into the docstring of `<module>.py` where that file exists (membership is
+    the file's header, WI-1021), and an LLR csv (Component column) naming the
+    same pairs, which the rules reading a design row's component still read."""
+    declare_components(root, pairs)
     req = root / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)
     body = "".join(
@@ -1231,6 +1234,24 @@ def write_tagged_llrs(root, pairs):
     (req / "low-level-requirements.csv").write_text(
         TAGGED_LLR_HDR + body, encoding="utf-8"
     )
+
+
+def declare_components(root, pairs):
+    """`pairs` = [(module, CMP-id)]: a `Component:` line in the docstring of each
+    existing `<module>.py`, a docstring added where it has none and a line the
+    file already carries replaced."""
+    for module, cmp in pairs:
+        path = root / (module + ".py")
+        if not path.is_file():
+            continue
+        text = re.sub(r"\n\nComponent: CMP-\d+\n", "", path.read_text(encoding="utf-8"))
+        text = re.sub(r'^"""Component: CMP-\d+"""\n', "", text)
+        if text.startswith('"""'):
+            end = text.index('"""', 3)
+            text = text[:end] + "\n\nComponent: {}\n".format(cmp) + text[end:]
+        else:
+            text = '"""Component: {}"""\n'.format(cmp) + text
+        path.write_text(text, encoding="utf-8", newline="\n")
 
 
 def test_top_view_over_bound_warns_plain_fails_strict(tmp_path):
@@ -1514,10 +1535,10 @@ def _contained_two_module_tree(tmp_path, src="scripts"):
     clean under the containment rule."""
     write_pack(tmp_path, "prompt-image")
     write_cmps(tmp_path, "CMP-001,Core,software,,built,,,,\n")
+    write_src_profile(tmp_path, ["mod_0.py", "mod_1.py"], src=src)
     write_tagged_llrs(
         tmp_path, [("scripts/mod_0", "CMP-001"), ("scripts/mod_1", "CMP-001")]
     )
-    write_src_profile(tmp_path, ["mod_0.py", "mod_1.py"], src=src)
 
 
 def test_untagged_module_on_disk_reds_the_containment_rule(tmp_path):
@@ -1575,9 +1596,12 @@ def test_files_mode_keeps_the_whole_family_dormant(tmp_path):
 
 def test_symbols_mode_sees_only_python(tmp_path):
     # Default symbols mode scans *.py exactly as the generator does: a .sh
-    # file never enters the inventory, so it cannot be "uncontained".
+    # file never enters the inventory, so it cannot be "uncontained". (It still
+    # declares its component: the header scope is every carrier type.)
     _contained_two_module_tree(tmp_path)
-    (tmp_path / "scripts" / "helper.sh").write_text("# h\n", encoding="utf-8")
+    (tmp_path / "scripts" / "helper.sh").write_text(
+        "# Component: CMP-001\n# h\n", encoding="utf-8"
+    )
     strict = run_traj(tmp_path, "--strict")
     assert strict.returncode == 0, strict.stdout + strict.stderr
 
@@ -1631,11 +1655,16 @@ def test_inventory_keeps_every_generator_shape(tmp_path):
 def test_undecodable_module_is_skipped_without_a_crash(tmp_path):
     # The fail-quiet arm: a non-UTF-8 .py cannot be judged, so the strict=False
     # consumer read skips that file rather than crashing a warn-tier rule
-    # (\xff is an invalid UTF-8 start byte on every platform).
+    # (\xff is an invalid UTF-8 start byte on every platform). The file costs
+    # itself, not the run: its header cannot be read, so it declares no
+    # component, and that is the run's one finding.
     _contained_two_module_tree(tmp_path)
     (tmp_path / "scripts" / "bin_mod.py").write_bytes(b"\xff\xfe\x00not utf-8")
     strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 0, strict.stdout + strict.stderr
+    assert "Traceback" not in strict.stderr, strict.stderr
+    errors = [ln for ln in strict.stderr.splitlines() if "ERROR - " in ln]
+    assert len(errors) == 1, strict.stderr
+    assert "scripts/bin_mod.py: declares no component" in errors[0]
 
 
 # --- WI-502 (OI-53 ruled (d)): Implements-tag vs CodeSymbol crosscheck --------
@@ -1833,15 +1862,26 @@ def test_intra_cmp_import_is_silent(tmp_path):
     assert "cross-component import" not in proc.stderr
 
 
-def test_cross_cmp_unmapped_endpoint_is_vacuous(tmp_path):
-    # mod_b has no Component membership: coverage is the containment rule's job,
-    # so the cross-CMP rule stays silent rather than double-reporting.
+def test_cross_cmp_unmapped_endpoint_is_unclassified(tmp_path):
+    """mod_b's header declares no component, so the edge cannot be judged: it
+    is reported as unclassified, beside the census finding naming mod_b, where
+    it was once skipped in silence. WARN plain, ERROR under --strict, as every
+    component finding is.
+
+    Implements: TC-458, TC-459"""
     write_arch(tmp_path, ARCH_2MOD_IMPORT)
     write_cmps(tmp_path, TWO_CMPS)
     write_tagged_llrs(tmp_path, [("scripts/mod_a", "CMP-001")])
-    proc = run_traj(tmp_path, "--strict")
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "cross-component import" not in proc.stderr
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert (
+        "cross-component import scripts/mod_a (CMP-001) -> scripts/mod_b "
+        "(no component) is unclassified" in plain.stderr
+    )
+    assert "WARN - scripts/mod_b.py: declares no component" in plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "ERROR - scripts/mod_b.py: declares no component" in strict.stderr
 
 
 def test_cross_cmp_no_imports_lines_is_vacuous(tmp_path):
@@ -1866,81 +1906,23 @@ def test_components_check_off_silences_cross_cmp(tmp_path):
     assert "cross-component import" not in proc.stderr
 
 
-# --- WI-440: the multi-membership overlap ADVISORY (OI-14's third do-not-wait) --
-# The old guard skipped an edge whose endpoint component sets merely OVERLAPPED,
-# so tagging a module into MORE components monotonically SILENCED the rule — a
-# fail-open the author controls. The overlap now REPORTS instead of suppressing:
-# warn-only, never the exit code (the partition it questions has not been ruled),
-# and the hard finding's semantics are untouched.
-
-ADVISORY = "suppress the cross-component seam rule on import"
-
-
-def _overlap_repo(tmp_path):
-    """mod_a is tagged into BOTH CMP-001 and CMP-002; mod_b only CMP-002 — so
-    the sets overlap on CMP-002 and the old guard skipped the a -> b edge."""
-    write_arch(tmp_path, ARCH_2MOD_IMPORT)
-    write_cmps(tmp_path, TWO_CMPS)
-    write_tagged_llrs(
-        tmp_path,
-        [
-            ("scripts/mod_a", "CMP-001"),
-            ("scripts/mod_a", "CMP-002"),
-            ("scripts/mod_b", "CMP-002"),
-        ],
-    )
-
-
-def test_multi_membership_overlap_advises_instead_of_silencing(tmp_path):
-    _overlap_repo(tmp_path)
-    plain = run_traj(tmp_path)
-    assert plain.returncode == 0, plain.stdout + plain.stderr
-    assert ADVISORY in plain.stderr
-    # It NAMES the multi-tagged module and the edge, so the partition work can
-    # consume the list.
-    assert "multi-component module(s) scripts/mod_a" in plain.stderr
-    assert "scripts/mod_a (CMP-001/CMP-002) -> scripts/mod_b (CMP-002)" in plain.stderr
-    # ...and it is NOT the hard finding: no seam error, and the message says so.
-    assert "has no declared IF-### seam" not in plain.stderr
-    assert "advisory only" in plain.stderr
-
-
-def test_overlap_advisory_never_reaches_the_exit_code(tmp_path):
-    # WARN-ONLY even under --strict, where the sibling FINDING is an error.
-    _overlap_repo(tmp_path)
-    strict = run_traj(tmp_path, "--strict")
-    assert strict.returncode == 0, strict.stdout + strict.stderr
-    assert ADVISORY in strict.stderr
-
-
-def test_overlap_advisory_yields_to_a_declared_seam(tmp_path):
-    # A declared IF row covering the pair means nothing was silenced BY the
-    # overlap — the seam is declared, so there is no partition question to raise.
-    _overlap_repo(tmp_path)
-    write_ifs(
-        tmp_path,
-        'IF-001,Consumes,scripts/mod_a,scripts/mod_b,"call",SR-001,v1,Stable,Active,,\n',
-    )
-    _write_tc_citing(tmp_path, "IF-001")
-    proc = run_traj(tmp_path, "--strict")
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert ADVISORY not in proc.stderr
+# --- WI-1021: one component per file -----------------------------------------
+# A file's header declares one component, so no endpoint sits in two and
+# silences an edge; the multi-membership advisory (WI-440) retired with that
+# cause. An edge is internal only inside one component.
 
 
 def test_single_tagged_same_component_edge_raises_nothing(tmp_path):
-    # Both endpoints single-tagged into CMP-001: ordinary intra-component
-    # wiring, neither a finding nor an advisory. The advisory is about
-    # MULTI-membership, not about overlap as such.
+    # Both endpoints declare CMP-001: ordinary intra-component wiring.
     _cross_cmp_repo(tmp_path, cmp_b="CMP-001")
     proc = run_traj(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert ADVISORY not in proc.stderr
+    assert "cross-component import" not in proc.stderr
 
 
 def test_disjoint_uncovered_edge_is_still_a_hard_finding(tmp_path):
-    # The scope guard: the FINDING's semantics are exactly as they were —
-    # disjoint sets, no covering IF row, WARN plain and ERROR under --strict —
-    # and it does not double-report as an advisory.
+    # Disjoint components, no covering IF row: WARN plain and ERROR under
+    # --strict.
     _cross_cmp_repo(tmp_path)
     plain = run_traj(tmp_path)
     assert plain.returncode == 0, plain.stdout + plain.stderr
@@ -1948,43 +1930,15 @@ def test_disjoint_uncovered_edge_is_still_a_hard_finding(tmp_path):
         "cross-component import scripts/mod_a (CMP-001) -> scripts/mod_b "
         "(CMP-002) has no declared IF-### seam" in plain.stderr
     )
-    assert ADVISORY not in plain.stderr
     strict = run_traj(tmp_path, "--strict")
     assert strict.returncode == 1
-    assert ADVISORY not in strict.stderr
-
-
-def test_untagged_endpoint_stays_vacuous_for_the_advisory_too(tmp_path):
-    # The deliberate vacuousness the docstring documents (containment rule's
-    # job) survives: mod_b has no Component tag, so mod_a's DOUBLE tag raises
-    # nothing here — an untagged endpoint is not a partition finding.
-    write_arch(tmp_path, ARCH_2MOD_IMPORT)
-    write_cmps(tmp_path, TWO_CMPS)
-    write_tagged_llrs(
-        tmp_path, [("scripts/mod_a", "CMP-001"), ("scripts/mod_a", "CMP-002")]
-    )
-    proc = run_traj(tmp_path, "--strict")
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert ADVISORY not in proc.stderr
-    assert "cross-component import" not in proc.stderr
-
-
-def test_components_check_off_silences_the_overlap_advisory(tmp_path):
-    # It shares the component layer's opt-out — an adopter who turned the layer
-    # off does not get half of it back.
-    _overlap_repo(tmp_path)
-    (tmp_path / "docs" / "components-check").write_text("off\n", encoding="utf-8")
-    proc = run_traj(tmp_path, "--strict")
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert ADVISORY not in proc.stderr
 
 
 # --- OI-48 (d): the declared shared-kernel exemption (WI-494) -----------------
 # `docs/kernel-modules-allow` — an import edge whose DESTINATION is listed there
-# is not a seam at all (neither the hard finding nor the multi-membership
-# advisory). Fail-safe by construction: absence of a valid declaration grants
-# no exemption, so a module not listed (or listed with a malformed entry) stays
-# fully policed.
+# is not a seam at all. Fail-safe by construction: absence of a valid
+# declaration grants no exemption, so a module not listed (or listed with a
+# malformed entry) stays fully policed.
 
 
 def write_kernel_allow(root, body):
@@ -1994,13 +1948,12 @@ def write_kernel_allow(root, body):
 def test_declared_kernel_destination_is_not_a_seam(tmp_path):
     """Implements: TC-067"""
     # mod_a (CMP-001) imports mod_b (CMP-002); mod_b is declared kernel — no
-    # finding, no advisory, clean even under --strict.
+    # finding, clean even under --strict.
     _cross_cmp_repo(tmp_path)
     write_kernel_allow(tmp_path, "scripts/mod_b — WI-494 test: shared reader.\n")
     strict = run_traj(tmp_path, "--strict")
     assert strict.returncode == 0, strict.stdout + strict.stderr
     assert "cross-component import" not in strict.stderr
-    assert ADVISORY not in strict.stderr
 
 
 def test_undeclared_module_still_fires_the_hard_finding(tmp_path):
@@ -2025,18 +1978,6 @@ def test_absent_kernel_allow_file_exempts_nothing(tmp_path):
     strict = run_traj(tmp_path, "--strict")
     assert strict.returncode == 1
     assert "cross-component import" in strict.stderr
-
-
-def test_kernel_exemption_also_silences_the_overlap_advisory(tmp_path):
-    """Implements: TC-067"""
-    # A declared kernel module that still carries a residual multi-tag is not
-    # ALSO advised about: the advisory exists to surface undeclared
-    # candidates, and a declared one is a settled candidate, not an open one.
-    _overlap_repo(tmp_path)  # mod_a tagged CMP-001+CMP-002, mod_b tagged CMP-002
-    write_kernel_allow(tmp_path, "scripts/mod_b — WI-494 test: declared kernel.\n")
-    plain = run_traj(tmp_path)
-    assert plain.returncode == 0, plain.stdout + plain.stderr
-    assert ADVISORY not in plain.stderr
 
 
 def test_kernel_exemption_is_one_directional(tmp_path):

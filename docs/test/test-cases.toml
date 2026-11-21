@@ -644,11 +644,11 @@ phase = 4
 [test.TC-067]
 verifies = ["SR-159", "LLR-067", "IF-319"]
 level = "Integration"
-method = "Run the cross-component import coverage matrix, including the declared shared-kernel exemption: an edge into a declared kernel module is silent (finding and advisory both), the exemption is one-directional (declaring the SOURCE does not exempt it), an undeclared module or an absent allow-file still fires (fail-safe default), and a malformed allow-file entry (no reason) grants no exemption while being reported and sharing the components_check opt-out."
+method = "Run the cross-component import coverage matrix, including the declared shared-kernel exemption: an edge into a declared kernel module is silent, the exemption is one-directional (declaring the SOURCE does not exempt it), an undeclared module or an absent allow-file still fires (fail-safe default), and a malformed allow-file entry (no reason) grants no exemption while being reported and sharing the components_check opt-out."
 tier = "Full"
 expected = "Uncovered cross-component edges warn/fail strict; covered, vacuous and declared-kernel cases stay silent."
 automated = "Yes"
-evidence = """tests/test_trajectory_arch.py::test_cross_cmp_import_without_seam_warns_plain_fails_strict; tests/test_trajectory_arch.py::test_cross_cmp_import_with_declared_seam_is_silent; tests/test_trajectory_arch.py::test_cross_cmp_seam_covers_either_direction; tests/test_trajectory_arch.py::test_components_check_off_silences_cross_cmp; tests/test_trajectory_arch.py::test_declared_kernel_destination_is_not_a_seam; tests/test_trajectory_arch.py::test_undeclared_module_still_fires_the_hard_finding; tests/test_trajectory_arch.py::test_absent_kernel_allow_file_exempts_nothing; tests/test_trajectory_arch.py::test_kernel_exemption_also_silences_the_overlap_advisory; tests/test_trajectory_arch.py::test_kernel_exemption_is_one_directional; tests/test_trajectory_arch.py::test_kernel_allow_entry_without_a_reason_is_dropped_and_reported; tests/test_trajectory_arch.py::test_kernel_allow_entry_with_empty_reason_is_dropped_and_reported; tests/test_trajectory_arch.py::test_kernel_allow_hygiene_shares_the_components_check_opt_out; tests/test_bootstrap.py::test_scaffold_ships_no_declared_kernel_surface"""
+evidence = """tests/test_trajectory_arch.py::test_cross_cmp_import_without_seam_warns_plain_fails_strict; tests/test_trajectory_arch.py::test_cross_cmp_import_with_declared_seam_is_silent; tests/test_trajectory_arch.py::test_cross_cmp_seam_covers_either_direction; tests/test_trajectory_arch.py::test_components_check_off_silences_cross_cmp; tests/test_trajectory_arch.py::test_declared_kernel_destination_is_not_a_seam; tests/test_trajectory_arch.py::test_undeclared_module_still_fires_the_hard_finding; tests/test_trajectory_arch.py::test_absent_kernel_allow_file_exempts_nothing; tests/test_trajectory_arch.py::test_kernel_exemption_is_one_directional; tests/test_trajectory_arch.py::test_kernel_allow_entry_without_a_reason_is_dropped_and_reported; tests/test_trajectory_arch.py::test_kernel_allow_entry_with_empty_reason_is_dropped_and_reported; tests/test_trajectory_arch.py::test_kernel_allow_hygiene_shares_the_components_check_opt_out; tests/test_bootstrap.py::test_scaffold_ships_no_declared_kernel_surface"""
 status = "Accepted"
 phase = 1
 
@@ -2107,7 +2107,7 @@ phase = 5
 [test.TC-195]
 verifies = ["SR-070", "LLR-199", "IF-139", "IF-140", "IF-141", "IF-142", "IF-143"]
 level = "Unit"
-method = """The join, the three coverage edges, the standing constraint and the freshness contract, each driven against a two-component spine small enough to reason about by hand. THE JOIN: assert membership comes from the design tier's Component tag, that the requirement tier is reached through it, and that the modules follow. DERIVED NEVER COPIED: a design row carrying no hat cell still contributes its SR parent's perspectives, and re-ruling that one requirement moves the view with no design cell edited. EDGE 1: a requirement with no design child appears in the unplaced table, is counted there, and appears in no component section - visible rather than dropped. EDGE 2: a requirement reaching two components appears in both and is marked shared in both, while one reaching a single component is not. EDGE 3: seams enter the view, an interface with both endpoints inside a component is internal to it while one crossing two is a boundary of BOTH, an UNTAGGED interface is still placed through its endpoints, and one that resolves nowhere is reported as unplaced. NO ACCEPTANCE: with one Accepted and one Drafted component declared in the hand file, no maturity key and neither word appears in any emitted cell. FRESHNESS, DRIVEN BOTH WAYS: --check passes on a fresh view, fails after a registry row moves, and passes again once regenerated; a missing view fails; the written bytes carry no CRLF and two renders agree. VACUITY: a repo whose only CMP row is the inert -000 example writes nothing and exits zero on both paths."""
+method = """The join, the three coverage edges, the standing constraint and the freshness contract, each driven against a two-component spine small enough to reason about by hand. THE JOIN: assert the design rows are placed by the design tier's Component tag and the requirement tier is reached through them, while the modules come from the files' Component headers. DERIVED NEVER COPIED: a design row carrying no hat cell still contributes its SR parent's perspectives, and re-ruling that one requirement moves the view with no design cell edited. EDGE 1: a requirement with no design child appears in the unplaced table, is counted there, and appears in no component section - visible rather than dropped. EDGE 2: a requirement reaching two components appears in both and is marked shared in both, while one reaching a single component is not. EDGE 3: seams enter the view, an interface with both endpoints inside a component is internal to it while one crossing two is a boundary of BOTH, an UNTAGGED interface is still placed through its endpoints, and one that resolves nowhere is reported as unplaced. NO ACCEPTANCE: with one Accepted and one Drafted component declared in the hand file, no maturity key and neither word appears in any emitted cell. FRESHNESS, DRIVEN BOTH WAYS: --check passes on a fresh view, fails after a registry row moves, and passes again once regenerated; a missing view fails; the written bytes carry no CRLF and two renders agree. VACUITY: a repo whose only CMP row is the inert -000 example writes nothing and exits zero on both paths."""
 tier = "Smoke"
 expected = "Satisfies the acceptance folded into LLR-199 (parent SR-070)"
 automated = "Yes"
@@ -4321,18 +4321,18 @@ phase = 6
 [test.TC-435]
 verifies = ["SR-159", "LLR-373"]
 level = "Unit"
-method = "Load a design registry through the carrier and join it with kitlib.spine.module_components: a row whose Module cell joins two modules and a row tagged into two components; then, beside a control row carrying a well-formed tag that names no component row, in turn a -000 example row, a row whose id does not start with LLR-, and a row mixing a lower-case and a bare token with a CMP- one. Separately, stub the join under gen_components' build over a two-component spine, and read which design rows it is handed and where the seams land."
+method = "Join a set of file declarations with kitlib.spine.module_components: paths in the kit-prefixed and the bare spelling, a package's __init__.py, a configuration file, two files sharing one module key and declaring two components, a lower-case value, a value that is not an id, and a well-formed id naming no component row. Separately, stub the join under gen_components' build over a two-component spine, and read which declarations it is handed and where the seams land."
 tier = "Smoke"
-expected = "Each module of a joined Module cell carries the row's tag and no joined key survives; the two-component row keeps both tags; the example row and the non-LLR- row make no membership, the non-CMP- tokens are dropped, and the control row keeps its dangling tag; gen_components binds no module_components of its own, hands the join its loaded design rows once, and with the join answering an empty map reports all three seams unplaced."
+expected = "Each path lands on its normalized module key with its one component; the shared key keeps both components; the lower-case and non-id values make no membership, and the dangling id is kept; gen_components binds no module_components of its own, hands the join the declarations it was given once, and with the join answering an empty map reports all three seams unplaced."
 automated = "Yes"
-evidence = "tests/test_components_registry.py::test_module_components_splits_a_joined_module_cell; tests/test_components_registry.py::test_the_join_keeps_the_narrower_answer_where_its_two_copies_disagreed; tests/test_gen_components.py::test_seam_placement_reads_membership_from_the_one_join"
+evidence = "tests/test_components_registry.py::test_module_components_keys_each_declared_file_by_its_module; tests/test_gen_components.py::test_seam_placement_reads_membership_from_the_one_join"
 status = "Accepted"
 phase = 6
 
 [test.TC-436]
 verifies = ["SR-159", "LLR-374"]
 level = "Integration"
-method = "Build one source tree under a declared scan root: a package with a sibling module and a nested package, a top-level module, two modules ending in the same package path, and an empty module. Tag one importer into one component and every other module into another, and run the cross-component rule in process for each import form in turn: import of a dotted path, the same with an alias, from a package a submodule, from a module a symbol, from a module a name sharing another module's stem, the three relative shapes (a sibling module, the package itself, two levels up), a relative import in the package's own __init__.py, a relative import in the __init__.py of a package with no module under it, and a bare stem. Then read which edges the rule classifies for an ambiguous bare stem, an ambiguous dotted path, a scanned module absent from the inventory, a relative climb past the top, and a relative import in a package's __init__.py that resolves to the importing module itself. Run the rule once more with a generator lacking the resolver, and draw the dependency diagram for the relative import in the __init__.py of the package with no module under it."
+method = "Build one source tree under a declared scan root: a package with a sibling module and a nested package, a top-level module, two modules ending in the same package path, and an empty module. Declare one importer's component as one component and every other module's as another, and run the cross-component rule in process for each import form in turn: import of a dotted path, the same with an alias, from a package a submodule, from a module a symbol, from a module a name sharing another module's stem, the three relative shapes (a sibling module, the package itself, two levels up), a relative import in the package's own __init__.py, a relative import in the __init__.py of a package with no module under it, and a bare stem. Then read which edges the rule classifies for an ambiguous bare stem, an ambiguous dotted path, a scanned module absent from the inventory, a relative climb past the top, and a relative import in a package's __init__.py that resolves to the importing module itself. Run the rule once more with a generator lacking the resolver, and draw the dependency diagram for the relative import in the __init__.py of the package with no module under it."
 tier = "Smoke"
 expected = "Each resolved form reports the cross-component finding naming its importer and the module the import names, the stem-sharing name landing on the module it is imported from and the bare stem resolving as before; the skipped forms yield no classified edge from their importer; the generator without the resolver leaves the rule silent; the diagram draws the arrow from that package to the module its import names."
 automated = "Yes"
@@ -4480,5 +4480,60 @@ tier = "Full"
 expected = "The lifecycle panel has a Vision row with no rung, then one row per rung in ladder order, DevStg-Release included, each naming in bold the tiers spine_rules.RUNG_TIERS gives that rung, or a dash for none. The counts read 1 SN · 2 STK, 3 B · 2 DA · 1 SUR, 2 SR, 1 CMP, 3 LLR, 4 TC and 1 evidence record, the Release row its stage description; over the spine fixture alone the tiers it lacks read no STK, no B, no DA, no SUR, no CMP and no evidence record. At each recorded rung exactly that rung's row is marked now, with the word."
 automated = "Yes"
 evidence = "tests/test_traj_panels.py::test_lifecycle_panel_has_a_row_for_every_rung_with_the_tiers_holding_it; tests/test_traj_panels.py::test_lifecycle_panel_counts_follow_the_registries; tests/test_traj_panels.py::test_lifecycle_panel_marks_the_row_of_each_recorded_rung"
+status = "Drafted"
+phase = 6
+
+[test.TC-457]
+verifies = ["SR-159", "LLR-396"]
+level = "Unit"
+method = "Write one file per carrier, each declaring the same component: a Python module's docstring, a shell script after its shebang, a macOS command file, a PowerShell script's hash comments and its help block, a TOML, an INI and a CSV file, a file with no suffix, a Windows batch file's REM line below echo-off, and a Markdown file's opening comment, and read each. Then read files whose declaring line is malformed in each way (no space, lower case, upper case, trailing words, two ids, a lower-case id), one with a malformed line beside an exact one, two with two declaring lines (two ids, and one id twice), and files whose line sits outside the carrier (a comment below a docstring, a later string, an empty module, a line below the top comment block, Markdown outside the opening comment, the words mid-line)."
+tier = "Smoke"
+expected = "Every carrier yields the component and no problem. Each malformed file yields no component and a problem quoting its line as not a declaration, the file with a malformed line beside an exact one included; each doubled file yields a problem naming two components; each file with its line outside the carrier yields no component and the absent problem."
+automated = "Yes"
+evidence = "tests/test_component_headers.py::test_each_carrier_declares_through_its_own_comment_syntax; tests/test_component_headers.py::test_a_line_shaped_like_a_declaration_but_not_exact_is_malformed; tests/test_component_headers.py::test_a_malformed_line_beside_an_exact_one_leaves_the_file_undeclared; tests/test_component_headers.py::test_two_declarations_are_doubled_even_naming_one_id; tests/test_component_headers.py::test_a_declaration_outside_the_carrier_declares_nothing"
+status = "Drafted"
+phase = 6
+
+[test.TC-458]
+verifies = ["SR-159", "LLR-397", "IF-316"]
+level = "Integration"
+method = "Over a repository with two live components and a declared source root, run the census over files that declare a live component, declare none, declare two, carry a malformed line, name an id no row has and name the example id; then over a tree holding a README.md, files under a hidden directory and a bytecode cache, a JSON file, a source file of another type stating a contract body, a configuration file and a directory the interface registry names as owners, and an unscoped file outside the root carrying a malformed line. Run it with only the example component row, and through the component rules with the components check on and off. Run the trajectory check plain and strict over a tree whose imported module declares no component."
+tier = "Smoke"
+expected = "Only the file declaring a live component is in the declarations, and each other file is one finding naming it and its class, the example id as no live row. The scope reports only the configuration owner and the other-type file, whose finding names its suffix and the contract body. With only the example row the census is empty. The component rules carry the census finding with the check on and nothing with it off. The plain run warns naming the undeclared module and exits 0; the strict run reports it as an error and exits 1."
+automated = "Yes"
+evidence = "tests/test_component_headers.py::test_the_census_names_every_finding_class_and_keeps_the_valid_ones; tests/test_component_headers.py::test_the_scope_is_the_grammars_types_under_src_and_the_file_owners; tests/test_component_headers.py::test_the_census_is_vacuous_with_no_live_component_row; tests/test_component_headers.py::test_the_census_rides_the_component_rules_and_their_opt_out; tests/test_trajectory_arch.py::test_cross_cmp_unmapped_endpoint_is_unclassified"
+status = "Drafted"
+phase = 6
+
+[test.TC-459]
+verifies = ["SR-159", "LLR-373", "LLR-067", "IF-319"]
+level = "Integration"
+method = "Over a repository whose design rows tag a module into one component while its header declares none, read the How-SW top view. Then run the cross-component rule over an import edge in turn with the destination undeclared, the importer undeclared, the destination undeclared beside an interface row covering the pair, and the destination undeclared on the shared-kernel list; over an edge whose destination shares its module key with a second file declaring the importer's component; and over an edge inside one component. Run the trajectory check plain over an edge whose destination declares no component."
+tier = "Smoke"
+expected = "The top view follows the headers, not the design rows: the declared module is in its component and the undeclared one is uncontained. Each undeclared case yields one finding naming both modules as unclassified, the covered and kernel cases included. The shared-key edge is the uncovered-seam finding, not silence. The edge inside one component is silent, and the multi-membership advisory no longer exists. The plain trajectory check names the edge as unclassified."
+automated = "Yes"
+evidence = "tests/test_component_headers.py::test_the_top_view_reads_the_headers_and_not_the_design_rows; tests/test_component_headers.py::test_an_edge_touching_an_undeclared_module_is_unclassified; tests/test_component_headers.py::test_a_key_two_files_share_silences_no_edge; tests/test_component_headers.py::test_an_edge_inside_one_component_is_silent_and_the_advisory_is_gone; tests/test_trajectory_arch.py::test_cross_cmp_unmapped_endpoint_is_unclassified"
+status = "Drafted"
+phase = 6
+
+[test.TC-460]
+verifies = ["SR-070", "LLR-199", "IF-140"]
+level = "Unit"
+method = "Over the two-component view fixture, move one source file's header to the other component, add a file no design row names declaring that component, and render the view."
+tier = "Smoke"
+expected = "The moved file leaves its old component's modules and joins the new one's beside the added file; the seam between the two files becomes internal to the new component; the design row tagged into the old component still places its row there."
+automated = "Yes"
+evidence = "tests/test_gen_components.py::test_the_modules_and_the_seams_follow_the_headers"
+status = "Drafted"
+phase = 6
+
+[test.TC-461]
+verifies = ["SR-178", "LLR-359", "IF-326"]
+level = "Unit"
+method = "Digest a registry row's accepted text through the acceptance record and a Done-when text through the blessing digest; then set the owner's digest width to another value and digest the row again."
+tier = "Smoke"
+expected = "Both digests carry the sha256 prefix and the owner's width; with the width changed, the record's digest follows it."
+automated = "Yes"
+evidence = "tests/test_acceptance_record.py::test_the_text_digest_takes_its_width_from_the_done_when_digest"
 status = "Drafted"
 phase = 6

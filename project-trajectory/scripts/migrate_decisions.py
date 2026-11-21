@@ -24,6 +24,8 @@ Usage:
 `--check` writes nothing and exits 1 when any record still needs the rewrite;
 otherwise the records are rewritten and the script exits 0, or 1 when a record
 does not parse (it is left untouched and named). Idempotent.
+
+Component: CMP-008
 """
 
 import argparse

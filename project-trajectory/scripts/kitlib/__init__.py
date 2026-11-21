@@ -157,4 +157,6 @@ CREATED, because an empty module is a worse statement than an absent one:
 
 **Stdlib only, like every kit script**, and every module here must import
 cleanly on a bare Python 3.11+ on Windows and POSIX.
+
+Component: CMP-006
 """

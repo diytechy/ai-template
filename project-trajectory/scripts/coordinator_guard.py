@@ -52,6 +52,8 @@ security: a session that can edit files can remove a hook.
 
 Stdlib only, Python 3.11+, Windows/POSIX.
 
+Component: CMP-008
+
 Contracts: IF-271, IF-274, IF-275, IF-277, IF-278, IF-279, IF-280, IF-281 —
 the interface seams this module declares (process.md §8; rows of record in
 docs/requirements/interfaces.toml).

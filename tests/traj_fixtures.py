@@ -191,16 +191,39 @@ CONT_IFS = (
 )
 
 
+# Each module's component as its `Component:` header declares it (WI-1021:
+# membership is the file's header); the same pairs CONT_LLRS tags.
+CONT_COMPONENTS = {
+    "mod_a": "CMP-001",
+    "mod_b": "CMP-001",
+    "mod_c": "CMP-002",
+    "mod_d": "CMP-002",
+}
+
+
+def declare_cont(root, components):
+    """Write each `scripts/<module>.py`'s `Component:` line from `{module: CMP
+    id}`, replacing any line the module already carries."""
+    for name, cid in components.items():
+        path = root / "scripts" / (name + ".py")
+        text = re.sub(r"\n\nComponent: CMP-\d+\n", "", path.read_text(encoding="utf-8"))
+        end = text.index('"""', 3)
+        text = text[:end] + "\n\nComponent: {}\n".format(cid) + text[end:]
+        path.write_text(text, encoding="utf-8")
+
+
 def containerize(root):
     """make_repo + a 4-module source tree (real files, WI-455), two software
-    components tagging them via LLR Component tags, and the cross/intra/
-    boundary seams."""
+    components holding them through each module's `Component:` header (and the
+    LLR Component tags naming the same pairs), and the cross/intra/boundary
+    seams."""
     make_repo(root)
     req = root / "docs" / "requirements"
     (req / "low-level-requirements.csv").write_text(CONT_LLRS, encoding="utf-8")
     (req / "components.toml").write_text(CONT_CMPS, encoding="utf-8")
     (req / "interfaces.toml").write_text(CONT_IFS, encoding="utf-8")
     write_cont_src(root)
+    declare_cont(root, CONT_COMPONENTS)
     return root
 
 

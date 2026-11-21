@@ -106,6 +106,8 @@ Marker pairs (the templates ship with them):
     <!-- BEGIN GENERATED CLI REFERENCE -->  ... <!-- END GENERATED CLI REFERENCE -->  (required per --cli-doc)
     <!-- BEGIN GENERATED INTERFACE REFERENCE --> ... <!-- END GENERATED INTERFACE REFERENCE --> (required per --contracts-doc)
 
+Component: CMP-006
+
 Contracts: IF-010, IF-028, IF-117, IF-131, IF-132, IF-150, IF-199, IF-310 — the
 interface seams this module declares (process.md §8; rows of record in
 docs/requirements/interfaces.toml).
@@ -814,6 +816,105 @@ def file_grammar_findings(owner, path):
     """`contracts_grammar_findings` over a file header: the lossy marker forms
     are reported by name for a registry or a hook exactly as for a module."""
     return _grammar_findings_over(owner, header_lines(path))
+
+
+# --- the Component declaration (process.md §8) ---------------------------------
+# A file names its ONE component on one line of the header that holds its
+# `Contracts:` marker. The id is `trace.py`'s CMP pattern.
+COMPONENT_RE = re.compile(r"^Component: (CMP-\d+)$")
+# A line opening like a declaration, in any case. One that is not exactly the
+# form is named, never read as declaring nothing.
+_COMPONENT_SHAPE_RE = re.compile(r"^component\s*:", re.I)
+# The file types the grammar has a carrier for, closed; "" is a file with no
+# suffix (a git hook, an extensionless config file).
+COMPONENT_TYPES = frozenset(
+    {".py", ".sh", ".command", ".ps1", ".toml", ".ini", ".csv", ".cmd", ".md", ""}
+)
+
+
+def component_declaration(lines):
+    """`(component, problem)` over a header's lines, exactly one of them None.
+
+    A declaration is a line, stripped, reading exactly `Component: CMP-NNN`.
+    A line opening `component:` in any case that is not exactly that form is
+    malformed, and it leaves the file undeclared even beside an exact line: a
+    header carrying a bad declaration has no trustworthy one. Two exact lines
+    are doubled, whatever they name; none is absent. `problem` is the reason
+    as a sentence fragment, for the caller to prefix with the file.
+
+    Implements: SR-159, LLR-396
+    """
+    exact, shaped = [], []
+    for line in lines:
+        text = line.strip()
+        found = COMPONENT_RE.match(text)
+        if found:
+            exact.append(found.group(1))
+        elif _COMPONENT_SHAPE_RE.match(text):
+            shaped.append(text)
+    if shaped:
+        return None, (
+            "`{}` is not a declaration: a declaration is one line reading "
+            "exactly `Component: CMP-NNN`".format(shaped[0])
+        )
+    if len(exact) > 1:
+        return None, "declares {} components ({}): a file has one".format(
+            len(exact), ", ".join(exact)
+        )
+    if not exact:
+        return None, (
+            "declares no component: its header has no `Component: CMP-NNN` line"
+        )
+    return exact[0], None
+
+
+def _docstring_lines(path):
+    """A Python module's docstring as lines, read off its first statement's
+    tokens: string literals, and then the end of the statement. Anything else
+    (an expression, a byte string, a module that will not tokenize or decode)
+    is no docstring, which is what `ast.get_docstring` answers for each, at the
+    cost of one token pass rather than a parse of the whole module."""
+    try:
+        text = path.read_text(encoding="utf-8-sig")
+    except (OSError, UnicodeDecodeError):
+        return []
+    parts = []
+    try:
+        for tok in tokenize.generate_tokens(io.StringIO(text).readline):
+            if tok.type in (tokenize.COMMENT, tokenize.NL):
+                continue
+            if tok.type == tokenize.STRING:
+                parts.append(ast.literal_eval(tok.string))
+                continue
+            if tok.type not in (tokenize.NEWLINE, tokenize.ENDMARKER):
+                return []
+            break
+    except (tokenize.TokenError, SyntaxError, ValueError):
+        return []
+    if not parts or not all(isinstance(p, str) for p in parts):
+        return []
+    return "".join(parts).splitlines()
+
+
+def file_component(path):
+    """THE ONE READER of a file's component: `(component, problem)` as
+    `component_declaration` gives it, over the file's carrier: a Python
+    module's docstring, and every other file's top-of-file comment block as
+    `header_lines` reads it (`#`, `REM` or `::`, `<# #>`, the opening
+    `<!-- -->`). Any file may be read; which files owe a declaration is the
+    caller's scope.
+
+    Implements: SR-159, LLR-396
+    """
+    path = Path(path)
+    if path.suffix.lower() == ".py":
+        return component_declaration(_docstring_lines(path))
+    return component_declaration(header_lines(path))
+
+
+def states_contract_body(path):
+    """Whether a non-Python file's header opens a `Contract IF-###:` body."""
+    return any(_BODY_OPEN_RE.match(line.strip()) for line in header_lines(path))
 
 
 # A module path reduced to a naming-convention-neutral key (strip a leading

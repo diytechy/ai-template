@@ -1,4 +1,6 @@
 #!/bin/sh
+# Component: CMP-009
+#
 # Agent-resume launcher (POSIX) — boot the right agent session at the right
 # tier, or the unattended coordinator loop, from the repo root
 # (process-options.md "Unattended operation (walk-away runs)"). The booted

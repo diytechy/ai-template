@@ -1,4 +1,6 @@
 #!/bin/sh
+# Component: CMP-009
+#
 # Product launcher (POSIX) — run this project with no commands to remember.
 # It presents the capabilities declared in docs/stack.ini's [run] section
 # (process.md §7, "the evaluator's rungs"): no args = a numbered menu, and

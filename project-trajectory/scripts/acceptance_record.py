@@ -60,6 +60,8 @@ travel with the code they annotate.
 
 Stdlib only.
 
+Component: CMP-006
+
 Contracts: IF-091, IF-129, IF-308 — the interface seams this module declares
 (process.md §8; rows of record in docs/requirements/interfaces.toml).
 

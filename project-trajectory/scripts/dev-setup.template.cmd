@@ -1,4 +1,5 @@
 @echo off
+REM Component: CMP-009
 setlocal
 REM dev-setup launcher (Windows) - the double-clickable Explorer wrapper for
 REM scripts\dev-setup.ps1 (the logic lives once, there; edit it, not this).

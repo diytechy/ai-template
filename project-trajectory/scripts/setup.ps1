@@ -1,3 +1,5 @@
+# Component: CMP-009
+#
 # One-shot dev setup for Windows (PowerShell). Makes a fresh clone runnable.
 # Idempotent. Edit the dependency list for your project; the reference installs
 # the tools the Python check harness uses. Linux/macOS: use scripts/setup.sh.

@@ -30,6 +30,8 @@ Placeholder ids ending in "-000" (the templates' examples) satisfy the
 --no-placeholders (wire it in from DevStg-Tests on) instead *flags* every cited "-000"
 id, so a real authored flow can't keep citing the template's example ids.
 
+Component: CMP-007
+
 Contracts: IF-003 — the interface seam this module declares (process.md §8; row of record in docs/requirements/interfaces.toml).
 
 Contract IF-003: the harness runs this CLI as one gate step and reads its exit

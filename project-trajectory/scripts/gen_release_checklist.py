@@ -37,6 +37,8 @@ Usage:
     --out      Explicit output path (overrides the default/--version location).
     default    Writes docs/release-checklist.md.
 
+Component: CMP-009
+
 Contracts: IF-018 — the interface seam this module declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
 

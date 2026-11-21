@@ -10,6 +10,8 @@ each had to import the `gen_trajectory` facade — a render family — to reach 
 state query, and the dispatcher reached in for two PRIVATE names. Those were the
 2026-08-19 review's two documented bad edges (H-02, M-02).
 
+Component: CMP-009
+
 Contracts: IF-164 — the interface seam this module declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
 

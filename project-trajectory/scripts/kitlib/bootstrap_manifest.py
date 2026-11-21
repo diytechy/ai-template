@@ -5,6 +5,8 @@ The manifest is one behavior decision: which kit sources become which adopter
 paths, with an optional requirement reference. File generation, profile
 selection, policy migration, and writes remain in ``bootstrap``.
 
+Component: CMP-009
+
 Contracts: IF-262 — the interface seam this file declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
 

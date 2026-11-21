@@ -27,6 +27,8 @@ Stdlib only, Python 3.11+, Windows/POSIX. The session service
 agent_loop re-exports the argv and rendering names so its public surface is
 unchanged.
 
+Component: CMP-008
+
 Contracts: IF-041, IF-064 — the interface seams this module declares (process.md §8; rows
 of record in docs/requirements/interfaces.toml).
 

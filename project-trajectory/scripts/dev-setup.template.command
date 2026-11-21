@@ -1,4 +1,6 @@
 #!/bin/sh
+# Component: CMP-009
+#
 # dev-setup launcher (macOS) — the double-clickable Finder wrapper for
 # scripts/dev-setup.sh (the POSIX command lives once, there; edit it, not this).
 #

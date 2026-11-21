@@ -2,6 +2,8 @@
 # tag-rank: ga>preview>beta>exp
 # BOTH families deliver the prompt on STDIN - the CmdTemplates carry NO {prompt}, so build_argv pipes it (run_session) and a large prompt never hits the OS command-line cap (Windows: 8191 chars on a codex.CMD shim under cmd.exe, 32767 via CreateProcess - the round's ~70k critic briefs exceed even that as argv, dying at launch as apparent nonresponse). claude -p and codex exec both read the prompt from stdin when the arg is omitted (WI-216/217, both verified live). codex sessions ADDITIONALLY capture -o/--output-last-message as the result, since codex echoes its banner + the whole prompt into stdout (WI-217).
 #
+# Component: CMP-008
+#
 # Contracts: IF-045 — the interface seam this file declares (process.md §8; row of
 # record in docs/requirements/interfaces.toml).
 #

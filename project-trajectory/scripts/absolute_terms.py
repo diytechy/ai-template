@@ -81,6 +81,8 @@ under-detects a universal phrased without one of its words ("whatever",
 "wherever") and a negative buried in a clause or opened after a comma; it is warn-only, so an under-detect costs a missed hint while a looser
 match would put standing false accusations in the report.
 
+Component: CMP-006
+
 Contracts: IF-252 — the seam this module declares (process.md §8; row of record
 in docs/requirements/interfaces.toml).
 

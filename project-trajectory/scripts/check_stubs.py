@@ -43,6 +43,8 @@ Usage:
     python scripts/check_stubs.py [--src src] [--report docs/test/stub-report.md]
                                   [--exclude GLOB ...] [--strict]
 
+Component: CMP-007
+
 Contracts: IF-006 — the interface seam this module declares (process.md §8;
 row of record in docs/requirements/interfaces.toml).
 

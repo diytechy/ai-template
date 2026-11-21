@@ -23,6 +23,8 @@
 # same commit — never a drive-by bump (the ratchet-only-tightens discipline the
 # complexity/size ratchets already keep).
 #
+# Component: CMP-007
+#
 # Contracts: IF-070 — the interface seam this file declares (process.md §8; row of
 # record in docs/requirements/interfaces.toml).
 #

@@ -20,6 +20,8 @@ accepted only while the listing it is judged in holds it open with
 `supersedes` naming that row (`row_refusal`). Pure: the caller supplies the
 listing, and nothing here reads git or a working tree or writes anything.
 
+Component: CMP-008
+
 Contracts: IF-294 - adoption request, record and listing calls from intake,
 handback and adoption_record (process.md §8; row of record in
 docs/requirements/interfaces.toml).

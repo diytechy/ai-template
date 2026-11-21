@@ -18,6 +18,8 @@ the 2,500-line merge coordinator — an edge of the seven-module import cycle th
 system forbids outright, since a render leaf writes nothing and must not be able
 to. The vocabulary moved DOWN to `kitlib/station.py`, below both. The rule is
 asserted, not merely written here: `tests/test_import_layers.py`.
+
+Component: CMP-009
 """
 
 import html

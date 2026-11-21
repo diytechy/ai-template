@@ -54,6 +54,8 @@ second formatter and a second place for the wording to drift; the `kind` is what
 the one caller that discriminates (the dispatcher, which excludes the pause)
 needs, and it is a FIELD rather than a substring match on the prose.
 
+Component: CMP-009
+
 Contracts: IF-088 — the seam this module declares (process.md §8;
 row of record in docs/requirements/interfaces.toml).
 

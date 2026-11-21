@@ -74,6 +74,8 @@ ALL OR NOTHING, as `adjudicate_brief`'s rule 2 states: every call returns
 `(value, None)` or `(None, reason)`, never a partial act and never a brief
 with a hole in it.
 
+Component: CMP-008
+
 Contracts: IF-296 — the seam this module declares (process.md §8; row of record
 in docs/requirements/interfaces.toml).
 

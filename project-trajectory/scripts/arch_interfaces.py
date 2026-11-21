@@ -9,6 +9,8 @@ declarations in the source tree: connectivity coverage
 hygiene and parse rules). Their inputs come from `arch_inputs`;
 ``trajectory_arch`` re-exports them for ``check_trajectory``.
 
+Component: CMP-006
+
 Contracts: IF-317 — the interface seam this file declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
 

@@ -76,6 +76,8 @@ unless --strict; NOT wired into check.py's required floor. Opt in per repo:
 
 Stdlib only.
 
+Component: CMP-007
+
 Contracts: IF-086 — the interface seam this module declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
 

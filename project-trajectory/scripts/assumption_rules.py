@@ -78,6 +78,8 @@ Stdlib only. A plain sibling of `scripts/`, not a `kitlib` module, for the
 reason `coherence.py` records: these are the checker's rules, and the
 scaffolder has no business importing them.
 
+Component: CMP-006
+
 Contracts: IF-190, IF-200, IF-201, IF-208, IF-216, IF-226, IF-231 — the seams
 this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 

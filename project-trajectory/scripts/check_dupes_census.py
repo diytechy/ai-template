@@ -31,6 +31,8 @@ baseline six lines up have narrative for the same reason those two do.
 Stdlib only.
 
 Implements: SR-182, LLR-195
+
+Component: CMP-007
 """
 
 import argparse

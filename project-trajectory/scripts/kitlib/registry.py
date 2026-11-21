@@ -23,6 +23,8 @@ the more informative spelling is the one kept below.
 The three modules now import from here, so `load_wis`' own POLICY split — the
 scheduler skips a malformed row, the validator reports it — stays where it
 belongs: in each consumer, over one shared parse.
+
+Component: CMP-006
 """
 
 import re

@@ -92,6 +92,8 @@ merge gate reads that as a refusal and the loop's derivation reads it as "assume
 a round is owed" — both fail toward more review, and each says so at its own
 call site.
 
+Component: CMP-008
+
 Contracts: IF-175 — the seam this module declares (process.md §8; row of record
 in docs/requirements/interfaces.toml).
 

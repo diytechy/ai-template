@@ -74,6 +74,8 @@ ruling D-8, `OI-16`): the console guard, the spec-folder read side and the TOML
 emitter all live in the shipped `kitlib` package now, and this module imports
 them. It is still a drop-in — `kitlib` copies with it, as ADOPTING.md §6 says.
 
+Component: CMP-006
+
 Contracts: IF-078, IF-092 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-078: plan_artifacts files a selected Plan-WI as a spec through this

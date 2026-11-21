@@ -2,9 +2,10 @@
 
 The claims this module holds, one per thing the ruling actually decided:
 
-  * the JOIN — membership from the design tier's `Component` tag, the
+  * the JOIN — design rows placed by the design tier's `Component` tag, the
     requirement tier reached THROUGH it, the perspectives DERIVED (never
-    copied), the seams placed by tag or by endpoint;
+    copied), each file's membership from its `Component:` header, the seams
+    placed by tag or by endpoint;
   * the THREE COVERAGE EDGES the brief refused to let the execution paper
     over — a requirement that reaches no component, one that reaches several,
     and whether seams enter the view at all. Each is asserted as a VISIBLE
@@ -92,12 +93,24 @@ channel = "bytes"
 @pytest.fixture
 def repo(tmp_path):
     """A two-component spine small enough to reason about by hand and wide
-    enough to carry all three coverage edges at once."""
+    enough to carry all three coverage edges at once, its two source files
+    each declaring the component its design row is tagged into."""
     _write(tmp_path, "docs/requirements/components.toml", CMPS)
     _write(tmp_path, "docs/requirements/system-requirements.toml", SRS)
     _write(tmp_path, "docs/requirements/low-level-requirements.toml", LLRS)
     _write(tmp_path, "docs/requirements/interfaces.toml", IFS)
+    _write(tmp_path, "docs/stack.ini", "[paths]\nsrc = project-trajectory/scripts\n")
+    _declare(tmp_path, "alpha", "CMP-001")
+    _declare(tmp_path, "beta", "CMP-002")
     return tmp_path
+
+
+def _declare(root, stem, component):
+    _write(
+        root,
+        "project-trajectory/scripts/{}.py".format(stem),
+        '"""{}.\n\nComponent: {}\n"""\n'.format(stem, component),
+    )
 
 
 def _view(root):
@@ -206,23 +219,48 @@ def test_an_untagged_seam_is_placed_by_its_ENDPOINTS(repo):
 def test_seam_placement_reads_membership_from_the_one_join(repo, monkeypatch):
     """The generator holds no join of its own (WI-1005): `build` asks
     `kitlib.spine.module_components` for the module -> component map, once,
-    over the design rows it loaded, and places seams by whatever that answers.
-    Stubbed to answer nothing, the two seams placed by their endpoints alone
-    fall to `[unplaced]`, so the answer is read, not merely requested.
+    over the declarations it was handed, and places seams by whatever that
+    answers. Stubbed to answer nothing, the two seams placed by their
+    endpoints alone fall to `[unplaced]`, so the answer is read, not merely
+    requested.
 
     Implements: TC-435"""
     gen = load_script(GEN)
     assert not hasattr(gen, "module_components"), "the generator's copy is deleted"
     asked = []
 
-    def nothing(llrs):
-        asked.append([r["LLR-ID"] for r in llrs])
+    def nothing(declared):
+        asked.append(sorted(declared))
         return {}
 
     monkeypatch.setattr(gen._kitspine, "module_components", nothing)
-    _, unplaced = gen.build(*gen._load(repo))
-    assert asked == [["LLR-001", "LLR-002"]]
+    declared = gen.arch_inputs.component_headers(repo)[0]
+    _, unplaced = gen.build(*gen._load(repo), declared)
+    assert asked == [
+        ["project-trajectory/scripts/alpha.py", "project-trajectory/scripts/beta.py"]
+    ]
     assert unplaced["seam_refs"] == ["IF-001", "IF-002", "IF-003"]
+
+
+def test_the_modules_and_the_seams_follow_the_headers(repo):
+    """A file's component is its header, not the design row naming it: moving
+    alpha's header to CMP-002 moves alpha into CMP-002's modules and makes the
+    seam between alpha and beta internal to CMP-002, while the design row
+    tagged CMP-001 still places LLR-001 there. A file no design row names
+    is listed by its header alone.
+
+    Implements: TC-460"""
+    _declare(repo, "alpha", "CMP-002")
+    _declare(repo, "gamma", "CMP-002")
+    view = _view(repo)["component_view"]
+    assert view["CMP-001"]["modules"] == []
+    assert view["CMP-002"]["modules"] == [
+        "project-trajectory/scripts/alpha.py",
+        "project-trajectory/scripts/beta.py",
+        "project-trajectory/scripts/gamma.py",
+    ]
+    assert view["CMP-002"]["seam_internal_refs"] == ["IF-001", "IF-002"]
+    assert view["CMP-001"]["llr_refs"] == ["LLR-001"]
 
 
 def test_an_unplaceable_seam_is_REPORTED_not_silently_excluded(repo):

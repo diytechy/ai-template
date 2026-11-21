@@ -1,5 +1,7 @@
 """Observation cadence: closed-work history and declared checkpoint triggers.
 
+Component: CMP-008
+
 Contracts: IF-269 — cadence policy consumed by rejudge.
 Contract IF-269: Cadence(root, revision, snapshot, checkpoint, git) reads the committed
     process policy and git history through git(root, *args), whose result has

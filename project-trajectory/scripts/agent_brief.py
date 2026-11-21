@@ -6,6 +6,8 @@ told. Runtime scheduling and bookkeeping stay in ``agent_loop``; prompt text,
 route-neutral brief assembly, guardrails payload selection, and the lane facts
 those briefs render live here together.
 
+Component: CMP-008
+
 Contracts: IF-260 — the interface seam this file declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
 

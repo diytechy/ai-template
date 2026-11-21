@@ -11,6 +11,8 @@ must not disagree: the brief that composes the sitting
 section's own drafts (`intake`). So the token form and the section form have
 one home, here, below all three.
 
+Component: CMP-008
+
 Contracts: IF-287 - the seam this module declares (process.md §8; row of
 record in docs/requirements/interfaces.toml).
 

@@ -87,6 +87,8 @@ what the mint wrote and mints NOTHING, and every derived title is deterministic
 intake.py sweep --before <sha> --after <sha>` — is idempotent by exact-title
 dedup.
 
+Component: CMP-008
+
 Contracts: IF-090, IF-229, IF-243, IF-244 — the interface seams this module
 declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 

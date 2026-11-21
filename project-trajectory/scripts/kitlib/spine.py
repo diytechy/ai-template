@@ -58,6 +58,8 @@ WHAT IS DELIBERATELY NOT HERE:
     it.
 
 Stdlib only, and import-clean of the rest of `scripts/`, like every module here.
+
+Component: CMP-006
 """
 
 import csv
@@ -957,44 +959,33 @@ def module_tests(llrs, tcs, module, test_root="tests"):
     )
 
 
-def module_components(llrs):
-    """`{normalized module key: {CMP ids}}` from the design rows' `Component`
-    tags joined on `LLR.Module`: the membership rule, a module belongs to the
-    component(s) its design rows are tagged with.
+def module_components(declared):
+    """`{normalized module key: {CMP ids}}` from the files' `Component:`
+    declarations: the membership rule, a file belongs to the one component its
+    header names.
 
-    THE JOIN'S ONE HOME (WI-1005). `gen_components` and `trajectory_arch` each
-    held a copy, and the copies disagreed on three inputs. Each now has the
-    narrower answer, the checker's: a `-000` example row and a row whose id does
-    not start with `LLR-` make no membership, and a `Component` token that does
-    not start with `CMP-` is dropped. A placeholder, or a token that cannot name
-    a component, must not make a membership the gate-bearing rules read. A
-    registry `trace.py --strict` passes holds none of the three, apart from
-    example rows.
-
-    `Module` is a joined list, split here like every other reader of the cell
-    (WI-429), and each part goes through `norm_module`, so the two spellings a
-    seam and a design row use meet on one key. The tags are not filtered
-    against the component registry: each caller intersects with the ids it
-    declares, and a tag naming no row is `trace.py`'s finding.
+    THE JOIN'S ONE HOME (WI-1005), its input the declarations since WI-1021:
+    `{file path: CMP id}` as the census (`arch_inputs.component_headers`)
+    reads them, a file with no valid declaration already absent. It reads no
+    file itself, and a value that does not start with `CMP-` makes no
+    membership. Each path goes through `norm_module`, so the spellings a seam,
+    an import and a header use meet on one key. Two files can share a key
+    (`check.py` and `check.sh`), so a key keeps every component its files
+    declare, and a rule reading the map treats a key with more than one as in
+    no single component. The ids are not filtered against the component
+    registry: each caller intersects with the ids it declares.
 
     Implements: SR-159, LLR-373
 
     Contract:
-      Inputs:  llrs: iterable of LLR row mappings, as the carrier loads them
-      Outputs: dict[str, set[str]] — each module key with a kept tag
+      Inputs:  declared: mapping of file path to CMP id
+      Outputs: dict[str, set[str]] — each module key with its components
     """
     out = {}
-    for row in llrs:
-        lid = (row.get("LLR-ID") or "").strip()
-        if not lid.startswith("LLR-") or is_example(lid):
-            continue
-        tags = {t for t in refs(row.get("Component")) if t.startswith("CMP-")}
-        if not tags:
-            continue
-        for part in refs(row.get("Module")):
-            key = norm_module(part)
-            if key:
-                out.setdefault(key, set()).update(tags)
+    for path, component in declared.items():
+        key = norm_module(path)
+        if key and str(component).startswith("CMP-"):
+            out.setdefault(key, set()).add(component)
     return out
 
 

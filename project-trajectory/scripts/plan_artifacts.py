@@ -31,6 +31,8 @@ walk is the shared `kitlib.registry.plan_table_rows` (WI-821; it was a copy
 under the retired F5 convention), and this module picks only id, title and
 predecessors from its rows.
 
+Component: CMP-008
+
 Contracts: IF-061 — the interface seam this module declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
 

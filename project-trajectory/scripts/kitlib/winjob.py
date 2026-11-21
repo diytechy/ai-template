@@ -13,6 +13,8 @@ WHAT IT TOUCHES. kernel32 and ntdll are loaded only when `win32()` is
 called, so the module imports cleanly on POSIX, where nothing calls it.
 Stdlib only (`ctypes`, `functools`), and no sibling import.
 
+Component: CMP-008
+
 Contracts: IF-302 — the interface seam this module declares (process.md §8;
 row of record in docs/requirements/interfaces.toml).
 

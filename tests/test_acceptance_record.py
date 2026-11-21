@@ -396,3 +396,26 @@ def test_the_snapshot_files_that_mirror_no_registry_widen_no_acceptance():
         acceptance_record.adjudication_acceptance_refusal({"SR-001"}, acted, delta)
         is None
     )
+
+
+def test_the_text_digest_takes_its_width_from_the_done_when_digest(monkeypatch):
+    """IF-326: a verdict or a ruling binds the text it judged by the digest's
+    exact string, so every text digest is cut to one width, which the
+    Done-when blessing's digest owns. The record's digest reads it from there
+    rather than repeating the number: changed at the owner, it follows.
+
+    Implements: TC-461"""
+    from kitlib import done_when
+
+    sr = "docs/requirements/system-requirements.toml"
+    row = {"SR-ID": "SR-001", "Title": "a requirement", "Status": "Accepted"}
+    width = len("sha256:") + done_when._DIGEST_CHARS
+    record = acceptance_record.accepted_text_digest(sr, "SR-ID", row)
+    blessing = done_when.digest("WI-001", "", "")
+    assert record.startswith("sha256:") and len(record) == width
+    assert blessing.startswith("sha256:") and len(blessing) == width
+    monkeypatch.setattr(done_when, "_DIGEST_CHARS", 9)
+    assert (
+        len(acceptance_record.accepted_text_digest(sr, "SR-ID", row))
+        == len("sha256:") + 9
+    )

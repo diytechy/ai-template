@@ -1,4 +1,5 @@
 @echo off
+REM Component: CMP-009
 setlocal
 REM Agent-resume launcher (Windows) - double-click to boot the right agent
 REM session at the right tier, or the unattended coordinator loop, from the

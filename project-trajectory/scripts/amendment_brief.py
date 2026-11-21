@@ -22,6 +22,8 @@ rather than in the composer because the import runs one way: the composer
 imports this module, and nothing here imports the composer (the import graph
 admits no cycle, a deferred import included). `JUDGED_TEXT` is the identity
 line this arm states; the composer's binding reader reads it from here.
+
+Component: CMP-008
 """
 
 from __future__ import annotations

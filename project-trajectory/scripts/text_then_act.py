@@ -20,6 +20,8 @@ ride it, text then act first; the merge slot's ruling sync rides the same walk
 with its own judge. What an unlistable range means differs per caller: this
 hook step reads it as no squash to exempt, and the slot refuses the lane in
 git's own words.
+
+Component: CMP-008
 """
 
 from pathlib import PurePosixPath

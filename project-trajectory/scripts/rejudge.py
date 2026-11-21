@@ -49,6 +49,8 @@ module drafts and writes nothing: `intake.mint_rejudge` and the merge-slot arm
 file the drafts through `intake._mint`, the one allocator of a work-item id,
 and the arrow between the two modules runs one way.
 
+Component: CMP-008
+
 Contracts: IF-228 — the seam this module declares (process.md §8; row of record
 in docs/requirements/interfaces.toml).
 

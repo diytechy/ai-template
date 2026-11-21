@@ -58,6 +58,8 @@ documentation aid; the module is library-first):
 
     python scripts/plan_briefs.py surface [--root .]   # print the SR+IF surface
     python scripts/plan_briefs.py hats                 # print the hat->template map
+
+Component: CMP-008
 """
 
 import argparse

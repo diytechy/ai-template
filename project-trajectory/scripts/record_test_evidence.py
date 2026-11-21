@@ -43,6 +43,8 @@ exits nonzero when the committed record does not hold. The fix is to re-run the
 suite or delete the record — never to edit the binding.
 
 Python 3.11+, stdlib only; Windows + POSIX.
+
+Component: CMP-007
 """
 
 import argparse

@@ -49,6 +49,8 @@ reviewer's judgement, labelled a claim under judgement, never the premise.
 
 Stdlib only, Python 3.11+, Windows/POSIX.
 
+Component: CMP-008
+
 Contracts: IF-288, IF-289 — the seams this module declares (process.md §8; rows
 of record in docs/requirements/interfaces.toml).
 

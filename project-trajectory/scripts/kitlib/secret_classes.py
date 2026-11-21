@@ -50,6 +50,8 @@ Pure data — `re` and `typing` only, no sibling import — so it is safe for
 `bootstrap.py` to import (the package's one asserted rule) without dragging a
 checker into the scaffolder.
 
+Component: CMP-006
+
 Contracts: IF-314 — the seam this module declares (process.md §8; row of record
 in docs/requirements/interfaces.toml).
 

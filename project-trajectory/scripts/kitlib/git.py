@@ -60,6 +60,8 @@ ancestry policy differs, keeps its own refusal text, remedy and squash policy,
 and registers its rider where it is read (`text_then_act.LANE_COMMIT_RIDERS`).
 As with `git_out`, the owner never decides what an unlistable range means:
 `squash_lines` hands back the caller's own lines for it, or None.
+
+Component: CMP-006
 """
 
 import re

@@ -41,6 +41,8 @@ blobs, not the commits that touched the file, so an edit put back clears itself;
 in a shallow clone whose history does not reach a file's landing it says the
 file's append-only status is unverifiable rather than passing it.
 
+Component: CMP-006
+
 Contracts: IF-257, IF-258 — the seams this module declares (process.md §8; rows
 of record in docs/requirements/interfaces.toml).
 

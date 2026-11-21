@@ -24,6 +24,8 @@ tests to its adjudicate kind, and it must carry the `act` command with them.
 
 Stdlib only, Python 3.11+, Windows/POSIX.
 
+Component: CMP-008
+
 Contracts: IF-283, IF-284, IF-285, IF-321 — the interface seams this module
 declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 

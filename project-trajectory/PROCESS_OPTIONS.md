@@ -2668,7 +2668,9 @@ durable component-to-pack association, not a second copy of the findings.
 **Structure is derived, never restated.** Membership lives on the **primitive**
 rows: LLR / IF / ASSET / PART each carry a `Component` cell (`;`-joined CMP ids
 — tag at the *finest* enclosing CMP; coarser membership derives through
-`PartOf`). From those tags everything else is a **view**: an interface with both
+`PartOf`). A source file or file owner declares its one component in its own
+header instead (`Component: CMP-###`, PROCESS.md §8), and the software rules
+and views read only that. From those tags everything else is a **view**: an interface with both
 endpoints inside a CMP is *internal*; with one endpoint inside it is the CMP's
 *boundary* — "the component **is** its interface set" as a derived
 characterization, never an authored list. A CMP row therefore has **no**
@@ -2700,24 +2702,24 @@ human act is for review and the acceptance route.
 
 **A cross-component edge needs a declared seam** (WI-064 — the AXES
 enforceability rule, mechanized for software). `check_trajectory.py` joins the
-committed arch-map's `Imports (internal):` lines with the `Component`-tag
-membership and `interfaces.toml`: an import edge between two *different*
-components with no IF row covering the module pair (either endpoint direction)
-is a finding — **WARN** at the plain/hook run, **ERROR under `--strict` (DevStg-Tests+)**
-— sharing the `[checks] components_check` opt-out. Vacuous when any input is absent
-(no imports lines, no real CMP rows, an untagged endpoint), so a non-adopting
-or small repo pays nothing. A *physical* repo's cross-CMP discipline stays
-gate-attested (`Inspection`) — the import graph is the software mechanization.
-An edge whose endpoints' component sets merely **overlap** is not that finding,
-but a module tagged into *more than one* component is evidence about the
-partition, not a licence to stay quiet — so it raises its own **advisory**
-(WI-440), **WARN-only, never the exit code even under `--strict`**, naming the
-multi-tagged module and the edge it silences.
+committed arch-map's `Imports (internal):` lines with the files' header
+membership and `interfaces.toml`: an import edge not inside one component
+with no IF row covering the module pair (either endpoint direction) is a
+finding — **WARN** at the plain/hook run, **ERROR under `--strict` (DevStg-Tests+)**
+— sharing the `[checks] components_check` opt-out, as does each file in the
+scope whose header declaration is absent, doubled, malformed or dangling.
+An edge touching a file with no valid declaration is reported
+**unclassified**, never internal or exempt. Vacuous when any input is absent
+(no imports lines, no real CMP rows), so a non-adopting or small repo pays
+nothing. A *physical* repo's cross-CMP discipline stays gate-attested
+(`Inspection`) — the import graph is the software mechanization. One component
+per file retired the multi-membership advisory (WI-440): no endpoint can sit
+in two components and silence an edge.
 
 **The How-SW top view is bounded** (WI-073/FB5). The software-architecture panel
 of `PROJECT_STATE.html` shows at most **ten** first-view items — the **top-level**
 components (a CMP with no `PartOf` that contains an arch-map module) plus any
-**uncontained** module (one with no `Component`-tagged LLR). Exceeding the bound
+**uncontained** module (one whose header declares no valid component). Exceeding the bound
 is a `check_trajectory.py` finding — **WARN** at the plain/hook run, **ERROR
 under `--strict` (DevStg-Tests+)** — so an unreadable module map drives *right-sizing of the
 component designations* instead of being tolerated. In the render, software items
@@ -2725,7 +2727,7 @@ are **containerized** into the component they belong to; expanding a component
 reveals its members (and nested components) and the seams internal to it, while
 interface seams that cross a component boundary aggregate to **one** deduplicated
 component-to-component edge at the top level. Membership is the same
-`Component`-tag join (`LLR.Module → CMP-###`); nesting via `PartOf` counts a
+header join (the file's `Component: CMP-###`); nesting via `PartOf` counts a
 module only at its top-level root. The rule is **opt-out, default-on** like the
 connectivity coverage — silence it with `[checks] components_check = false` —
 and **vacuous**

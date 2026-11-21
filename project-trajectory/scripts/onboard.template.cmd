@@ -1,4 +1,5 @@
 @echo off
+REM Component: CMP-009
 setlocal enabledelayedexpansion
 REM Stage-0 onboarder (Windows) - the first rung of the onboarding ladder
 REM (process.md section 7):

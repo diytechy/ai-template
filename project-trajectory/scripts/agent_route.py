@@ -72,6 +72,8 @@ ship as legible per-repo-overridable defaults (calibration values, not spine
 facts); the scoreboard (`score_reviews.py`) stays **advisory** — the declared
 policy picks, nothing auto-optimizes.
 
+Component: CMP-008
+
 Contracts: IF-044 — the interface seam this module declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
 

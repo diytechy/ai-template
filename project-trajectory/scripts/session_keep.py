@@ -25,6 +25,8 @@ policy-file reader) and `kitlib.git`, and `agent_route` (the entry grammar a
 review pin is written in) only inside `scoped_route`, its one user;
 `session_service` imports it.
 
+Component: CMP-008
+
 Contracts: IF-247, IF-248, IF-272, IF-273 — the interface seams this module declares
 (process.md §8; rows of record in docs/requirements/interfaces.toml).
 

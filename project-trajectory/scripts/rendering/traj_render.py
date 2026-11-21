@@ -3,7 +3,10 @@
 The escape/tab/scroll helpers, the declared colour/weight vocabularies
 (TIER/STATUS/SW/OKF/PHASE + ring inks), the responsive svg wrappers, and
 the shared Simulink-style drill renderer. WI-280 split of gen_trajectory.py;
-the facade re-exports, so consumers are unchanged."""
+the facade re-exports, so consumers are unchanged.
+
+Component: CMP-009
+"""
 
 import html
 import math

@@ -46,6 +46,8 @@ record's grammar and digests, and the records it cites in the parent. The
 critique's own tree (the commit it reviewed, by sha) is compared only at the
 hook and the filing step, before any rebase can orphan that commit.
 
+Component: CMP-008
+
 Contracts: IF-295 — the seam this module declares (process.md §8; row of record
 in docs/requirements/interfaces.toml).
 

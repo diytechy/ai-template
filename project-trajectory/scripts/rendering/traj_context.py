@@ -25,6 +25,8 @@ and imports no lifecycle service (`tests/test_import_layers.py`).
 Fully server-computed (fixed geometry, `.1f` rounding, id-sorted inputs, no
 clocks), so the `--check` freshness byte-compare stays stable; a repo with no
 `external.toml` renders byte-identically to before the view existed.
+
+Component: CMP-009
 """
 
 from .traj_render import (

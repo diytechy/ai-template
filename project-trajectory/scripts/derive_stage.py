@@ -35,6 +35,8 @@ rung predicates so that the two axes can never disagree about what a Drafted row
 is. When slice 3 re-discriminates the ladder it edits ONE fall-through
 (`spine_rules.spine_stage`) and both files follow.
 
+Component: CMP-006
+
 Contracts: IF-050, IF-165 — the interface seams this module declares
 (process.md §8; rows of record in docs/requirements/interfaces.toml).
 

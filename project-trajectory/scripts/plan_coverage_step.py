@@ -37,6 +37,8 @@ Usage (the CLI is a documentation aid; plans map to A/B in argument order):
 
     python scripts/plan_coverage_step.py --goal GOAL.md PLAN_A.md PLAN_B.md \
         [--root .] [--out coverage.md]
+
+Component: CMP-008
 """
 
 import argparse

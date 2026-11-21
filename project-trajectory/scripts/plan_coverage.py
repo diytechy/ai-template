@@ -75,6 +75,8 @@ Findings (exit 1):
 Malformed inputs (no clauses in the goal, no Done-when in the item, no
 findings in a findings file or one mixing both shapes, no plan table) exit 2.
 
+Component: CMP-006
+
 Contracts: IF-060, IF-152, IF-153 — the interface seams this module declares
 (process.md §8; rows of record in docs/requirements/interfaces.toml).
 

@@ -12031,6 +12031,54 @@ unchanged.
 
 **Kit-owned files — overwrite:** `scripts/arch_tags.py`.
 
+### Each file declares its one component in a `Component:` header, and membership is read from it [since 1aa6c439a]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.
+The first of variant F's entries; each later F row writes its own, applied in
+landing order.)*
+
+**What changed.** Component membership has one home, the file. A file names
+its one component on one line of the header that holds its `Contracts:`
+marker, reading exactly `Component: CMP-###` (PROCESS.md §8): in a Python
+module's docstring; as a `#` line in the top comment block of a `.sh`,
+`.command`, `.ps1`, `.toml`, `.ini` or `.csv` file or a file with no suffix;
+as a `REM` line at the top of a `.cmd` file, below `@echo off`; inside the
+opening `<!-- ... -->` comment of a `.md` file. The files that owe one are
+every such file under `[paths] src` (`README.md` excluded) and every file the
+interface registry names as an owner. Once a live `CMP-###` row exists (from
+DevStg-Arch), `check_trajectory.py` reports each file in that scope whose
+declaration is absent, doubled, malformed or names no live component row, and
+a file of another type under `[paths] src` that states a `Contract IF-###:`
+body: WARN at a plain run, ERROR under `--strict`, silenced by `[checks]
+components_check = false`. The cross-component rule, the How-SW top view and
+the derived component view read the headers, not the design rows' `Component`
+cells: an import edge touching an undeclared file is reported as
+unclassified, and an edge is internal only inside one component. The
+multi-membership advisory is gone. The design rows' `Component` cell still
+places those rows in the component view until a later variant-F entry
+derives placement.
+
+**What to do.** With no live `CMP-###` row, nothing is forced. Otherwise run
+`python scripts/check_trajectory.py` after the upgrade: it names each file in
+your scope with no header. Add one line to each, naming the one component it
+belongs to; an empty `__init__.py` needs a one-line docstring. Where your
+design rows tagged a file into several components, pick one: a file reused
+across components keeps one owner (a shared kernel is listed in
+`docs/kernel-modules-allow`), and a configuration file keeps one owner the
+others read through a `file` interface. An edge your picks turn into a
+crossing needs an interface row, as any crossing does. The scaffolded
+launchers (`run.*`, `agent-resume.*`, `onboard.*`, `scripts/dev-setup.*`)
+arrive carrying the kit's own `Component:` line, as the kit's `Contracts:`
+markers name the kit's seams; if your `[paths] src` covers them, change the
+line to your own component.
+
+**Kit-owned files — overwrite:** every file the kit ships under `scripts/`
+and `hooks/` (each now carries the kit's own `Component:` line),
+`PROCESS.md`, `PROCESS_OPTIONS.md` and `skills/byte-budget-guard/SKILL.md`.
+
+**Project-owned files — edit:** each of your own files in the scope above
+gains its `Component:` line.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

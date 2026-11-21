@@ -110,6 +110,8 @@ worktrees, where nobody else's work lives.
 Stdlib only; Windows and POSIX. Every git call here runs with
 GIT_LITERAL_PATHSPECS set, so a path is a path and never a glob.
 
+Component: CMP-008
+
 Contracts: IF-186 — the interface seam this module declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
 

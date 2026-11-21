@@ -189,6 +189,8 @@
 #   is the single requestor of all of them, and the exit-code rows are where
 #   its decision plugs in.
 #
+# Component: CMP-006
+#
 # Contracts: IF-057 — the interface seam this file declares (process.md §8; row of
 # record in docs/requirements/interfaces.toml).
 #
@@ -1917,7 +1919,7 @@ notes = """source - assumption_rules consumes nothing but the row vocabulary it 
 [interface.IF-194]
 rationale = "A loop commit can be told apart from a person's only if every one says it is the loop's, and every floor that checks it and every reader that relies on it must agree on the words: the trailer key, the session grammar, which trailer counts, the name of the marker a loop-started process carries, and which commits mark a lane as the loop's and which attended record closes it. One vocabulary module below every writer, floor and reader keeps a writer from emitting a trailer a floor calls malformed, keeps the merge slot and the writers agreeing on what a loop writer's commit looks like, and keeps the history check reading the mark the writers wrote."
 owner = "scripts/kitlib/provenance"
-requestors = ["scripts/agent_common", "scripts/agent_loop", "scripts/bookkeeping", "scripts/check", "scripts/check_trajectory", "scripts/dispatch", "scripts/handback", "scripts/integrate", "scripts/session_service"]
+requestors = ["scripts/agent_common", "scripts/agent_loop", "scripts/bookkeeping", "scripts/check", "scripts/check_trajectory", "scripts/dispatch", "scripts/handback", "scripts/id_carrier", "scripts/integrate", "scripts/session_service"]
 channel = "call"
 data = "LOOP_TRAILER/LOOP_SESSION_ENV;format/parse_loop_trailer, loop_{trailer_refusal,writer_commit,lane_window}, reclaim_subject; mark_loop_process, with_loop_trailer, append_trailer"
 version = "v1"
@@ -1928,7 +1930,7 @@ notes = """source - provenance consumes no other module's surface; its one input
 [interface.IF-195]
 rationale = "Every reader that asks whether a dial holds a rung - the loop's writers, the pre-commit step, the merge slot and the history check - asks it here, so the rung tables, the comparison and the reading of the dial itself cannot differ between them. Every reader runs the one resolution: the live readers read the dial committed in a tree they name and the history reader each past commit's dial, each printing nothing, and a value that is not a rung reads as the most-held one, which only ever asks the operator for more. None of them reaches a coordinator primitive to ask a question about a string, a table and a tree."
 owner = "scripts/kitlib/authority"
-requestors = ["scripts/acceptance_record", "scripts/agent_common", "scripts/check", "scripts/check_trajectory", "scripts/integrate", "scripts/adjudicate_act"]
+requestors = ["scripts/acceptance_record", "scripts/agent_common", "scripts/agent_policy", "scripts/check", "scripts/check_trajectory", "scripts/integrate", "scripts/adjudicate_act"]
 channel = "call"
 data = "ACCEPTANCE_RUNGS, SPINE_ACCEPTANCE_RUNGS; rung_for -> rung|None; dial_from_config -> rung; dial_at -> rung; holds_under -> bool"
 version = "v1"
@@ -2860,9 +2862,9 @@ notes = """The record writer's own call to write_atomic is part of IF-214. These
 [interface.IF-316]
 rationale = """Every architecture rule reads the registry rows, the opt-out dials, the scan profile and the source inventory through one module, so no two rules read one input two ways and no rule keeps a loader of its own."""
 owner = "scripts/arch_inputs"
-requestors = ["scripts/trajectory_arch", "scripts/arch_interfaces", "scripts/arch_tags", "scripts/arch_seams", "scripts/arch_components"]
+requestors = ["scripts/trajectory_arch", "scripts/arch_interfaces", "scripts/arch_tags", "scripts/arch_seams", "scripts/arch_components", "scripts/gen_components"]
 channel = "call"
-data = "registry paths, IF_ID_RE, CMP_ID_RE, both opt-out dials, load_ifs, load_seams, load_cmps, arch_inventory, and private helpers incl. _arch_scan_profile"
+data = "registry paths, IF_ID_RE, CMP_ID_RE, the two dials, load_ifs, load_seams, load_cmps, arch_inventory, component_headers, private helpers"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
@@ -2889,7 +2891,7 @@ component = "CMP-006"
 owner = "scripts/arch_seams"
 requestors = ["scripts/trajectory_arch", "scripts/arch_components"]
 channel = "call"
-data = "cross_component_findings, cross_component_advisories, read_kernel_modules, kernel_allow_parse_findings, _classifiable_edges, _cross_component_scan, _SCAN_CACHE"
+data = "cross_component_findings, read_kernel_modules, kernel_allow_parse_findings, _classifiable_edges, _cross_component_scan, _SCAN_CACHE"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
@@ -2936,3 +2938,14 @@ data = "RUNG_TIERS: rung -> ((tier, spine_stage keyword), ...) · load_spine(doc
 version = "v1"
 status = "Drafted"
 component = "CMP-009"
+
+[interface.IF-326]
+rationale = """A text digest is compared by its exact string wherever a verdict or a ruling binds the text it judged, so every digest the kit writes is cut to one width. The Done-when blessing's digest owns that width, and the acceptance record's text digest takes it from there rather than repeating the number, so the two cannot be cut differently."""
+owner = "scripts/kitlib/done_when"
+requestors = ["scripts/acceptance_record"]
+channel = "call"
+data = "_DIGEST_CHARS: the count of lowercase hex characters a sha256 text digest keeps after its sha256: prefix (16)"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """source - a constant, read where a digest is cut; no call crosses at run time beyond the read."""

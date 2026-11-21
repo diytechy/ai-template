@@ -46,6 +46,8 @@ assumption carries no evidence level (operator ruling 2026-10-02).
 
 Implements: SR-205, SR-206, SR-212, LLR-242, LLR-243, LLR-244
 
+Component: CMP-007
+
 Contracts: IF-230 — the seam this module declares (process.md §8; row of record
 in docs/requirements/interfaces.toml).
 

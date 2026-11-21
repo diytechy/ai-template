@@ -46,6 +46,8 @@ Usage:
 --root/--docs are the path flags shared with trace.py and check_docs.py: the
 four artifact paths default under <root>/docs unless given explicitly.
 
+Component: CMP-007
+
 Contracts: IF-004, IF-147, IF-167 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-004: the harness runs this CLI as one gate step and reads what it

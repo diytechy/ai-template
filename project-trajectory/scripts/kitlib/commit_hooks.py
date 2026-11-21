@@ -22,6 +22,8 @@ find the kit scripts is the hook's own refusal. It reads no environment
 variable and takes no parameter besides the checkout's root, so nothing can
 turn it off.
 
+Component: CMP-008
+
 Contracts: IF-297 — the interface seam this module declares (process.md §8;
 row of record in docs/requirements/interfaces.toml).
 

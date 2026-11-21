@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 """The cross-component seam check: an import between components needs a declared interface row.
 
-`cross_component_findings` reports each internal import edge whose endpoints
-sit in disjoint components and that no interface row covers;
-`cross_component_advisories` reports, warn-only, each edge an endpoint in
-several components silences. An edge into a module declared in
-`docs/kernel-modules-allow` is neither. The edges come from
-`arch_inputs.arch_inventory` and resolve through
-`gen_arch_map.resolve_import`; membership is
-`kitlib.spine.module_components`. One scan per root per run, held in
-`_SCAN_CACHE`. ``trajectory_arch`` re-exports the rule for
+`cross_component_findings` reports each internal import edge that is not
+inside one component and that no interface row covers, and each edge touching
+a file with no valid `Component:` declaration, as unclassified. An edge into a
+module declared in `docs/kernel-modules-allow` is not a seam. The edges come
+from `arch_inputs.arch_inventory` and resolve through
+`gen_arch_map.resolve_import`; membership is the files' headers
+(`arch_inputs.component_headers`) through `kitlib.spine.module_components`.
+One scan per root per run, held in `_SCAN_CACHE`. ``trajectory_arch`` re-exports the rule for
 ``check_trajectory``, and `arch_components` runs it inside
 `component_findings`.
+
+Component: CMP-006
 
 Contracts: IF-319 — the interface seam this file declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
 
 Contract IF-319: the seam rule surface ``trajectory_arch`` re-exports and
-`arch_components` composes. `cross_component_findings(root)` and
-`cross_component_advisories(root)` return finding strings from one cached
-scan per root; the advisories are `[]` when `[checks] components_check =
-false`, and the findings leave that dial to their caller.
+`arch_components` composes. `cross_component_findings(root)` returns finding
+strings from one cached scan per root, and leaves the `[checks]
+components_check` dial to its caller.
 `read_kernel_modules(root)` gives the declared kernel as `{module key:
 reason}`, empty when the file is absent, and
 `kernel_allow_parse_findings(root)` names the first line its grammar cannot
@@ -43,13 +43,12 @@ import spine_carrier
 from arch_inputs import (
     CMP_CSV,
     IF_CSV,
-    LLR_CSV,
     _arch_scan_profile,
     _norm_module,
     arch_inventory,
+    component_headers,
     load_cmps,
     load_seams,
-    read_components_check_enabled,
 )
 
 try:
@@ -204,15 +203,15 @@ def kernel_allow_parse_findings(root):
 
 def _classifiable_edges(root):
     """Yield `(src, dst, src_cmps, dst_cmps)` for every internal import edge
-    the cross-CMP rules can classify — both endpoints normalized, both carrying
-    at least one REAL CMP membership.
+    — both endpoints normalized, each with the REAL CMP ids its files' headers
+    declare, an empty set for a module with no valid declaration.
 
     The vacuity guards live here, so every caller inherits them: no internal
-    imports, no real CMP rows, an endpoint with no `Component`-tag membership
-    (coverage is the containment rule's job, not this one's), an import that
-    resolves to no inventory module, to several, or to the importing module
-    itself, and a `gen_arch_map` too old to resolve one (IF-131: every entry
-    point is optional at the call site, and a missing one silences the rule).
+    imports, no real CMP rows, an import that resolves to no inventory module,
+    to several, or to the importing module itself, and a `gen_arch_map` too old
+    to resolve one (IF-131: every entry point is optional at the call site, and
+    a missing one silences the rule). An endpoint with no declaration is NOT a
+    guard: it is yielded, for the caller to report as unclassified.
 
     Each import is the token `gen_arch_map.internal_imports` wrote, bare
     (`agent_route`), dotted (`kitlib.spine`) or relative (`.registry`), and
@@ -223,7 +222,7 @@ def _classifiable_edges(root):
     segment, as this rule once did, missed every dotted and relative import,
     so no edge into a package was ever checked.
 
-    Implements: SR-159, LLR-374
+    Implements: SR-159, LLR-374, LLR-067
     """
     names, _contracts, imports = arch_inventory(root)
     resolve = getattr(gen_arch_map, "resolve_import", None)
@@ -233,7 +232,7 @@ def _classifiable_edges(root):
     cmp_ids = {c["id"] for c in load_cmps(spine_carrier.load(root / CMP_CSV, "CMP-ID"))}
     if not cmp_ids:
         return
-    raw = _kitspine.module_components(spine_carrier.load(root / LLR_CSV, "LLR-ID"))
+    raw = _kitspine.module_components(component_headers(root)[0])
     membership = {n: tags & cmp_ids for n, tags in raw.items()}
     modules = {_norm_module(m) for m in names} - {""}
     src, _mode = _arch_scan_profile(root)
@@ -241,133 +240,105 @@ def _classifiable_edges(root):
     packages = {_norm_module(p) for p in package_paths([scan_dir])}
     for src in sorted(imports):
         src_n = _norm_module(src)
-        src_cmps = membership.get(src_n, set())
-        if not src_cmps:
-            continue
         for token in sorted(imports[src]):
             dst_n = resolve(token, src_n, modules, packages)
-            dst_cmps = membership.get(dst_n, set())
-            if dst_cmps and dst_n != src_n:
-                yield src_n, dst_n, src_cmps, dst_cmps
+            if dst_n and dst_n != src_n:
+                yield (
+                    src_n,
+                    dst_n,
+                    membership.get(src_n, set()),
+                    membership.get(dst_n, set()),
+                )
 
 
 _SCAN_CACHE = {}
 
 
+def _edge_label(src_n, src_cmps, dst_n, dst_cmps):
+    return "{} ({}) -> {} ({})".format(
+        src_n,
+        "/".join(sorted(src_cmps)) or "no component",
+        dst_n,
+        "/".join(sorted(dst_cmps)) or "no component",
+    )
+
+
 def _cross_component_scan(root):
-    """`(findings, advisories)` over the classifiable import edges — the two
-    tiers of the cross-CMP rule, computed in ONE pass so they can never disagree
-    about which edge is which.
+    """The cross-CMP rule's findings over the internal import edges, in one
+    pass.
 
-    A **finding** (unchanged since WI-064) is an edge whose endpoint component
-    sets are DISJOINT and which no declared IF-### row covers.
+    THE TRUST RULING FIRST (WI-1021): an edge with an endpoint whose header
+    declares no valid component cannot be judged, so it is reported as
+    UNCLASSIFIED before the declared seams and the kernel are read — never
+    treated as internal, covered or exempt.
 
-    An **advisory** (WI-440, OI-14) is an edge the overlap guard SUPPRESSES only
-    because an endpoint is tagged into more than one component: the sets
-    intersect, no IF row covers the pair, and `len(cmps) > 1` somewhere. That
-    edge would be a finding under a partition where each module belongs to one
-    component, so the multi-membership is EVIDENCE ABOUT THE PARTITION (the file
-    splits, the shared part is its own component, or the boundary is drawn
-    wrong) rather than a licence to stay quiet. Reporting it reverses the
-    direction of the old rule, where authoring one more `Component` tag
-    monotonically silenced the check — a fail-open the author controls.
-
-    An edge whose endpoints are single-tagged into the SAME component is
-    ordinary intra-component wiring and is neither.
-
-    A THIRD, EARLIER exit (OI-48 ruled (d), WI-494): an edge whose
-    DESTINATION is a declared shared-kernel module (`read_kernel_modules`) is
-    not a seam at all — neither a finding nor the multi-membership advisory.
-    Checked before the overlap split, so a kernel module that still carries a
-    residual multi-tag is not ALSO advised about (the advisory exists to
-    surface undeclared candidates; a module already declared kernel is a
-    settled candidate, not an open one). One-directional by construction —
+    Then an edge whose module pair a declared IF-### row covers is silent, and
+    so is an edge whose DESTINATION is a declared shared-kernel module
+    (`read_kernel_modules`, OI-48 ruled (d), WI-494): consumed across
+    components by design, it is not a seam. One-directional by construction —
     the exemption keys on `dst_n`, never `src_n`, so an edge OUT of a kernel
     module stays exactly as policed as any other edge.
 
-    ONE scan per run, cached per root: the two public wrappers used to each
-    trigger their own scan from `main`, so the two tiers were computed from two
-    separate reads of the same registries — the exact could-disagree state this
-    function's contract forbids (and a review round demonstrated with a
-    mid-run registry change). The cache makes the docstring's "computed in ONE
-    pass" literally true for the process's lifetime.
+    An edge is INTERNAL only when both endpoints sit in the same one component.
+    Every other edge is a finding. Two files can share a module key
+    (`check.py` and `check.sh`), so a key can carry two components; such an
+    edge is not internal, and a second declaration on a shared key cannot
+    silence an edge the way a second design-row tag once did (the
+    multi-membership advisory, WI-440, retired with that cause).
+
+    ONE scan per run, cached per root, so two callers in one process can never
+    read two answers from one tree.
     """
     cached = _SCAN_CACHE.get(str(root))
     if cached is not None:
         return cached
-    # `covered` and `kernel` are resolved LAZILY: with zero classifiable edges
-    # the old rule never read interfaces.csv (or now kernel-modules-allow) at
-    # all, and an unreadable file must not turn a vacuous scan into a crash
-    # (review finding, extended to the new surface for the same reason).
+    # `covered` and `kernel` are resolved LAZILY: with no edge to judge the rule
+    # never reads interfaces.toml or kernel-modules-allow, and an unreadable
+    # file must not turn a vacuous scan into a crash.
     covered = None
     kernel = None
-    findings, advisories = [], []
+    findings = []
     for src_n, dst_n, src_cmps, dst_cmps in _classifiable_edges(root):
+        edge = _edge_label(src_n, src_cmps, dst_n, dst_cmps)
+        if not src_cmps or not dst_cmps:
+            findings.append(
+                "cross-component import {} is unclassified: a module in no "
+                "component cannot be judged — declare its component in its "
+                "`Component:` header (process.md §8), or set docs/process.toml "
+                "[checks] components_check = false".format(edge)
+            )
+            continue
         if covered is None:
             covered = _declared_seam_pairs(root)
-        if (src_n, dst_n) in covered:
-            continue
-        if kernel is None:
             kernel = read_kernel_modules(root)
-        if dst_n in kernel:
+        if (src_n, dst_n) in covered or dst_n in kernel:
             continue
-        edge = "{} ({}) -> {} ({})".format(
-            src_n,
-            "/".join(sorted(src_cmps)),
-            dst_n,
-            "/".join(sorted(dst_cmps)),
-        )
-        if src_cmps & dst_cmps:
-            multi = [m for m, c in ((src_n, src_cmps), (dst_n, dst_cmps)) if len(c) > 1]
-            if multi:
-                advisories.append(
-                    "multi-component module(s) {} suppress the cross-component "
-                    "seam rule on import {} — the shared tag, not a declared "
-                    "IF-### row, is what silences this edge; split the module, "
-                    "give the shared part its own component, or declare the "
-                    "seam in {} (advisory only — never the exit "
-                    "code)".format(", ".join(multi), edge, IF_CSV)
-                )
+        if len(src_cmps) == 1 and src_cmps == dst_cmps:
             continue
         findings.append(
             "cross-component import {} has no declared IF-### seam — declare "
-            "the interface row in {} or retag the membership, or set "
+            "the interface row in {} or the component in the header, or set "
             "docs/process.toml [checks] components_check = false".format(edge, IF_CSV)
         )
-    _SCAN_CACHE[str(root)] = (findings, advisories)
-    return findings, advisories
+    _SCAN_CACHE[str(root)] = findings
+    return findings
 
 
 def cross_component_findings(root):
     """The cross-CMP-edge-without-IF rule (WI-064; the AXES accepted model's
     "Enforceability" ruling, process-options.md "Component layer"): an internal
-    import edge whose endpoints belong to *different* CMP-### components must be
-    covered by a declared IF-### row — an undeclared cross-component coupling is
-    a finding, mechanized from the same committed artifacts the other component
-    rules read. The CALLER gates the opt-out (`component_findings` shares
-    `[checks] components_check`) and the WARN-plain / ERROR-under-`--strict`
-    promotion. See `_cross_component_scan` for the tier split (this is tier one)
-    and `_classifiable_edges` for the vacuity guards this rule inherits —
-    including the DELIBERATE vacuousness for an endpoint carrying no
-    `Component` tag, which stays the containment rule's job, not this one's.
-    Since OI-48 (WI-494) an edge into a declared shared-kernel module
-    (`read_kernel_modules`, `docs/kernel-modules-allow`) is exempted here
-    before either tier — see `_cross_component_scan`'s "THIRD, EARLIER exit".
+    import edge that is not inside one CMP-### component must be covered by a
+    declared IF-### row — an undeclared cross-component coupling is a finding,
+    mechanized from the same committed artifacts the other component rules
+    read — and an edge touching a module whose header declares no valid
+    component is reported as unclassified. The CALLER gates the opt-out
+    (`component_findings` shares `[checks] components_check`) and the
+    WARN-plain / ERROR-under-`--strict` promotion. See `_cross_component_scan`
+    for the classification and `_classifiable_edges` for the vacuity guards.
+    An edge into a declared shared-kernel module (`read_kernel_modules`,
+    `docs/kernel-modules-allow`, OI-48, WI-494) is exempted once both ends
+    are declared.
 
     Implements: SR-159, LLR-067
     """
-    return _cross_component_scan(root)[0]
-
-
-def cross_component_advisories(root):
-    """The multi-membership overlap advisory (WI-440, OI-14's third
-    do-not-wait): the edges the overlap guard silences because an endpoint
-    carries more than one `Component` tag — see `_cross_component_scan`.
-
-    WARN-ONLY, never the exit code, not even under `--strict`: this reports a
-    question about the PARTITION, and no partition has been ruled yet, so it
-    must not block. Shares `component_findings`' `[checks] components_check`
-    opt-out, which the caller does NOT gate for it — this function does."""
-    if not read_components_check_enabled(root):
-        return []
-    return _cross_component_scan(root)[1]
+    return _cross_component_scan(root)

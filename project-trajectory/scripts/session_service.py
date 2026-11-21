@@ -29,6 +29,8 @@ imports its siblings `agent_common`, `agent_session` and `session_adapters`
 (and `adjudicate_brief` for the brief classes' template identity),
 and `agent_loop` and `plan_runner` import it.
 
+Component: CMP-008
+
 Contracts: IF-246, IF-282 — the interface seams this module declares
 (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
