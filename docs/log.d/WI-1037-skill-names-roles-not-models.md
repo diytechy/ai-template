@@ -4,7 +4,9 @@ Deferred open items: none. The row changes text only and takes no
 operator decision; its three calls are in the decisions record
 (`../decisions/maint-wi-1037.toml`, D-001 to D-003).
 
-Review: pending (the coordinator).
+Review: round 1, Argon (prose) APPROVE; Sol one MINOR, adopted: seven
+observations' model labels restored as "observed with <model>"; its
+request for a label-pinning test declined by the coordinator.
 
 Built on the maintenance branch `maint/wi-1037` from `1aa6c439a`, with the
 commit hooks on. The record is in the row's Deliverable

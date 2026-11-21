@@ -102,6 +102,14 @@ unchanged): `coordinator-cycle/SKILL.md` 35,516 -> 36,411 (+895),
 Sol and Terra in its method and expected cells; its text is left as
 accepted (D-003), for the coordinator to file if wanted.
 
+**Review round 1 (2026-11-21):** Argon (prose) APPROVE; Sol one MINOR,
+adopted: seven observations had lost their model labels (the stand-in
+trial, the background-pytest and stray-file incidents, the delayed
+critiques, the stopped and resumed author turns, the week-long reset), now
+restored as "observed with <model>" beside their evidence; its request for a
+test pinning the labels was declined by the coordinator (it would pin
+prose).
+
 **Found, not changed (outside the spec's files):**
 
 - `scripts/coordinator/terra-spine-prompt.template.md` names models ("GPT

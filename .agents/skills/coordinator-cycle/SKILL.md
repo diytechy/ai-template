@@ -80,8 +80,8 @@ and 33):
   and the lane's log fragment each time it stands in (ruling 7). The operator
   chose the slot's stand-in when the program's three-reviewer trial ended
   (revision 37's trial; coordinator-2026-10-16 D-008): it caught what
-  REVIEW-A missed, while the second stand-in's unique catches never changed
-  a round.
+  REVIEW-A missed (the stand-in observed with Opus, REVIEW-A observed with
+  Sol), while the second stand-in's unique catches never changed a round.
 
 ## 1. Before the claim: settle scope and trust where the row is born
 

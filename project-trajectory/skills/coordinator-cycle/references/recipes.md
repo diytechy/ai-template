@@ -265,7 +265,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      completion notice and stop with no verdict: look for its process (its
      scratch path in the command line), then resume that reviewer with
      SendMessage, never a
-     fresh one (WI-921's gate, 2026-10-15g). One that handed its test run to
+     fresh one (observed with Claude, WI-921's gate, 2026-10-15g). One that handed its test run to
      a background sub-agent returned "waiting" with no verdict, in a
      headless leg. Tell every sub-agent reviewer to run its tests itself in
      the foreground. If one still returns early, resume it with SendMessage,
@@ -391,7 +391,8 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      had to place them de-indented by hand (leg 28, wi-987 D-001).
      Tell the planner a TC states only what its rows state, so its plan
      says which row states each new behaviour: a plan reading "no text is
-     added" to an LLR cost wi-982 a stopped author turn and a returned
+     added" to an LLR cost wi-982 a stopped author turn (observed with
+     Terra) and a returned
      sitting (wi-982 D-004), and the plan briefed this way met one sitting
      (wi-983). A headless planner's stop report goes to the row's own
      stop clause first: confirm the finding yourself, and never amend the
@@ -838,7 +839,8 @@ commit of its own, move it to trunk's tip
   reserve and renumber in the lane.
   Run `git status` in the primary checkout first: a sub-agent reviewer's
   probe once left a stray file at its root through a redirect from its
-  default working directory (wi-798, 2026-10-20). Then read
+  default working directory (observed with Claude, wi-798, 2026-10-20).
+  Then read
   `git branch --show-current` against `docs/process.toml`'s `trunk`: the
   operator can move the checkout during a leg, nothing fails when the new
   branch starts at trunk's tip, and a landing then commits off trunk.
@@ -1411,7 +1413,8 @@ lane commit being replayed.
 - **A usage limit on a `codex_call.py` route:** wait for the reset the CLI
   error names. Retain the author's session; observed session counts are
   not a quota.
-  A reset days away (2026-10-26: a week) stops every author turn on that
+  A reset days away (observed with Terra, 2026-10-26: a week) stops every
+  author turn on that
   route, which has no stand-in. Probe again after two hours (a one-word
   `CRITIQUE` call); then a sub-agent reviewer may fill REVIEW-A, but each
   lane whose next step is the author's stops at a committed safe point, and
@@ -1563,7 +1566,7 @@ lane commit being replayed.
 
 - Tool calls in one message run one after the other, an Agent call included:
   a planner's 54 minutes passed before the two critiques beside it began
-  (leg 34). Real overlap needs one script that starts its children and waits.
+  (observed with Sol, leg 34). Real overlap needs one script that starts its children and waits.
 - A landed lane's deleted branch fails the next record-checks run of an open lane whose
   base still holds that claim folder (hold-by-rename). Rebase the open lane
   first, with `git stash` around staged work (wi-993, leg 34).
@@ -1577,7 +1580,8 @@ lane commit being replayed.
   flag; `file` from the lane is unchanged (wi-995, leg 35).
 - Chain a guarded script to its `git add` and commit with `&&`. A script that
   stopped on its guard left a commit whose message named edits it never made,
-  and a resumed author was told they were applied (wi-993 D-006, wi-995 D-004).
+  and a resumed author was told they were applied (observed with Terra,
+  wi-993 D-006, wi-995 D-004).
   A backslash escape in a heredoc's Python reached the file as a real newline:
   match on text holding no escape, or write the script with the file tool.
   A TOML decision appended through a quoted heredoc lost one backslash of
