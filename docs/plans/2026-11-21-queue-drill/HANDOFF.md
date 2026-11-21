@@ -5,11 +5,10 @@ Read this file first; it is the resume point. The longer history is
 `docs/plans/2026-11-11-test-tiers/HANDOFF.md` §12.6, and nothing there needs
 reading before starting.
 
-**Where the drill stands.** Wave A is built, reviewed and merged, and the
-suite after it has run (§1). The operator answered §3.1 and the second round
-it raised (§3.3): variant F is built first. The drill now files F's rows on
-trunk (§2), critiques each, and stops once for the operator to see the cut
-before any F builder starts; WI-1019 builds beside that filing.
+**Where the drill stands.** Waves A and B are merged. Variant F is filed
+(WI-1021 to WI-1030) and critiqued by Sol and Argon, with every finding
+applied. The drill is stopped at §3.3 N6: the operator sees F's cut (§3.4)
+before any F builder starts. The suite after wave B runs during the stop.
 
 **The job:** take each drillable work item through scope critique, build,
 review and merge into `refactor_again`, running items in parallel worktrees
@@ -28,7 +27,12 @@ and documentation by Sol at low effort **and** Gemini Argon at low effort
   WI-1020 were filed from WI-1017's evidence sample (`361270a84`). The suite
   after wave A ran on `361270a84`: `8264 passed, 31 skipped` in 26:12, no
   failure. The wave's worktrees and branches are removed.
-- No worktree is open for this drill. No branch, act or snapshot is pending.
+- Wave B: WI-1019 merged (`da78f85ee`, regen `d19ab3efe`). Its worktree and
+  branch are removed. No worktree is open for this drill; no branch or
+  snapshot is pending.
+- Acts owed, all to automated adjudication (§3.3 N4): wave A's three chains
+  (§3.1 Q5) and LLR-395's first acceptance (SR-157's chain). WI-1038 then
+  re-points TC-428 and TC-429, which drift.
 - The operator still owes, outside this drill: the OI-79 remote-ref delete
   and the push.
 
@@ -36,14 +40,14 @@ and documentation by Sol at low effort **and** Gemini Argon at low effort
 
 | Item | What | Wave | Notes |
 |---|---|---|---|
-| WI-1019 | An LLR states WI-1001's untagged-TC rule | B, now | Critiqued (Sol and Argon), building in `D:/ai-template-wt-wi1019`; mints LLR-395 and tags the code; the TC re-point moved to WI-1038 (the parent-first rule refuses an accepted TC under a drafted LLR) |
 | WI-1038 | TC-428 and TC-429 verify LLR-395 once accepted | After LLR-395's acceptance | Filed from WI-1019's build; claimable only once adjudication accepts LLR-395 |
-| WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6) | F, after the N6 stop | Filed; each critiqued by Sol and Argon. Landing order: 1021, 1022, 1023, then 1024 and 1027, 1025, then 1026, 1028 and 1030, then 1029; built side by side where `needs` allows, landing one at a time (plan revision 37) |
+| WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6, §3.4) | F, after the N6 stop | Filed and critiqued (round 1, Sol and Argon, all findings applied, `a57782d59`). Order by `needs`: 1021; 1022; 1023; then 1024 and 1027 (either order); 1025; then 1026, 1028 and 1030; then 1029. Built side by side where `needs` allows, landing one at a time (plan revision 37) |
 | WI-1016 | A repository can switch off the implementation layer | After F | Re-critiqued once F lands; reverses SR-186, so its amendment is drafted for the operator |
 | WI-1018 | Row text a lane leaves stale is filed, and the first set is brought up to the code | After F-8 | F-8's text migration takes B1, B7 and B9 and likely more; this row then fixes what is left |
 | WI-1031 to WI-1037 | The rest of phase 3, and the skill naming the author role | Filed, not drilled | Owe a scope critique when they come up (§3.3 N2, N5) |
 
-Done in wave A: WI-1013, WI-1014 and WI-1017 (§10). Closed by §3.3:
+Done in wave A: WI-1013, WI-1014 and WI-1017; in wave B: WI-1019 (§10).
+Closed by §3.3:
 WI-1015 restructured into F's rows (N1), WI-1020 cancelled (N5).
 
 Not drillable: WI-827 (the operator's signature on SN-029's amendment),
@@ -257,6 +261,51 @@ file read by reference was never tried, and works (§6).
   critiqued on trunk, then the drill stops for the operator to see the cut.
 - **N7. WI-1018 after F-8, WI-1016 after F.** Left blank; the recommendation
   stands.
+
+### 3.4 The F stop (N6): the cut, for the operator (answer in place)
+
+Each row's spec is in `docs/work/queued/`, and its critique with the
+coordinator's dispositions is in `docs/reviews/2026-11-21-scope-critiques/`.
+
+| Row | What | Needs |
+|---|---|---|
+| WI-1021 (F-1) | `Component:` headers; membership read from them; the one-component table held for the operator's ruling before merge (N3) | — |
+| WI-1022 (F-2) | Interface owner and sides become component ids or `external:` parties; one body per interface; the cover rule on components (WI-1015 item 1); `call` rows classified, internal ones retired | 1021 |
+| WI-1023 (F-3) | LLR `module`, `code_symbol` and `component` removed; undeclared keys refused; the `Implements:` index; derived placement; SR-180's chain retired with successors; the migrator; the batch act held for the operator (N4) | 1021, 1022 |
+| WI-1024 (F-4) | `constrains`, `dimensions` and `out_of_domain` cells; every interface reaches an executable test (WI-1015 item 6); OI-43's check retired | 1023 |
+| WI-1027 (F-7) | The parent-LLR link and one tree walk for every SR-to-LLR reader | 1023 |
+| WI-1025 (F-5) | One home per contract: the effective-contract reader, the hand-over check, bodies cut to their form | 1024 |
+| WI-1026 (F-6) | `Consumes:` and `Requests:` tags in code; sides hand over side by side | 1025 |
+| WI-1028 (F-8) | No code in requirement text: the commit check, the `boundary` class, rows rewritten in place (WI-1018's cases) | 1023, 1025 |
+| WI-1030 (F-10) | Item 12's builds: checks A and C, `run.cmd audit`'s `arch` and `hats` parts | 1021, 1024, 1025 |
+| WI-1029 (F-9) | The build brief's derived component context | 1024, 1025, 1027 |
+
+**S1. Approve the cut and its order?** *Recommendation:* approve. F lands
+one row at a time; F-1 starts alone, since every other row needs it.
+
+**Answer:**
+
+**S2. WI-1023 mints one SR.** The plan retires SR-180's chain and states its
+discharge rule again under new ids, so F-3 needs one SR beside its LLRs and
+TCs, against §8's "no SR expected". *Recommendation:* allow one SR in
+WI-1023's range.
+
+**Answer:**
+
+**S3. Work beside F-1.** Only WI-1021 can build at first. WI-1036 (audit
+the scripts that read git history; research, no code) and WI-1037 (the
+skill names roles, not models; text) share no file with F-1. *Recommendation:*
+critique both and build them beside F-1.
+
+**Answer:**
+
+**S4. WI-1035's two questions, for when it comes up (not blocking).** This
+repo has `review_rounds = 1` while the coordinator runs two reviewers; the
+draft keeps 1 as `full_reviewers` and leaves a change to you. And WI-802, a
+draft row, also proposes a `[review]` section for a different purpose; the
+spec says whichever lands second renames.
+
+**Answer:**
 
 ## 4. One work item, start to finish
 
@@ -494,4 +543,17 @@ Append one line per step taken: the item, what happened, the commit.
 - 2026-11-21: filed WI-1021 to WI-1038 (F-1 to F-10 drafted by one session,
   the rest by another, both into the scratchpad first); WI-1015
   restructured into WI-1022 and WI-1024; WI-1020 cancelled; WI-1016 now
-  needs WI-1021 and WI-1023, WI-1018 needs WI-1028.
+  needs WI-1021 and WI-1023, WI-1018 needs WI-1028. `41a2daeeb` (the first
+  try was refused: a restructured row's Deliverable is one fixed line, and
+  its successors name it in `supersedes`).
+- 2026-11-21: F's scope critiques, round 1. Sol: two APPROVE, 14 findings
+  over eight rows. Argon by file reference: ten CHANGES-REQUESTED, 35
+  findings, every run 41 to 113 seconds. 49 distinct findings: 47 adopted,
+  2 in part, none rejected, no split. `a57782d59`.
+- 2026-11-21: WI-1019 built (`maint/wi-1019`): LLR-395 and its code tag, a
+  RESYNC entry for the tagged shipped file; smoke `3698 passed, 3 skipped`.
+  Review round 1: Sol and Argon both APPROVE, no findings (an Argon run
+  started from the repository root by a coordinator slip was stopped before
+  it wrote anything, and rerun from the scratchpad). Merged `da78f85ee`,
+  regen `d19ab3efe`; worktree and branch removed. Stopped at §3.4 for the
+  operator; the suite after wave B runs during the stop.
