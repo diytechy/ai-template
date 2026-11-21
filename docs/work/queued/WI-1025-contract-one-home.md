@@ -30,25 +30,22 @@ retire here: the form names no symbols, and the hand-over compares the
 row's form with the body exactly (HANDOFF §3.1 Q1's table).
 
 **The model (pointer rules, "Where the contract lives").** Before a body
-exists, the row's `data` cell is the contract's home: the whole form, as
-many lines as it needs, judged at the sitting of the row it serves. Once a
-file states `Contract IF-NNN:`, the body's opening is the form, the exact
-text of the cell, and the cell is generated from it. One effective-contract
-reader returns the form from whichever home holds it; check A (WI-1030),
-rendering and the approval snapshot use it. A commit-versus-parent check
-guards the transitions: a body's introduction must match the cell, and a
-body's removal must move or retire the contract. An authored edit to a cell
-whose body exists fails as stale.
+exists, the row's `data` cell is the contract's home, judged at the sitting
+of the row it serves. Once a file states `Contract IF-NNN:`, the whole body
+is the form and the cell is generated from it. A body keeps today's grammar
+(`gen_arch_map._contract_bodies`): it runs from the opener to the next
+opener, a blank line or the end of the header, so a form is one paragraph,
+wrapped over as many lines as it needs. Symbol names stay in the code
+outside the body. One effective-contract reader returns the form from
+whichever home holds it; check A (WI-1030), rendering and the interface
+reference use it.
 
 **The migration.** Each body shrinks to its form. Each behavioural sentence
 either already exists in the LLR or SR that constrains the interface
 (WI-1024 populated those links) and is deleted, or becomes that row's text.
 Each crossing `call` row's form becomes a typed request and answer with no
-symbol names; the symbol binding stays in the body. `external:`-owned rows
-keep their far-side body, checked against an authorized local endpoint.
-
-**Needs:** WI-1024 (the constraining LLR or SR each behavioural sentence
-moves to).
+symbol names. `external:`-owned rows keep their far-side body (WI-1022's
+rule), its form our reading of the external surface.
 
 ## Scope answers
 
@@ -56,41 +53,64 @@ moves to).
   transition check, warn-first; (2) the migration of bodies, cells and
   `call` forms; (3) the check made strict and the 160-character advisory
   retired for form cells. Kept together: (3) cannot land before (2), and
-  the reader's exact comparison is what (2) is checked against.
+  the reader's comparison is what (2) is checked against.
 - **S2.** No new authority: the check is a commit finding over files and
   registries; nothing releases a hold or authorizes an act.
-- **S3.** The form is compared byte-exact after one normalization the plan
-  states (line endings, the body's indentation); anything else differs.
+- **S3.** Closed in Done-when 1 to 4: one normalization, one set of
+  transition states over (parent, commit), one `call` form grammar.
+  Bounded to what supported workflows and the kit's routes produce
+  (PROCESS.md §6); a hand edit of a generated cell is what the stale rule
+  catches.
 - **S4.** `single`: reader, commit check, every script family with a body,
   and a migration.
-- **S5.** Moves behaviour from interface to requirement rows; the
-  Deliverable names each LLR or SR amended or minted.
-- **S6.** No new package, tool or service.
+- **S5.** Moves behaviour from interface to requirement rows. Re-cut LLRs
+  (text only, drifting): LLR-042 (the contract gate's slices), LLR-041
+  (the `data` cell advisory in `trace.py`), LLR-080 (the declared-interface
+  rendering) and WI-1023's successor discharge LLR. The destination of each
+  body's prose is the LLR or SR WI-1024 linked to its interface; the lane's
+  plan lists them per body, with any unresolved destination recorded, and
+  the Deliverable gives the final body-to-row map.
+- **S6.** `needs` WI-1024: each moved sentence goes to the constraining row
+  it populated. WI-1023 is an ancestor through it. No new package, tool or
+  service.
 
 ## Done-when
 
-- [ ] One effective-contract reader returns each interface's form: the
-      row's `data` cell while no body exists, the body's opening once one
-      does. Rendering, the interface reference and the approval snapshot
-      read it.
-- [ ] A commit check, against the parent: a new body's opening equals the
-      cell; a removed body comes with a move or a retirement; an authored
-      edit to a cell whose body exists is refused as stale. Warn-first,
-      then strict.
-- [ ] Every body opens with its whole form and carries no behavioural
-      claim; every moved sentence is deleted as already stated or added to
-      the constraining LLR or SR (accepted rows: text only, drifting). The
-      Deliverable maps each body to the rows it touched.
-- [ ] Every crossing `call` row's form is a typed request and answer that
-      names no symbol.
+- [ ] **One reader, one normalization.** The effective-contract reader
+      returns each interface's form: the row's `data` cell while no body
+      exists, the whole body once one does. Two texts are the same form
+      when equal after converting line endings to LF, stripping each line,
+      dropping empty lines and joining the rest with single spaces. The
+      generated cell keeps the body's line breaks. Rendering and the
+      interface reference read the reader.
+- [ ] **Transitions, per interface, commit against parent** (a body exists
+      when WI-1022's uniqueness scan finds one): no body in either, the
+      cell is authored and unchecked; a body in both, the commit's cell
+      must equal the commit's body, else stale; a body introduced, it must
+      equal the parent's cell (or the new cell, for a row added in the
+      same commit), and a commit changing the cell and introducing the body
+      together is a finding; a body removed, the same commit must state it
+      in another file (a move) or retire the row, else a finding.
+      Warn-first, then strict.
+- [ ] Every body is its whole form and carries no behavioural claim; every
+      moved sentence is deleted as already stated or added to the
+      constraining LLR or SR (accepted rows: text only, drifting, listed
+      for adjudication).
+- [ ] **The `call` form.** Every crossing `call` row's form reads
+      `request: <what is passed>; answer: <what returns>`, in that order,
+      and names no symbol: no token in it is a name the shipped scripts
+      define (by `ast`) written as code (backticked, containing `_`, with
+      an internal capital, or followed by `(`). That name reader is built
+      once here; WI-1028 reuses it.
 - [ ] Each `external:`-owned row's far-side body is checked against an
-      authorized local endpoint.
-- [ ] The 160-character advisory retires for form cells. Interface rows
-      name no file (ruling 5).
+      authorized local endpoint (WI-1022's rule).
+- [ ] The 160-character advisory retires for form cells. A form names no
+      file: a `file`-channel form uses artifact-class wording (ruling 5;
+      WI-1022 took file names out of the endpoint cells).
 - [ ] WI-1023's successor discharge LLR gains its clause: where an LLR
       constrains an interface, the reader returns a valid realization.
 - [ ] A RESYNC entry (variant F, after WI-1024's) gives adopters the
       one-home rule and the migration steps.
 - [ ] `trace.py --strict` and `check_trajectory --strict` are clean;
-      red-before tests for each transition; every importer of a changed
-      module runs green.
+      red-before tests for each transition state and the `call` form;
+      every importer of a changed module runs green.

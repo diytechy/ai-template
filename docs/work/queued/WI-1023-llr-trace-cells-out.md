@@ -57,9 +57,6 @@ it as a spine unit where this row removes the column is reworded:
 `RUNTIME_FLOWS.template.md` (participants from the LLR `Module` column) and
 the performance-budget template's `Refs`.
 
-**Needs:** WI-1021 (membership no longer read from LLR cells), WI-1022
-(placement derives through an interface's owner component).
-
 ## Scope answers
 
 - **S1.** Deliverables, in landing order on one branch: (1) the schema
@@ -69,12 +66,16 @@ the performance-budget template's `Refs`.
 - **S2.** No new authority: the index replaces cells as the input to
   existing checks.
 - **S3.** The loader refuses any key a requirement tier does not declare
-  (deny by default); the evidence generator reads the existing tag grammar.
+  (deny by default). The evidence generator reads the existing tag grammar
+  and rewrites only the parts LLR-366's reader rule binds to the declared
+  tests root; parts outside it and parenthetical notes are kept verbatim.
 - **S4.** `single`: many script families, a schema and a migration.
 - **S5.** Placement becomes an output derived from new inputs (interface
   owners; WI-1024 adds `constrains`). SR-180, LLR-180 and TC-175 are
   re-cut (PROCESS.md §5).
-- **S6.** No new package, tool or service.
+- **S6.** `needs` WI-1021: file membership no longer comes from LLR cells;
+  WI-1022: placement derives through an interface's owner component. No new
+  package, tool or service.
 - **B4.** The batch act is held for the operator (Done-when 6).
 
 ## Done-when
@@ -91,9 +92,11 @@ the performance-budget template's `Refs`.
       at several interfaces is placed at each. The views read placement.
 - [ ] SR-180, LLR-180 and TC-175 retire with a successor record; a new SR,
       LLR and TC state the per-evidence-kind discharge rule, `Drafted`.
-- [ ] Each TC `evidence` cell's test-file parts are generated from the test
-      files' TC tags and checked current; other evidence kinds stay
-      authored. The generated cells equal today's on every row.
+- [ ] Each TC `evidence` cell's test-file parts (the parts LLR-366's reader
+      binds to the declared tests root) are generated from the test files'
+      TC tags and checked current; parts outside the tests root, other
+      evidence kinds and parenthetical notes stay authored, kept verbatim.
+      The generated cells equal today's on every row.
 - [ ] The batch act is held: the lane stops at a green tip with the cells
       removed and asks the operator for the ruling "trace cells removed,
       requirement text unchanged", recorded once in the Deliverable. It

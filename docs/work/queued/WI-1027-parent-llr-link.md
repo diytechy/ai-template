@@ -23,18 +23,14 @@ parent is discharged by its children plus an integration TC.
 
 Every LLR today is top-level, so no row migrates until a child is written.
 The cost is in the readers. About thirty scripts read `sr_refs`; the walks
-that matter are the orphan and coverage rules (`trace.py`), the stage
-derivation (`derive_stage.py`), the review's scoped test set
-(`review_set.py`, through its one walk in `kitlib.spine`), the acceptance
-and adjudication briefs, the planning briefs, blast radius (WI-1024), the
-build brief's component context (WI-1029) and the dashboard. The lane's
-plan enumerates the walks from the code. PROCESS.md §4's ladder text
-("TERMINAL", "the tier does not recurse, the activity does") changes with
-decomposition (b).
+that matter are listed in Done-when 2, and the lane's plan confirms the
+list from the code. PROCESS.md §4's ladder text ("TERMINAL", "the tier does
+not recurse, the activity does") changes with decomposition (b).
 
-**Needs:** WI-1023 (the loader refuses undeclared requirement-tier keys, so
-`parent` is added to the declared set there, not beside it). It may be
-built beside WI-1024 and lands after WI-1023.
+**Siblings.** Blast radius is WI-1024's and the build brief's component
+context is WI-1029's; both use this row's walk. WI-1029 waits on this row.
+WI-1024 and this row both wait only on WI-1023 and may land in either
+order: whichever lands second moves blast radius onto the tree walk.
 
 ## Scope answers
 
@@ -44,12 +40,17 @@ built beside WI-1024 and lands after WI-1023.
   same lane, after the walks.
 - **S2.** The scoped test set gates the review start (WI-995); this row
   changes the set's derivation, not its authority. No new authority.
-- **S3.** `parent` admits one live LLR id; a cycle, a dead id, a child
-  carrying `sr_refs`, or a top-level LLR with none is a finding.
+- **S3.** Closed in Done-when 1 and 3: the cell's form and its findings,
+  and when a parent is discharged.
 - **S4.** `single`: schema, many reader families, a gate's input.
 - **S5.** Adds the requirement tree; components and interfaces are
-  unchanged.
-- **S6.** No new package, tool or service.
+  unchanged. Re-cut LLRs (text only, drifting): LLR-001 and LLR-201 (the
+  join and orphan rules), LLR-367 (the review test set), LLR-186 (the
+  effective stage), LLR-197 (the spine row vocabulary); the lane's plan
+  completes the list from the walks it changes.
+- **S6.** `needs` WI-1023: the loader refuses undeclared requirement-tier
+  keys there, so `parent` joins the declared set rather than sitting
+  beside it. No new package, tool or service.
 
 ## Done-when
 
@@ -57,18 +58,28 @@ built beside WI-1024 and lands after WI-1023.
       carries no `sr_refs`; a top-level LLR carries at least one. A cycle,
       a dead id or either `sr_refs` breach is a finding failing `--strict`.
 - [ ] One walk, in `kitlib.spine`, returns an SR's LLRs down the tree, and
-      a child's SR up the chain. Every reader that walks SR → LLR uses it:
-      the orphan and coverage rules, the stage derivation, the review's
-      scoped test set, the acceptance and planning briefs, blast radius and
-      the dashboard. The plan's enumeration is in the Deliverable.
-- [ ] A parent LLR is discharged by its children plus an integration TC
-      that verifies it; a parent with children and no such TC is a finding.
+      a child's SR up the chain. These readers use it: the orphan and
+      coverage rules (`trace.py`, `coherence.py`), the stage derivation
+      (`derive_stage.py`), the review's scoped test set (`review_set.py`),
+      the acceptance brief, the adjudication briefs
+      (`adjudicate_brief.py`), the planning briefs, blast radius (when
+      WI-1024 has landed; otherwise WI-1024 adopts it) and the dashboard.
+      The Deliverable lists every reader changed.
+- [ ] **A parent's discharge.** A parent is an LLR some child's `parent`
+      names. It must itself be named in the `verifies` of at least one TC
+      (its integration TC); a parent with none is a finding failing
+      `--strict`. An SR's coverage and the stage are derived over the
+      whole descendant tree: each descendant counts exactly as a top-level
+      LLR counts today, so an unverified or `Drafted` descendant holds its
+      SR as one would now.
 - [ ] The dashboard's spine view shows the requirement tree as the
       component view shows nesting.
 - [ ] PROCESS.md §4's ladder text states decomposition (b) once; the
-      spine-authoring skill and `spine-questions.md` point at it.
+      spine-authoring skill and `spine-questions.md` point at it. The S5
+      LLRs are amended (drifting, listed for adjudication).
 - [ ] Tests build a three-level tree in a fixture and show each walk
-      reaching a grandchild's TCs (red before the walk changes); every
-      importer of a changed module runs green.
+      reaching a grandchild's TCs (red before the walk changes), a parent
+      with no integration TC, and an unverified grandchild holding its SR;
+      every importer of a changed module runs green.
 - [ ] A RESYNC entry (variant F) gives adopters the cell; existing rows need
       no change.

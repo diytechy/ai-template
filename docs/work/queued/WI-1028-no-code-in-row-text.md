@@ -24,13 +24,11 @@ TC only; SN and SR rows name no file in any cell, rationale included.
 advisories (`sr_artifact_advisories`, `sn_artifact_advisories`). It compares
 the commit with its parent and judges only tokens added to a requirement or
 architecture text cell, so a lane touching a row for another reason owes no
-rewrite. Code tokens: paths to implementation files, and names defined in
-the shipped scripts (read by `ast` each run) written as code (backticked,
-snake_case, CamelCase or a call). The boundary set comes from an explicit
-`boundary` class on the shipped-file inventory's entries
-(`kitlib/bootstrap_manifest.MAPPING`; revision 6), matched on the
-destination path, so the launchers shipped from `scripts/run.template.*`
-count; no second list.
+rewrite. The boundary set comes from an explicit `boundary` class on the
+shipped-file inventory's entries (`kitlib/bootstrap_manifest.MAPPING`;
+revision 6), matched on the destination path, so the launchers shipped from
+`scripts/run.template.*` count; no second list. The defined-name reader is
+WI-1025's, reused here.
 
 **Layer 3, the judgement.** The sitting brief and the spine-authoring
 skill state contract voice for every requirement tier: an LLR states the
@@ -38,59 +36,89 @@ observable obligation and survives a refactor that keeps behaviour.
 
 **The migration, and its amendment rule (HANDOFF §3.3 N5).** A rough
 pattern finds code-like tokens in the title, detail or rationale of 222 of
-347 LLR rows; the CMP rows' notes list member files, which the `Component:`
-headers (WI-1021) made a second home. Each row is rewritten in place to
-contract voice, keeping every obligation. The coordinator's recipe
+347 LLR rows; component rows' `notes` list member files, which the
+`Component:` headers (WI-1021) made a second home. Each row is rewritten in
+place to contract voice, keeping every obligation. The coordinator's recipe
 "amend an accepted row by addition"
 (`project-trajectory/skills/coordinator-cycle/references/recipes.md`)
 forbids that today, so this row amends it: removing code names from an
 accepted cell is a rewrite that keeps each obligation, checked sentence by
-sentence against the accepted text; where a row no longer fits the design,
-PROCESS.md §5's re-cut (retire and mint) applies instead. Accepted rows keep
-their status and drift; the acts go to automated adjudication (N4), listed
-in the Deliverable. WI-1020 was cancelled in favour of this rule.
-
-**WI-1018's cases.** Its first set (B1 to B9) is taken here where this
-migration covers it; WI-1018 runs after this row on what is left.
-
-**Needs:** WI-1023 (the code cells are gone, so only text remains) and
-WI-1025 (interface rows hold symbol-free forms, so the check can include
-them without failing every `call` row).
+sentence against the accepted text. Where a row no longer fits the design,
+PROCESS.md §5's re-cut (retire and mint) applies, in its own row filed on
+trunk, not in this lane. WI-1020 was cancelled in favour of this rule.
 
 ## Scope answers
 
 - **S1.** Deliverables, in order on one branch: (1) the inventory's
   `boundary` class and the commit check; (2) the rewrite of existing rows
   and the recipe amendment; (3) layer 3's text. Kept together: (1)'s token
-  grammar defines what (2) removes, stated once.
-- **S2.** The check refuses a commit, an existing gate class (the commit
-  hook's checks); no file gains authority over a hold or an act.
-- **S3.** Deny by default over the closed token classes in Done-when 2;
-  prose that names mechanism in plain words is layer 3's, not the check's.
+  classes define what (2) removes, stated once.
+- **S2.** The `boundary` class decides whether a file name is admitted in
+  an LLR or TC row, so a `## Trust` section follows.
+- **S3.** The token classes are closed in Done-when 2; text outside them is
+  admitted by the check and judged by layer 3. Bounded to supported
+  workflows and kit routes (PROCESS.md §6): hand-chosen aliases and
+  hand-edited kit-written state are outside it.
 - **S4.** `single`: a commit check, an inventory schema and a migration.
-- **S5.** No new state or boundary; rows are re-cut only where they no
-  longer fit, each named in the Deliverable.
-- **S6.** No new package, tool or service.
+- **S5.** No new state or boundary. Re-cut LLRs (text only, drifting):
+  LLR-133 (the stand-alone rule in `trace_text`), LLR-203 (the shipped-file
+  inventory), LLR-276 (the mapping-purpose classes); the lane's plan names
+  the rows behind the artifact advisories and completes the list. The
+  migration's rewrites keep each obligation, so they are not re-cuts; a
+  row that needs one is filed on trunk (Done-when 4).
+- **S6.** `needs` WI-1023: the code cells are gone, so only text remains;
+  WI-1025: interface rows hold symbol-free forms, so the check can include
+  them without failing every `call` row, and its name reader is reused. No
+  new package, tool or service.
+
+## Trust
+
+The inventory's `boundary` class gains authority over which file names a
+commit may add to LLR and TC rows (PROCESS.md §3, "When a guard is owed").
+
+- **Producer.** A person or model editing `kitlib/bootstrap_manifest.py` in
+  a lane (the supported route), and this row's classification. No script
+  writes it.
+- **Failed write.** An entry with a class value other than `boundary`, or a
+  malformed entry: the manifest reader reports it as a finding.
+- **Consumers.** The commit check (in `trace_text.py`, run by the hook),
+  `gen_arch_map.mapping_purpose_findings` and `bootstrap.py`, all through
+  `bootstrap_manifest.mapping_entries`.
+- **Ruling, shared by every consumer.** An entry with no class, or an
+  invalid one, is not a boundary file: its name is refused where only
+  boundary files are admitted.
 
 ## Done-when
 
 - [ ] Each shipped-file inventory entry may carry the `boundary` class;
       every registry, template, configuration file and launcher entry does.
-- [ ] A commit check refuses a token added to an SN, SR, LLR, IF or CMP
-      text cell when it is a path to an implementation file or a name
-      defined in the shipped scripts written as code (backticked,
-      snake_case, CamelCase or a call); and refuses a boundary-file name
-      added to an SN, SR, IF or CMP row. It reads only the commit against
-      its parent and only added tokens.
+- [ ] **The commit check.** It refuses a token added to an SN, SR, LLR, IF
+      or CMP text cell when the token is (a) the repository path or the
+      basename with suffix of a file under `[paths] src` that is not a
+      boundary file, or (b) a name `ast` finds defined in a `.py` file under
+      `[paths] src` (a module-level or class-level `def`, `async def` or
+      `class`, or a module-level assigned name) written as code: inside
+      backticks, containing `_`, with an internal capital, or followed by
+      `(`. It refuses a boundary file's destination path or basename added
+      to an SN, SR, IF or CMP row. Any other text is admitted and left to
+      layer 3. It reads only the commit against its parent and only added
+      tokens.
 - [ ] Every existing SN, SR, LLR, IF and CMP row passes the same rule as if
-      all its text were added; each rewrite keeps every obligation, and the
-      Deliverable lists each row changed and each act owed.
+      all its text were added; each rewrite keeps every obligation. The
+      Deliverable lists each row changed and each act owed; the acts go to
+      automated adjudication (HANDOFF §3.3 N4), and the lane holds for none.
+- [ ] A row that no longer fits the design is left as it is, listed in the
+      Deliverable, and filed on trunk at the merge as its own re-cut row.
 - [ ] The recipe line is amended as above; PROCESS.md §5 is cited, not
       restated.
+- [ ] The Deliverable says which of WI-1018's cases B1 to B9 this row
+      closed; the coordinator narrows WI-1018 on trunk at the merge to
+      what is left.
 - [ ] The sitting brief and the spine-authoring skill state contract voice
       for every requirement tier, once, with a pointer from
       `spine-questions.md`.
 - [ ] A RESYNC entry (variant F) gives adopters the check and the
       `boundary` class; their existing rows warn until rewritten.
-- [ ] Red-before tests for each token class and the added-only rule; every
-      importer of a changed module runs green; `trace.py --strict` is clean.
+- [ ] Red-before tests for each token class, the admitted text, the Trust
+      ruling and the added-only rule; every importer of a changed module
+      runs green; `trace.py --strict` is clean.

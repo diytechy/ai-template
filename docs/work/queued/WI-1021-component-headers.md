@@ -42,14 +42,15 @@ file doing two components' work is evidence about the partition (OI-14); it
 is flagged and filed as its own row, never split here.
 
 **Where the header goes (F point 1, revision 16).** In the same header that
-holds the file's `Contracts:` marker: a Python file's module docstring, or
-the top-of-file comment block the existing `Contracts:` reader reads
-(`gen_arch_map.module_contracts`). Not built here: the inventory-entry form
-for a file type with no comment syntax; no file in this row's scope lacks
-one, so it is filed when an adopter needs it.
+holds the file's `Contracts:` marker, by the file's comment syntax (Done-when
+1). Not built here: the inventory-entry form for a file type with no comment
+syntax; no file in this row's scope lacks one, so it is filed when an
+adopter needs it.
 
-**Needs:** none. WI-1022 (interface owners) reads these headers; WI-1023
-removes the LLR `component` cell once nothing reads it for membership.
+**The component registry's prose.** CMP-006's `notes` describe membership by
+LLR tags and the multi-membership advisories this row retires; this row
+rewrites those sentences. Removing the file names component rows still carry
+is WI-1028's (no code in row text).
 
 **Downstream.** Adopters gain the header grammar. This row writes its own
 RESYNC entry, the first of variant F's (each F row writes its own entry,
@@ -62,43 +63,71 @@ apply in landing order; the operator: re-sync need not be one entry). Items
   headers written, and membership switched to them. They land together:
   headers without the switch are a second home, and the switch without
   headers empties every component.
-- **S2.** No file gains authority over a hold, an act or a gate. The header
-  replaces the LLR cell as the input to an existing strict check.
-- **S3.** The grammar and scope are closed (Done-when 1 and 2); anything
-  else is a finding.
+- **S2.** The headers become the membership input to strict checks and the
+  DevStg-Arch derivation, so a `## Trust` section follows.
+- **S3.** The grammar, its carriers and the scope are closed (Done-when 1
+  and 2); anything else is a finding or outside the rule, as stated there.
 - **S4.** `single`: several script families (`kitlib/spine.py`,
   `arch_components.py`, `arch_seams.py`, `gen_components.py`,
   `derive_stage.py`, `gen_arch_map.py`) and a grammar over file headers.
-- **S5.** No state, domain value or boundary is added. Membership changes
-  its input (headers, not LLR cells). The ruled table may move edges across
-  a component boundary; each is covered (Done-when 5).
-- **S6.** No new package, tool or service.
+- **S5.** No state, domain value or boundary is added; membership changes
+  its input. Re-cut LLRs (text only, drifting): LLR-373 (the join), LLR-067
+  and LLR-374 (the cross-component rule and its import resolution), LLR-199
+  and LLR-049 (the component views), LLR-172 (the derivation record); the
+  lane's plan completes the list from the code. The ruled table may move
+  edges across a boundary; each is covered (Done-when 5).
+- **S6.** `needs` is empty: nothing this row reads is unbuilt. No new
+  package, tool or service.
 - **B4.** The one-component table is the operator's ruling (Done-when 4).
+
+## Trust
+
+The header becomes the authority on a file's component, which strict checks
+and the stage derivation read (PROCESS.md §3, "When a guard is owed").
+
+- **Producer.** A person or model editing the file in a lane (the supported
+  route), and this row's migration. No script writes a header.
+- **Failed write.** A header left absent, doubled, malformed or naming no
+  live CMP row. Each is a finding (Done-when 1); no kit route half-writes a
+  header.
+- **Consumers.** The one header reader (beside
+  `gen_arch_map.module_contracts`), read by the membership home in
+  `kitlib/spine.py`, `arch_components.py`, `arch_seams.py`,
+  `gen_components.py` and `derive_stage.py`.
+- **Ruling, shared by every consumer.** A file whose declaration is absent
+  or invalid belongs to no component: it is reported, and every import edge
+  touching it is reported as unclassified, never treated as internal or
+  exempt.
 
 ## Done-when
 
 - [ ] **Grammar.** A declaration is one line reading exactly
-      `Component: CMP-NNN` (digits as the id space spells them), in a
-      Python module docstring, or in the top-of-file comment block after
-      the comment marker (`#` for `.sh`, `.command`, `.ps1`, TOML and the
-      hooks; `REM` for `.cmd`). One reader, beside the existing
-      `Contracts:` header reader, returns each in-scope file's component.
-      A file with no declaration, two declarations, a malformed one or an
-      id no live CMP row has is a finding; warn-first, failing `--strict`
-      from DevStg-Arch upward, like the cross-component rule it feeds.
-- [ ] **Scope, closed.** Every file under `[paths] src` with suffix `.py`,
-      `.sh`, `.command`, `.ps1` or `.cmd` (`README.md` excluded as
-      documentation; any other file type there is a finding naming it), the
-      shipped hooks under `project-trajectory/hooks/`, and every other file
-      that states a `Contract IF-NNN:` body (configuration and registry
-      headers: nine today). A file outside the scope may carry a
-      declaration, judged by the same grammar.
+      `Component: CMP-NNN` (digits as the id space spells them), placed by
+      file type: a Python module docstring; a `#` line in the top-of-file
+      comment block for `.sh`, `.command`, `.ps1`, `.toml`, `.ini`, `.csv`
+      and files with no suffix (the hooks, `docs/agents-enabled`); a `REM`
+      line in the top-of-file comment block for `.cmd`; a line inside the
+      opening `<!-- ... -->` comment of a `.md` file (`docs/runtime-flows.md`,
+      `docs/status.md`). One reader, beside the existing `Contracts:` header
+      reader, returns each in-scope file's component. A file with no
+      declaration, two declarations, a malformed one or an id no live CMP
+      row has is a finding; warn-first, failing `--strict` from DevStg-Arch
+      upward, like the cross-component rule it feeds.
+- [ ] **Scope, closed.** Every file under `[paths] src` of a type the
+      grammar lists (`README.md` excluded as documentation), and every file
+      the contract scan reads as a file owner today
+      (`arch_interfaces._owner_files`: 13 non-directory paths, the hooks,
+      configuration files and registries among them). A file of another
+      type under `[paths] src` is outside the rule unless it states a
+      `Contract IF-NNN:` body, which is then a finding naming its type. A
+      file outside the scope may carry a declaration, judged by the same
+      grammar.
 - [ ] **Membership reads the headers.** `kitlib.spine.module_components`'s
       callers (`arch_components`, `arch_seams`, `gen_components`) and the
       DevStg-Arch derivation read file membership from the one header
-      reader. No check compares an LLR's `component` cell with a header.
-      LLR-373's text is amended to the header source (Accepted: text only,
-      drifting for adjudication).
+      reader, under the Trust ruling. No check compares an LLR's
+      `component` cell with a header. The LLRs in S5 are amended to the
+      header source (Accepted: text only, drifting for adjudication).
 - [ ] **The table, ruled by the operator.** The lane's plan lists each of
       the 34 files with LLRs tagged to several components: its candidate
       components with LLR counts, the pick and its reason, and a flag where
@@ -111,12 +140,14 @@ apply in landing order; the operator: re-sync need not be one entry). Items
 - [ ] **No new silence.** Every import edge the ruled headers turn into a
       crossing is covered by an existing interface row naming both files,
       shown inside one component, or covered by a new `Drafted` `call` row
-      from the lane's id range. The multi-membership advisory retires.
+      from the lane's id range. The multi-membership advisory retires, and
+      CMP-006's `notes` stop describing it (drifting for adjudication).
       `trace.py --strict` and `check_trajectory --strict` are clean.
 - [ ] Every in-scope file carries its declaration; the kernel allowlist is
       unchanged.
 - [ ] A RESYNC entry tells adopters the grammar, that headers are owed from
       DevStg-Arch upward, and that it is the first of variant F's entries.
       PROCESS.md §8 states where the header goes, once.
-- [ ] Tests: red-before for each finding class and for membership from
-      headers; every test module importing a changed module runs green.
+- [ ] Tests: red-before for each finding class, each carrier syntax, the
+      Trust ruling (an unclassified edge) and membership from headers;
+      every test module importing a changed module runs green.
