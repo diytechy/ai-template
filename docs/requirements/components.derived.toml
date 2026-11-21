@@ -18,8 +18,8 @@
 
 [derived]
 components = 4
-design_rows = 345
-seam_rows = 268
+design_rows = 347
+seam_rows = 269
 requirements_placed = 133
 requirements_unplaced = 5
 seams_unplaced = 0
@@ -48,6 +48,7 @@ sr_refs = [
   "SR-164",
   "SR-165",
   "SR-166",
+  "SR-168",
   "SR-169",
   "SR-174",
   "SR-176",
@@ -99,6 +100,7 @@ sr_shared_refs = [
   "SR-158",
   "SR-161",
   "SR-163",
+  "SR-168",
   "SR-169",
   "SR-174",
   "SR-176",
@@ -219,6 +221,7 @@ llr_refs = [
   "LLR-386",
   "LLR-387",
   "LLR-388",
+  "LLR-393",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -465,6 +468,7 @@ seam_boundary_refs = [
   "IF-312",
   "IF-314",
   "IF-315",
+  "IF-325",
 ]
 
 [component_view.CMP-007]
@@ -1223,6 +1227,7 @@ sr_shared_refs = [
   "SR-146",
   "SR-148",
   "SR-163",
+  "SR-168",
   "SR-169",
   "SR-170",
   "SR-226",
@@ -1300,6 +1305,7 @@ llr_refs = [
   "LLR-326",
   "LLR-370",
   "LLR-372",
+  "LLR-394",
 ]
 hat_refs = [
   "ACCESSIBILITY",
@@ -1455,6 +1461,7 @@ seam_boundary_refs = [
   "IF-310",
   "IF-315",
   "IF-321",
+  "IF-325",
 ]
 
 [unplaced]

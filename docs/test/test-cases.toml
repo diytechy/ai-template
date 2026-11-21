@@ -4460,3 +4460,25 @@ automated = "Yes"
 evidence = "tests/test_open_items_assumptions.py; tests/test_open_items_assumptions.py::test_each_row_owing_a_first_acceptance_has_its_card_with_its_cells_whole; tests/test_open_items_assumptions.py::test_an_accepted_assumption_whose_text_moved_shows_it_before_and_after; tests/test_open_items_assumptions.py::test_the_page_renders_the_briefs_model_and_counts_it"
 status = "Accepted"
 phase = 6
+
+[test.TC-455]
+verifies = ["SR-168", "LLR-393"]
+level = "Unit"
+method = "Build spine_stage's keyword arguments with every tier adopted, read and settled and the evidence passing. For each tier RUNG_TIERS names, put that one tier in work (its first row Drafted, a Drafted row beside an accepted one for the three tiers read from their first acceptance, the need Drafted, or evidence_passed false) and call spine_stage. Compare RUNG_TIERS's rungs with the ladder, and its keywords with the four that travel with a tier's rows, with spine_stage's parameters; check that every keyword it names is one the test drives."
+tier = "Full"
+expected = "Satisfies LLR-393's detail (parent SR-168) for the settled arguments and for every tier RUNG_TIERS names."
+automated = "Yes"
+evidence = "tests/test_spine_rules.py::test_rung_tiers_covers_the_ladder_and_every_input_spine_stage_reads; tests/test_spine_rules.py::test_each_tier_in_work_holds_the_rung_rung_tiers_names"
+status = "Drafted"
+phase = 6
+
+[test.TC-456]
+verifies = ["SR-168", "LLR-394", "IF-325"]
+level = "Integration"
+method = "Render the Process tab in process over a repository holding a need, two stakeholders, a frame with three crossings, two assumptions, a surrogate, a component, the spine fixture's two requirements, three design rows and four test cases, and an evidence record; render it again over the spine fixture alone; then render it with each rung of the ladder recorded as the stage in turn."
+tier = "Full"
+expected = "The lifecycle panel has a Vision row with no rung, then one row per rung in ladder order, DevStg-Release included, each naming in bold the tiers spine_rules.RUNG_TIERS gives that rung, or a dash for none. The counts read 1 SN · 2 STK, 3 B · 2 DA · 1 SUR, 2 SR, 1 CMP, 3 LLR, 4 TC and 1 evidence record, the Release row its stage description; over the spine fixture alone the tiers it lacks read no STK, no B, no DA, no SUR, no CMP and no evidence record. At each recorded rung exactly that rung's row is marked now, with the word."
+automated = "Yes"
+evidence = "tests/test_traj_panels.py::test_lifecycle_panel_has_a_row_for_every_rung_with_the_tiers_holding_it; tests/test_traj_panels.py::test_lifecycle_panel_counts_follow_the_registries; tests/test_traj_panels.py::test_lifecycle_panel_marks_the_row_of_each_recorded_rung"
+status = "Drafted"
+phase = 6

@@ -1019,7 +1019,7 @@ def build_html(root, wis):
         extra_tabs.append(tab)
         extra_panels.append(panel)
     proc = process_panel(
-        root, wis, stats, snapshot.stage
+        root, wis, snapshot.stage
     )  # the method reference view (WI-085)
     if proc:
         tab, panel = proc

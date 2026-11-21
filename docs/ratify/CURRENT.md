@@ -15,6 +15,12 @@ _Baseline: `docs/requirements/assumptions.toml` copied 2026-11-20 (46d518b56)._
 
 _Acceptance provenance: the last commit to move a `Status` cell in a snapshotted registry is 0e67ffffb (2026-11-20) — the record's maturity cells have not moved since._
 
+## Off-spine census
+
+_Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into acceptance or arrives accepted, `--accepts` names it or `--reaccepts` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
+
+- `docs/requirements/interfaces.toml` — 0 changed, 1 added, 0 removed since the snapshot; ruling(s): none cited.
+
 
 _No chain on a rung the operator-acceptance dial holds owes an act; every chain in this brief waits for automated adjudication._
 
@@ -23,7 +29,64 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 2 chain(s): SR-225, SR-233</summary>
+<summary>Waiting for automated adjudication — 3 chain(s): SR-168, SR-225, SR-233</summary>
+
+## SR-168 — The state view shows current progress and next work
+
+> **Requirement.** The delivered generator set shall produce one state view from which a reviewer reads the adopted repository's completeness, its requirement decomposition, its planned and in-flight work, and any declared hold on that work, without consulting a second surface.
+
+> **Rationale.** Realizes SN-023's FIRST conjunct — a reviewer sees the project's progress from one dashboard-like file — with SN-010 (what the reviewer reads there is the generated truth, never a hand-kept summary of it). ONE DECISION PER ROW: the integrity of a generated artifact (SR-070) and what that artifact must SHOW are two obligations that fail independently. This row is the progress half; SR-169 is the connection half, along the conjunction SN-023 itself draws. Deliberately NOT folded back into SR-070: a state view that regenerates deterministically, offline and drift-checkably while omitting the work in flight satisfies that row completely and this one not at all. Deliberately NOT folded into SR-169 either: a complete progress view can carry no seam graph whatsoever — the state this repository was in before its interface registry existed — so the two are separately observable and separately buildable. `phase` inherits the parent's 1 rather than tracking its children (which span 1 through 4), because a phase records WHEN a piece shipped, and child-later-than-parent is the ordinary case.
+
+
+### LLR LLR-393 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-393
+- **SR-Refs**: SR-168
+- **Title**: The tiers holding each stage rung are stated once, as data beside the derivation, and held to it by driving it
+- **Module**: project-trajectory/scripts/spine_rules.py
+- **CodeSymbol**: RUNG_TIERS
+- **Detail**: RUNG_TIERS in spine_rules maps every rung of the stage ladder, and only those, to the tiers whose in-work rows hold the repository at that rung, each named by its id prefix and the spine_stage keyword carrying its rows: DevStg-Needs to SN (sn_ids) and STK (stks); DevStg-Boundary to B (bifs), DA (das) and SUR (surs); DevStg-Reqs to SR (srs); DevStg-Arch to CMP (cmps); DevStg-LLReqs to LLR (llrs); DevStg-Tests to TC (tcs); DevStg-Impl to the evidence record (evidence_passed); DevStg-Release to none. A tier is named at one rung only. Over keyword arguments in which every tier is adopted, read and settled and the evidence passes, spine_stage returns DevStg-Release, and putting any one named tier in work returns the rung the table names for it. The keywords the table names, with sn_draft, cited_srs, have_bifs and have_cmps, which travel with a tier's rows, are exactly spine_stage's parameters. spine_stage does not read the table.
+- **Rationale**: A reader drawing the ladder that restates which tier holds which rung falls out of step with the derivation whenever a tier or a rung is added. Running spine_stage from the table would make that impossible, but its need-coverage arm sits after the requirement arm, so its arms are not a flat ladder; driving the function from a test holds the table to it instead, and a new parameter fails that test until the table names it.
+- **TestRefs**: TC-455
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 6
+
+### LLR LLR-394 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-394
+- **SR-Refs**: SR-168
+- **Title**: The Process tab's lifecycle panel draws every stage rung with the tiers holding it and how many rows each holds
+- **Module**: project-trajectory/scripts/traj_parse.py;project-trajectory/scripts/rendering/traj_panels.py
+- **CodeSymbol**: rung_tiers/_lifecycle_rows/process_panel
+- **Detail**: traj_parse.rung_tiers(root) returns, for every rung of kitlib.ladder.STAGE_ORDER and in that order, the tiers spine_rules.RUNG_TIERS names for the rung, each with the number of rows spine_rules.load_spine returns under its keyword, so example -000 rows are not counted; the evidence tier counts the committed docs/test/evidence record (0 or 1) read through kitlib.evidence. process_panel's first panel draws a Vision row with no rung, then one row per rung: the tiers' names joined by " · " in bold, the rung, and each tier's count as "<n> <tier>", or "no <tier>" when it holds none; a rung no tier holds shows "—" and the rung's STAGE_DESC sentence. The row whose rung is the recorded stage carries the now class and the word now, so exactly one row is current at any of the eight rungs. The panel holds no list of rungs or tiers of its own.
+- **Rationale**: The panel answers which tiers hold the rung the repository stands at; reading the rungs from the ladder and each rung's tiers from the stage derivation's own table keeps it answering for a rung or tier added later, where a list in the renderer would go stale unseen.
+- **TestRefs**: TC-456
+- **Status**: Drafted
+- **Component**: CMP-009
+- **Phase**: 6
+
+### TC TC-455 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-455
+- **Verifies**: SR-168;LLR-393
+- **Level**: Unit
+- **Method**: Build spine_stage's keyword arguments with every tier adopted, read and settled and the evidence passing. For each tier RUNG_TIERS names, put that one tier in work (its first row Drafted, a Drafted row beside an accepted one for the three tiers read from their first acceptance, the need Drafted, or evidence_passed false) and call spine_stage. Compare RUNG_TIERS's rungs with the ladder, and its keywords with the four that travel with a tier's rows, with spine_stage's parameters; check that every keyword it names is one the test drives.
+- **Tier**: Full
+- **Expected**: Satisfies LLR-393's detail (parent SR-168) for the settled arguments and for every tier RUNG_TIERS names.
+- **Automated**: Yes
+- **Evidence**: tests/test_spine_rules.py::test_rung_tiers_covers_the_ladder_and_every_input_spine_stage_reads; tests/test_spine_rules.py::test_each_tier_in_work_holds_the_rung_rung_tiers_names
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-456 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-456
+- **Verifies**: SR-168;LLR-394;IF-325
+- **Level**: Integration
+- **Method**: Render the Process tab in process over a repository holding a need, two stakeholders, a frame with three crossings, two assumptions, a surrogate, a component, the spine fixture's two requirements, three design rows and four test cases, and an evidence record; render it again over the spine fixture alone; then render it with each rung of the ladder recorded as the stage in turn.
+- **Tier**: Full
+- **Expected**: The lifecycle panel has a Vision row with no rung, then one row per rung in ladder order, DevStg-Release included, each naming in bold the tiers spine_rules.RUNG_TIERS gives that rung, or a dash for none. The counts read 1 SN · 2 STK, 3 B · 2 DA · 1 SUR, 2 SR, 1 CMP, 3 LLR, 4 TC and 1 evidence record, the Release row its stage description; over the spine fixture alone the tiers it lacks read no STK, no B, no DA, no SUR, no CMP and no evidence record. At each recorded rung exactly that rung's row is marked now, with the word.
+- **Automated**: Yes
+- **Evidence**: tests/test_traj_panels.py::test_lifecycle_panel_has_a_row_for_every_rung_with_the_tiers_holding_it; tests/test_traj_panels.py::test_lifecycle_panel_counts_follow_the_registries; tests/test_traj_panels.py::test_lifecycle_panel_marks_the_row_of_each_recorded_rung
+- **Status**: Drafted
+- **Phase**: 6
 
 ## SR-225 — A delegated run closes with a record of the calls it made, where the declared dial asks for one
 
