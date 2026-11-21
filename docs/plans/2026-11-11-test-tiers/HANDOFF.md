@@ -3340,3 +3340,22 @@ list is fixed unless §12.6 says so.
   backlog; `falsified` would fail the gate for any requirement relying on it
   alone); OI-79's remote-ref delete; push `refactor_again`. Next work: §6
   (B1 first), which is not yet rows.
+- **2026-11-20, DA-020 and the decisions record.** The operator ruled the
+  record a ledger to audit when risk is suspected, not a queue to read, so
+  DA-020 was restated (Argon reviewed, three fixes; `326637c37`) and
+  re-accepted (act seq 185, `46d518b56`); standing `active`. A judged
+  sample of the records (`docs/reviews/2026-11-20-decisions-overlap/`, 106
+  of 1,193 entries) put ~58% on run conduct and ~10% on restating a spine
+  row; WI-1013 (SR-225, queued) narrows the routing: a call a spine row
+  states, or about conducting the run, is not recorded. **Diagrams checked
+  at the operator's request, not yet changed:** the README's registry map
+  (`README.md` "one map") draws a retired `IF req_refs` edge and lacks the
+  assumption tier (DA/SUR: SR `da_refs`, TC `assumption_refs`, IF
+  `bridged_by`, DA `effect_at` -> B, `realized_by`, SUR `emulates` -> EXT),
+  stakeholders (STK, SN `stakeholder_refs`), hats and open items; the
+  dashboard's Process tab panel 1 (`rendering/traj_panels.py`) omits
+  DevStg-Release (derived since WI-500; its comment says nothing derives
+  it) and shows only SR at DevStg-Boundary and only SN at DevStg-Needs,
+  though the frame, the assumption tier and the stakeholder tier hold those
+  rungs. The operator is weighing how much design the spine should carry
+  (LLRs pin Module and CodeSymbol) before the diagrams are redrawn.
