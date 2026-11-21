@@ -231,7 +231,7 @@ def _undeclared_case_findings(rows, tags, refused):
     refusal is already a finding. It reads declarations only, so a tagged test
     still failing is clean here. It stays when the equality check retires.
 
-    Implements: SR-157"""
+    Implements: SR-157, LLR-395"""
     found = []
     for row in rows:
         tc = (row.get("TC-ID") or "").strip()

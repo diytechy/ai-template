@@ -29,7 +29,27 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 3 chain(s): SR-168, SR-225, SR-233</summary>
+<summary>Waiting for automated adjudication — 4 chain(s): SR-157, SR-168, SR-225, SR-233</summary>
+
+## SR-157 — Spine and work-registry rules fail the harness verdict
+
+> **Requirement.** The delivered harness shall report every declared spine and work-registry rule violation — broken joins, integrity and schema faults, leftover placeholders, requirement-form findings and work-item coherence contradictions — naming the at-fault row and cell, gating the declared failure set at the declared gate while advisory classes never change the exit code.
+
+> **Rationale.** Realizes SN-002 (the chain is mechanically verified, not asserted — this row is the boundary-level home of the verdict SN-002's acceptance asks for), SN-012 (optional registries and opt-outs cost a non-user nothing) and SN-025 (the tracked work-item graph the loop derives its next work from is kept coherent). One row because the adopter-observable contract is one: registry rules produce named findings at a declared severity; which rules, at which severities, is the component detail the rows below it decompose. Fan-out re-stamp: the delivered contract is one — a named, row-and-cell-attributed finding at a declared severity, gating or advisory — while the rule inventory it ranges over is open by this row's own acceptance ("a rule added at one of those sites is in this row's scope by default"), so the child count tracks the number of declared rules rather than the number of decisions this row makes, and would climb back through any bound a split bought.
+
+
+### LLR LLR-395 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-395
+- **SR-Refs**: SR-157
+- **Title**: An accepted or founded automated test case that no test file declares is a finding
+- **Module**: project-trajectory/scripts/arch_tags.py
+- **CodeSymbol**: tc_tag_findings/_undeclared_case_findings
+- **Detail**: A test case owes a declaration when its row is loaded from the test-case registry, its status is Accepted or Founded, and its automated cell, with surrounding whitespace removed and letter case ignored, reads yes. A placeholder row is not loaded, and a Drafted case or a case whose automated cell is absent, blank or holds another word owes no declaration; the parts of a Drafted case's Evidence cell are still held equal to its declarations by the separate equality rule. A case that owes a declaration, and that no valid declaration in a test file under the declared tests root names, is reported as a finding that names the case and states that no test declares it. Its Evidence cell does not change that reading: a parenthetical note, an absent cell, a whole-file part, a part outside the tests root and a path the tree lacks are reported alike. A declaration refused as misplaced or malformed declares nothing, so a case whose only declaration is refused carries this finding beside the refusal, while a valid declaration beside a refused one clears it. A case holding an Evidence part in a test file refused as unreadable is not reported by this rule, alone or beside a readable part, since that refusal already names the file at the same severity. One valid declaration naming the case clears this finding; where it also covers an Evidence part, it clears that part's equality finding too. The rule reads declarations, not test outcomes, so a declared test that still fails leaves the case cle… [673 more chars — read the registry row]
+- **Rationale**: An accepted automated case whose test was never written leaves its chain undelivered while the other checks pass, since the equality rule finds nothing when a case has neither a declaration nor an Evidence part under the tests root. Which cases owe a declaration is a separate contract from whether a case's Evidence parts equal its declarations, which holds Drafted cases too, so each has its own row. Reading declarations rather than outcomes leaves a test's result to the harness, and reading the automated cell as the trace check reads it keeps one meaning for that cell.
+- **TestRefs**: TC-428; TC-429
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 6
 
 ## SR-168 — The state view shows current progress and next work
 

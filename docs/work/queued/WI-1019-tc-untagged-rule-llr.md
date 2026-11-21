@@ -37,14 +37,24 @@ dial releases these rungs to automated adjudication (queue-drill HANDOFF §3.1
 Q5, §3.3 N4), so the lane ends at the registry edits and lists what is owed;
 no status moves and no hold sits inside the lane.
 
+**Changed at the build (2026-11-21).** The parent-first rule (SR-245 and
+LLR-357 at the trace, SR-246 and LLR-358 at the commit) refuses an `Accepted`
+TC verifying a `Drafted` LLR: re-pointing TC-428 and TC-429 at a new `Drafted`
+LLR-395 fails `trace.py --strict`, and the commit hook refuses it. So this row
+mints LLR-395 and links it from the code tag, and TC-428 and TC-429 move to
+verify it after LLR-395's first acceptance, under WI-1038 (filed on trunk by
+the coordinator). The re-point's drift is WI-1038's.
+
 ## Done-when
 
 - [ ] LLR-395 (`Drafted`, under SR-157) states WI-1001's rule as built: which
       live test cases owe a test-file declaration, the inputs that make the
       check vacuous or stop it, and its severity by rung and by strict
       checking, all as TC-428 and TC-429 expect. Its text names no code.
-- [ ] TC-428 and TC-429 verify LLR-395 in place of SR-157 (IF-263 kept), as
-      changing no other cell of those accepted rows, and `trace.py --strict`
-      stays clean.
-- [ ] The Deliverable lists the acts owed: LLR-395's first acceptance and
-      the drift on TC-428 and TC-429, for automated adjudication.
+- [ ] LLR-395's `test_refs` name TC-428 and TC-429, whose rows are unchanged
+      here; their re-point to verify LLR-395 is WI-1038's, after LLR-395's
+      first acceptance. `trace.py --strict` stays clean.
+- [ ] The function implementing the rule names LLR-395 in its `Implements:`
+      tag, SR-157 kept.
+- [ ] The Deliverable lists the act owed: LLR-395's first acceptance, for
+      automated adjudication; the re-point's drift is WI-1038's.
