@@ -13,8 +13,9 @@ child returned for want of a parent, then a TC for an arm its LLR states).
   labelled derived SR (§2(c)); a missing stakeholder outcome needs an SN
   proposal, not an unrelated parent.
 - **Author the subtree in one pass.** Include every new and amended row from
-  the anchor down (SRs, LLRs, TCs and interface rows) and each accepted row
-  whose text the change makes untrue. New rows stay `Drafted`; interface rows
+  the anchor down (SRs, LLRs, TCs and interface rows), each accepted row
+  whose text the change makes untrue, and each LLR the design re-cuts
+  (`docs/process.md` §5's design replacement). New rows stay `Drafted`; interface rows
   carry no acceptance status. Leave existing statuses unchanged while authoring.
 - **Author it before the build.** TC rows are authored with their LLRs before
   the build, so the build's first deliverable is the tests they call for.

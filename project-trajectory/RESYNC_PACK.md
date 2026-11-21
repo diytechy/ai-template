@@ -11894,6 +11894,40 @@ findings, are unchanged.
 
 **Kit-owned files — overwrite:** `scripts/check_vocab.py`.
 
+### An LLR yields to a sustainable design: the change intake re-cuts rows [since 0d67302bd]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** `process.md` §5's change intake now says once that an LLR
+records the current design, not a commitment. When a sustainable design
+needs a different decomposition, the LLRs are split, merged, moved or retired
+(`retire.py`) under their tier's acceptance authority, never the design bent
+to fit them; the parent requirement keeps its acceptance and the enduring
+regression tests stay. Moving code that keeps every row's stated behavior
+moves trace cells only. Keeping an unsuitable row, or bending the design to
+fit it, to avoid an acceptance act is a finding. The chart gains a re-cut
+branch, reached from a violated row and from a new scope whose solution the
+existing LLRs do not fit. The readers point at that statement and restate
+none of it: the spine-authoring skill's "keep IDs where meaning remains" now
+says what to do where it does not, its in-lane reference has a lane's change
+set include each LLR the design re-cuts, the spine questions' §3 routes an
+unsuitable mechanism or division of the design to §5, and the worker and
+reviewer briefs ask about a design bent to fit a row as well as a workaround.
+
+**What to do.** Nothing is forced and nothing migrates: no setting, schema
+or row changes. A brief or procedure of your own that restated the old
+design-replacement wording points at `process.md` §5 instead.
+
+**Kit-owned files — overwrite:** `PROCESS.md`,
+`skills/spine-authoring/SKILL.md`,
+`skills/spine-authoring/references/in-lane.md`,
+`prompts/spine-questions.md`, `prompts/worker.template.md`,
+`prompts/reviewer.template.md`.
+
+**Regenerated files:** `docs/process.md`, `prompts/CATALOG.md`.
+
+**Adopter-merged files:** none.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
