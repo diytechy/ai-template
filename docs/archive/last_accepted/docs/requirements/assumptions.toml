@@ -220,10 +220,10 @@ standing = "active"
 
 [assumption.DA-020]
 effect_at = ["B-09"]
-assumption = """A delegated run's decisions record lists every call the run was told to record, each described as the run's work shows it, and the operator reads each entry listed as not yet seen and confirms or overrules it, so a call made on the operator's behalf reaches the operator."""
-holds_when = """The session writes its record at its close, from the work it did, under the instruction it is handed that names which calls to record; and runs add entries no faster than the operator reads them, the operator reading the listed entries at each sitting."""
-obstacle = """A run leaves a call out of its record, or describes it as smaller or safer than its work shows; or entries pile up faster than the operator reads them, the backlog is skimmed or left, and a call the operator would have overruled stands unread while later work builds on it."""
-falsifier = """A call that a delegated run's diff or session log shows plainly and that its record leaves out or misdescribes; or an entry left listed as not yet seen while the operator confirms or overrules entries recorded after it; or an entry still listed as not yet seen after later work has built on the call it records, which git history shows as a later integrated commit that changes what the call changed or carries out what it decided."""
+assumption = """A delegated run's decisions record lists every call the run was told to record, each described as the run's work shows it, so that an operator who suspects a run's choices carry risk finds there what was decided, what was passed over, what reversing it would cost and why it was not escalated."""
+holds_when = """The session writes its record at its close, from the work it did, under the instruction it is handed that names which calls to record, and the record stays in the repository after the run closes, whether or not any entry is read."""
+obstacle = """A run leaves a call out of its record, or describes it as smaller or safer than its work shows, so an operator auditing the run does not find the call that carries the risk."""
+falsifier = """A call that a delegated run's diff or session log shows plainly and that its record leaves out, or whose entry misdescribes what was decided, what was passed over, what reversing it would cost or why it was not escalated."""
 obstacle_hats = ["UNATTENDED-OPS"]
 status = "Accepted"
 standing = "active"

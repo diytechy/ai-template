@@ -15,46 +15,4 @@ _Baseline: `docs/requirements/assumptions.toml` copied 2026-11-20 (0e67ffffb)._
 
 _Acceptance provenance: the last commit to move a `Status` cell in a snapshotted registry is 0e67ffffb (2026-11-20) — the record's maturity cells have not moved since._
 
-## Assumptions and surrogates owing an acceptance
-
-### DA-020 — DRIFTED
-
-- **Assumption**
-  - before: A delegated run's decisions record lists every call the run was told to record, each described as the run's work shows it, and the operator reads each entry listed as not yet seen and confirms or overrules it, so a call made on the operator's behalf reaches the operator.
-  - after: A delegated run's decisions record lists every call the run was told to record, each described as the run's work shows it, so that an operator who suspects a run's choices carry risk finds there what was decided, what was passed over, what reversing it would cost and why it was not escalated.
-- **Falsifier**
-  - before: A call that a delegated run's diff or session log shows plainly and that its record leaves out or misdescribes; or an entry left listed as not yet seen while the operator confirms or overrules entries recorded after it; or an entry still listed as not yet seen after later work has built on the call it records, which git history shows as a later integrated commit that changes what the call changed or carries out what it decided.
-  - after: A call that a delegated run's diff or session log shows plainly and that its record leaves out, or whose entry misdescribes what was decided, what was passed over, what reversing it would cost or why it was not escalated.
-- **HoldsWhen**
-  - before: The session writes its record at its close, from the work it did, under the instruction it is handed that names which calls to record; and runs add entries no faster than the operator reads them, the operator reading the listed entries at each sitting.
-  - after: The session writes its record at its close, from the work it did, under the instruction it is handed that names which calls to record, and the record stays in the repository after the run closes, whether or not any entry is read.
-- **Obstacle**
-  - before: A run leaves a call out of its record, or describes it as smaller or safer than its work shows; or entries pile up faster than the operator reads them, the backlog is skimmed or left, and a call the operator would have overruled stands unread while later work builds on it.
-  - after: A run leaves a call out of its record, or describes it as smaller or safer than its work shows, so an operator auditing the run does not find the call that carries the risk.
-
-**Relied on by.**
-
-- SR-225 — A delegated run closes with a record of the calls it made, where the declared dial asks for one: The delivered loop content shall keep the operator's verdict on each delegated decision coupled to the work that acts on it and each delegated run to its record: whatever the declared decision-recording dial, reporting without refusing a record entry that omits a required disclosure field or leaves one blank, treating each run's record as the listing the operator reads, in which an entry with no verdict is not yet seen, and refusing an overrule unless its transition change files or amends open work that cites the entry; and, where that dial asks for a record, refusing to integrate a closing lane whose record is absent, naming where it belongs.
-
-**Serving.**
-
-- SN-029 — An autonomous run gets as far as it honestly can. Once triggered, the coordinator stops for an operator judgement only when the declared acceptance level reserves that tier for an operator, when a round cannot converge on its own, or when requirement/test documentation is introduced or amended such that the gate drops below what automation is permitted to accept. On every tier released to automation, an acceptance still happens as a review from a declared perspective against the row's actual evidence, and leaves a record naming who or what accepted it — releasing a tier means the review is delegated, never skipped.
-
-**Lands on.**
-
-- B-09 — EXT-006 (Person)
-
-**Cells.**
-
-- **Assumption**: A delegated run's decisions record lists every call the run was told to record, each described as the run's work shows it, so that an operator who suspects a run's choices carry risk finds there what was decided, what was passed over, what reversing it would cost and why it was not escalated.
-- **HoldsWhen**: The session writes its record at its close, from the work it did, under the instruction it is handed that names which calls to record, and the record stays in the repository after the run closes, whether or not any entry is read.
-- **Obstacle**: A run leaves a call out of its record, or describes it as smaller or safer than its work shows, so an operator auditing the run does not find the call that carries the risk.
-- **ObstacleHats**: UNATTENDED-OPS
-- **Status**: Accepted
-- **Standing**: active
-
-**Can be falsified by.** no test case
-
-**Falsifier.** A call that a delegated run's diff or session log shows plainly and that its record leaves out, or whose entry misdescribes what was decided, what was passed over, what reversing it would cost or why it was not escalated.
-
 _No spine row differs from its `docs/archive/last_accepted` copy, and no row awaits a first acceptance._

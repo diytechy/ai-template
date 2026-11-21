@@ -23,3 +23,5 @@ Deferred open items: none.
   the record. The operator: "if the spine surfaces behavior that was
   selected, there is no need to mention it as a decision." The sample's
   verdicts are in `docs/reviews/2026-11-20-decisions-overlap/`.
+- **DA-020 re-accepted:** act seq 185, the commit after its text. The
+  record's copy of `assumptions.toml` equals live again.
