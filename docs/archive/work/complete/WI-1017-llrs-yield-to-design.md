@@ -163,30 +163,34 @@ refactor moves traced cells and never reopens a requirement row, which
 "moves trace cells only" keeps); and the operator's ruling of 2026-11-19 that
 "architectural changes are permitted to keep code clean and modular".
 
-**Causes outside the guidance: rows to file, not built here.**
+**Causes outside the guidance: filed as their own rows, not built here.**
 (`docs/decisions/maint-wi-1017.toml` D-001 reads the coordinator's procedure
-as outside this row's homes.)
+as outside this row's homes.) Work ids are minted on trunk, so rows 1 to 3
+are filed on trunk at this row's landing, as a successor is filed: WI-1018,
+WI-1019 and WI-1020, from the descriptions below. Row 4 is no new row.
 
-1. **Row text a lane leaves stale is never filed.** The rule that a MINOR
-   after the gate never moves the gated tip (`coordinator-cycle` recipes §3,
-   wi-935 D-005) and the cost of re-sitting or re-accepting a row send an
-   LLR's stale text to status.md's unfiled follow-ups or to nowhere (B1 to
-   B9); only B5 has been fixed since. A row to file: such a follow-up is filed
-   as a queued row, or rides the next lane that touches the row, so it cannot
-   lapse. Its first set: LLR-273's `module`, LLR-150, LLR-123's rationale,
-   LLR-362, LLR-153's label, LLR-312, and LLR-172 with TC-166.
-2. **WI-1001's rule has no LLR** (B10). A row to file: amend LLR-366 or mint
-   an LLR under SR-157 stating that an accepted automated TC no tag names is a
-   finding (the operator's acceptance).
-3. **Accepted rows are amended only by addition** (`coordinator-cycle`
-   recipes, "Brief Terra to amend an accepted row by addition"). It guards
-   against lost obligations, and it makes accepted rows grow (wi-977's 008 F6:
-   LLR-149 repeats a sentence) where a re-cut would retire and mint. One case
-   in the sample; a row to file only if the coordinator judges it worth one:
-   the recipe names §5's re-cut as the alternative to appending.
+1. **WI-1018: row text a lane leaves stale is never filed.** The rule that a
+   MINOR after the gate never moves the gated tip (`coordinator-cycle`
+   recipes §3, wi-935 D-005) and the cost of re-sitting or re-accepting a row
+   send an LLR's stale text to status.md's unfiled follow-ups or to nowhere
+   (B1 to B9); only B5 has been fixed since. The row: such a follow-up is
+   filed as a queued row, or rides the next lane that touches the row, so it
+   cannot lapse. Its first set: LLR-273's `module`, LLR-150, LLR-123's
+   rationale, LLR-362, LLR-153's label, LLR-312, and LLR-172 with TC-166.
+2. **WI-1019: WI-1001's rule has no LLR** (B10). The row: amend LLR-366 or
+   mint an LLR under SR-157 stating that an accepted automated TC no tag names
+   is a finding (the operator's acceptance).
+3. **WI-1020: accepted rows are amended only by addition**
+   (`coordinator-cycle` recipes, "Brief Terra to amend an accepted row by
+   addition"). It guards against lost obligations, and it makes accepted rows
+   grow (wi-977's 008 F6: LLR-149 repeats a sentence) where a re-cut would
+   retire and mint. The row: the recipe names §5's re-cut as the alternative
+   to appending. One case in the sample, so the operator may cancel it.
 4. **A module joins a component only through a design row naming it** (A1).
-   Not a new row: variant F's placement on the realization removes that
-   binding, and review-churn phase 3 still needs its rows (HANDOFF §12.6).
+   Not a new row: it is covered by the review-churn plan's phase 3 (variant
+   F, whose placement on the realization removes that binding). Phase 3's
+   rows are the operator's call, put to them in
+   `docs/plans/2026-11-21-queue-drill/HANDOFF.md` §3.
 
 ### Tests
 
@@ -225,7 +229,9 @@ as outside this row's homes.)
 - `AGENTS.template.md` (9,964), `CLAUDE.md` (8,052) and `PROCESS_OPTIONS.md`
   untouched.
 
-Left undone: the four rows above, named and not filed; the review.
+Left undone: nothing in the Done-when. Rows 1 to 3 above are filed on trunk
+at the landing as WI-1018 to WI-1020; row 4 is covered by the review-churn
+plan's phase 3, put to the operator.
 
 ## Context
 

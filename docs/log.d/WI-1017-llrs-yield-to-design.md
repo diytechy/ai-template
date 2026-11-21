@@ -1,7 +1,8 @@
 ## 2026-11-21 — WI-1017: an LLR yields to a sustainable design; PROCESS.md §5 says it once and the readers point at it
 
-Deferred open items: none — the four rows the sample names are left for the
-coordinator to file; none holds an operator decision this session took.
+Deferred open items: none — the causes outside the guidance are work rows
+filed on trunk at the landing (WI-1018 to WI-1020) or the review-churn plan's
+phase 3, which the queue-drill hand-off puts to the operator.
 
 Review: pending (the coordinator).
 
@@ -31,10 +32,14 @@ Deliverable (`../archive/work/complete/WI-1017-llrs-yield-to-design.md`).
   and scope-critique rubrics point at it. The builder agent and K3 tag new
   code with the LLR whose stated behavior it implements, not the one whose
   module is the file.
-- **Rows to file, not built:** stale row text a lane leaves (the post-gate
-  rule; seven rows listed), WI-1001's rule that no LLR states, the
-  amend-by-addition recipe (one case; the coordinator's call), and the
-  containment rule (already variant F's phase 3).
+- **Causes outside the guidance, not built:** work ids are minted on trunk,
+  so the coordinator files rows 1 to 3 there at the landing, from the
+  Deliverable's descriptions: WI-1018 (row text a lane leaves stale is filed;
+  seven rows listed as its first set), WI-1019 (WI-1001's rule has no LLR)
+  and WI-1020 (accepted rows amended only by addition; one case, the
+  operator may cancel it). Row 4, the containment rule, is covered by the
+  review-churn plan's phase 3 (variant F), whose rows are the operator's
+  call, put to them in `../plans/2026-11-21-queue-drill/HANDOFF.md` §3.
 - **Decisions:** `docs/decisions/maint-wi-1017.toml` D-001 (the
   coordinator's procedure is outside this row's homes), D-002 (no spine row
   minted; the pin rides `tests/test_prompts.py`'s file-level tag).
