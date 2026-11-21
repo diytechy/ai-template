@@ -1,0 +1,15 @@
+high_risk = ["D-002"]
+
+[decision.D-001]
+decided = "docs/decisions/run-000-example.toml, the scaffolded copy of decisions.template.toml, is left as it is: the template's new header paragraph is not copied into it."
+alternative = "Copy the new template over it, since the brief asks that a dogfooded instance of a changed file be kept in step."
+reversal_cost = "One commit copying the template over the example; nothing reads the example (its one entry is -000)."
+why_not_escalated = "A reading of scope: the row's Done-when keeps every file under docs/decisions/ as written, tests/test_dogfood_sync.py does not pin the example, and it already carries the header from before WI-1009 (owner and [attestation] wording), so bringing it in step means rewriting more than this row changes. The RESYNC entry tells adopters their copy keeps the old header until copied over."
+review = ""
+
+[decision.D-002]
+decided = "Two texts that still send conduct-of-the-run calls to a decisions record are left unchanged: PROCESS.md section 6 (a dismissed review finding is recorded in the delegated-decisions record too, when the run keeps one) and the coordinator-cycle skill, which records test dispositions, triage dismissals, dispute rulings and failed commit-check rounds in the lane's record."
+alternative = "Bring both into line with the new routing in this row: drop the parenthetical in PROCESS.md section 6 and re-point the coordinator-cycle skill's mandated entries to the commit, the log fragment or the round's own files."
+reversal_cost = "A follow-up row editing PROCESS.md (byte-watched) and the coordinator-cycle skill and its copies; no code and no record changes."
+why_not_escalated = "A reading of scope: the row names the routing table, the template's header and session_note as the routing and its two copies, and bounds the routing to the calls a build or adjudication session makes under a recording dial; the coordinator's own procedure and the review threat model sit outside that named surface. Reported to the coordinator rather than changed here."
+review = ""
