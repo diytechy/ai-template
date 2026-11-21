@@ -286,10 +286,11 @@ backlink_coverage_min = 50
 # f537fc531d (the parent of the phase-6 acceptance act), judged 63
 # requirements, all clean, before the cut.
 test_first_since = "f6dd5b87a182a3b8fc555796ce845221227d6c64"
-# The assumption gate, OFF here: enabling it is this repository's own act,
-# taken once its requirements' assumptions are accepted (the shipped
-# template's comment on this key is the canonical doc).
-assumption_gate = false
+# The assumption gate, ON here since 2026-11-20: the act that accepted this
+# repository's assumptions and surrogates (seq 184) left its four steps with no
+# finding, and the operator had asked for it on when ready (2026-11-18). The
+# shipped template's comment on this key is the canonical doc.
+assumption_gate = true
 
 [adjudicator]
 # Adjudicator session retention, shipped OFF (`context_reset_pct = 0`: every

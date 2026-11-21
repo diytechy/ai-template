@@ -40,8 +40,8 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
      modular are in scope. B8's overnight launcher goes.
   2. **The queue:** the ready frontier below. Every queued row owes its scope
      critique before a claim. The operator's act over the assumptions and
-     surrogates is taken (seq 184); the flip to `assumption_gate = true`
-     follows it.
+     surrogates is taken (seq 184), and the assumption gate is on
+     (`assumption_gate = true`).
   3. **Downstream (HANDOFF §7):** the second migrator pass is done where it
      was safe (HANDOFF §12.6, 2026-11-19). Left: FileBackup, held by the
      operator until its conversion is merged; the four conversions paused
@@ -56,7 +56,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   at low effort. Pushing is the operator's (`push = "operator"`).
 - **Assumption tier — C1 and C2 have landed and are approved:** the
   redrawn frame, checkpoint re-judging of observation tests, the assumption
-  gate's four steps (behind `[checks] assumption_gate = false`), and C2's
+  gate's four steps (`[checks] assumption_gate`, on since 2026-11-20), and C2's
   assumption and surrogate rows with every SR's bridging. The owner signed
   the assumption ruling on 2026-10-02: an assumption carries status and standing
   only, falsification is the one signal, and there is no evidence ladder, so

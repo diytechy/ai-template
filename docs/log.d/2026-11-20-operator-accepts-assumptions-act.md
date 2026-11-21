@@ -27,5 +27,8 @@ Deferred open items: none.
   builds on it) is met by the unread October decisions backlog, so its
   standing is the operator's to rule next.
 - **Effect:** the record's copies equal the live registries; the page's
-  section 2 is empty. The assumption gate (`[checks] assumption_gate`) is
-  still off; turning it on is the next commit.
+  section 2 is empty.
+- **The assumption gate is on** (`[checks] assumption_gate = true`, the
+  commit after the act): its four steps report no finding with every
+  assumption accepted, which is when the operator asked for it
+  (2026-11-18: "turn on the assumption check when ready").

@@ -1101,6 +1101,10 @@ def test_the_shipped_template_declares_every_checks_dial_at_todays_default():
         # vocabulary cut onto trunk (operator ruling 2026-11-16): acceptances
         # before the cut are under a spelling the current reader does not read.
         "test_first_since": "f6dd5b87a182a3b8fc555796ce845221227d6c64",
+        # SR-205: on since 2026-11-20, once the operator's act (seq 184)
+        # accepted this repo's assumptions and the gate's four steps found
+        # nothing; the operator asked for it on when ready (2026-11-18).
+        "assumption_gate": True,
     }
     assert live["checks"] == {**checks, **OPERATOR_DIALS}
     # AND THE README'S DIAL TABLE, whose third column is this repo's own value
