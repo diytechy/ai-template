@@ -11919,19 +11919,24 @@ or to an exit. `decisions.template.toml`'s header says the same.
 `kitlib.decisions.session_note`, the instruction the loop appends to a build
 or adjudication session's body under `record` or `escalate-first`, now names
 the table's home and the two kinds of call left to record, in place of the
-registry, spine or kit-file route; its signature is unchanged. The record's
+registry, spine or kit-file route; its signature is unchanged. `PROCESS.md`
+§6, "Review threat model", no longer sends a dismissed finding to the
+delegated-decisions record as well: a dismissal selects no design, so its
+one recorded line stays in the response to the review verdict. The record's
 format, the close refusal and the overrule sync do not change.
 
 **What to do.** Nothing is forced and nothing migrates: every record you
 have stays valid as written, including entries the new routing would leave
 out, and nothing asks you to prune them. Overwrite the files below. If you
 adjusted the routing table in your own `docs/process-options.md`, carry your
-adjustment into the new table. Your `docs/decisions/run-000-example.toml`
+adjustment into the new table. A procedure of your own that sends review
+triage, dismissals or reviewer substitutions to the record can send them to
+the commit and the log fragment instead. Your `docs/decisions/run-000-example.toml`
 keeps the template's old header comment until you copy the new one over it;
 it is the example and is never judged.
 
 **Kit-owned files — overwrite:** `scripts/kitlib/decisions.py`,
-`decisions.template.toml`, `PROCESS_OPTIONS.md`.
+`decisions.template.toml`, `PROCESS_OPTIONS.md`, `PROCESS.md`.
 
 **Adopter-merged files:** none.
 

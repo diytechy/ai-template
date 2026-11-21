@@ -1052,8 +1052,7 @@ A finding whose reproduction needs the host itself compromised or contrived (a
 fake or hostile binary, a shim whose output depends on the working directory,
 the environment or `PATH` changed by another process mid-call, a tampered OS
 or tool) is out of scope: it is dismissed in one recorded line by whoever
-rules the finding, in the response to the review verdict (and in the
-delegated-decisions record too, when the run keeps one), and never answered
+rules the finding, in the response to the review verdict, and never answered
 with code. A finding whose reproduction needs a contrived, improbable scenario
 is dismissed the same way (operator ruling 2026-10-13): a hand act the process
 forbids (rewinding the trunk branch, skipping or disabling a hook,

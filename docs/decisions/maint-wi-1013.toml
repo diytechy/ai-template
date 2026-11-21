@@ -1,4 +1,4 @@
-high_risk = ["D-002"]
+high_risk = []
 
 [decision.D-001]
 decided = "docs/decisions/run-000-example.toml, the scaffolded copy of decisions.template.toml, is left as it is: the template's new header paragraph is not copied into it."
@@ -8,8 +8,8 @@ why_not_escalated = "A reading of scope: the row's Done-when keeps every file un
 review = ""
 
 [decision.D-002]
-decided = "Two texts that still send conduct-of-the-run calls to a decisions record are left unchanged: PROCESS.md section 6 (a dismissed review finding is recorded in the delegated-decisions record too, when the run keeps one) and the coordinator-cycle skill, which records test dispositions, triage dismissals, dispute rulings and failed commit-check rounds in the lane's record."
-alternative = "Bring both into line with the new routing in this row: drop the parenthetical in PROCESS.md section 6 and re-point the coordinator-cycle skill's mandated entries to the commit, the log fragment or the round's own files."
-reversal_cost = "A follow-up row editing PROCESS.md (byte-watched) and the coordinator-cycle skill and its copies; no code and no record changes."
-why_not_escalated = "A reading of scope: the row names the routing table, the template's header and session_note as the routing and its two copies, and bounds the routing to the calls a build or adjudication session makes under a recording dial; the coordinator's own procedure and the review threat model sit outside that named surface. Reported to the coordinator rather than changed here."
+decided = "Resolved in this row after review round 1: PROCESS.md section 6 and the coordinator-cycle skill no longer send conduct-of-the-run calls to a decisions record. Dismissals, re-grades, dispute rulings and the convergence map go to the response to the review, a commit message a convergence reviewer does not read; reviewer stand-ins, failed commit-check rounds, a lane keeping an older order and operator-held steps go to the commits, the log fragment or the handoff; the skill records a call only when the routing table routes it there. SR-233, LLR-311 and TC-332 drop the section 6 clause, text only."
+alternative = "Leave both texts as they were and report the contradiction for a follow-up row, as this entry first recorded."
+reversal_cost = "One commit restoring the PROCESS.md clause and the skill's record sends (all three copies), and the three spine rows' text, each owing re-acceptance again."
+why_not_escalated = "A reading of scope, first left for the coordinator, who ruled after review round 1 that the fix lands in this row. The convergence map and a finding's outcome go to a commit message rather than the log fragment because a convergence reviewer reads the log fragment and must not see earlier verdicts."
 review = ""

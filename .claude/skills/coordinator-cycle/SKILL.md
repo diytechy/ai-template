@@ -62,8 +62,8 @@ and 33):
   parallel, each from its own `review_brief.py review --scope full` render
   with its own `--scratch`, so each has its own verdict path and its own
   `--basetemp`.
-- A Claude REVIEW-B is recorded as a substitution in the lane's decisions
-  each time it stands in (ruling 7). The operator chose Claude Opus at high for
+- A Claude REVIEW-B is recorded as a substitution in the round's commit
+  and the lane's log fragment each time it stands in (ruling 7). The operator chose Claude Opus at high for
   the slot when the program's three-reviewer trial ended (revision 37's
   trial; coordinator-2026-10-16 D-008): it caught what Sol missed, while the
   second stand-in's unique catches never changed a round.
@@ -210,8 +210,9 @@ Rows and tests come before the code (`project-trajectory/PROCESS.md` §4,
    - **An Inspection, Analysis or Vouch TC:** the independently checkable
      evidence its declared method names, as the TC row states it.
 
-   A test that fits none is named, with its disposition, in the lane's
-   decisions record before the code commit.
+   A test that fits none is named, with its disposition, in the
+   tests-first commit and the log fragment, and in the lane's decisions
+   record only when §5 sends it there.
 
    The tests-first commit goes through `integrate.py record-checks` with a test
    set that names each marked file: the file carries a tag to a TC in the
@@ -221,13 +222,14 @@ Rows and tests come before the code (`project-trajectory/PROCESS.md` §4,
    change with the marks kept first. A refresh or a hand landing (recipes
    §3) refused for a mark ends in the code commit or a quarantine. A test the checks skip takes no mark,
    because a skip is never evidence: it is named, with its disposition,
-   in the lane's decisions record.
+   in its commit and the log fragment, and in the lane's decisions record
+   only when §5 sends it there.
 3. The builder then builds the code. Re-run its claimed results yourself,
    then verify, regenerate and commit through `integrate.py record-checks`
    (recipes §6).
 
-A lane claimed before this order landed keeps the order it started with;
-record that as a decision in its decisions record.
+A lane claimed before this order landed keeps the order it started with,
+and says so in its commit and its log fragment.
 
 ### Iterate: code only, in counted full rounds
 
@@ -258,8 +260,10 @@ Each round:
 4. **Triage under the review threat model** (`project-trajectory/PROCESS.md`
    §6, "Review threat model"). Dismiss a finding whose reproduction needs a
    compromised or contrived host, or a contrived scenario, in one recorded
-   line, in the lane's `docs/decisions/<branch>.toml`, and never answer it
-   with code; re-grade a mislabelled BLOCKER or MAJOR there too. Send a
+   line, in the response to the review (the message of the commit that
+   answers the round, which a convergence reviewer does not read), and
+   never answer it with code; re-grade a mislabelled BLOCKER or MAJOR
+   there too. Send a
    contested finding to a dispute sitting (step 7). Only a BLOCKER or a MAJOR
    costs a round; a MINOR goes to the spine change list or a successor row,
    and so does a reviewer's coverage-extension note (ruling 1), which carries
@@ -287,9 +291,11 @@ Each round:
    builder's position verbatim; do not argue the finding. Each finding comes
    back FIX, SUCCESSOR (a row of its own, filed on trunk at the landing),
    DISMISS with a reason class, or ESCALATE to the operator; the ruling is
-   final. Record each ruling in the lane's decisions record, never re-raise a
-   dismissed finding, and exclude a dismissed or successor finding from the
-   next coverage plan by citing the verdict.
+   final. Its verdict file is its record: cite it in the response to the
+   review, and record a ruling in the lane's decisions record only when §5
+   sends it there. Never re-raise a dismissed finding, and exclude a
+   dismissed or successor finding from the next coverage plan by citing
+   the verdict.
 8. **A consolidation outside the spec's named surface stops the round.** When
    the fix needs one owner for something several modules outside the spec
    already read, the builder reports it rather than building it. You file a
@@ -313,7 +319,7 @@ this hold (`project-trajectory/PROCESS.md` §4).
   finding, and the checkpoint follows it.
 - **The commit-check failure cap** (revisions 17 and 18): failed commit checks
   draw no review. Count each failed `integrate.py record-checks` as a failed round in
-  the lane's decisions record; at `[build] stop_lane_after_consecutive_commit_check_failures`
+  the lane's log fragment; at `[build] stop_lane_after_consecutive_commit_check_failures`
   consecutive failed rounds, close the lane partial (recipes §8, "Close a lane partial"), never a new stop.
 - **Which rounds run in convergence stance.** The third counted round, the
   last the cap allows, renders `review --scope full --stance convergence`
@@ -327,8 +333,9 @@ this hold (`project-trajectory/PROCESS.md` §4).
   finding to a regression test that fails on the pre-fix code or, for a fix
   with no executable test, to independently checkable evidence (the
   corrected text at the cited site, or an inspection record). Record the map
-  in the lane's decisions, which the reviewers do not read. A round that
-  cannot be mapped in full does not start.
+  in a commit message on the lane (an empty commit will do), which a
+  convergence reviewer does not read. A round that cannot be mapped in
+  full does not start.
 - **At the cap, and after a convergence round,** every open BLOCKER or MAJOR
   goes to one dispute sitting, which rules each FIX, SUCCESSOR, DISMISS or
   ESCALATE. Only that sitting moves a finding to a successor row (owner,
@@ -339,7 +346,7 @@ this hold (`project-trajectory/PROCESS.md` §4).
   ruling of a recorded verdict, from its binding (§4). Without one nothing
   is filed, and the finding holds the landing.
 - **A lane in flight when this shape landed** starts its count at zero at
-  its next review, recorded as a decision.
+  its next review, noted in its log fragment.
 
 ### Checkpoint: when a counted round has no BLOCKER or MAJOR
 
@@ -436,9 +443,11 @@ Two landing rules for the machinery itself (operator, 2026-10-14; revision 37):
 
 ## 5. Decisions and the operator
 
-Record calls not already settled by the spec or a ruled item in
-`docs/decisions/<branch>.toml` (`coordinator-<date>.toml` for calls on trunk),
-with the riskiest in `high_risk`. Ask the operator to **confirm or overrule**,
+Record a call in `docs/decisions/<branch>.toml` (`coordinator-<date>.toml`
+for calls on trunk) only when the routing table in
+`project-trajectory/PROCESS_OPTIONS.md`, "Delegated decisions record",
+routes it there, with the riskiest in `high_risk`; a call the table leaves
+out goes where the table sends it. Ask the operator to **confirm or overrule**,
 never to approve. Anything keeping a row from building forward is filed as
 `project-trajectory/PROCESS.md` §5, "Open items", states; then move to the next
 row. A held-rung acceptance stops no lane, a new need's or a frame external
@@ -526,8 +535,8 @@ Any other step the session prompt's Never list or §5 reserves to the operator i
 treated the same way. For each such step, the leg:
 
 1. brings the lane to a safe committed point;
-2. records the step and its evidence (the verdict, the rows, the command) in
-   the lane's decisions record and under the new handoff's "For the operator";
+2. records the step and its evidence (the verdict, the rows, the command)
+   under the new handoff's "For the operator" and in the lane's log fragment;
 3. files the step as an open item where none holds it
    (`project-trajectory/PROCESS.md` §5, "Open items");
 4. moves to the next row.
@@ -603,7 +612,7 @@ Operator-reserved acts and standing prohibitions:
 - Self-review, or adjudicate through a subagent. If Codex is rate-limited,
   wait for its reset. After Codex has been unavailable for more than two hours,
   fill the REVIEW-A slot with a fresh independent Claude reviewer and record
-  the same-family relaxation in the decisions record.
+  the same-family relaxation in the round's commit and the log fragment.
 - Skip a hook, or add a fallback, degenerate or legacy path. Fix the single
   point of failure instead.
 - Change `~/.claude` settings, or install software the handoff does not name.
