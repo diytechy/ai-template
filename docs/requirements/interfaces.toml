@@ -2926,3 +2926,13 @@ component = "CMP-008"
 interface_from_external = "B-10"
 coincident = """Its reading is the outcome: a verdict that rules every requested finding exactly once, from the declared rulings and with a reason, is the ruling the dispute ends on; anything else is refused whole, and no ruling is defaulted."""
 rationale = """An adjudicator answering a dispute writes its verdict in a grammar the kit defines, and the dispute's bound rests on reading that grammar strictly. Declaring the surface the adjudicator writes into keeps the grammar the brief asks for and the one validation reads as one."""
+
+[interface.IF-325]
+rationale = """The lifecycle panel shows which tiers hold each rung and how many rows each holds. Reading both from the module that derives the stage keeps the panel from restating a mapping that moves whenever a tier or a rung is added."""
+owner = "scripts/spine_rules"
+requestors = ["scripts/traj_parse"]
+channel = "call"
+data = "RUNG_TIERS: rung -> ((tier, spine_stage keyword), ...) · load_spine(docs): those rows, keyed by keyword"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"

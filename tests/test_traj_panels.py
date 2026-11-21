@@ -243,12 +243,14 @@ def test_process_tab_renders_three_panels_from_live_data(tmp_path):
     assert "Artifact lifecycle × the stage ladder" in text
     assert "The station cycle" in text
     assert "Slices → phase → the checks" in text
-    # panel 1 joins the spine registries (make_repo: 1 SN, 2 SR / 1 Accepted,
-    # 3 LLR, 4 TC) — live counts, not prose
-    assert "1 SN" in text
-    assert "2 SR · 1 accepted" in text
-    assert "3 LLR" in text and "4 TC" in text
-    assert "1 of 2 SR accepted" in text
+    # panel 1 joins the spine registries (make_repo: 1 SN, 2 SR, 3 LLR, 4 TC, and
+    # none of the other tiers) — live counts, not prose. WI-1014: one row per
+    # rung, each counting the tiers that hold it.
+    assert '<span class="n">1 SN · no STK</span>' in text
+    assert '<span class="n">2 SR</span>' in text
+    assert '<span class="n">3 LLR</span>' in text
+    assert '<span class="n">4 TC</span>' in text
+    assert '<span class="n">no evidence record</span>' in text
     # the pre-station picture is gone: the serial resume-loop chips and their
     # escalation bullets do not survive the redraw (their successors are the
     # handback outcome and the surface arm, asserted by the station tests).
@@ -273,35 +275,22 @@ def test_process_tab_renders_three_panels_from_live_data(tmp_path):
 
 def test_process_current_stage_highlight_follows_docs_stage(tmp_path):
     """Implements: TC-051"""
-    # RE-KEYED FROM THE BAR AXIS (WI-498 slice 5), name and all: the concern is
-    # unchanged — a lifecycle tier is `now` iff the DERIVED value falls in its
-    # declared span — but the value read from `docs/stage` is one of the eight
-    # LADDER RUNGS, so the spans are rung spans and the attribute is
-    # `data-stages=`. Every tier is asserted at both readings, not just the
-    # moving ones: under the old three-value axis a tier could only be missed by
-    # a span typo, while under eight rungs a repo standing at an unclaimed rung
-    # would silently highlight nothing at all.
-    with_stage(tmp_path, "DevStg-Reqs")
-    assert gen(tmp_path).returncode == 0
-    text = html_of(tmp_path)
-    assert "Stage: <b>DevStg-Reqs</b> — the rung this repo is IN" in text
-    assert 'class="stg" data-stages="DevStg-Needs"' in text  # SN done
-    assert 'class="stg now" data-stages="DevStg-Boundary→DevStg-Reqs"' in text  # SR
-    assert 'class="stg" data-stages="DevStg-Arch→DevStg-LLReqs"' in text  # LLR not yet
-    assert 'class="stg" data-stages="DevStg-Tests"' in text  # TC not yet
-    assert 'class="stg" data-stages="DevStg-Impl"' in text  # code+tests not yet
-
-    write_stage(tmp_path, "DevStg-Impl")
-    assert gen(tmp_path).returncode == 0
-    text = html_of(tmp_path)
-    assert "Stage: <b>DevStg-Impl</b> — the rung this repo is IN" in text
-    assert 'class="stg" data-stages="DevStg-Needs"' in text  # SN no longer current
-    assert 'class="stg" data-stages="DevStg-Boundary→DevStg-Reqs"' in text  # nor SR
-    assert 'class="stg" data-stages="DevStg-Arch→DevStg-LLReqs"' in text  # nor LLR
-    assert 'class="stg" data-stages="DevStg-Tests"' in text  # nor TC
-    assert 'class="stg now" data-stages="DevStg-Impl"' in text  # code+tests
-    # exactly one tier is current at a time — the panel's whole claim
-    assert text.count('class="stg now"') == 1
+    # RE-KEYED FROM THE BAR AXIS (WI-498 slice 5), then from rung SPANS to one
+    # row per rung (WI-1014): a row is `now` iff the value recorded in
+    # `docs/stage` IS its rung. Every rung is asserted at both readings, not just
+    # the moving ones; TC-456 drives all eight in process.
+    rungs = load_script("spine_rules").STAGE_ORDER
+    make_repo(tmp_path)
+    for stage in ("DevStg-Reqs", "DevStg-Impl"):
+        write_stage(tmp_path, stage)
+        assert gen(tmp_path).returncode == 0
+        text = html_of(tmp_path)
+        assert "Stage: <b>{}</b> — the rung this repo is IN".format(stage) in text
+        for rung in rungs:
+            cls = "stg now" if rung == stage else "stg"
+            assert 'class="{}" data-stages="{}"'.format(cls, rung) in text, rung
+        # exactly one row is current at a time — the panel's whole claim
+        assert text.count('class="stg now"') == 1
 
 
 def test_process_now_marker_carries_a_worded_cue_not_border_alone(tmp_path):
@@ -398,7 +387,7 @@ def test_meta_process_tab_smoke():
     gt = load_script("gen_trajectory")
     wis, integrity = ct.load_wis(ct.read_registry_rows(ROOT / ct.WI_CSV))
     assert not integrity
-    out = gt.process_panel(ROOT, wis, gt.spine_stats(ROOT))
+    out = gt.process_panel(ROOT, wis)
     assert out is not None
     tab, panel = out
     assert 'data-tab="process"' in tab
@@ -410,6 +399,172 @@ def test_meta_process_tab_smoke():
     assert "project-trajectory/PROCESS.md" in hrefs
     for href in hrefs:
         assert (ROOT / href).exists(), href
+
+
+# --- TC-456: panel 1 draws every rung and the tiers holding it (WI-1014) ------
+# The rows come from the ladder (kitlib.ladder via spine_rules) and each rung's
+# tiers from spine_rules.RUNG_TIERS, never from a list in the panel; the counts
+# are the rows spine_rules.load_spine hands the derivation, plus the committed
+# evidence record.
+
+_PANEL_ROW = re.compile(
+    r'<li class="stg(?: now)?" data-stages="([^"]*)">.*?<b>(.*?)</b>'
+    r'<span class="g">(.*?)</span><span class="n">(.*?)</span></li>'
+)
+
+_TIERED_NEEDS = """[need.SN-001]
+status = "Accepted"
+need = "Do the thing well."
+why = "Users need it."
+priority = "M"
+acceptance = "works end to end."
+stakeholder_refs = ["STK-001", "STK-002"]
+
+[stakeholder.STK-001]
+name = "Adopter"
+description = "Owns the delivered package."
+party = "EXT-001"
+status = "Accepted"
+
+[stakeholder.STK-002]
+name = "Maintainer"
+description = "Owns the upkeep."
+party = "EXT-001"
+status = "Accepted"
+"""
+
+_TIERED_FRAME = """[entity.EXT-001]
+name = "Downstream adopter"
+class = "operational"
+description = "The team that adopts the package."
+status = "Accepted"
+""" + "".join(
+    """
+[boundary.B-0{n}]
+entity = "EXT-001"
+direction = "out"
+carries = "crossing {n}"
+status = "Accepted"
+""".format(n=n)
+    for n in (1, 2, 3)
+)
+
+_TIERED_ASSUMPTIONS = """[assumption.DA-001]
+effect_at = ["B-01"]
+assumption = "Adopters read the page."
+holds_when = "Always."
+obstacle = "Nobody opens it."
+status = "Accepted"
+standing = "active"
+
+[assumption.DA-002]
+effect_at = ["B-02"]
+assumption = "Adopters act on it."
+holds_when = "Always."
+obstacle = "Nobody acts."
+status = "Accepted"
+standing = "active"
+
+[surrogate.SUR-001]
+name = "A scripted adopter"
+emulates = ["EXT-001"]
+description = "Stands in for the adopter in tests."
+status = "Accepted"
+"""
+
+_TIERED_COMPONENTS = """[component.CMP-001]
+name = "Core"
+category = "software"
+status = "Accepted"
+"""
+
+
+def _tiered_repo(root):
+    """make_repo plus one or more rows in every tier the ladder reads."""
+    make_repo(root)
+    req = root / "docs" / "requirements"
+    (req / "stakeholder-needs.md").unlink()
+    (req / "stakeholder-needs.toml").write_text(_TIERED_NEEDS, encoding="utf-8")
+    (req / "external.toml").write_text(_TIERED_FRAME, encoding="utf-8")
+    (req / "assumptions.toml").write_text(_TIERED_ASSUMPTIONS, encoding="utf-8")
+    (req / "components.toml").write_text(_TIERED_COMPONENTS, encoding="utf-8")
+    from kitlib import evidence as kit_evidence  # scripts/ is on sys.path here
+
+    record = {
+        "outcome": "pass",
+        "tier": "full",
+        "command": "pytest -q",
+        "revision": "0000000",
+        "binding": "sha256:0",
+    }
+    (root / kit_evidence.EVIDENCE_FILE).write_text(
+        kit_evidence.render(record, "2026-11-21"), encoding="utf-8"
+    )
+    return root
+
+
+def _panel_rows(root, stage="DevStg-Impl"):
+    gt = load_script("gen_trajectory")
+    _tab, panel = gt.process_panel(root, [], {"stage": stage})
+    return _PANEL_ROW.findall(panel)
+
+
+def test_lifecycle_panel_has_a_row_for_every_rung_with_the_tiers_holding_it(
+    tmp_path,
+):
+    """Implements: TC-456"""
+    rules = load_script("spine_rules")
+    rows = _panel_rows(_tiered_repo(tmp_path))
+    # The Vision lead row, then every rung the derivation returns, in ladder
+    # order, DevStg-Release included.
+    assert [stages for stages, _label, _rung, _note in rows] == [""] + list(
+        rules.STAGE_ORDER
+    )
+    assert rows[0][1:3] == ("Vision", "—")
+    for stages, label, rung, _note in rows[1:]:
+        assert rung == stages
+        tiers = rules.RUNG_TIERS[stages]
+        assert label == (" · ".join(code for code, _kw in tiers) or "—"), stages
+    # The counts are the rows each tier holds in this repository.
+    assert [note for *_rest, note in rows[1:]] == [
+        "1 SN · 2 STK",
+        "3 B · 2 DA · 1 SUR",
+        "2 SR",
+        "1 CMP",
+        "3 LLR",
+        "4 TC",
+        "1 evidence record",
+        rules.STAGE_DESC[rules.STAGE_RELEASE],
+    ]
+
+
+def test_lifecycle_panel_counts_follow_the_registries(tmp_path):
+    """Implements: TC-456"""
+    # The same panel over make_repo alone: the tiers it never adopted count none,
+    # and the spine tiers count what make_repo wrote.
+    notes = [note for *_rest, note in _panel_rows(make_repo(tmp_path))[1:-1]]
+    assert notes == [
+        "1 SN · no STK",
+        "no B · no DA · no SUR",
+        "2 SR",
+        "no CMP",
+        "3 LLR",
+        "4 TC",
+        "no evidence record",
+    ]
+
+
+def test_lifecycle_panel_marks_the_row_of_each_recorded_rung(tmp_path):
+    """Implements: TC-456"""
+    rules = load_script("spine_rules")
+    make_repo(tmp_path)
+    gt = load_script("gen_trajectory")
+    for stage in rules.STAGE_ORDER:
+        _tab, panel = gt.process_panel(tmp_path, [], {"stage": stage})
+        assert re.findall(r'<li class="stg now" data-stages="([^"]*)">', panel) == [
+            stage
+        ]
+        assert panel.count('<span class="nowtag">now</span>') == 1
 
 
 # --- WI-389: the station/lane cycle (docs/concurrency-v2.md, ruled 2026-07-31) --

@@ -627,3 +627,109 @@ def test_requirement_first_lifecycle_end_to_end(scaffold):
     # evidence-gated and has no producer; a reader seeing DevStg-Impl on a
     # finished-looking spine is being told the truth (WI-498 slice 3).
     assert _stage(scaffold) != RULES.STAGE_RELEASE
+
+
+# --- TC-455: the tiers holding each rung, as data (SR-168, LLR-393) -----------
+# `RUNG_TIERS` states `spine_stage`'s arms for the readers that draw the ladder
+# (the dashboard's lifecycle panel). It is pinned to the function by DRIVING it:
+# over a spine where every tier is settled, putting one tier in work returns the
+# rung the table names for that tier; and the table names every input the
+# function reads, so a new input fails here until the table says where it holds.
+
+# The keywords that travel with a tier's rows rather than being a tier: the need
+# tier's draft set, the requirement set the need-coverage arm reads, and the two
+# frame applies-when flags.
+_COMPANIONS = {
+    "sn_draft": "sn_ids",
+    "cited_srs": "srs",
+    "have_bifs": "bifs",
+    "have_cmps": "cmps",
+}
+
+
+def _settled():
+    """Every tier adopted, read and settled, and the harness evidence passing:
+    the spine `spine_stage` returns its top rung for."""
+    return {
+        "srs": [
+            {
+                "SR-ID": "SR-001",
+                "SN-Refs": "SN-001",
+                "VerificationMethod": "Test",
+                "Status": "Accepted",
+            }
+        ],
+        "llrs": [{"LLR-ID": "LLR-001", "SR-Refs": "SR-001", "Status": "Accepted"}],
+        "tcs": [
+            {"TC-ID": "TC-001", "Verifies": "SR-001;LLR-001", "Status": "Accepted"}
+        ],
+        "sn_ids": {"SN-001"},
+        "sn_draft": set(),
+        "bifs": [{"B-ID": "B-01", "Status": "Accepted"}],
+        "cmps": [{"CMP-ID": "CMP-001", "Status": "Accepted"}],
+        "have_bifs": True,
+        "have_cmps": True,
+        "das": [{"DA-ID": "DA-001", "Status": "Accepted"}],
+        "surs": [{"SUR-ID": "SUR-001", "Status": "Accepted"}],
+        "stks": [{"STK-ID": "STK-001", "Status": "Accepted"}],
+        "evidence_passed": True,
+    }
+
+
+def _with_a_drafted_row(rows, id_key, new_id):
+    """An ACTIVE tier (it keeps its accepted row) with a row still in work —
+    the three tiers read from their first acceptance hold nothing otherwise."""
+    return rows + [{id_key: new_id, "Status": "Drafted"}]
+
+
+def _first_drafted(rows):
+    return [dict(rows[0], Status="Drafted")] + rows[1:]
+
+
+# One way to put each tier in work, keyed by the keyword RUNG_TIERS names it by.
+_IN_WORK = {
+    "sn_ids": lambda kw: dict(kw, sn_draft={"SN-001"}),
+    "stks": lambda kw: dict(
+        kw, stks=_with_a_drafted_row(kw["stks"], "STK-ID", "STK-002")
+    ),
+    "bifs": lambda kw: dict(kw, bifs=_first_drafted(kw["bifs"])),
+    "das": lambda kw: dict(kw, das=_with_a_drafted_row(kw["das"], "DA-ID", "DA-002")),
+    "surs": lambda kw: dict(
+        kw, surs=_with_a_drafted_row(kw["surs"], "SUR-ID", "SUR-002")
+    ),
+    "srs": lambda kw: dict(kw, srs=_first_drafted(kw["srs"])),
+    "cmps": lambda kw: dict(kw, cmps=_first_drafted(kw["cmps"])),
+    "llrs": lambda kw: dict(kw, llrs=_first_drafted(kw["llrs"])),
+    "tcs": lambda kw: dict(kw, tcs=_first_drafted(kw["tcs"])),
+    "evidence_passed": lambda kw: dict(kw, evidence_passed=False),
+}
+
+
+def test_rung_tiers_covers_the_ladder_and_every_input_spine_stage_reads():
+    """Implements: TC-455"""
+    import inspect
+
+    assert list(RULES.RUNG_TIERS) == list(RULES.STAGE_ORDER)
+    named = [tier for tiers in RULES.RUNG_TIERS.values() for tier in tiers]
+    keywords = [keyword for _code, keyword in named]
+    codes = [code for code, _keyword in named]
+    assert len(set(keywords)) == len(keywords), "a tier is named at two rungs"
+    assert len(set(codes)) == len(codes), "two tiers share one name"
+    # Every input spine_stage reads is a tier the table names, or travels with one.
+    params = set(inspect.signature(RULES.spine_stage).parameters)
+    assert set(keywords) | set(_COMPANIONS) == params
+    assert set(_COMPANIONS.values()) <= set(keywords)
+    # Every tier the table names is driven by the next test; none is unpinned.
+    assert set(keywords) == set(_IN_WORK)
+
+
+def test_each_tier_in_work_holds_the_rung_rung_tiers_names():
+    """Implements: TC-455"""
+    settled = _settled()
+    assert RULES.spine_stage(**settled) == RULES.STAGE_RELEASE
+    # Nothing is in work at the top rung, so no tier holds it.
+    assert RULES.RUNG_TIERS[RULES.STAGE_RELEASE] == ()
+    for rung, tiers in RULES.RUNG_TIERS.items():
+        for code, keyword in tiers:
+            got = RULES.spine_stage(**_IN_WORK[keyword](settled))
+            assert got == rung, (code, keyword, got)

@@ -3958,3 +3958,27 @@ test_refs = "TC-447"
 status = "Accepted"
 component = "CMP-006"
 phase = 6
+
+[design.LLR-393]
+sr_refs = ["SR-168"]
+title = "The tiers holding each stage rung are stated once, as data beside the derivation, and held to it by driving it"
+module = "project-trajectory/scripts/spine_rules.py"
+code_symbol = "RUNG_TIERS"
+detail = """RUNG_TIERS in spine_rules maps every rung of the stage ladder, and only those, to the tiers whose in-work rows hold the repository at that rung, each named by its id prefix and the spine_stage keyword carrying its rows: DevStg-Needs to SN (sn_ids) and STK (stks); DevStg-Boundary to B (bifs), DA (das) and SUR (surs); DevStg-Reqs to SR (srs); DevStg-Arch to CMP (cmps); DevStg-LLReqs to LLR (llrs); DevStg-Tests to TC (tcs); DevStg-Impl to the evidence record (evidence_passed); DevStg-Release to none. A tier is named at one rung only. Over keyword arguments in which every tier is adopted, read and settled and the evidence passes, spine_stage returns DevStg-Release, and putting any one named tier in work returns the rung the table names for it. The keywords the table names, with sn_draft, cited_srs, have_bifs and have_cmps, which travel with a tier's rows, are exactly spine_stage's parameters. spine_stage does not read the table."""
+rationale = """A reader drawing the ladder that restates which tier holds which rung falls out of step with the derivation whenever a tier or a rung is added. Running spine_stage from the table would make that impossible, but its need-coverage arm sits after the requirement arm, so its arms are not a flat ladder; driving the function from a test holds the table to it instead, and a new parameter fails that test until the table names it."""
+test_refs = "TC-455"
+status = "Drafted"
+component = "CMP-006"
+phase = 6
+
+[design.LLR-394]
+sr_refs = ["SR-168"]
+title = "The Process tab's lifecycle panel draws every stage rung with the tiers holding it and how many rows each holds"
+module = "project-trajectory/scripts/traj_parse.py;project-trajectory/scripts/rendering/traj_panels.py"
+code_symbol = "rung_tiers/process_panel"
+detail = """traj_parse.rung_tiers(root) returns, for every rung of kitlib.ladder.STAGE_ORDER and in that order, the tiers spine_rules.RUNG_TIERS names for the rung, each with the number of rows spine_rules.load_spine returns under its keyword, so example -000 rows are not counted; the evidence tier counts the committed docs/test/evidence record (0 or 1) read through kitlib.evidence. process_panel's first panel draws a Vision row with no rung, then one row per rung: the tiers' names joined by " · " in bold, the rung, and each tier's count as "<n> <tier>", or "no <tier>" when it holds none; a rung no tier holds shows "—" and the rung's STAGE_DESC sentence. The row whose rung is the recorded stage carries the now class and the word now, so exactly one row is current at any of the eight rungs. The panel holds no list of rungs or tiers of its own."""
+rationale = """The panel answers which tiers hold the rung the repository stands at; reading the rungs from the ladder and each rung's tiers from the stage derivation's own table keeps it answering for a rung or tier added later, where a list in the renderer would go stale unseen."""
+test_refs = "TC-456"
+status = "Drafted"
+component = "CMP-009"
+phase = 6
