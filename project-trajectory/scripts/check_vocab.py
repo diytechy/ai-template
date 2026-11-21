@@ -83,6 +83,7 @@ the tool rather than by reading this docstring.
 
 import argparse
 import fnmatch
+import os
 import re
 import sys
 from pathlib import Path
@@ -383,6 +384,23 @@ def findings_for(text, rel):
     return out
 
 
+def _tree_files(root):
+    """Every file under `root`, sorted. A `SKIP_DIRS` directory is left before
+    the walk descends into it, and a directory gone by the time the walk reaches
+    it is skipped (`os.walk` passes over a listing that fails), where
+    `rglob` raised: in a lane refresh other check steps run beside this one,
+    and one removing its own cache directory failed the vocabulary step on a
+    tree with nothing wrong in it (2026-11-20).
+
+    Implements: SR-149, LLR-169
+    """
+    out = []
+    for folder, dirs, files in os.walk(root):
+        dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
+        out.extend(Path(folder) / name for name in files)
+    return sorted(out)
+
+
 def scan(root, list_scope=False):
     """`(findings, scanned_count)` over the whole tree.
 
@@ -390,7 +408,7 @@ def scan(root, list_scope=False):
     """
     root = Path(root).resolve()
     findings, scanned = [], 0
-    for path in sorted(root.rglob("*")):
+    for path in _tree_files(root):
         if not path.is_file():
             continue
         rel, reason = in_scope(path, root)

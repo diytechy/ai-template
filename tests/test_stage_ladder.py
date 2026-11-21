@@ -208,6 +208,39 @@ def _run_vocab(root, *args):
     )
 
 
+def test_a_directory_vanishing_mid_walk_does_not_crash_the_scan(tmp_path, monkeypatch):
+    """The scan walks the whole tree, and in a lane refresh other check steps
+    run beside it: one removed its `pytest-cache-*` directory while the walk was
+    inside it, `rglob` raised FileNotFoundError, and the vocabulary step failed
+    a refresh that had nothing wrong with it (the unfiltered suite,
+    2026-11-20, `test_dispatch`'s end-to-end drive). A directory that is gone
+    when the walk reaches it holds nothing to judge, so the scan skips it and
+    still judges every file it can read."""
+    import os
+
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "live.md").write_text("The rung is G3.\n", encoding="utf-8")
+    gone = tmp_path / "pytest-cache-files-x"
+    gone.mkdir()
+    (gone / "note.md").write_text("ok\n", encoding="utf-8")
+    real_scandir = os.scandir
+    reached = []
+
+    def vanishing_scandir(path="."):
+        if os.path.basename(os.fspath(path)) == gone.name:
+            reached.append(path)
+            raise FileNotFoundError(2, "gone mid-walk", os.fspath(path))
+        return real_scandir(path)
+
+    monkeypatch.setattr(os, "scandir", vanishing_scandir)
+    findings, scanned = vocab.scan(tmp_path)
+    # The walk did reach the directory and was refused its listing: a fix that
+    # merely skipped cache directories by name would not get here.
+    assert reached, "the walk never listed the vanishing directory"
+    assert scanned >= 1
+    assert any("docs/live.md" in f and "G3" in f for f in findings), findings
+
+
 @pytest.fixture
 def planted(tmp_path):
     """A tiny repo shape with one live authored surface and one of each carve-out

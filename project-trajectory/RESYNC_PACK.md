@@ -11877,6 +11877,23 @@ checks.
 
 **Adopter-merged files:** none.
 
+### The vocabulary check skips a directory that vanishes while it walks [since 979e128c5]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** `check_vocab.py` walked the whole tree with `rglob`, which
+raises when a directory is removed between being listed and being read. In a
+lane refresh other check steps run beside it, and one removing its own cache
+directory failed the vocabulary step on a tree with nothing wrong in it. The
+walk now uses `os.walk`, which passes over such a directory, and leaves the
+tool and VCS directories it already ignored (`.git`, `.venv`, `out` and the
+rest of `SKIP_DIRS`) before descending into them. The files it judges, and its
+findings, are unchanged.
+
+**What to do.** Nothing is forced.
+
+**Kit-owned files — overwrite:** `scripts/check_vocab.py`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
