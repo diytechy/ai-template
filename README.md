@@ -220,11 +220,14 @@ chasing it.
 The process stores every durable fact as **one registry row**, referenced
 everywhere else by id ([`PROCESS.md`](project-trajectory/PROCESS.md) §2–§3);
 anything visual or navigable is a **generated view** of those rows, never a
-second home for them. They come in **three** kinds, and the middle one is the
+second home for them. They come in **four** kinds, and the second is the
 one most often mis-read: four registries form the required **spine**; the
 **depth-0 frame** (`external.toml` — `EXT`/`B`/`REL`) is off-spine but equally
 **required**, because `DevStg-Boundary` is rung 1 of the stage ladder and
-`bootstrap.py` installs the file for every profile; the rest are genuinely
+`bootstrap.py` installs the file for every profile; three tiers —
+**stakeholders** (`STK`, in the needs file), **domain assumptions** and
+**surrogates** (`DA`/`SUR`, `assumptions.toml`) — are optional, and the stage
+reads each from its first accepted row; the rest are genuinely
 **optional layers** a project adopts only when its scope earns them. The frame
 ships *inert*, not absent — a `-000` placeholder that costs a single-module
 project nothing — and "inert until filled" is the honest gloss, never
@@ -240,36 +243,72 @@ graph LR
     SN["SN-### need"] --> SR["SR-### requirement"]
     SR --> LLR["LLR-### design"]
     LLR --> TC["TC-### test"]
+    SR --> TC
   end
   subgraph frame["The depth-0 frame — off-spine but REQUIRED; ships inert, rung 1 reads it"]
     EXT["EXT-### external entity"]
     B["B-## boundary crossing"]
     REL["REL-### external relationship"]
   end
+  subgraph read["Read by the stage from their first acceptance — optional"]
+    STK["STK-### stakeholder (in the needs file)"]
+    DA["DA-### domain assumption"]
+    SUR["SUR-### surrogate"]
+  end
   subgraph off["Off-spine layers — optional; id-integrity-checked when present"]
     WI["WI-### work item"]
+    OI["OI-### open item"]
     IF["IF-### interface"]
     PB["PB-### perf budget"]
     PART["PART-### purchased part"]
     ASSET["ASSET-### binary asset"]
     CMP["CMP-### component"]
     REPO["REPO-### delegated repo"]
+    HAT["hat (a roster name, no id)"]
   end
-  B -- "Entity" --> EXT
-  REL -- "From/To" --> EXT
-  SR -- "Boundary-Refs" --> B
-  IF -. "realizes (from/to_external)" .-> B
-  WI -- "SR-Refs" --> SR
-  IF -- "req_refs" --> SR
+  B -- "entity" --> EXT
+  REL -- "from / to" --> EXT
+  SN -- "stakeholder_refs" --> STK
+  STK -- "party" --> EXT
+  SR -- "boundary_refs" --> B
+  SR -- "da_refs" --> DA
+  TC -- "assumption_refs" --> DA
+  DA -- "effect_at" --> B
+  DA -- "realized_by" --> SUR
+  SUR -- "emulates" --> EXT
+  IF -. "realizes: interface_from_external / interface_to_external" .-> B
+  IF -- "bridged_by" --> DA
+  TC -- "verifies" --> IF
+  IF -- "verified_by" --> TC
+  IF -- "verified_by" --> LLR
+  SR -- "hat_refs" --> HAT
+  LLR -- "hat_refs" --> HAT
+  DA -- "obstacle_hats" --> HAT
+  WI -- "sr_refs" --> SR
+  WI -- "needs" --> OI
   PB -- "Refs" --> SR
+  PB -- "Refs" --> LLR
   REPO -- "DelegatedSRs" --> SR
   PART -- "IF-Ref" --> IF
+  ASSET -- "Refs" --> SR
   ASSET -- "Refs" --> LLR
-  LLR -. "Component tag" .-> CMP
-  IF -. "Component tag" .-> CMP
-  ASSET -. "Component tag" .-> CMP
-  PART -. "Component tag" .-> CMP
+  LLR -. "component" .-> CMP
+  IF -. "component" .-> CMP
+  ASSET -. "Component" .-> CMP
+  PART -. "Component" .-> CMP
 ```
+
+Inside the spine an arrow runs from parent to child: the child's `sn_refs`,
+`sr_refs` or `verifies` names the parent. Every other arrow runs from the row
+holding the cell to the row it names, labelled with the cell as its template
+spells it (a TOML key, or a CSV template's header); a dotted arrow is a
+tie-back or a membership tag rather than a trace link. Not drawn: links inside
+one registry (SR `delivered_with`, IF `carried_by`, CMP `part_of` /
+`superseded_by` / `derivation`, EXT `mediates`, a work item's `needs` naming
+another work item); cells naming paths rather than rows (IF `owner` /
+`requestors` / `consumers`, LLR `module` / `code_symbol`, SN `source`, CMP
+`knowledge`, a module named in PB `Refs`); and a test case's observation cells
+(`inputs`, `trigger`), which name rows only to say when a result goes stale.
 
 ### The spine — required, every project
 
@@ -296,7 +335,19 @@ rung 1; leaving it inert is a *statement*, not an omission, and that is what
 
 | Registry | Ids | What it does |
 |---|---|---|
-| [`external`](project-trajectory/registries/external.template.toml) | `EXT-###` `B-##` `REL-###` | The **depth-0 frame**, in three row kinds: who is outside the system, what **crosses its boundary**, and which external-to-external flows the system is *not* a party to. This is the tier **system requirements form around** — an SR states an observable AT a crossing, and names it in `Boundary-Refs`. A relationship carries no interface vocabulary, deliberately: it is not a crossing and must never grow a realizing IF. |
+| [`external`](project-trajectory/registries/external.template.toml) | `EXT-###` `B-##` `REL-###` | The **depth-0 frame**, in three row kinds: who is outside the system, what **crosses its boundary**, and which external-to-external flows the system is *not* a party to. This is the tier **system requirements form around** — an SR states an observable AT a crossing, and names it in `boundary_refs`. A relationship carries no interface vocabulary, deliberately: it is not a crossing and must never grow a realizing IF. |
+
+### Read from their first acceptance — optional tiers the stage reads
+
+Three tiers, in two files, stay out of the stage's reading until one of their
+rows reads `Accepted`; from then on a `Drafted` row of the tier holds the stage
+at its rung (`spine_rules.tier_active`). No setting switches them on: the
+first accepted row does.
+
+| Registry | Ids | What it does |
+|---|---|---|
+| [`stakeholder-needs`](project-trajectory/registries/stakeholder-needs.template.toml) (its `[stakeholder.*]` rows) | `STK-###` | **Who owns an outcome.** A need names its stakeholders in `stakeholder_refs`; a stakeholder names the external party it is in `party`. An active tier with a Drafted row holds `DevStg-Needs`. |
+| [`assumptions`](project-trajectory/registries/assumptions.template.toml) | `DA-###` `SUR-###` | The **claims about the world** between what the system does and what a stakeholder experiences, and the **stand-ins** tests use for external parties. An assumption names the crossing its outcome lands on (`effect_at`), the perspectives its obstacle came from (`obstacle_hats`) and, for a fidelity claim, the surrogate it says is faithful (`realized_by`); a surrogate names the parties it stands in for (`emulates`). A requirement cites the assumptions its argument relies on in `da_refs`, a test case the ones it can falsify in `assumption_refs`, and a boundary interface the ones carrying its reading in `bridged_by`. An active assumption or surrogate tier with a Drafted row holds `DevStg-Boundary`. |
 
 ### Off-spine registries — optional layers
 
@@ -306,14 +357,15 @@ integrity-check the ids the moment real rows exist.
 
 | Registry | Ids | What it does — and why it exists |
 |---|---|---|
-| [`interfaces`](project-trajectory/registries/interfaces.template.toml) | `IF-###` | One **interface definition** per row — what the interface concretely *is*, in one testable line, versioned. The **`owner`** cell names the one row answerable for the seam (a design-tier id wherever one exists, else an `SR-###`); `req_refs` lists every requirement it realizes or relies on. A row ties back to a boundary crossing (`interface_from_external` / `interface_to_external`) only when it **realizes** one; a row with neither is an internal seam. Every interface is backed by an SR and a contract test ([`PROCESS.md`](project-trajectory/PROCESS.md) §8). |
+| [`interfaces`](project-trajectory/registries/interfaces.template.toml) | `IF-###` | One **interface** per row, versioned: its **`owner`** (the providing module, file or `external:` party — never a requirement or design id; the requirement is reached through the owner), its far side as `requestors` or `consumers` (the key says which way the information runs), its typed `channel` and its `data`. What the owner promises is stated once, in the owner's own header (`Contract IF-###:`), not in a cell. A row ties back to a boundary crossing (`interface_from_external` / `interface_to_external`) only when it **realizes** one, and such a row names the assumptions carrying its reading in `bridged_by`; a row with neither tie-back is an internal seam. `verified_by` names the parent TC or LLR a low-level seam's coverage rides on, and `carried_by` the bundle a constituent rides in. Every interface is backed by an SR and a contract test ([`PROCESS.md`](project-trajectory/PROCESS.md) §8). |
 | [`performance-budgets`](project-trajectory/registries/performance-budgets.template.csv) | `PB-###` | Quantitative NFR budgets (latency, RAM, artifact size) that behavior tests can't express; `check_perf.py` compares emitted metrics against budget + baseline (§9). |
 | [`procurement`](project-trajectory/registries/procurement.template.csv) | `PART-###` | Parts the project **buys rather than builds** (motor, board, camera): vendor, cost, status, quantity. The owning `IF-###` row is each part's owner-of-record. |
 | [`assets`](project-trajectory/registries/assets.template.csv) | `ASSET-###` | The facts *about* an un-diffable binary (art, music, CAD, voice): provenance (AI-content disclosure), license, attribution, contract link, location + hash. |
 | [`components`](project-trajectory/registries/components.template.toml) | `CMP-###` | The durable **set-grained** home for knowledge + lifecycle — a subsystem, "the left arm", a package group. It exists because no finer tier can hold either: an IF is one seam, a workstream is mutable by design, and an LLR *is* the thing a rewrite replaces — while `Status` (maturity), `Standing` (the lifecycle axis: `active`/`has-gap`/`deprecated`) and `SupersededBy` carry identity across the rewrite. **Structure is derived, never authored**: membership is a `Component` tag on LLR/IF/ASSET/PART rows; an IF with both endpoints inside a CMP is *internal*, with one endpoint inside it is that CMP's *boundary*. (Accepted design: [`AXES_AND_WORKSTREAMS.md`](docs/archive/AXES_AND_WORKSTREAMS.md); live spec: [`PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) "Component layer".) |
-| [`work-items`](project-trajectory/work/WI-000.template.md) | `WI-###` | The execution DAG — *when/how* atop the spine's *what*: each WI delivers SRs, belongs to a workstream, and depends on predecessors (a bare id blocks; a `~`-prefixed id only orders). The live carrier is the **`docs/work/` spec folder** (one file per WI, status = its directory; [`work-items.template.csv`](project-trajectory/registries/work-items.template.csv) survives as the legacy migration format `wi_convert.py` reads). Validated by `check_trajectory.py`; rendered into `PROJECT_STATE.html`. |
+| [`work-items`](project-trajectory/work/WI-000.template.md) | `WI-###` | The execution DAG — *when/how* atop the spine's *what*: each WI delivers SRs (`sr_refs`), belongs to a workstream, and depends on the predecessors in its `needs` (a bare id blocks; a `~`-prefixed id only orders; an `OI-###` id waits on that open item's ruling). The live carrier is the **`docs/work/` spec folder** (one file per WI, status = its directory; [`work-items.template.csv`](project-trajectory/registries/work-items.template.csv) survives as the legacy migration format `wi_convert.py` reads). Validated by `check_trajectory.py`; rendered into `PROJECT_STATE.html`. |
+| [`open-items`](project-trajectory/registries/open-items.template.toml) | `OI-###` | The operator **decision** registry: one brief per question only the operator can rule. Work items point to open items, never the reverse — a held work item cites the item in its `needs` and reads `blocked` until it is ruled, and the item carries no work-item pointer. Rendered into `docs/open-items.html`. |
 | [`repos`](project-trajectory/registries/repos.template.csv) | `REPO-###` | Coordinator-only, for the rare multi-repo rung: one row per delegated repo plus the coordinator SRs it fulfils ([`MULTI_REPO.md`](project-trajectory/MULTI_REPO.md) §6). |
-| [`hats`](project-trajectory/registries/hats.template.toml) | *names, no id space* | The **declared expert perspectives** every applicable decomposition must face. Each `[hat.NAME]` carries `applies_when` (a closed, evaluable condition — `always`, `scope`/`kind` equality, `tags contains`), `asks` (the question that lands in the brief) and `listens_for` (the **failure class** it catches — a hat naming no failure is refused as ceremony). Unlike the rows above it ships with **content**, because an empty roster is a form with nothing behind it, and it is **owner text**: adopters edit it, which is what keeps an inherited `applies_when` honest. `scripts/hats.py` reads it; `scripts/plan_briefs.py` injects the applicable questions into the dual-plan **planner** (decomposition) brief. Deleting it is a supported opt-out; a broken one refuses loudly. |
+| [`hats`](project-trajectory/registries/hats.template.toml) | *names, no id space* | The **declared expert perspectives** every applicable decomposition must face. Each `[hat.NAME]` carries `applies_when` (a closed, evaluable condition — `always`, `scope`/`kind` equality, `tags contains`), `asks` (the question that lands in the brief) and `listens_for` (the **failure class** it catches — a hat naming no failure is refused as ceremony). Unlike the rows above it ships with **content**, because an empty roster is a form with nothing behind it, and it is **owner text**: adopters edit it, which is what keeps an inherited `applies_when` honest. `scripts/hats.py` reads it; `scripts/plan_briefs.py` injects the applicable questions into the dual-plan **planner** (decomposition) brief. Requirement and design rows name the hats that shaped them in `hat_refs`, and an assumption the hats its obstacle came from in `obstacle_hats`. Deleting it is a supported opt-out; a broken one refuses loudly. |
 
 This meta-repo dogfoods the component knowledge layer in its
 [`docs/knowledge/` index](docs/knowledge/README.md).
