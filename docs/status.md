@@ -26,8 +26,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 
 - **RESUME HERE:** read
   [plans/2026-11-21-queue-drill/HANDOFF.md](plans/2026-11-21-queue-drill/HANDOFF.md)
-  first: the queue drill's waves, builder rules, review routing and the
-  points where the operator decides. The longer history is
+  first. The drill's first wave has landed and it is stopped at its §3.1,
+  where the operator answers the questions that wave B waits on; it also
+  holds the waves, builder rules and review routing. The longer history is
   [plans/2026-11-11-test-tiers/HANDOFF.md](plans/2026-11-11-test-tiers/HANDOFF.md)
   §12.6, and its §6 still lists the functional changes. The
   vocabulary migration is landed and accepted (act seq 183), and the queue's
