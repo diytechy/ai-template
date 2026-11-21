@@ -44,7 +44,8 @@ and documentation by Sol at low effort **and** Gemini Argon at low effort
 | WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6, §3.4) | F, after the N6 stop | Filed and critiqued (round 1, Sol and Argon, all findings applied, `a57782d59`). Order by `needs`: 1021; 1022; 1023; then 1024 and 1027 (either order); 1025; then 1026, 1028 and 1030; then 1029. Built side by side where `needs` allows, landing one at a time (plan revision 37) |
 | WI-1016 | A repository can switch off the implementation layer | After F | Re-critiqued once F lands; reverses SR-186, so its amendment is drafted for the operator |
 | WI-1018 | Row text a lane leaves stale is filed, and the first set is brought up to the code | After F-8 | F-8's text migration takes B1, B7 and B9 and likely more; this row then fixes what is left |
-| WI-1044 | WI-1037's leftovers: the author's prompt template and TC-385 name roles; recipes §5's `` escapes | Filed, not drilled | Owes a scope critique; amends TC-385 |
+| WI-1044 | WI-1037's leftovers: the author's prompt template and TC-385 name roles; recipes §5's `
+` escapes | Filed, not drilled | Owes a scope critique; amends TC-385 |
 | WI-1040 to WI-1043 | WI-1036's findings: the last-act date and the test-first order read from the act ledger, an unanchored risk said so, two dead history helpers removed | Filed, not drilled | Owe a scope critique; WI-1041 amends LLR-239, WI-1042 amends LLR-257 |
 | WI-1039 | The smoke tier back under its CPU budget | Beside F-1 | Filed 2026-11-21 (§3.4, the suite during F); owes its critique |
 | WI-1031 to WI-1035 | The rest of phase 3 | Filed, not drilled | Owe a scope critique when they come up (§3.3 N2); WI-1035 carries §3.4 S4's answer |
@@ -328,6 +329,49 @@ closes, or sooner when a smoke red points wider. The smoke tier has grown
 past its CPU budget (WI-1019's run: 1,014.6 CPU seconds against 540; 351 s
 wall against about 55 s when stamped), so a re-tier row is filed: WI-1039.
 
+### 3.5 F-1's one-component table, for the operator's ruling (§3.3 N3)
+
+WI-1021 is built on `maint/wi-1021` (`fa057410d`) and waits for this ruling
+before its review and merge. The table, with each file's LLR tags and the
+reason for each pick: `docs/plans/WI-1021/component-table.md` on that
+branch (`git show maint/wi-1021:docs/plans/WI-1021/component-table.md`).
+
+**R1. The eight near-even files** (the leading component holds under two
+thirds of the tags): `acceptance_record` CMP-006, `check` CMP-007,
+`gen_open_items` CMP-009, `census` CMP-008, `check_doc_refs` CMP-007,
+`held_status` CMP-006, `id_carrier` CMP-006, `kitlib/authority` CMP-006.
+Each pick follows the file's stated job; the picks create three new
+crossings, each now covered by an interface row. *Recommendation:* accept.
+
+**Answer:**
+
+**R2. Two files doing two components' work.** `acceptance_record.py` holds
+the spine's two-tree comparison (CMP-006) and five coordinator landing rules
+on top of it (CMP-008). `check_doc_refs.py` holds a prose lint (CMP-007) and
+the symbol-binding oracle that discharges a design row (CMP-006), which
+WI-1023 retires. *Recommendation:* file a row to move `acceptance_record`'s
+landing rules into a CMP-008 module behind an interface; no row for
+`check_doc_refs` until WI-1023 lands, since the oracle's spine role goes
+with it.
+
+**Answer:**
+
+**R3. Three picks against the tag majority.** `hooks/pre-commit` CMP-007
+(CMP-007's row names it and its interface carries CMP-007; its CMP-008 tags
+are lane rules it runs as steps); `kitlib/config` and `kitlib/git` CMP-006
+(the shared-kernel rule). *Recommendation:* accept.
+
+**Answer:**
+
+**R4. 22 in-scope files no LLR names.** Launchers and setup scripts CMP-009
+(`check.{ps1,sh}` CMP-007); registries CMP-006; configuration files to the
+component that mainly reads them (`process.toml`, `agents.toml`,
+`agents-enabled`, `status.md` CMP-008; `stack.ini`, `coverage-floors`,
+`declared-absences`, `pre-push` CMP-007; `runtime-flows.md` CMP-009).
+*Recommendation:* accept.
+
+**Answer:**
+
 ## 4. One work item, start to finish
 
 Run the commands from the repository root with
@@ -606,3 +650,10 @@ Append one line per step taken: the item, what happened, the commit.
   leftovers filed as WI-1044. All three Argon timeouts froze at opencode's
   `init`, each launched in the same second as a Sol run; Argon now starts
   after Sol, staggered.
+- 2026-11-21: smoke on the merged trunk `78ea4e843`: `3699 passed, 3
+  skipped` in 87 s, CPU 547.7 s against 540 with one builder beside it (the
+  1,014.6 s of WI-1019's run was mostly load). WI-1021 (F-1) built on
+  `maint/wi-1021` (`fa057410d`): 167 files declare a component, membership
+  read from the headers, the multi-membership advisory retired, IF-326 and
+  three requestor additions cover the new crossings; smoke `3713 passed, 3
+  skipped`. Stopped at §3.5 for the operator's ruling on its table.
