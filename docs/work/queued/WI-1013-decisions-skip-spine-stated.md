@@ -7,6 +7,7 @@ specref = "docs/reviews/2026-11-20-decisions-overlap/README.md"
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 2
+planmode = "single"
 +++
 
 ## Context
@@ -38,6 +39,28 @@ go stale once later work changes the spine: wi-841 D-002 places a hold in
 The operator's rule: "if the spine surfaces behavior that was selected,
 there is no need to mention it as a decision."
 
+### The delta
+
+The routing table in `PROCESS_OPTIONS.md` "Delegated decisions record" is
+the one home for what a run records. Two places copy it today and follow it:
+`decisions.template.toml`'s header, and the instruction
+`kitlib.decisions.session_note` returns, which `agent_loop.session_body`
+appends to a build or adjudication session's body under `record` or
+`escalate-first` (LLR-283, LLR-284). The instruction's text says "one
+[decision.D-<n>] table per call that touched a registry, the spine or a kit
+file, or that you are unsure of". It comes to name the table's home and the
+two kinds of call left to record, and stops restating the routing.
+`session_note` keeps its signature, so IF-256 is unchanged; the seam
+`agent_loop` → `kitlib.decisions` already exists. No state, domain value or
+boundary is added.
+
+SR-225 states the record's mechanics (its required fields, the close
+refusal, the overrule coupling) and not which calls go in it, so it is not
+amended. LLR-283 states what `session_note` returns, so its detail is
+amended to the new instruction. LLR-283 is `Accepted`: the amendment
+changes its text only, stays `Accepted` and shows as drift for the
+operator's re-accept, and lands in a commit before any act.
+
 ## Done-when
 
 - [ ] The routing table and `decisions.template.toml`'s header say that a
@@ -51,15 +74,43 @@ there is no need to mention it as a decision."
       review finding's outcome is judged by what it changes, so an outcome
       that selects a design no spine row states is still recorded.
 - [ ] What is left to record is stated plainly: a reading of scope, and a
-      design choice no spine row states.
+      design choice no spine row states. Anything else is not recorded by
+      default: a call none of the lines above names goes in the record only
+      when it is one of those two kinds, or when the confidence ratchet
+      promotes it. The routing covers the calls a build or adjudication
+      session makes under a recording dial through the kit's routes.
 - [ ] The instruction each build and adjudication session is handed under a
       recording dial says the same, read from the one home rather than
-      copied.
+      copied: `session_note` names the routing table's home and the two
+      kinds left to record, and a test pins that it no longer carries the
+      "touched a registry, the spine or a kit file" routing.
 - [ ] The confidence ratchet is unchanged: low confidence or a reviewer's
       dissent can still promote a call to the record or to an exit.
 - [ ] The existing records stay as written; nothing rewrites or prunes them.
 - [ ] A RESYNC entry tells adopters what the routing now leaves out, and
       that their records need no migration.
-- [ ] The scope critique settles whether SR-225 or an LLR states the
-      routing and so needs an amendment; any amendment is drafted for the
-      operator's acceptance.
+- [ ] LLR-283's detail is amended to the instruction's new content, text
+      only, for the operator's re-accept ("The delta"). SR-225 is unchanged.
+
+## Critique dispositions
+
+Round 1 (OpenAI Sol, low, 2026-11-21; Gemini Argon timed out, so Sol
+reviewed alone; `docs/reviews/2026-11-21-scope-critiques/WI-1013.md`):
+CHANGES-REQUESTED, two findings. Sol could not settle the last Done-when
+item from the sources it read, so the coordinator settled it from SR-225 and
+LLR-283's text.
+
+- **S4 (MAJOR), `planmode` missing: adopted as `planmode = "single"`.** The
+  row promises a routing over the space of a run's calls and changes both a
+  shipped doc and the instruction code hands a session, so a short plan
+  fixes the wording of the one home and what `session_note` says before the
+  code (`docs/plans/WI-1013/plan.md`).
+- **S3 (MINOR), no bound and no default for an unclassified call:
+  adopted.** The third Done-when item now states the default (not recorded
+  unless it is a scope reading or a design choice no spine row states, or
+  the ratchet promotes it) and the bound (the calls a build or adjudication
+  session makes under a recording dial through the kit's routes).
+- **The amendment question (the last Done-when item as filed): settled.**
+  "The delta" records that SR-225 does not state the routing and that
+  LLR-283 states `session_note`'s content, so LLR-283 is amended and SR-225
+  is not. The fourth Done-when item names the test that pins the change.

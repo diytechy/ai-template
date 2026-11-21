@@ -7,6 +7,7 @@ specref = "docs/plans/2026-11-11-test-tiers/HANDOFF.md#126-progress-log"
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 2
+planmode = "single"
 +++
 
 ## Context
@@ -42,6 +43,12 @@ The operator is weighing how much design the spine should carry (an LLR
 pins `Module` and `CodeSymbol`). The map's "LLR design" label waits on that;
 everything above does not.
 
+**Two deliverables, kept together on purpose.** The README map and panel 1
+could each land alone; they are one row because both answer the same
+question, which tiers and links today's spine has, and one review reads
+them against the same templates. The map lands first (prose only), then the
+panel, its golden files and tests.
+
 ## Done-when
 
 - [ ] The README map draws every registry and link above from the current
@@ -51,3 +58,20 @@ everything above does not.
 - [ ] The dashboard's golden files and tests follow the panel.
 - [ ] The map's LLR label is left as it is unless the operator has ruled on
       the spine's design depth by the time this row is built.
+
+## Critique dispositions
+
+Round 1 (OpenAI Sol, low, 2026-11-21; Gemini Argon timed out, so Sol
+reviewed alone; `docs/reviews/2026-11-21-scope-critiques/WI-1014.md`):
+CHANGES-REQUESTED, two findings.
+
+- **S4 (MAJOR), `planmode` missing: adopted as `planmode = "single"`.** Panel
+  1 promises a row for every rung the derivation can return and its tiers,
+  with live counts, so a short plan names where the rungs and each rung's
+  tiers are read from before the renderer changes
+  (`docs/plans/WI-1014/plan.md`). That plan answers the S5 question: whether
+  the panel reads the ladder and `spine_rules` rather than a hand list, and
+  so gains an input.
+- **S1 (MINOR), two landable deliverables with no order: adopted.** Context
+  now keeps the map and the panel together on purpose and lands the map
+  first.
