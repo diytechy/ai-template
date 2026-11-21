@@ -30,6 +30,8 @@ fixed in `387df72ce`:
   detail, and `method` keeps the procedure.
 - Also fixed: the interfaces row's backing claim, which named an SR and a
   contract test, now follows §8 (`c37cef6bc`).
+- Review round 2 (Sol, low, narrow over `eab7ae240..2be996ed0`): APPROVE,
+  no findings.
 
 **Against the Done-when:**
 

@@ -75,6 +75,7 @@ Built on the maintenance branch `maint/wi-1014`, cut from `refactor_again` at
   <!-- fig: cmd=".venv/Scripts/python.exe -m pytest -q -p no:cacheprovider -n auto tests/test_trace.py tests/test_trace_rules.py tests/test_trace_coherence.py tests/test_trace_interfaces.py tests/test_trace_golden.py tests/test_trace_briefs.py tests/test_trace_hats.py tests/test_trace_hats_driven.py tests/test_evidence_join.py tests/test_check_docs.py tests/test_check_doc_refs.py tests/test_check_figures.py tests/test_check_figures_rules.py tests/test_rule_sync.py tests/test_status_vocabulary_contract.py tests/test_dogfood_sync.py tests/test_spine_rules.py tests/test_check_test_first.py tests/test_plan_coverage.py tests/test_cell_classes.py tests/test_id_watermark.py" rev=387df72ce -->
   `671 passed, 2 skipped, 18 warnings in 187.83s`.
   Also fixed: the interfaces row's backing claim, which named an SR and a
-  contract test, now follows §8 (`c37cef6bc`).
+  contract test, now follows §8 (`c37cef6bc`). Review round 2 (Sol, low,
+  narrow over `eab7ae240..2be996ed0`): APPROVE, no findings.
 - **Out of scope, noticed:** LLR-051's detail still names "(2) the
   resume-loop panel", which the station cycle replaced earlier.
