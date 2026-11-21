@@ -14,8 +14,7 @@ planmode = "single"
 
 Built on the maintenance branch `maint/wi-1017`, cut from `refactor_again` at
 `0d67302bd`, with the commit hooks on. The sample landed first, in the plan's
-commit, and the guidance in the commit after it. Review: pending (the
-coordinator). The specref
+commit, and the guidance in the commit after it. The specref
 (`docs/plans/2026-11-11-test-tiers/HANDOFF.md`, §12.6) is cleared at close,
 as a terminal row's is.
 
@@ -23,6 +22,25 @@ as a terminal row's is.
   sample and committed alone.
 - `d1d221c82`: the guidance, the pin test, the RESYNC entry, the decisions
   record and the regenerated views.
+- `3fbd1076c`: the close-out.
+- `41fce6e27` and `1af9e6326`: the review's two fixes, below.
+
+**Review.** Sol (`gpt-6.1-sol`, low) reviewed the whole branch alone; Gemini
+Argon was not run, since it timed out at 900 seconds on every run in this
+sitting and is skipped (operator, 2026-11-21). CHANGES-REQUESTED, two
+findings, both fixed:
+
+- [MAJOR] The Deliverable left the causes outside the guidance named and not
+  filed. Work ids are minted on trunk, so rows 1 to 3 are filed there at the
+  landing as WI-1018 to WI-1020, and row 4 is covered by the review-churn
+  plan's phase 3, put to the operator; the list, the Left-undone line and the
+  log fragment say so (`1af9e6326`).
+- [MINOR] The worker brief, the builder agent and K3 restated §5's
+  prohibition on bending the design. Each reader (the reviewer brief and S5
+  too) now keeps its own instruction and the §5 pointer only, and the pin
+  fails a reader that shares a five-word run with the statement, speaks of
+  bending the design, or lists the re-cut's verbs: red on the prior text for
+  five readers, green after (`41fce6e27`).
 
 ### The evidence sample (Done-when 1)
 
@@ -211,9 +229,14 @@ WI-1019 and WI-1020, from the descriptions below. Row 4 is no new row.
   `test_module_size_ratchet`: `658 passed, 1 skipped in 404.37s (0:06:44)`.
   `test_bootstrap.py -k "byte_caps or size_budget or baselines"`:
   `3 passed in 11.78s`.
+- After the review's fixes: `test_prompts`, `test_prompts_driven`,
+  `test_agent_loop_worker`, `test_agent_loop_review`, `test_review_brief`,
+  `test_skills_sync`, `test_dogfood_sync`, `test_routing_and_prompts`:
+  `308 passed, 1 skipped in 280.27s (0:04:40)`; `test_plan_filing`:
+  `32 passed in 40.57s`.
 - `check_trajectory.py --strict`: clean; `trace.py --strict`: `orphans=0
-  integrity=0`; `check_doc_refs.py`: 229 dangling, as at the base. Both
-  commits passed the hook.
+  integrity=0`; `check_doc_refs.py`: 229 dangling, as at the base. Every
+  commit passed the hook.
 
 ### Byte deltas
 

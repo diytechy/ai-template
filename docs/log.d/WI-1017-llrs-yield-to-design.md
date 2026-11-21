@@ -4,7 +4,22 @@ Deferred open items: none — the causes outside the guidance are work rows
 filed on trunk at the landing (WI-1018 to WI-1020) or the review-churn plan's
 phase 3, which the queue-drill hand-off puts to the operator.
 
-Review: pending (the coordinator).
+Review: Sol (`gpt-6.1-sol`, low) reviewed the whole branch alone; Gemini
+Argon was not run, since it timed out at 900 seconds on every run in this
+sitting and is skipped (operator, 2026-11-21). CHANGES-REQUESTED, two
+findings, both fixed:
+
+- [MAJOR] The causes outside the guidance were named and not filed: rows 1
+  to 3 are filed on trunk at the landing as WI-1018 to WI-1020, row 4 is
+  covered by the review-churn plan's phase 3, put to the operator, and the
+  Deliverable and this fragment say so (`1af9e6326`).
+- [MINOR] Three readers restated §5's prohibition on bending the design:
+  every reader keeps its own instruction and the §5 pointer only, and the
+  pin now fails a reader that shares a five-word run with the statement,
+  speaks of bending the design, or lists the re-cut's verbs; red on the
+  prior text for five readers, green after (`41fce6e27`). After the fixes:
+  the eight modules they reach, `308 passed, 1 skipped in 280.27s`;
+  `test_plan_filing`, `32 passed in 40.57s`.
 
 Built on the maintenance branch `maint/wi-1017` from `0d67302bd`, with the
 commit hooks on. The record of the sample, case by case, is in the row's
