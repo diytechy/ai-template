@@ -387,9 +387,9 @@ def test_a_lane_writes_its_tc_rows_and_tests_before_its_code():
         "the rest of the set follows the round",
     ):
         assert gone not in skill, gone
-    # The order is the point: Terra's set, then the tests, then the code.
+    # The order is the point: the author's set, then the tests, then the code.
     assert (
-        skill.index("Dispatch Terra once to author the **whole change set**")
+        skill.index("Dispatch the spine author once to write the **whole change set**")
         < skill.index("Build round 1's first deliverable")
         < skill.index("The builder then builds the code")
     )
@@ -507,19 +507,21 @@ CYCLE_COPIES = tuple(
 def test_the_cycle_says_sol_and_terra_calls_are_refused_in_the_blackout_window():
     """Implements: TC-385"""
     # Pins WI-960's Done-when item on the coordinator-cycle skill text: the
-    # skill's roles and its recipes name the entry point every Sol and Terra
-    # call runs through, and say the blackout window refuses those calls
-    # before launch. test_skills_sync keeps the copies byte-identical.
-    # Adequacy witness: a cycle that still launches through the shell
-    # wrappers never names the entry point or the refusal.
+    # skill's roles and its recipes name the entry point every author, critic
+    # and REVIEW-A call runs through (the Sol and Terra routes when WI-960
+    # landed), and say the blackout window refuses those calls before launch.
+    # Since WI-1037 the text names the call by its entry point, not by the
+    # model its route resolves to. test_skills_sync keeps the copies
+    # byte-identical. Adequacy witness: a cycle that still launches through
+    # the shell wrappers never names the entry point or the refusal.
     cycle = KIT / "skills" / "coordinator-cycle"
     for name in ("SKILL.md", "references/recipes.md"):
         text = (cycle / name).read_text(encoding="utf-8")
         flat = " ".join(text.replace("*", "").split()).casefold()
         assert "codex_call.py" in flat, name
         assert (
-            "inside the blackout window, a sol or terra call is refused before launch"
-            in flat
+            "inside the blackout window, a `codex_call.py` call is refused before "
+            "launch" in flat
         ), name
 
 
@@ -548,6 +550,63 @@ def test_no_recipe_launches_sol_or_terra_outside_the_entry_point():
                 if name in text
             ]
     assert found == []
+
+
+# The prose names of the models that have filled a coordinator role, the shape
+# of a model id, and the effort levels. Which model and effort fill a role is a
+# setting, the route the role resolves to (WI-1037).
+_MODEL_NAME = re.compile(
+    r"\b(?:Terra|Sol|Luna|Opus|Sonnet|Fable|Gemini|Argon|Claude|GPT)\b"
+)
+_MODEL_ID = re.compile(r"\b(?:gpt|gemini)-\d|\bclaude-(?:opus|sonnet|fable)\b")
+_EFFORT = re.compile(r"\b(?:low|medium|high|xhigh)\b")
+
+
+def test_the_cycle_names_each_role_never_the_model_that_fills_it():
+    # Pins WI-1037's Done-when on the coordinator-cycle skill, its recipes and
+    # the coordinator tools' README: they name the role (the builder, the
+    # author, the critic, the code reviewers, the adjudicator), and a model
+    # only where an observation is labelled "observed with <model>"; no model
+    # id appears; the Roles table states no model or effort and points at the
+    # route setting. Checked in all three copies; test_skills_sync keeps them
+    # byte-identical. Adequacy witness: the text before WI-1037 ("Dispatch
+    # Terra once", the Roles table's "Codex 6.1 Sol (`gpt-6.1-sol`, medium)")
+    # fails every clause.
+    paths = [
+        copy / name
+        for copy in CYCLE_COPIES
+        for name in ("SKILL.md", "references/recipes.md")
+    ] + [ROOT / "scripts" / "coordinator" / "README.md"]
+    found = []
+    for path in paths:
+        flat = " ".join(path.read_text(encoding="utf-8").split())
+        found += [
+            "{}: ...{}".format(path, flat[max(0, m.start() - 40) : m.end()])
+            for m in _MODEL_NAME.finditer(flat)
+            if not flat[: m.start()].endswith("observed with ")
+        ]
+        found += [
+            "{}: ...{}".format(path, flat[max(0, m.start() - 40) : m.end() + 20])
+            for m in _MODEL_ID.finditer(flat)
+        ]
+    assert found == []
+    for copy in CYCLE_COPIES:
+        text = (copy / "SKILL.md").read_text(encoding="utf-8")
+        start = text.index("## Roles")
+        roles = text[start : text.index("\n## ", start + 1)]
+        rows = [line for line in roles.splitlines() if line.startswith("| ")]
+        assert len(rows) >= 7, copy  # the header and six roles
+        assert [row for row in rows if _EFFORT.search(row)] == [], copy
+        flat = " ".join(roles.split())
+        for setting in (
+            "`ROLE_ROUTES`",
+            "`docs/agents.toml`",
+            "`docs/agents-enabled`",
+            "`--route`",
+            "`.claude/agents/kit-builder.md`",
+            "coordinator-2026-10-16 D-008",
+        ):
+            assert setting in flat, (copy, setting)
 
 
 def _cycle_section(text, number):
@@ -730,8 +789,8 @@ def test_the_cycle_reserves_before_drafting_and_folds_the_watermark(copy):
     assert squash, "no squash bullet"
     assert '"$PY" "$SCRIPTS/trace.py" --fold-ids' in squash.group(0)
     assert "reserved-ids" in squash.group(0)
-    terra = re.search(r"- \*\*Terra, first turn:\*\*.*?(?=- \*\*)", recipes)
-    assert terra and "RESERVED" in terra.group(0)
+    first_turn = re.search(r"- \*\*The author, first turn:\*\*.*?(?=- \*\*)", recipes)
+    assert first_turn and "RESERVED" in first_turn.group(0)
     skill = " ".join((copy / "SKILL.md").read_text(encoding="utf-8").split())
     assert "so its acts pull up as each lane lands" in skill
     assert "acts and the id watermark pull up" not in skill
@@ -892,9 +951,9 @@ def test_the_cycle_names_the_hats_slot_at_dispatch(copy):
         assert "HATS" in _intent_or_checkpoint_step_1(skill, heading), heading
     recipes = (copy / "references" / "recipes.md").read_text(encoding="utf-8")
     match = re.search(
-        r"^- \*\*Terra, first turn:\*\*.*?(?=^- \*\*)", recipes, re.M | re.S
+        r"^- \*\*The author, first turn:\*\*.*?(?=^- \*\*)", recipes, re.M | re.S
     )
-    assert match, "no Terra first-turn bullet"
+    assert match, "no author first-turn bullet"
     assert "HATS" in match.group(0)
     # A round's sitting also reaches the need each amended SR names, so the
     # author's value must name it too.

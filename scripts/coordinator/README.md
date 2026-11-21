@@ -17,25 +17,29 @@ Run from the repo root with the repo venv.
   after `git merge --squash <branch>` hits conflicts in a registry. It refuses
   on a true per-table conflict.
 
-## A Codex call through the session service (WI-960)
+## A `codex_call.py` call through the session service (WI-960)
 
-`codex_call.py` runs every Sol and Terra call (the coordinator recipes, §1,
-"A Codex call"). It replaced the shell launchers, so the call is recorded
-through the kit's session service like the adjudicator's.
+`codex_call.py` runs every author, critic and REVIEW-A call (the coordinator
+recipes, §1, "A `codex_call.py` call"). It replaced the shell launchers, so
+the call is recorded through the kit's session service like the
+adjudicator's.
 
     "$PY" "$TOOLS/codex_call.py" <role> --root <dir> --prompt-file <prompt> --out <out> \
       [--effort medium] [--wi WI-NNN] [--resume] [--route <entry>] [--timeout 7200]
 
-- The role is `REVIEW-A` or `CRITIQUE` (Sol, the enabled `OPENAI-SOL` row) or
-  `AUTHOR` (Terra, the enabled `OPENAI-TERRA` row, naming its `--wi`).
-  `--route` names another enabled entry (the recipes' Luna substitution, §7).
+- The role is `REVIEW-A`, `CRITIQUE` or `AUTHOR` (naming its `--wi`). A
+  role's route is the enabled roster row the script's `ROLE_ROUTES` maps it
+  to (a `docs/agents.toml` row that `docs/agents-enabled` lists), and the
+  row gives the model; the effort is `--effort`. `--route` names another
+  enabled entry (the recipes' substitution for a model the account does not
+  offer, §7).
 - The launch template is the script's own: `codex exec` under the
   workspace-write sandbox, unelevated on Windows, with the primary checkout's
   `<checkout>.wt/review-tmp` its one extra writable root, so a reviewer can
   run pytest with a literal `--basetemp` there. The prompt goes on stdin; the
   final text goes to `--out`.
 - `--resume` (an `AUTHOR` turn only) continues the thread of the lane's newest
-  Terra log committed at HEAD, and refuses before launch when that log is
+  `AUTHOR` log committed at HEAD, and refuses before launch when that log is
   missing, damaged, foreign, or older than an uncommitted one.
 - The change check reads `--root`'s HEAD and uncommitted paths before and
   after the call. Another call's commit that only adds standard-call session
@@ -49,7 +53,7 @@ launch (an argument, the route, the prompt, the blackout window, commit hooks
 off, the resume carrier); 3 an edit, its paths printed; 4 a log left
 uncommitted or a spool that could not be written, the log named; 5 a change
 check that could not run. After launch the precedence is 5, 3, 4, 1, 0.
-`mkprompt.py` still fills the Terra spine-author brief,
+`mkprompt.py` still fills the spine author's brief,
 `terra-spine-prompt.template.md`: an unfilled slot is refused, and
 `@LANE_SLUG@`, `@WTROOT@` and `@PY@` are derived. Review briefs are rendered
 with the kit's `review_brief.py review` (the recipes give the command).

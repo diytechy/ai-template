@@ -1,0 +1,26 @@
+# docs/decisions/maint-wi-1037.toml — delegated calls on the maintenance branch
+# maint/wi-1037 (WI-1037).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The Done-when's 'name roles, not models' is read as reaching every model name in the coordinator-cycle skill, its recipes and scripts/coordinator/README.md, including the three sub-agent roles the spec's role list does not name: the builder, the planner and the REVIEW-B stand-in. 'Codex' stays where it names the CLI or its parts (the `codex` CLI on PATH, its sandbox, its shell, the quoted 400 error text), since it is a tool and not a model, and the entry point keeps its name, `codex_call.py`, which the text now uses for the call ('a `codex_call.py` call', the recipes' heading 'A `codex_call.py` call'). An observation keeps its model as 'observed with <model>', with its existing date or decision reference."
+alternative = "Change only the four roles the spec lists (author, critic, code reviewer, adjudicator) and leave the builder's, planner's and stand-in's model names; or also rename 'Codex' where it names the CLI."
+reversal_cost = "Low: text in one skill and one README; a pin in tests/test_prompts.py names the model words it polices."
+why_not_escalated = "The spec's Done-when has no exception beyond labelled observations, and its Roles-table clause names each role; the CLI is not a model, and renaming files or the entry point is outside the row (its Context says so)."
+review = ""
+
+[decision.D-002]
+decided = "A role that no roster row fills points at the record that sets its model. The builder, and its general-purpose fallback, point at `.claude/agents/kit-builder.md`'s frontmatter. The REVIEW-B stand-in points at the operator's ruling coordinator-2026-10-16 D-008. The planner, whose model no record sets, points at the builder definition's `model`: the recipe passed `model: \"opus\"`, which is that definition's value today, so no launch changes. The not-offered substitution's route and effort point at coordinator-2026-10-10 D-017. TC-055's judge command takes `<model>` and `<effort>` placeholders, with WI-920's run kept as an observation (Luna at high effort)."
+alternative = "For the planner, pass no `model`, so the sub-agent inherits the coordinator's model, or add a planner agent definition carrying its own model; for TC-055's judges, keep the literal command with its model id."
+reversal_cost = "Low: one recipe clause; a planner definition, if wanted, is a row of its own."
+why_not_escalated = "The row changes text only and no launch; tying the planner to the builder's definition keeps today's model, and the critic's independence rule (another family than the planner) is unchanged."
+review = ""
+
+[decision.D-003]
+decided = "TC-385 (Accepted) names Sol and Terra in its method and expected cells. Its two tests keep their names, which its evidence cell carries, and the blackout pin now asserts the text's new phrase ('inside the blackout window, a `codex_call.py` call is refused before launch'). The row's text is left unchanged: the cycle text still names the entry point as the only launch path for the calls those routes serve, and amending an Accepted row would owe an act this text-only row does not take."
+alternative = "Amend TC-385's method and expected to name the roles (author, critic, REVIEW-A) in this branch, owing its re-acceptance."
+reversal_cost = "Low: a later row amends TC-385's text, and its act is the operator's or the adjudicator's as the dial routes it."
+why_not_escalated = "The spec scopes the skill and the README and says nothing of TC-385; the row's reading holds of the mechanism today. It is named for the coordinator in the Deliverable."
+review = ""
