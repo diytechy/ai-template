@@ -12,7 +12,15 @@ planmode = "single"
 
 ## Deliverable
 
-Review: pending (the coordinator).
+Review round 1 (Sol, low): two findings, both fixed in `81b24a125`. Sol
+(low) reviewed alone; Argon timed out and was skipped.
+
+- MAJOR: `PROCESS.md` §6 and the `coordinator-cycle` skill still sent the
+  run's conduct to a decisions record; both now follow the routing table
+  (below, "Review round 1").
+- MINOR: TC-293 (g) said the section routes no registry, spine or kit-file
+  call to the record; it now says touching one no longer routes a call
+  there by itself.
 
 Built on the maintenance branch `maint/wi-1013`, cut from `refactor_again` at
 `0d67302bd`, with the commit hooks on. The routing table in
@@ -57,15 +65,18 @@ Done-when item:
    content, and that nothing migrates.
 8. **The amendments, for the operator's re-accept.** LLR-283's detail (the
    `session_note` clause) and TC-293's method, clauses (g) and (i), text only;
-   both stay `Accepted` and show as drift in `docs/ratify/CURRENT.md`, which
-   files them under "Waiting for automated adjudication" because the dial
-   releases the LLR and TC rungs. SR-225 and IF-256 are unchanged. No id was
-   minted.
+   and, from review round 1, SR-233's acceptance criteria, LLR-311's detail
+   and TC-332's method and expected, which drop `PROCESS.md` §6's
+   dismissal-to-the-record clause. All text only; all stay `Accepted` and
+   show as drift in `docs/ratify/CURRENT.md`, which files both chains
+   (SR-225, SR-233) under "Waiting for automated adjudication": the dial
+   releases those rungs. SR-225 and IF-256 are unchanged. No id was minted.
 
 Commits: `211eaeea6` the plan; `f751678ab` the two tests, red; `9170e8593`
 the routing table, the template's header, `session_note`, the RESYNC entry
 and the byte-budget re-stamp, tests green; `1ea2f19af` LLR-283 and TC-293;
-then this close-out.
+`6969c7e16` the close-out; `4dcd70439` review round 1's tests, red;
+`81b24a125` its fixes; then this record of the review.
 
 Tests, on the tree at `1ea2f19af`:
 
@@ -81,7 +92,14 @@ Tests, on the tree at `1ea2f19af`:
 - the open-items, merge-rung, vocabulary and prompt modules:
   `223 passed in 31.88s`.
 
-`trace.py --strict` and `check_trajectory.py --strict` exit 0. The specref
+Review round 1's tests, on the tree at `81b24a125`:
+
+<!-- fig: cmd=".venv/Scripts/python.exe -m pytest -q -p no:cacheprovider -n auto tests/test_prompts.py tests/test_decision_record.py tests/test_decisions_to_review.py tests/test_skills_sync.py tests/test_skill_materialization.py tests/test_bootstrap.py tests/test_dogfood_sync.py tests/test_check_resync.py tests/test_resync_pack.py tests/test_held_rung_doctrine.py tests/test_skills_index.py tests/test_spine_rules.py tests/test_trace.py tests/test_trace_rules.py" rev=81b24a125 -->
+- the prompt, skill-mirror, byte-budget, dogfood, RESYNC and trace modules:
+  `500 passed, 2 skipped in 172.88s (0:02:52)`.
+
+`trace.py --strict` and `check_trajectory.py --strict` exit 0 on both
+trees, and `check_vocab.py` is clean. The specref
 (`docs/reviews/2026-11-20-decisions-overlap/README.md`) is cleared at close,
 as a terminal row's is.
 
@@ -89,15 +107,28 @@ Byte deltas: `project-trajectory/PROCESS_OPTIONS.md` 201,438 -> 202,180
 (+742, watched: the routing table's two new rows and the sentence under it).
 It had grown +1,897 unflagged since its last stamp (199,541); the
 `byte-budget-guard` row is re-stamped at 202,180 in all three copies.
-`byte-budget-guard/SKILL.md` 4,613 -> 4,632, 368 under its 5,000 cap.
+`project-trajectory/PROCESS.md` 100,990 -> 100,922 (-68, watched: §6's
+clause), re-stamped likewise. `byte-budget-guard/SKILL.md` 4,613 -> 4,615
+across both re-stamps, 385 under its 5,000 cap.
 
-Left for the coordinator (`docs/decisions/maint-wi-1013.toml` D-002): two
-texts outside this row's named surface still send conduct-of-the-run calls
-to a decisions record. One is `PROCESS.md` §6, where a dismissed review
-finding is recorded "in the delegated-decisions record too, when the run
-keeps one". The other is the `coordinator-cycle` skill, which records test
-dispositions, triage dismissals, dispute rulings and failed commit-check
-rounds in the lane's record.
+Review round 1 (`docs/decisions/maint-wi-1013.toml` D-002): at the
+coordinator's ruling, the two texts first left for a follow-up now follow the
+routing table. `PROCESS.md` §6 no longer sends a dismissal to the record. The
+`coordinator-cycle` skill (SKILL.md and `references/recipes.md`, all three
+copies byte-equal) records a call only when the routing table routes it
+there (§5). Its other sites now send:
+
+- dismissals, re-grades, dispute rulings and the convergence map to the
+  response to the review, a commit message, which a convergence reviewer
+  does not read (it does read the log fragment);
+- reviewer stand-ins, the same-family relaxation, failed commit-check rounds
+  and the other run-conduct notes to the commits and the log fragment;
+- an operator-held step to the handoff and the log fragment.
+
+A test outside every evidence class, a skipped test and a dispute ruling
+still go in the record when §5 sends them there. No cited operator ruling
+names the record as its carrier: ruling 7 (2026-10-07) and OI-108 say only
+that the same-family relaxation is recorded.
 
 ## Context
 
