@@ -3322,3 +3322,21 @@ list is fixed unless §12.6 says so.
   true`; (2) OI-79: delete `origin/wi508-architectural-remap-HELD-for-owner-verdict`
   (its commits are in trunk); (3) push `refactor_again`. The §6 functional
   changes (B1 first) are not yet rows.
+- **2026-11-20, the operator's act taken and the assumption gate on.** The
+  operator: "In regard to the ai-template, I accept ... The changes to the
+  spine that is, that were shown in open-items." Act seq 184, `0e67ffffb`:
+  62 flips to `Accepted` (DA-001..028, SUR-001..004, LLR-370, LLR-372..374,
+  LLR-382..388, TC-428..431, TC-433..436, TC-438..448) and 54 re-accepts
+  (25 SRs, 15 LLRs, 13 TCs, CMP-006); `--accepts` copied `interfaces.toml`,
+  whose changed and added rows all stay `Drafted` (IF-314..322 included:
+  the page never showed IF rows, and the registry's rows are `Drafted` as a
+  deliberate non-claim). The record gained its first `assumptions.toml`
+  copy; every copy equals live; live stage `DevStg-Impl`, 0 drafts; the
+  page's section 2 is empty. Then `4b01948cf`: `[checks] assumption_gate =
+  true` (its four steps report 0 findings with the gate on; the value joins
+  `test_rule_sync`'s `OPERATOR_DIALS`). Both commits passed the hook's 29
+  steps. **Still the operator's:** DA-020's standing (accepted as written,
+  `active`, though its falsifier is met by the unread October decisions
+  backlog; `falsified` would fail the gate for any requirement relying on it
+  alone); OI-79's remote-ref delete; push `refactor_again`. Next work: §6
+  (B1 first), which is not yet rows.
