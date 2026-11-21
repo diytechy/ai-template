@@ -1,6 +1,6 @@
 +++
 id = "WI-1015"
-title = "The code is held to its interface and LLR rows: the cross-component rule's two loopholes close, and declared callers, signatures and LLR symbols are compared with the code"
+title = "The code is held to its interface and LLR rows, and the cross-component rule's loopholes close"
 workstream = "process"
 sr_refs = ["SR-159", "SR-157"]
 specref = "docs/reviews/2026-11-21-code-vs-interfaces/README.md"
