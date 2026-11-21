@@ -68,9 +68,9 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **TC-ID**: TC-455
 - **Verifies**: SR-168;LLR-393
 - **Level**: Unit
-- **Method**: Build spine_stage's keyword arguments with every tier adopted, read and settled and the evidence passing. For each tier RUNG_TIERS names, put that one tier in work (its first row Drafted, a Drafted row beside an accepted one for the three tiers read from their first acceptance, the need Drafted, or evidence_passed false) and call spine_stage. Compare RUNG_TIERS's rungs with the ladder, and its keywords with the four that travel with a tier's rows, with spine_stage's parameters.
+- **Method**: Build spine_stage's keyword arguments with every tier adopted, read and settled and the evidence passing. For each tier RUNG_TIERS names, put that one tier in work (its first row Drafted, a Drafted row beside an accepted one for the three tiers read from their first acceptance, the need Drafted, or evidence_passed false) and call spine_stage. Compare RUNG_TIERS's rungs with the ladder, and its keywords with the four that travel with a tier's rows, with spine_stage's parameters; check that every keyword it names is one the test drives.
 - **Tier**: Full
-- **Expected**: The settled arguments read DevStg-Release, which RUNG_TIERS gives no tier; each tier put in work reads the rung RUNG_TIERS names for it. RUNG_TIERS's rungs are the ladder's, in order; no tier or keyword is named twice; its keywords with sn_draft, cited_srs, have_bifs and have_cmps are exactly spine_stage's parameters, and every keyword it names is driven.
+- **Expected**: Satisfies LLR-393's detail (parent SR-168) for the settled arguments and for every tier RUNG_TIERS names.
 - **Automated**: Yes
 - **Evidence**: tests/test_spine_rules.py::test_rung_tiers_covers_the_ladder_and_every_input_spine_stage_reads; tests/test_spine_rules.py::test_each_tier_in_work_holds_the_rung_rung_tiers_names
 - **Status**: Drafted
