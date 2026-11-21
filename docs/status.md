@@ -25,8 +25,11 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
 - **RESUME HERE:** read
+  [plans/2026-11-21-queue-drill/HANDOFF.md](plans/2026-11-21-queue-drill/HANDOFF.md)
+  first: the queue drill's waves, builder rules, review routing and the
+  points where the operator decides. The longer history is
   [plans/2026-11-11-test-tiers/HANDOFF.md](plans/2026-11-11-test-tiers/HANDOFF.md)
-  §12 first (its last §12.6 entry is the current state), then §6. The
+  §12.6, and its §6 still lists the functional changes. The
   vocabulary migration is landed and accepted (act seq 183), and the queue's
   rows and the assumption tier are accepted (act seq 184); what follows, in
   order (the coordinator handoffs before it are history, newest first from
