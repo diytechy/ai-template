@@ -156,7 +156,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     owner) fails the checks before that module exists
     (`test_seam_resolution`; `check_trajectory --strict` also errors on
     an IF no TC cites): keep the set as a patch and let it ride the
-    build commit that creates the module, recorded as a decision
+    build commit that creates the module, saying so in its message
     (wi-940 D-002).
   - `mkprompt.py` takes `LANE=<branch>` (`wi-912`), never the worktree
     path, which builds a broken `--basetemp` (`C:-Projects-...`).
@@ -229,7 +229,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      the checkpoint tip, a round over a rebase that changed code or rows, and
      a review after a fix round the cap's sitting orders each add
      `--stance convergence`, and each renders only after the convergence map
-     (SKILL §3) is recorded in the lane's decisions. The brief names the
+     (SKILL §3) is recorded. The brief names the
      verdict path under the scratch directory.
   2. Append nothing the template states: its reviewer brief carries the
      threat model (PROCESS.md §6), severity by reachability, the out-of-set
@@ -253,7 +253,8 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      name, and ask for a two-line reply (the verdict path and its VERDICT
      line). Pass the Agent tool's `model: "opus"` and `effort: "high"`: a
      prompt saying "work at high effort" does not set it (2026-10-16c).
-     Record the stand-in in the lane's decisions. Create each reviewer's
+     Record the stand-in in the round's commit and the log fragment.
+     Create each reviewer's
      scratch directory before the launch: Sol's first pytest run failed on
      a missing basetemp parent (2026-10-18c). A Claude reviewer that
      backgrounds its own pytest can lose the completion notice and stop
@@ -293,7 +294,7 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      gets its own coverage plan (`plan_coverage.py --findings` takes one).
   - A round finding that the lane's amended rows carry no sitting or act
     yet names no code defect: its remedy is the checkpoint sitting, the
-    cycle's next step. Re-grade it in the lane's decisions; it costs no
+    cycle's next step. Re-grade it in the response to the review; it costs no
     fix round, and the convergence map points it at the sitting's verdict
     and act (wi-931 D-006, D-008). So is a gate finding that an accepted
     sitting's act is still owed: the act turn follows the gate (wi-942
@@ -639,8 +640,9 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
      the dismissal classes being `out-of-scope`, `refuted` and
      `not-worth-cost`. A SUCCESSOR's reason says what its row must do; the
      brief never offers it for a convergence-class finding.
-  4. Record each ruling in the response to the review and in the lane's
-     `docs/decisions/<branch>.toml`. An ESCALATE goes to the operator. A
+  4. Record each ruling in the response to the review, citing the verdict,
+     and in the lane's `docs/decisions/<branch>.toml` only when SKILL §5
+     sends it there. An ESCALATE goes to the operator. A
      SUCCESSOR is filed on trunk at the landing (§3).
 - **Preview spine mints,** from the lane root:
   `"$PY" "$TOOLS/preview_mint.py" <before> [<after>]`.
@@ -747,11 +749,12 @@ commit of its own, move it to trunk's tip
      - 7: as for `adjudicate`.
   4. An act that stopped between its flip and its snapshot leaves the flip
      uncommitted, and the next `act` refuses the lane as dirty. Discard the
-     named paths (`git checkout -- <paths>`), record that as a decision, and
-     re-run: it lists the whole act again. A combined act stopped between its
+     named paths (`git checkout -- <paths>`), note that in the log fragment,
+     and re-run: it lists the whole act again. A combined act stopped between its
      two commits re-runs with only its first-acceptance act.
   5. A lane in flight when WI-912 landed: a verdict sat before it whose act is
-     still owed carries no bless marks, so re-sit it, recorded as a decision.
+     still owed carries no bless marks, so re-sit it, noted in the log
+     fragment.
      An act a lane already took from such a verdict on a MEANING row is not
      authorized either: the merge slot refuses it, so re-sit the row before
      the landing.
@@ -1270,8 +1273,9 @@ lane commit being replayed.
   lane's last commit record, and the refresh and the hand landing's check
   (§3) refuse a tree that still holds one: a refresh or a hand landing (§3)
   refused for a mark ends in the code commit or a quarantine. A test the checks skip takes no mark, because a skip is never
-  evidence: it is named, with its disposition, in the lane's decisions
-  record.
+  evidence: it is named, with its disposition, in its commit and the log
+  fragment, and in the lane's decisions record only when SKILL §5 sends it
+  there.
 - The declared checks run the tier once: the lints run first, then the
   budget step's run, which exits with the tier's own code on a failing tier
   and prints its CPU-seconds and wall time, with a WARN line for a limit
@@ -1282,8 +1286,8 @@ lane commit being replayed.
   passes the step's exit code through, so a chained `&& git commit` never
   records a failing tier.
 - A build whose in-process tests take the smoke tier past `max-tests`
-  re-stamps the ceiling in that commit, with its reason, fig line and a
-  decision, not at the landing: failed checks are not left standing (wi-911
+  re-stamps the ceiling in that commit, with its reason and fig line, not
+  at the landing: failed checks are not left standing (wi-911
   D-005).
 - A commit sometimes exits 1 with every hook step passing. Read the hook
   output and retry with `-F`; never skip the hook.
@@ -1386,8 +1390,8 @@ lane commit being replayed.
   at 22:40 local (leg 02). While it is not offered, review through the
   same entry point with `--route <the enabled Luna row>` at
   `--effort high` (coordinator-2026-10-10 D-017, pending the operator); the
-  model is that row's. Record the substitution in every lane's decisions
-  record.
+  model is that row's. Record the substitution in each lane's round commit
+  and log fragment.
 - **Codex usage limit:** wait for the reset the CLI error names. Retain
   Terra; observed session counts are not a quota.
   A reset days away (2026-10-26: a week) stops every Terra turn, which

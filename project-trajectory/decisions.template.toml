@@ -2,8 +2,18 @@
 # the run made on the operator's behalf that deserve the operator's second look.
 # The doctrine (what to record, what goes to the operator instead, what an
 # overturned entry costs) is the process options' "Delegated decisions record"
-# layer; the `[authority] decision_recording` dial in docs/process.toml
-# decides whether a run owes one.
+# layer, whose routing table is the one home for which calls go here; the
+# `[authority] decision_recording` dial in docs/process.toml decides whether a
+# run owes one.
+#
+# WHAT GOES HERE: a reading of scope, and a design choice no spine row states.
+# NOT HERE: a choice a spine row states, whether the run wrote, amended or
+# found the row (the row is its record); the conduct of the run, such as who
+# reviewed and in which round, commit grouping or order, a re-stamp whose own
+# ledger carries its reason, or working around a tool or environment failure
+# (the commit and the log fragment carry it). A review finding's outcome
+# counts by what it changes. Any other call stays out unless low confidence or
+# a reviewer's dissent promotes it.
 #
 # ONE FILE PER RUN, named by the lane's branch (a `/` becomes `-`; nothing else
 # is rewritten). A branch name carrying `#` has no record and, under a recording

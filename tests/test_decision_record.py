@@ -19,8 +19,10 @@ without its record is driven on a scaffold in `test_decision_record_merge.py`.
     blank value, a non-table entry, a malformed hoist and a dangling hoist are
     reported by entry; extra keys are not judged; the findings never raise; a
     `-000` entry is inert and the shipped template sound; every close owes a
-    record under a recording dial; and the note reaches a build and an
-    adjudication session and never a review session.
+    record under a recording dial; the note reaches a build and an
+    adjudication session and never a review session; and the note names the
+    routing table's home and the two kinds of call it leaves to record, each
+    held by that home and the template's header.
 
 Implements: TC-293
 """
@@ -316,6 +318,51 @@ def test_the_session_note_names_the_path_only_under_a_recording_dial():
     ask_more = kd.session_note("escalate-first", "wi-1-x")
     assert "docs/decisions/wi-1-x.toml" in ask_more
     assert len(ask_more) > len(note), "escalate-first adds the prefer-the-exits rule"
+
+
+ROUTING_HOME = "Delegated decisions record"
+KINDS_LEFT_TO_RECORD = ("a reading of scope", "a design choice no spine row states")
+
+
+def _flat(text):
+    return " ".join(text.split())
+
+
+def _routing_home():
+    """The process options' section that holds the routing table, heading to
+    the next heading, whitespace-normalized."""
+    text = (KIT / "PROCESS_OPTIONS.md").read_text(encoding="utf-8")
+    start = text.index("\n## {}\n".format(ROUTING_HOME))
+    return _flat(text[start : text.index("\n## ", start + 1)])
+
+
+def _template_header():
+    text = (KIT / "decisions.template.toml").read_text(encoding="utf-8")
+    return _flat(" ".join(ln.lstrip("#") for ln in text.splitlines() if ln[:1] == "#"))
+
+
+def test_the_session_note_names_the_routing_home_and_the_two_kinds_it_leaves():
+    # WI-1013: the note sends the session to the one home of the routing and
+    # names the two kinds of call it leaves to record, each found in that home
+    # and the template's header; it no longer copies the old route.
+    note = _flat(kd.session_note("record", "wi-1-x"))
+    assert 'process-options.md "{}"'.format(ROUTING_HOME) in note
+    home, header = _routing_home(), _template_header()
+    for kind in KINDS_LEFT_TO_RECORD:
+        assert kind in note and kind in home and kind in header, kind
+    assert "touched a registry" not in note and "kit file" not in note
+
+
+def test_the_routing_home_and_the_template_leave_out_spine_stated_and_conduct():
+    # WI-1013: a choice a spine row states is recorded by the row, and the
+    # conduct of the run by the commit and the log fragment; the one-way
+    # confidence ratchet stays, and the registry-spine-kit-file route goes.
+    home, header = _routing_home(), _template_header()
+    for text in (home, header):
+        assert "the row is its record" in text
+        assert "the commit and the log fragment carry it" in text
+    assert "The confidence ratchet is one-way" in home
+    assert "touches a registry, the spine or a kit-owned file" not in home
 
 
 def _worker(rows=None):

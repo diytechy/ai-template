@@ -1,0 +1,15 @@
+high_risk = []
+
+[decision.D-001]
+decided = "docs/decisions/run-000-example.toml, the scaffolded copy of decisions.template.toml, is left as it is: the template's new header paragraph is not copied into it."
+alternative = "Copy the new template over it, since the brief asks that a dogfooded instance of a changed file be kept in step."
+reversal_cost = "One commit copying the template over the example; nothing reads the example (its one entry is -000)."
+why_not_escalated = "A reading of scope: the row's Done-when keeps every file under docs/decisions/ as written, tests/test_dogfood_sync.py does not pin the example, and it already carries the header from before WI-1009 (owner and [attestation] wording), so bringing it in step means rewriting more than this row changes. The RESYNC entry tells adopters their copy keeps the old header until copied over."
+review = ""
+
+[decision.D-002]
+decided = "Resolved in this row after review round 1: PROCESS.md section 6 and the coordinator-cycle skill no longer send conduct-of-the-run calls to a decisions record. Dismissals, re-grades, dispute rulings and the convergence map go to the response to the review, a commit message a convergence reviewer does not read; reviewer stand-ins, failed commit-check rounds, a lane keeping an older order and operator-held steps go to the commits, the log fragment or the handoff; the skill records a call only when the routing table routes it there. SR-233, LLR-311 and TC-332 drop the section 6 clause, text only."
+alternative = "Leave both texts as they were and report the contradiction for a follow-up row, as this entry first recorded."
+reversal_cost = "One commit restoring the PROCESS.md clause and the skill's record sends (all three copies), and the three spine rows' text, each owing re-acceptance again."
+why_not_escalated = "A reading of scope, first left for the coordinator, who ruled after review round 1 that the fix lands in this row. The convergence map and a finding's outcome go to a commit message rather than the log fragment because a convergence reviewer reads the log fragment and must not see earlier verdicts."
+review = ""
