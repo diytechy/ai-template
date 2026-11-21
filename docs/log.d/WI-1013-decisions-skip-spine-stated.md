@@ -1,7 +1,8 @@
 ## 2026-11-21 — WI-1013: a delegated run records only scope readings and design choices no spine row states
 
 Review round 1 (Sol, low): two findings, both fixed in `81b24a125`. Sol
-(low) reviewed alone; Argon timed out and was skipped.
+(low) reviewed alone; Argon timed out and was skipped. Review round 2
+(Sol, low, narrow over `6969c7e16..17ee547c1`): APPROVE, no findings.
 
 - MAJOR: `PROCESS.md` §6 and the `coordinator-cycle` skill still sent the
   run's conduct to a decisions record; both now follow the routing table.
