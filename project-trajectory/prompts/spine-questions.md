@@ -254,16 +254,16 @@ Questions:
 - **A child adds detail.** If the LLR would merely re-word its parent, link
   instead. `trace.py`'s paraphrase advisory is lexical and warns forever; the
   judgement stays yours.
-- **Replace an unsuitable design through the normal amendment route.** If the
-  parent outcome remains sound but the LLR's mechanism causes the problem,
-  compare the old/new design, retained parent clauses and behavioral regressions,
-  affected trace/evidence/work references, and the code that becomes removable.
-  Amend the LLR and its mechanism-specific verification together; an Accepted
-  LLR does not require keeping an obsolete shim. Preserve unchanged parent
-  acceptance, re-accept changed child content through the applicable authority,
-  and let the derived stage expose incomplete evidence. A changed stakeholder
-  outcome, justified SR constraint or active WI scope returns to its own intake
-  and acceptance path; it cannot be hidden as a design-only replacement.
+- **Replace an unsuitable design; never work around it.** If the parent
+  outcome remains sound but an LLR's mechanism, or the way the rows divide the
+  design, causes the problem, `docs/process.md` §5's design replacement routes
+  it. Compare the old/new design, retained parent clauses and behavioral
+  regressions, affected trace/evidence/work references, and the code that
+  becomes removable; an Accepted LLR does not require keeping an obsolete
+  shim, and the derived stage exposes incomplete evidence. A changed
+  stakeholder outcome, justified SR constraint or active WI scope returns to
+  its own intake and acceptance path; it cannot be hidden as a design-only
+  replacement.
 - **An LLR's `Hat-Refs` holds only what its OWN decomposition raised — never a
   copy of its parent's.** The row's EFFECTIVE set is derived (own refs unioned
   with its `SR-Refs` parents'), so an own ref is earned only where the design

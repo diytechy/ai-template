@@ -1003,6 +1003,7 @@ flowchart TD
   C -->|"an existing SR/LLR is violated"| D{"obligation and design still sound?"}
   D -->|"yes"| TG["coverage gap:\nno TC caught it"]
   D -->|"parent sound; LLR unsuitable"| DR["amend LLR + verification\npreserve parent acceptance"]
+  D -->|"parent sound; design re-cut"| RD["split / merge / move / retire LLRs\n(retire.py); keep parent acceptance"]
   D -->|"promised behavior changes"| RG
   C -->|"no row speaks to it"| RG["requirement gap:\nnew/changed SN -> SR -> LLR\n(walk DevStg-Reqs/DevStg-Tests for that slice)"]
   TG --> T1["write the failing TC first"]
@@ -1010,21 +1011,31 @@ flowchart TD
   S -->|"new seam"| I2["IF-### row\n+ a TC per contract"]
   S -->|"new subsystem/part"| C2["CMP-### / PART-### rows\n+ Component tags"]
   S -->|"code only"| L2["LLR rows on the\nexisting modules"]
+  S -->|"existing LLRs do not fit"| RD
   I2 --> W["WI-### into the DAG"]
   C2 --> W
   L2 --> W
   T1 --> W
   DR --> W
+  RD --> W
   W --> G["implement test-first; gates re-run"]
   G --> V["touched CMP:\nhas-gap -> Founded"]
 ```
 
 - **Coverage gap** — the requirement was right and untested: the fix *starts*
   as a failing TC against the existing SR/LLR, never code-first.
-- **Design replacement** — use the ordinary scoped amendment and its tier's
-  acceptance authority; preserve enduring behavioral regression tests and parent constraints.
-  Authoring is not acceptance. Use the `spine-authoring` skill questions
-  to distinguish an unsuitable LLR from a changed stakeholder obligation.
+- **Design replacement** — an LLR records the current design, not a
+  commitment. When a sustainable design needs a different decomposition, the
+  LLRs are split, merged, moved or retired (`retire.py`) under their tier's
+  acceptance authority, never the design bent to fit them; the parent SR keeps
+  its acceptance, and the enduring behavioral regression tests and parent
+  constraints stay. One row's mechanism at fault is that row's scoped
+  amendment. Moving code that keeps every row's stated behavior moves trace
+  cells only; a design that divides the behavior differently re-cuts the rows.
+  Keeping an unsuitable row, or bending the design to fit it, to avoid an
+  acceptance act is a finding. Authoring is not acceptance. Use the
+  `spine-authoring` skill questions to distinguish an unsuitable LLR from a
+  changed stakeholder obligation.
 - **Requirement gap** — no row speaks to it, or its promised outcome must change:
   walk the DevStg-Reqs/DevStg-Tests stages for that slice
   only; the new rows then scope the solution (each new interface, component, or

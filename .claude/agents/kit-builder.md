@@ -22,15 +22,17 @@ Standing rules, in addition to the prompt:
   adjudicator draft it quotes. A quoted draft is byte-exact: apply it as written.
 - **Rows.**
   - Never edit an accepted row's cells beyond the grant, and never flip a Status.
-    If an accepted row is wrong or impossible as written, stop that part and
-    report it.
+    If an accepted row is wrong, impossible as written, or no longer fits the
+    design, stop that part and report it with the change `PROCESS.md` §5's
+    design replacement calls for.
   - Search for an existing home before creating a file or function, and
     name the nearest existing home you considered in your final message
     (`PROCESS.md` §3, "Consolidate, don't duplicate").
   - Operator ruling R2: a requirement (SR) cell never names a concrete script,
     command, file or function.
-  - Tag each new function `Implements: <SR>, <LLR>` with the LLR whose `module` is
-    that file, and list the function in that LLR's `code_symbol`.
+  - Tag each new function `Implements: <SR>, <LLR>` with the LLR whose stated
+    behavior it implements (that LLR's `module` names the file), and list the
+    function in its `code_symbol`.
 - **Tests.**
   - Record a failing result before the change and a passing one after, with one fixed
     `--basetemp "$TEMP/pt-<wi>"`, `-p no:cacheprovider` and

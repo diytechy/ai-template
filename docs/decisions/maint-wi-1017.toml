@@ -1,0 +1,19 @@
+# docs/decisions/maint-wi-1017.toml — delegated calls on the maintenance branch
+# maint/wi-1017 (WI-1017).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The coordinator's procedure (the coordinator-cycle skill, scope this-repo) is read as outside the guidance this row changes. The evidence sample found two causes there: the rule that a MINOR after the gate never moves the gated tip, which left five LLRs' cells trailing their code as unfiled follow-ups (one since amended, by WI-1010), and the rule that an accepted row is amended only by addition. Both are named in the row's Deliverable as rows to file and left unchanged here. The guidance changed is PROCESS.md section 5, the spine-authoring skill with its in-lane reference and its question home (prompts/spine-questions.md), the builder's instructions (prompts/worker.template.md and .claude/agents/kit-builder.md) and the reviewer and scope-critique prompts (prompts/reviewer.template.md, docs/rubrics/kit-change-review.md, docs/rubrics/scope-critique.md)."
+alternative = "Change the coordinator-cycle recipes here as well: file each row-text follow-up after a gate, and let a re-cut retire and mint rather than append."
+reversal_cost = "Low: a later row edits the recipes; nothing here depends on them staying as they are."
+why_not_escalated = "The spec names the homes that point at the statement and routes a cause outside the guidance to its own row; the post-gate rule rests on the review-churn rulings that a MINOR never costs a round, which this row has no authority to revisit."
+review = ""
+
+[decision.D-002]
+decided = "No spine row is minted. The new pin, tests/test_prompts.py::test_the_design_replacement_rule_has_one_home_and_every_reader_points_at_it, rides the module's file-level tag (TC-157), as its sibling test_both_builder_briefs_search_before_minting_a_file_or_function does; the allotted LLR-396 to LLR-398, TC-460 to TC-463 and IF-327 to IF-328 are unused."
+alternative = "Mint TC-460 verifying SR-186, or an LLR under SR-186 stating the rule's one home and its readers, on the pattern of LLR-311 and TC-332."
+reversal_cost = "Low: a later row mints the TC (and the LLR if wanted) and moves the pin's tag to it; the first acceptance of each is the operator's."
+why_not_escalated = "The brief expects a guidance row to need no ids; SR-186 is Accepted and is not amended, and a row stating where doctrine text lives would put two of this repository's own files (the builder agent, the rubrics) into a requirement about the delivered process."
+review = ""

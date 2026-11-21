@@ -1112,6 +1112,88 @@ def test_the_arch_section_points_at_the_rubric_and_restates_nothing():
     assert content[0] not in sr and "## 4." not in sr
 
 
+DESIGN_RULE = "an llr records the current design, not a commitment"
+# A reader restates the rule when it speaks of bending the design to a row, or
+# lists the re-cut's verbs, in whatever words; a copied phrase is caught by the
+# five-word runs it shares with the statement.
+BENT_DESIGN = re.compile(
+    r"\bben(?:d|ds|ding|t)\b\W+(?:\w+\W+){0,2}?design\b|\bdesign\W+bent\b"
+)
+RECUT_VERBS = re.compile(r"\bsplit\w*\W+merg", re.IGNORECASE)
+
+
+def _flat(path):
+    return " ".join(path.read_text(encoding="utf-8").split())
+
+
+def _runs(text, size=5):
+    words = re.findall(r"[\w§'-]+", text.lower().replace("`", ""))
+    return {" ".join(words[i : i + size]) for i in range(len(words) - size + 1)}
+
+
+def test_the_design_replacement_rule_has_one_home_and_every_reader_points_at_it():
+    """WI-1017: PROCESS.md §5's change intake says once that an LLR yields to a
+    sustainable design, and its chart routes a re-cut from a violated row and
+    from a new scope's solution. Every reader names §5's design replacement
+    and restates none of it: no five-word run of the statement, no talk of
+    bending the design to a row, no list of the re-cut's verbs.
+
+    Adequacy: a second copy of the opening sentence would be a second home; a
+    reader with no pointer leaves its author fitting code under the rows that
+    exist, which the evidence sample found (WI-1007's split minted no design
+    row); a builder told to tag new code with the LLR whose `module` is the
+    file grows that row instead of re-cutting it."""
+    process = (KIT / "PROCESS.md").read_text(encoding="utf-8")
+    intake = process[process.index("### Change intake") : process.index("## 6.")]
+    flat = " ".join(intake.split())
+    assert " ".join(process.split()).lower().count(DESIGN_RULE) == 1
+    assert DESIGN_RULE in flat.lower()
+    for clause in (
+        "the LLRs are split, merged, moved or retired (`retire.py`) under their "
+        "tier's acceptance authority, never the design bent to fit them",
+        "the parent SR keeps its acceptance, and the enduring behavioral "
+        "regression tests and parent constraints stay",
+        "Moving code that keeps every row's stated behavior moves trace cells "
+        "only; a design that divides the behavior differently re-cuts the rows.",
+        "Keeping an unsuitable row, or bending the design to fit it, to avoid an "
+        "acceptance act is a finding.",
+    ):
+        assert clause in flat, clause
+    for edge in (
+        '-->|"parent sound; design re-cut"| RD[',
+        'S -->|"existing LLRs do not fit"| RD',
+        "RD --> W",
+    ):
+        assert edge in intake, edge
+    skill = KIT / "skills" / "spine-authoring"
+    readers = [
+        skill / "SKILL.md",
+        skill / "references" / "in-lane.md",
+        KIT / "prompts" / "spine-questions.md",
+        KIT / "prompts" / "worker.template.md",
+        KIT / "prompts" / "reviewer.template.md",
+        ROOT / ".claude" / "agents" / "kit-builder.md",
+        ROOT / "docs" / "rubrics" / "kit-change-review.md",
+        ROOT / "docs" / "rubrics" / "scope-critique.md",
+    ]
+    statement = intake[
+        intake.index("- **Design replacement**") : intake.index("- **Requirement gap**")
+    ]
+    restated = []
+    for path in readers:
+        text = _flat(path)
+        assert "§5" in text and "design replacement" in text, path
+        assert "LLR whose `module` is that file" not in text, path
+        shared = sorted(_runs(statement) & _runs(text))
+        bent = BENT_DESIGN.findall(text) + RECUT_VERBS.findall(text)
+        if shared or bent or DESIGN_RULE in text.lower():
+            restated.append((path.name, shared[:3], bent))
+    assert restated == [], restated
+    assert "Keep IDs where meaning remains; where it does not," in _flat(
+        skill / "SKILL.md"
+    )
+
+
 def test_the_record_at_event_rule_has_one_home():
     # WI-911 (review-churn ruling 2): PROCESS.md §3 states it once, directly
     # after "When a guard is owed".
