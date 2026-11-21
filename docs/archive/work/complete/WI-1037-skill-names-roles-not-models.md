@@ -110,6 +110,11 @@ restored as "observed with <model>" beside their evidence; its request for a
 test pinning the labels was declined by the coordinator (it would pin
 prose).
 
+**Review round 2 (2026-11-21, narrow, over `d7256fa8c..ae078ae7a`):**
+Sol APPROVE, no findings. Argon timed out inside opencode's start-up (its
+log stops at `init`, before any model call), so Sol reviewed this round
+alone (queue-drill HANDOFF §6).
+
 **Found, not changed (outside the spec's files):**
 
 - `scripts/coordinator/terra-spine-prompt.template.md` names models ("GPT

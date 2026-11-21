@@ -7,6 +7,8 @@ operator decision; its three calls are in the decisions record
 Review: round 1, Argon (prose) APPROVE; Sol one MINOR, adopted: seven
 observations' model labels restored as "observed with <model>"; its
 request for a label-pinning test declined by the coordinator.
+Review: round 2, narrow over the fix, Sol APPROVE (Argon timed out in
+start-up; Sol alone).
 
 Built on the maintenance branch `maint/wi-1037` from `1aa6c439a`, with the
 commit hooks on. The record is in the row's Deliverable
