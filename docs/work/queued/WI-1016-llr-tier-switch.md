@@ -45,6 +45,12 @@ modules. A row that realizes a boundary crossing, or whose channel is a
 file, CLI, exit code, stdout, env, git or bytes surface, stays. The scope
 critique confirms the cut.
 
+The ruled target changes the hardest of these. Under the review-churn
+plan's variant F (`docs/plans/2026-10-11-review-churn/pointer-rules.md`,
+ruled, not built), each code file declares its component and an LLR names
+no code, so component membership no longer comes from LLR tags. Built on F,
+switching the tier off leaves components and interfaces working.
+
 Related: WI-1012 (the light spine: needs and open items, no work-item
 registry) sits further down the same axis; the critique decides whether one
 depth setting serves both. WI-1015 changes the same checks, so this row

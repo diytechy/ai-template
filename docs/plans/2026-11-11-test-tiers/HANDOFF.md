@@ -3376,3 +3376,15 @@ list is fixed unless §12.6 says so.
   (guidance that an LLR yields to a sustainable design; checks recent lanes
   first), `817d8c170`. A current map of the links:
   https://claude.ai/artifact/EHKccLzXQGbH96t2TjFinH (the operator's, private).
+- **2026-11-21, variant F found ruled and unbuilt.** The operator asked for
+  the diagram tying components to LLRs and interfaces: it is the review-churn
+  plan's "Spine Pointer Rules" (`docs/plans/2026-10-11-review-churn/pointer-rules.md`;
+  the published page https://claude.ai/artifact/VYzwf3J1WYcFJpvZCjRdt5, now
+  updated from revision 24 to revisions 35 and 36, with a today-versus-target
+  figure and a reading against the queue). Variant F is ruled in full and no
+  work item builds it: LLRs lose `module` and `code_symbol` and their
+  component cell, an interface's owner becomes a component id, code files
+  declare `Component:`, consumers and requestors hand over to role tags.
+  WI-1015 and WI-1016 now say so in their Context: several WI-1015 checks
+  hold cells F retires, and F removes WI-1016's component dependency.
+  Review-churn phase 3 still needs rows.

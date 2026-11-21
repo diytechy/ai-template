@@ -36,6 +36,15 @@ links largely present but the interface layer loosely held:
 - **125 of the 268 interface rows have no test case,** though PROCESS.md §8
   says every interface is backed by one; no row uses `verified_by`.
 
+**Read against the ruled target first.** The review-churn plan's variant F
+(`docs/plans/2026-10-11-review-churn/pointer-rules.md`, ruled in revisions
+35 and 36, not built) removes the LLR `module` and `code_symbol` cells,
+makes an interface's owner a component id, and hands consumers and
+requestors over to role tags in code. Several checks below would hold cells
+F retires. The scope critique decides whether this row builds on F, or
+narrows to what F keeps (the cover and overlap loopholes, signatures, test
+coverage).
+
 The test-file link already shows the target shape: a test's `Implements:`
 tags and its test case's `Evidence` are held equal both ways, and a mismatch
 fails `--strict`.
