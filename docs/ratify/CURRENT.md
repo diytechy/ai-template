@@ -13,13 +13,13 @@ _Baseline: `docs/requirements/external.toml` copied 2026-11-16 (675f5b7a4)._
 _Baseline: `docs/requirements/components.toml` copied 2026-11-20 (0e67ffffb)._
 _Baseline: `docs/requirements/assumptions.toml` copied 2026-11-20 (46d518b56)._
 
-_Acceptance provenance: the last commit to move a `Status` cell in a snapshotted registry is 0e67ffffb (2026-11-20) — the record's maturity cells have not moved since._
+_Acceptance provenance: the last commit to move a `Status` cell in a snapshotted registry is c350f9ba4 (2026-11-21) — the record's maturity cells have not moved since._
 
 ## Off-spine census
 
 _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into acceptance or arrives accepted, `--accepts` names it or `--reaccepts` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
 
-- `docs/requirements/interfaces.toml` — 0 changed, 1 added, 0 removed since the snapshot; ruling(s): none cited.
+- `docs/requirements/interfaces.toml` — 0 changed, 1 added, 0 removed since the snapshot; ruling(s): WI-1014.
 
 
 _No chain on a rung the operator-acceptance dial holds owes an act; every chain in this brief waits for automated adjudication._
@@ -56,7 +56,7 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **SR-Refs**: SR-168
 - **Title**: The Process tab's lifecycle panel draws every stage rung with the tiers holding it and how many rows each holds
 - **Module**: project-trajectory/scripts/traj_parse.py;project-trajectory/scripts/rendering/traj_panels.py
-- **CodeSymbol**: rung_tiers/process_panel
+- **CodeSymbol**: rung_tiers/_lifecycle_rows/process_panel
 - **Detail**: traj_parse.rung_tiers(root) returns, for every rung of kitlib.ladder.STAGE_ORDER and in that order, the tiers spine_rules.RUNG_TIERS names for the rung, each with the number of rows spine_rules.load_spine returns under its keyword, so example -000 rows are not counted; the evidence tier counts the committed docs/test/evidence record (0 or 1) read through kitlib.evidence. process_panel's first panel draws a Vision row with no rung, then one row per rung: the tiers' names joined by " · " in bold, the rung, and each tier's count as "<n> <tier>", or "no <tier>" when it holds none; a rung no tier holds shows "—" and the rung's STAGE_DESC sentence. The row whose rung is the recorded stage carries the now class and the word now, so exactly one row is current at any of the eight rungs. The panel holds no list of rungs or tiers of its own.
 - **Rationale**: The panel answers which tiers hold the rung the repository stands at; reading the rungs from the ladder and each rung's tiers from the stage derivation's own table keeps it answering for a rung or tier added later, where a list in the renderer would go stale unseen.
 - **TestRefs**: TC-456

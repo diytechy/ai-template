@@ -25,9 +25,15 @@ import json
 
 import schedule
 import traj_parse
-from kitlib import station
+from kitlib import ladder, station
 from .traj_graph import GraphGeom, flat_graph
-from traj_parse import OKF_TIER_ORDER, _okf_nodes, _process_doc, _stage_value
+from traj_parse import (
+    OKF_TIER_ORDER,
+    _okf_nodes,
+    _process_doc,
+    _stage_value,
+    rung_tiers,
+)
 from .traj_render import (
     DRILL_STYLE,
     OKF_TYPE_CODE,
@@ -880,7 +886,55 @@ def _station_panel(root):
     )
 
 
-def process_panel(root, wis, stats, stage_record=None):
+def _lifecycle_li(rung, label, note, now):
+    """One row of the lifecycle panel: its tiers in bold, its rung, its note."""
+    return (
+        '<li class="stg{cls}" data-stages="{rung}">{tag}<b>{label}</b>'
+        '<span class="g">{rungtxt}</span>'
+        '<span class="n">{note}</span></li>'.format(
+            cls=" now" if now else "",
+            rung=esc(rung),
+            # WI-470 (SR-052/A3 coverage): the "now" marker used to be an
+            # accent BORDER alone — colour is the only thing that told a
+            # reader which tier is current, one panel away from the plain
+            # "Next stage to clear" sentence above. This pairs it with a
+            # word at the marked tier itself, not just elsewhere on the page.
+            tag='<span class="nowtag">now</span>' if now else "",
+            label=esc(label),
+            rungtxt=esc(rung or "—"),
+            note=esc(note),
+        )
+    )
+
+
+def _lifecycle_rows(root, stage):
+    """Panel 1 of the Process tab, artifact lifecycle x THE STAGE LADDER: one
+    row per rung the derivation can return, in ladder order, each naming the
+    tiers that hold it with the rows each holds here (`traj_parse.rung_tiers`),
+    or the rung's description when no tier holds it. The row whose rung IS the
+    recorded stage is marked, so exactly one row is current at any rung. A lead
+    Vision row carries no rung: the vision is one home, not a registry the
+    derivation reads.
+
+    NO LIST OF RUNGS OR TIERS LIVES HERE (WI-1014). The panel used to hand-write
+    six rows against eight rungs, and they drifted twice: it never gained
+    `DevStg-Release` once the harness evidence made that rung derivable, and it
+    kept SR alone at Boundary and SN alone at Needs after the frame, the
+    assumption tier and the stakeholder tier came to hold those rungs. The rungs
+    are now the ladder's (kitlib.ladder) and each rung's tiers are
+    `spine_rules.RUNG_TIERS`, pinned to `spine_stage` by its own test.
+
+    Implements: SR-168, LLR-394"""
+    rows = [_lifecycle_li("", "Vision", "one home (the README tag)", False)]
+    for rung, tiers in rung_tiers(root):
+        label = " · ".join(tier for tier, _count in tiers) or "—"
+        counts = ("{} {}".format(count or "no", tier) for tier, count in tiers)
+        note = " · ".join(counts) or ladder.STAGE_DESC[rung]
+        rows.append(_lifecycle_li(rung, label, note, rung == stage))
+    return "".join(rows)
+
+
+def process_panel(root, wis, stage_record=None):
     """The Process tab + panel as (tab, panel), or None when there is no
     docs/stage (the tab is then omitted -> a stage-less repo renders
     byte-identically; the Knowledge-tab vacuity idiom). Three linked panels:
@@ -902,69 +956,8 @@ def process_panel(root, wis, stats, stage_record=None):
         root, "docs/process-options.md", "project-trajectory/PROCESS_OPTIONS.md"
     )
 
-    # Panel 1 — artifact lifecycle x THE STAGE LADDER. Live counts join the spine
-    # registries; a TIER is highlighted when the repo's effective stage falls in
-    # that tier's rung span.
-    #
-    # RE-KEYED FROM BAR SPANS TO RUNGS (WI-498 slice 5), and this was forced, not
-    # cosmetic: the value fed in here used to be a CHECKS (one of three) and the
-    # spans were bar spans, so with `docs/stage` supplying a RUNG (one of eight) a
-    # repo standing at DevStg-Arch or DevStg-LLReqs would have matched no row at
-    # all and the panel would have highlighted nothing, silently. Under one
-    # vocabulary the mapping also gets simpler to state: each tier is named for
-    # the rung at which producing it IS the work in hand.
-    #
-    # The two FRAME rungs ride with the tier that authors them, which is the
-    # bundling this panel already used for architecture: `DevStg-Boundary` sits
-    # with SR because the crossings are a requirements-tier artifact
-    # (docs/requirements/external.toml), exactly as `DevStg-Arch` sits with LLR.
-    # Six rows against eight rungs, and no row claims `DevStg-Release` — nothing
-    # derives that rung (slice 3), so a row highlighting there would be a claim
-    # the axis cannot make.
-    #
-    # NB "tier" below is a lifecycle ROW of this panel; the rung beside it is the
-    # process.md §4 stage. One ladder now, so the old "two different axes" caveat
-    # this comment used to carry is gone with the axis it warned about.
-    tiers = [
-        ("Vision", "", "one home (the README tag)"),
-        ("SN", "DevStg-Needs", "{} SN".format(stats["sn_total"])),
-        (
-            "SR",
-            "DevStg-Boundary→DevStg-Reqs",
-            "{} SR · {} accepted".format(stats["sr_total"], stats["sr_verified"]),
-        ),
-        (
-            "LLR + architecture",
-            "DevStg-Arch→DevStg-LLReqs",
-            "{} LLR".format(stats["llr_total"]),
-        ),
-        ("TC", "DevStg-Tests", "{} TC".format(stats["tc_total"])),
-        (
-            "code + tests",
-            "DevStg-Impl",
-            "{} of {} SR accepted".format(stats["sr_verified"], stats["sr_total"]),
-        ),
-    ]
-    stage_lis = []
-    for label, span, note in tiers:
-        now = stage in span.split("→") if span else False
-        stage_lis.append(
-            '<li class="stg{cls}" data-stages="{span}">{tag}<b>{label}</b>'
-            '<span class="g">{spantxt}</span>'
-            '<span class="n">{note}</span></li>'.format(
-                cls=" now" if now else "",
-                span=esc(span),
-                # WI-470 (SR-052/A3 coverage): the "now" marker used to be an
-                # accent BORDER alone — colour is the only thing that told a
-                # reader which tier is current, one panel away from the plain
-                # "Next stage to clear" sentence above. This pairs it with a
-                # word at the marked tier itself, not just elsewhere on the page.
-                tag='<span class="nowtag">now</span>' if now else "",
-                label=esc(label),
-                spantxt=esc(span or "—"),
-                note=esc(note),
-            )
-        )
+    # Panel 1 — artifact lifecycle x the stage ladder (`_lifecycle_rows`).
+    stage_lis = _lifecycle_rows(root, stage)
 
     # Panel 3 — the slice -> phase -> gate-check cadence (the docs/work/ registry
     # is canonical). "Checks" here is the SURVIVING sense — a set of checks that must
@@ -1077,15 +1070,15 @@ def process_panel(root, wis, stats, stage_record=None):
         '<p class="gnow">Stage: <b>' + esc(stage) + "</b> — the rung this repo is "
         "IN, derived over its settled spine and recorded in <code>docs/stage</code> "
         "(<code>derive_stage.py</code>). ONE ladder: a stage is a state, and "
-        "acceptance is the event that moves it. The highlighted tier is the one "
-        "whose artifacts are the work in hand at this rung.</p>\n"
+        "acceptance is the event that moves it. The highlighted row is that "
+        "rung.</p>\n"
         "<h3>1 · Artifact lifecycle × the stage ladder</h3>\n"
-        '<p class="cap">Each tier decomposes the one above it; beside it is the '
-        "rung at which producing that tier IS the work — the tiers (§3) and the "
-        "ladder (§4) live "
+        '<p class="cap">One row per rung the derivation can return, in ladder '
+        "order, naming the tiers that hold it: while one of them is still in "
+        "work, the repo stays at that rung. The tiers (§3) and the ladder (§4) live "
         'in <a href="' + esc(proc_doc) + '">' + esc(proc_doc) + "</a>. Counts are "
         "live from this repo's registries.</p>\n"
-        '<ol class="pflow">' + "".join(stage_lis) + "</ol>\n"
+        '<ol class="pflow">' + stage_lis + "</ol>\n"
         "<h3>2 · The station cycle</h3>\n"
         '<p class="cap">One work item, once around the loop: claimed off the '
         "ready frontier onto its own lane, built by one worker session, closed "

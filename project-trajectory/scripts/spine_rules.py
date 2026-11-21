@@ -28,9 +28,10 @@ THE LAYERING, top to bottom:
   * `kitlib/stage.py`   the `docs/stage` format, the input fingerprint, and THE
                         COMMON READER every consumer of the stage calls.
 
-WHO CALLS IT: `derive_stage` (for `load_spine` + `spine_stage`) and
-`baseline_snapshot` (for the maturity vocabulary). Nothing else imports it, and
-nothing runs it — there is no `main()`.
+WHO CALLS IT: `derive_stage` (for `load_spine` + `spine_stage`),
+`baseline_snapshot` (for the maturity vocabulary) and `traj_parse` (for
+`RUNG_TIERS` + `load_spine`: the dashboard's lifecycle panel, IF-325). Nothing
+runs it — there is no `main()`.
 
 THE RUNG FALL-THROUGH, in one sentence each. `spine_stage` returns the LOWEST
 rung anything still holds open, so the answer is "what is in work":
@@ -72,6 +73,20 @@ Stack-agnostic, standard-library only. The row vocabulary this module used to
 duplicate from `trace.py` under the retired F5 rule now has ONE home,
 `kitlib.spine`, and is re-exported below (WI-448 slice 3) — this still never
 imports the joined-spine engine.
+
+Contracts: IF-325 — the seam this module declares (process.md §8; the row of
+record in docs/requirements/interfaces.toml).
+
+Contract IF-325: the dashboard's source module reads which tiers hold each
+    rung, and the rows those tiers hold, from here rather than restating them.
+    `RUNG_TIERS` maps every rung of the stage ladder, and only those, to a
+    tuple of `(tier, keyword)` pairs: the tier's id prefix (or, for the one
+    input that is not a row set, its name) and the `spine_stage` keyword that
+    carries its rows. A tier is named at one rung only; `DevStg-Release` maps
+    to an empty tuple. `load_spine(docs)` returns, under those keywords, the
+    rows the derivation reads, example rows dropped; `evidence_passed` is the
+    one keyword it does not return, because `derive_stage` supplies the
+    harness verdict itself. Neither call writes anything.
 """
 
 import sys
@@ -782,6 +797,41 @@ def spine_stage(
     if evidence_passed:
         return STAGE_RELEASE
     return STAGE_IMPL
+
+
+# THE TIERS HOLDING EACH RUNG, AS DATA: `spine_stage`'s arms above, stated for the
+# readers that draw the ladder (the dashboard's lifecycle panel) so none of them
+# restates the mapping. "Holds" is the docstring's word: a tier in work keeps the
+# repository at that rung. Each tier is `(name, keyword)`: its id prefix, and
+# the `spine_stage` keyword carrying its rows, which is also `load_spine`'s key
+# for them. The need-coverage arm (an accepted need no requirement answers) is
+# the need tier's work, so SN names it; a repository with no requirement at all
+# reads Needs for the same reason.
+#
+# `DevStg-Impl` is held by the one input that is not a row set: until the
+# harness's evidence record passes for this tree, implementation is the work in
+# hand. Nothing is in work at `DevStg-Release`, so no tier holds it.
+#
+# A TABLE BESIDE THE FUNCTION, NOT A TABLE THE FUNCTION RUNS FROM. The arms are
+# not a flat ladder (the coverage arm sits after the Reqs arm), so the table is
+# pinned to them by driving `spine_stage` instead: each tier put in work over an
+# otherwise settled spine returns the rung named here, and the keywords named
+# here, with the four that travel with them (`sn_draft`, `cited_srs`,
+# `have_bifs`, `have_cmps`), are exactly the function's parameters
+# (tests/test_spine_rules.py, TC-455). A new input fails that test until it is
+# named here.
+#
+# Implements: SR-168, LLR-393
+RUNG_TIERS = {
+    STAGE_NEEDS: (("SN", "sn_ids"), ("STK", "stks")),
+    STAGE_BOUNDARY: (("B", "bifs"), ("DA", "das"), ("SUR", "surs")),
+    STAGE_REQS: (("SR", "srs"),),
+    STAGE_ARCH: (("CMP", "cmps"),),
+    STAGE_LLREQS: (("LLR", "llrs"),),
+    STAGE_TESTS: (("TC", "tcs"),),
+    STAGE_IMPL: (("evidence record", "evidence_passed"),),
+    STAGE_RELEASE: (),
+}
 
 
 # THE BAR AXIS IS GONE, IN TWO ACTS. Slice 2 deleted the STAGE -> BAR CROSSING

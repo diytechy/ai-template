@@ -49,7 +49,15 @@ except ImportError:  # pragma: no cover - in-process fallback
 # plain here: the facade's guarded import is the module family's ONE sys.path
 # repair, and it runs before this module is ever imported.
 import check_trajectory as ct
+from kitlib import evidence as _kitevidence
+from kitlib import ladder as _ladder
 from kitlib import stage as _kitstage
+
+# Sibling: the spine rules (IF-325). The Process tab's lifecycle panel reads
+# which tiers hold each rung, and the rows they hold, from the module that
+# derives the stage, so the panel cannot drift from the derivation. Plain
+# import for the same reason as `ct` above.
+import spine_rules
 
 # Sibling: the assumption tier's pure rules (IF-190). The per-need assumption
 # view (SR-218) takes a requirement's classification from the rules the checker
@@ -277,6 +285,30 @@ def spine_stats(root):
         "tc_total": len(tcs),
         "def_pct": round(100 * sr_verified / sr_total) if sr_total else 0,
     }
+
+
+def rung_tiers(root):
+    """`[(rung, [(tier, count), ...]), ...]` for every rung of the stage ladder,
+    in ladder order: the tiers `spine_rules.RUNG_TIERS` says hold the rung, each
+    with the number of rows it holds here — the rows `spine_rules.load_spine`
+    hands the derivation, so example `-000` rows are not counted. The evidence
+    tier counts the committed harness record (0 or 1); whether it still binds
+    to this tree is the recorded stage's answer, not this count's.
+
+    Implements: SR-168, LLR-394"""
+    rows = spine_rules.load_spine(Path(root) / "docs")
+    record = _kitevidence.read(root)
+    rows["evidence_passed"] = [record] if record else []
+    return [
+        (
+            rung,
+            [
+                (tier, len(rows[keyword]))
+                for tier, keyword in spine_rules.RUNG_TIERS[rung]
+            ],
+        )
+        for rung in _ladder.STAGE_ORDER
+    ]
 
 
 def project_vision(root):

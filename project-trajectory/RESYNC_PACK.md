@@ -11894,6 +11894,47 @@ findings, are unchanged.
 
 **Kit-owned files — overwrite:** `scripts/check_vocab.py`.
 
+### The dashboard's lifecycle panel shows every stage rung and the tiers holding it [since 0d67302bd]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** Panel 1 of the dashboard's Process tab ("Artifact
+lifecycle × the stage ladder") drew six hand-written rows against the eight
+rungs: it had no `DevStg-Release` row, and it showed only SR at
+`DevStg-Boundary` and only SN at `DevStg-Needs`, though the frame's
+crossings, the assumption and surrogate tiers and the stakeholder tier hold
+those rungs. It now draws one row per rung, in ladder order, after the Vision
+row:
+
+- **The rungs and tiers are read, not listed.** The rungs come from
+  `kitlib.ladder.STAGE_ORDER`, and each rung's tiers from a new table,
+  `spine_rules.RUNG_TIERS`, which a test holds to `spine_stage` by driving it.
+  `DevStg-Impl` is held by the evidence record (`docs/test/evidence`) until it
+  passes; no tier holds `DevStg-Release`.
+- **The counts are the derivation's rows.** `traj_parse.rung_tiers` counts
+  the rows `spine_rules.load_spine` returns for each tier (example `-000` rows
+  not counted), and the evidence record as 0 or 1. A tier with no rows reads
+  `no <tier>`.
+- **The highlight is exact.** The row whose rung is the recorded stage is
+  marked `now`, so one row is current at every rung. The SR row's
+  `· N accepted` and the old Impl row's `N of M SR accepted` are gone; the
+  dashboard's tiles still show requirement acceptance.
+- `process_panel(root, wis, stage_record=None)` drops its unused `stats`
+  argument.
+
+**What to do.** Nothing is forced and nothing migrates. Overwrite the files
+below together, then regenerate `PROJECT_STATE.html`: `--check` reads the
+committed page as stale until you do. A repository with no `docs/stage`
+renders no Process tab, as before.
+
+**Kit-owned files — overwrite:** `scripts/spine_rules.py`,
+`scripts/traj_parse.py`, `scripts/rendering/traj_panels.py`,
+`scripts/gen_trajectory.py`.
+
+**Regenerated files:** `PROJECT_STATE.html`.
+
+**Adopter-merged files:** none.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

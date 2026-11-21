@@ -1,0 +1,11 @@
+# docs/decisions/maint-wi-1014.toml — delegated calls in WI-1014's branch.
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "The README's registry map reads 'every registry and link' as: a node for every registry under project-trajectory/registries/ and the work-item folder, an edge for every cell naming another registry's row, and one sentence under the map naming what is not drawn (links inside one registry: SR delivered_with, IF carried_by, CMP part_of / superseded_by / derivation, EXT mediates, a work item's needs naming a work item; cells naming paths rather than rows; a test case's observation cells inputs and trigger). The per-run decisions record is not drawn: no registry row names its entries by id. The stakeholder, assumption and surrogate tiers get their own subgraph and table section, so the intro counts four kinds of registry, not three."
+alternative = "Draw the same-registry links as self-loops and the decisions record as a node, or fold STK into the spine and DA/SUR into the optional layers and keep three kinds."
+reversal_cost = "Low: a README edit; nothing reads the map."
+why_not_escalated = "The spec asks for every registry and link from the current templates and leaves the drawing to the builder; no spine row states the map's shape."
+review = ""
