@@ -25,3 +25,5 @@ commit hooks on. The record is in the row's Deliverable
   `system-requirements.toml` +50.
 - **Acts owed:** SR-243's drift, for automated adjudication (its chain in
   `docs/ratify/CURRENT.md`, "Waiting for automated adjudication").
+- **Review:** round 1, OpenAI Sol (low) and Gemini Hydrogen (low, the
+  Antigravity CLI): both `VERDICT: APPROVE findings=0`.

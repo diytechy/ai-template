@@ -77,6 +77,15 @@ hook reports the amendment, and `docs/ratify/CURRENT.md` lists the SR-243
 chain under "Waiting for automated adjudication", now with SR-243's own
 cells beside TC-385's. This branch takes no act.
 
+**Review** (the coordinator, 2026-11-21; queue-drill HANDOFF §4 step 4).
+Round 1 over `660805e62..9e16123f7`, the generated views and this spec's
+copies withheld and the spec at the tip given whole: OpenAI Sol
+(`gpt-6.1-sol`, low, via `codex exec`) read the whole diff, and Gemini
+Hydrogen (`gemini-4-hydrogen-low`, via the Antigravity CLI) the prose by
+file reference, each asked whether the two cells keep every obligation and
+only rename the models to the roles. Sol: `VERDICT: APPROVE findings=0`.
+Hydrogen: `VERDICT: APPROVE findings=0`. No findings, so no further round.
+
 ## Context
 
 Filed on trunk on 2026-11-21 from WI-1044's build. SR-243 (Accepted) still
