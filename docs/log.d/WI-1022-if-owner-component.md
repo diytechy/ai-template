@@ -50,3 +50,8 @@ commit hooks on. The record is in the row's Deliverable
   <!-- fig: cmd="python -m pytest -q -n 8 <each module listed>; python project-trajectory/scripts/run_menu.py smoke" rev="the worktree ahead of the review-round-2 commit, on edcd89c3f" -->
 - **Smoke** over `d8ac920b8`: `trace.py --strict` `orphans=0 integrity=0`, `interface-findings=0`; `check_trajectory.py --strict` clean; `check_resync: OK`; the tier `1 failed, 3716 passed, 3 skipped, 18 warnings in 106.58s (0:01:46)`, the one failure trunk's.
   <!-- fig: cmd="python project-trajectory/scripts/run_menu.py smoke" rev="d8ac920b8" -->
+- **Review:** round 1, OpenAI Sol (low) in two halves (code; registries and
+  documents) and Gemini Hydrogen (low, the Antigravity CLI) on the prose:
+  Hydrogen APPROVE; Sol four MINORs, adopted, fixed in `edcd89c3f`. Round 2
+  narrow: Hydrogen APPROVE, Sol two MINORs from the fix, adopted, fixed in
+  `7a94e148f`. Round 3 narrow: both `VERDICT: APPROVE findings=0`.

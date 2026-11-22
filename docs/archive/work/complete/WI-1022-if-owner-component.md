@@ -253,6 +253,28 @@ copies); `RESYNC_PACK.md` 737,613 -> 741,775 (unbudgeted); `EXAMPLE.md`
   test translator were decomposed outward. `rendering/traj_views.py` sits at
   999 SLOC, under the 1000 line.
 
+**Review** (the coordinator, 2026-11-22; queue-drill HANDOFF §4 step 4).
+Round 1 over `1b15d07fb..b2c4c2725`, the generated views, the plan and this
+spec's copies withheld, the spec at the tip given whole, and the interface
+registry given as a per-row summary of changed cells in place of its
+204 KB diff. OpenAI Sol (`gpt-6.1-sol`, low, via `codex exec`) read it in two
+sessions, the scripts and tests in one and the registries and documents in
+the other, because the brief was 500 KB whole; it could read the plan's
+classification section to judge Done-when 5. Gemini Hydrogen
+(`gemini-4-hydrogen-low`, via the Antigravity CLI) read the prose by file
+reference. The five deviations above were put to both by name. Hydrogen:
+`VERDICT: APPROVE findings=0`, the deviations judged justified. Sol: four
+distinct MINORs, one raised by both halves, all adopted: a listed Python
+file outside the source root and a body in a file with no `Contracts:`
+marker both escaped the uniqueness scan; LLR-244's `code_symbol` lacked
+`component_srs`; the RESYNC entry's external-owner wording. Fixed in
+`edcd89c3f`. Round 2, narrow, over `b2c4c2725..edcd89c3f`: Hydrogen
+APPROVE (the size-baseline bump's reason judged sound); Sol two MINORs the
+fix introduced, adopted: an unparseable listed header raised through
+`interface_findings`, and LLR-398's `code_symbol` lacked `file_contracts`.
+Fixed in `7a94e148f`. Round 3, narrow, over `edcd89c3f..7a94e148f`: Sol and
+Hydrogen both `VERDICT: APPROVE findings=0`.
+
 ## Context
 
 Variant F's second row (F-2), filed on trunk on 2026-11-21 (queue-drill
