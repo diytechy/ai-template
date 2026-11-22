@@ -48,3 +48,5 @@ commit hooks on. The record is in the row's Deliverable
   and the first acceptance of LLR-393, LLR-394, LLR-395 and LLR-398 with
   TC-455, TC-456, TC-463, TC-474 and TC-475, beside what WI-1047's sitting
   already judged.
+- **Review:** round 1, Sol (low) and Hydrogen (low): Hydrogen APPROVE; Sol
+  one MINOR (a docstring), fixed in `9ae7df40c`. Round 2 narrow: both APPROVE.
