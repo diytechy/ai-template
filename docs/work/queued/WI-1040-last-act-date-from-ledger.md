@@ -8,6 +8,7 @@ specref = "docs/reviews/2026-11-history-readers/README.md"
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
+planmode = "single"
 +++
 
 ## Context
@@ -32,8 +33,15 @@ LLR names the function, so no accepted row changes.
 ## Done-when
 
 - [ ] The brief's heading reads the newest ledger entry and the commit that
-      added it; with no ledger, or an empty one, it says no act is recorded
-      instead of guessing.
-- [ ] A test shows a row addition or a new draft after the last act no
-      longer moves the heading's date, and fails on today's code.
+      added it. With no ledger, or an empty one, it says no act is recorded
+      instead of guessing. When the newest entry is present but the commit
+      that added it is not in the readable history (a shallow clone, the
+      limit IF-217 already states), the heading gives the entry's recorded
+      date and says its commit is not in the available history; it never
+      falls back to another commit. The promise covers supported workflows
+      and the ledger as the kit writes it; a hand-edited ledger is outside
+      it.
+- [ ] A test covers each of those states, and one shows that a row addition
+      or a new draft after the last act no longer moves the heading's date,
+      failing on today's code.
 - [ ] The audit note's site 1 is marked resolved by this row.

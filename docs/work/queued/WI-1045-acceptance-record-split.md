@@ -3,11 +3,12 @@ id = "WI-1045"
 title = "acceptance_record's landing rules move to a CMP-008 module; the file keeps the two-tree comparison"
 workstream = "process"
 sr_refs = []
-needs = ["WI-1021"]
+needs = ["WI-1021", "WI-1023"]
 specref = "docs/plans/2026-11-21-queue-drill/HANDOFF.md"
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 3
+planmode = "single"
 +++
 
 ## Context
@@ -44,10 +45,11 @@ read from the code.
 no row until WI-1023 lands: its symbol-binding oracle's spine role retires
 there (§3.5 R2).
 
-**Order.** After WI-1021, which writes the headers. Built after WI-1023, the
-move needs no re-pointing of the design rows' `module` and `code_symbol`
-cells, which WI-1023 removes; built before it, the move re-points them (a
-traced-cell change, no act). The scope critique settles which.
+**Order (settled by the scope critique, 2026-11-21).** After WI-1023 (F-3),
+which itself follows WI-1022 (F-2). F-2 makes interface owners and endpoints
+component ids and narrows the cross-component cover, so the move's seams are
+written once, in that form. F-3 removes the design rows' `module` and
+`code_symbol` cells, so the move re-points none of them.
 
 ## Done-when
 
@@ -55,11 +57,15 @@ traced-cell change, no act). The scope critique settles which.
       header declares CMP-008; `acceptance_record.py` keeps the two-tree
       comparison and its CMP-006 header. The plan lists every function that
       moves and every one that stays, with the design row behind each.
-- [ ] Each import edge the move makes cross between CMP-006 and CMP-008 is
-      covered by an interface row naming both sides (a new `Drafted` `call`
-      row, or a requestor added to an existing `Drafted` one), with its
-      `Contract IF-NNN:` body; the cross-component rule reports nothing
-      uncovered.
+- [ ] Every cross-component import the move introduces or redirects is
+      covered under F-2's rule: a `call` row owned by the imported file's
+      component that names the importer's component among its requestors.
+      That includes the edges between CMP-006 and CMP-008 and the callers
+      in other components whose import now lands in the new module, such
+      as `check.py` (CMP-007) on the parent-first rules through IF-308. The
+      cover is a new `Drafted` row, a requestor added to an existing
+      `Drafted` one, or an existing seam re-owned, each with its contract
+      body; the cross-component rule reports nothing uncovered.
 - [ ] Behaviour is unchanged: no design row's requirement text changes, and
       every test module importing `acceptance_record` or a module this row
       creates runs green with only its imports changed; a test that must

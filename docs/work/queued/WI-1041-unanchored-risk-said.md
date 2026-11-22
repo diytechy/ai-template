@@ -8,6 +8,7 @@ specref = "docs/reviews/2026-11-history-readers/README.md"
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
+planmode = "none"
 +++
 
 ## Context
@@ -31,7 +32,9 @@ text, which drifts for automated adjudication (queue-drill HANDOFF §3.3 N4).
 
 - [ ] With no act naming the assumption, the reader reports the risk as
       unanchored, naming the assumption and telling the operator to accept
-      it in an act; it walks no history.
+      it in an act; it walks no history. The promise covers supported
+      workflows and the ledger and registry as the kit writes them; a hand
+      edit of either is outside it.
 - [ ] LLR-239's text says so (text only; its status is unchanged), and a
       test that fails on today's code shows the new outcome.
 - [ ] The Deliverable lists LLR-239's drift as the act owed; the audit

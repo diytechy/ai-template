@@ -8,15 +8,17 @@ reading before starting.
 **Where the drill stands.** Waves A and B are merged, and WI-1036 and
 WI-1037 beside F-1. Variant F is filed (WI-1021 to WI-1030), critiqued, and
 its cut approved (§3.4). F-1 (WI-1021) is merged, its one-component table
-ruled by the operator (§3.5). Next: F-2 (WI-1022), already critiqued, in a
-new worktree (§4 step 2). §3.6 holds three questions for the operator about
-later F rows; none blocks F-2.
+ruled by the operator (§3.5). F-2 (WI-1022) is building in its worktree
+(§10). WI-1040 to WI-1045 are critiqued; WI-1040, 1041, 1043 and 1044 may
+build beside F. §3.6's three questions are answered.
 
 **The job:** take each drillable work item through scope critique, build,
 review and merge into `refactor_again`, running items in parallel worktrees
 where they do not collide. Reviews: code by OpenAI Sol at low effort; prose
-and documentation by Sol at low effort **and** Gemini Argon at low effort
-(operator, 2026-11-21).
+and documentation by Sol at low effort **and** Gemini Hydrogen through the
+Antigravity CLI (`agy`), which replaced Gemini Argon through opencode-go;
+adjudication sittings by Gemini Neon through `agy` (operator, 2026-11-21;
+§6).
 
 ## 1. State at hand-off
 
@@ -26,8 +28,8 @@ and documentation by Sol at low effort **and** Gemini Argon at low effort
 - Merged: wave A, WI-1013 (`efafa872f`), WI-1014 (`2ea2fd150`) and WI-1017
   (`fd3ece15d`); wave B, WI-1019 (`da78f85ee`); beside F-1, WI-1036
   (`a0ca15d3f`) and WI-1037 (`b62079378`); F-1, WI-1021 (`147fed185`, regen
-  `ed671a026`). Their worktrees and branches are removed; no worktree is
-  open for this drill. Suites: after wave A on `361270a84`, `8264 passed,
+  `ed671a026`). Their worktrees and branches are removed. Open: F-2's,
+  `D:/ai-template-wt-wi1022` on `maint/wi-1022`. Suites: after wave A on `361270a84`, `8264 passed,
   31 skipped`; after wave B on `224ff2c68`, `8264 passed, 31 skipped`;
   smoke after F-1 on `ed671a026`, `3714 passed, 3 skipped`. The next
   unfiltered suite runs after F-3 (§3.4).
@@ -48,9 +50,9 @@ and documentation by Sol at low effort **and** Gemini Argon at low effort
 | WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6, §3.4) | F, after the N6 stop | Filed and critiqued (round 1, Sol and Argon, all findings applied, `a57782d59`). Order by `needs`: 1021; 1022; 1023; then 1024 and 1027 (either order); 1025; then 1026, 1028 and 1030; then 1029. Built side by side where `needs` allows, landing one at a time (plan revision 37). F-1 merged (`147fed185`) |
 | WI-1016 | A repository can switch off the implementation layer | After F | Re-critiqued once F lands; reverses SR-186, so its amendment is drafted for the operator |
 | WI-1018 | Row text a lane leaves stale is filed, and the first set is brought up to the code | After F-8 | F-8's text migration takes B1, B7 and B9 and likely more; this row then fixes what is left |
-| WI-1045 | `acceptance_record.py`'s landing rules move to a CMP-008 module (F-1's table, §3.5 R2) | After F-1; the critique settles before or after F-3 | Filed, not drilled; owes a scope critique |
-| WI-1044 | WI-1037's leftovers: the author's prompt template and TC-385 name roles; recipes §5's carriage-return escapes | Filed, not drilled | Owes a scope critique; amends TC-385 |
-| WI-1040 to WI-1043 | WI-1036's findings: the last-act date and the test-first order read from the act ledger, an unanchored risk said so, two dead history helpers removed | Filed, not drilled | Owe a scope critique; WI-1041 amends LLR-239, WI-1042 amends LLR-257 |
+| WI-1045 | `acceptance_record.py`'s landing rules move to a CMP-008 module (F-1's table, §3.5 R2) | After F-3 (WI-1023) | Critiqued (Sol and Hydrogen, all findings applied): the order settled after F-3, the cover held to F-2's rule, IF-308's callers named |
+| WI-1044 | WI-1037's leftovers: the author's prompt template and TC-385 name roles; recipes §5's carriage-return escapes | Beside F | Critiqued: Sol and Hydrogen both APPROVE, spec unchanged; amends TC-385 |
+| WI-1040 to WI-1043 | WI-1036's findings: the last-act date and the test-first order read from the act ledger, an unanchored risk said so, two dead history helpers removed | WI-1040, 1041 and 1043 beside F; WI-1042 after F-2 | Critiqued (Sol and Hydrogen, all findings applied). WI-1041 amends LLR-239; WI-1042 amends LLR-257, gains a Trust section and settles its pre-ledger rule, and needs WI-1022 (IF-220's consumers cell) |
 | WI-1039 | The smoke tier back under its CPU budget | Beside F-1 | Filed 2026-11-21 (§3.4, the suite during F); critiqued by Sol alone, findings applied (`d1c56e986`); not built |
 | WI-1031 to WI-1035 | The rest of phase 3 | Filed, not drilled | Owe a scope critique when they come up (§3.3 N2); WI-1035 carries §3.4 S4's answer |
 
@@ -494,8 +496,8 @@ Run the commands from the repository root with
    files of §7.2 excluded. A narrow round prepends the round's findings and
    the coordinator's rulings to the same brief over the fix range. Code changes (scripts, tests) go to Sol. Prose and documentation changes
    (docs, skills, prompts, templates, registry text, RESYNC entries) go to Sol
-   and Argon. A branch with both: Sol reads the whole diff, Argon the prose
-   part. Fix findings on the branch, then record the reviewers, findings and
+   and Hydrogen. A branch with both: Sol reads the whole diff, Hydrogen the
+   prose part. Fix findings on the branch, then record the reviewers, findings and
    fixes in the Deliverable and the log fragment. That record needs no
    further review; any other change made after the review gets a narrow
    re-review (`--scope narrow --findings <round file>`) before the merge.
@@ -549,20 +551,25 @@ Run the commands from the repository root with
 - **Sol (code, and prose alongside Argon):** from `<scratch>`, not the repo:
   `codex exec -c model_reasoning_effort=low --model gpt-6.1-sol --skip-git-repo-check -o <scratch>/sol-NNNN.md - < <scratch>/rev-NNNN.txt`.
   Several Sol runs may go at once.
-- **Argon (prose), by file reference (operator's idea, 2026-11-21):** write
-  one self-contained bundle into `<scratch>`: a first line saying it cannot
-  read the repository and must make no tool call but reading this file, then
-  the brief, the spec, its specref and the registry rows it names, or the
-  diff. Run from `<scratch>`:
-  `timeout 900 opencode run -m opencode-go/gemini-4-argon --variant low -- "Read the file bundle-NNNN.md in the current directory and carry out the review it contains. It is self-contained: make no tool call other than reading that one file. Give your verdict as your final message."`.
-  WI-1019's scope critique (a 23 KB bundle) returned in 37 seconds. No
-  31,000-character cap applies: only the one-line prompt is on the command
-  line. Argon run from `<scratch>` cannot read the repository (opencode
-  refuses each outside read), and briefs that told it to may be what stalled
-  the earlier runs. Never attach with `-f`: it has stalled for 20 minutes.
-  One opencode run at a time: two at once fail with "database is locked".
-  **If Argon times out, skip it** (operator, 2026-11-21); note in the review
-  record that Sol reviewed alone, and do not retry it in a loop.
+- **Hydrogen (prose), through the Antigravity CLI (operator, 2026-11-21:
+  "For prose please use antigravity (cli "agy") hydrogen"; it replaces
+  Argon).** Effort low, as the prose route has run; the operator named no
+  effort. Write one self-contained bundle into `<scratch>`: a first line
+  saying it cannot read the repository and must make no tool call but
+  reading this file, then the brief, the spec, its specref and the registry
+  rows it names, or the diff. Run from `<scratch>`:
+  `timeout 900 agy -p "Read the file bundle-NNNN.md in the current directory and carry out the review it contains. It is self-contained: make no tool call other than reading that one file. Give your verdict as your final message." --model gemini-4-hydrogen-low --mode plan --print-timeout 880s > hyd-NNNN.md`.
+  `--mode plan` keeps it from editing; a file-reference ping returned in 8
+  seconds. Run one at a time until two at once are shown to work.
+  **If Hydrogen times out, skip it** (the operator's rule for Argon,
+  2026-11-21); note in the review record that Sol reviewed alone, and do not
+  retry it in a loop.
+- **Argon (retired from the drill, 2026-11-21).** It ran through
+  `opencode run -m opencode-go/gemini-4-argon --variant low` by the same file
+  reference; it stalled at opencode's start-up on several runs, and the
+  operator moved prose to Hydrogen.
+- **Neon (adjudication sittings, operator, 2026-11-21, §3.6 G1):** the
+  Antigravity CLI at high effort, `--model gemini-4-neon-high`.
 - Tell each reviewer to answer from the brief and diff, and to cap its tool
   calls; a reviewer handed the whole repository reads for half an hour.
 
@@ -765,3 +772,15 @@ Append one line per step taken: the item, what happened, the commit.
   F-3's batch act run through the Antigravity CLI (`agy`) on Neon at high
   effort; G2 (b), applied to WI-1024 (Context and Done-when); G3, decided
   before WI-1026 is claimed.
+- 2026-11-21: resumed. F-2 (WI-1022) building on `maint/wi-1022` in
+  `D:/ai-template-wt-wi1022` from `1b15d07fb` (ranges LLR 398–405, TC
+  462–475, IF 327–340). The operator moved prose review from Argon to Gemini
+  Hydrogen through `agy`, and confirmed Neon through `agy` for adjudication
+  (§6, the opening). WI-1039 waits for a quiet box: its readings need no
+  other test run beside them. Scope critiques of WI-1040 to WI-1045, round
+  1: Sol and Hydrogen (low) both APPROVE WI-1044; Hydrogen APPROVE WI-1043;
+  the rest CHANGES-REQUESTED, 19 findings in all (Hydrogen 15 to 25 s per
+  run). All adopted: `planmode` set on five rows, coverage bounds on WI-1040
+  and WI-1041, WI-1042's pre-ledger, pairing and completeness rules settled
+  with a Trust section and `needs` WI-1022, WI-1045 ordered after F-3 with
+  its cover held to F-2's rule.

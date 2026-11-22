@@ -19,6 +19,9 @@ repository: `integrate._last_commit_time` and `traj_parse._git` (checked by
 grep at `a0ca15d3f`, compiled caches aside). Dead history readers invite a
 later caller to recompute a decision from history.
 
+The two deletions could land apart; they ride one row by choice, as one
+cleanup the same review reads, and land together in one commit.
+
 ## Done-when
 
 - [ ] Both functions are deleted, with any import only they used; a grep of
