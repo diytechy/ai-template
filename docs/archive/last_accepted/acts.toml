@@ -1143,3 +1143,10 @@ date = "2026-11-20"
 accepted = []
 reaccepted = ["DA-020"]
 copied = ["docs/requirements/assumptions.toml"]
+
+[[act]]
+seq = 186
+date = "2026-11-22"
+accepted = []
+reaccepted = ["LLR-041", "LLR-042", "LLR-067", "LLR-080", "LLR-199", "LLR-239", "LLR-283", "LLR-293", "LLR-311", "LLR-373", "SR-233", "SR-243", "TC-044", "TC-067", "TC-080", "TC-081", "TC-195", "TC-250", "TC-293", "TC-332", "TC-385", "TC-435", "TC-436"]
+copied = ["docs/requirements/low-level-requirements.toml", "docs/requirements/system-requirements.toml", "docs/test/test-cases.toml"]

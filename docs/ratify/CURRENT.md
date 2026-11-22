@@ -13,7 +13,7 @@ _Baseline: `docs/requirements/external.toml` copied 2026-11-16 (675f5b7a4)._
 _Baseline: `docs/requirements/components.toml` copied 2026-11-20 (0e67ffffb)._
 _Baseline: `docs/requirements/assumptions.toml` copied 2026-11-20 (46d518b56)._
 
-_Acceptance provenance: the last acceptance act is the act ledger's seq 185, dated 2026-11-20, added by commit 46d518b56c05._
+_Acceptance provenance: the last acceptance act is the act ledger's seq 186, dated 2026-11-22; its commit is not in the available history: no commit adds it yet, so the act is not committed._
 
 ## Off-spine census
 
@@ -30,7 +30,7 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 14 chain(s): SR-070, SR-157, SR-159, SR-168, SR-169, SR-178, SR-202, SR-208, SR-212, SR-215, SR-217, SR-225, SR-233, SR-243</summary>
+<summary>Waiting for automated adjudication — 9 chain(s): SR-070, SR-157, SR-159, SR-168, SR-169, SR-178, SR-208, SR-212, SR-217</summary>
 
 ## SR-070 — Generated views are offline, deterministic and drift-checkable
 
@@ -39,25 +39,8 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 > **Rationale.** Realizes SN-010 and the dissolved edge expectation that a generated artifact drifting from its source fails its --check, by isolating one independently reviewable obligation formerly carried by SR-038; with SN-012, since a repository that carries no source registry pays nothing for the view that registry would have fed. ONE DECISION PER ROW: the INTEGRITY of a generated artifact and what the state view must SHOW are two unrelated obligations, and this row holds the first alone. They fail independently: a view can be perfectly offline, deterministic and drift-checkable while showing nothing about the work in flight or how the parts connect. The content half sheds along the conjunction SN-023 itself draws ("progress AND how its parts connect") to SR-168 and SR-169; this row keeps the artifact-integrity contract alone. The subject is "each artifact the generator set produces" rather than "each view" deliberately: the knowledge-export bundle is not a view, and a fourth row minted to hold it would be the filler tier the ruling forbids. The child/parent phase spread is untouched and is intended — this split is by observable class, not by phase, a partition that was considered and rejected.
 
 
-### LLR LLR-199
-- **Detail**
-  - before: gen_components.py derives the component view from four registries: components.toml declares components, low-level-requirements.toml provides Component membership, system-requirements.toml is reached through that membership, and interfaces.toml provides seams. It writes docs/requirements/components.derived.toml; docs/stack.ini [generated] declares kind components, check.py freshness-gates component-view, trunk_step --regen regenerates it on trunk, and the file carries the generated-but-live staleness header. For each component it emits member design rows, their decomposed requirements, perspectives from trace.effective_hats over members, modules, and seams split into internal and boundary by the components layer rule. A requirement with no component appears once in the counted unplaced table; registries cannot distinguish missing decomposition from an all-component constraint, and that judgement has no place in shipped machinery. A requirement in several components appears in each and in each component's sr_shared_refs, so the view never implies exclusive ownership. A seam is placed from its Component tag unioned with components resolved from endpoints through trace_text.norm_module; an unresolved seam stays in the unplaced table rather than being dropped. NO ACCEPTANCE CELL APPEARS, EVER: the hand file declares the component and holds its maturity, while this file describes it. With no real CMP row and no view on disk, the generator exits 0 and writes nothing. NOT DISCHARGED: the view has no INTERNALS, so mechanism remains in the named design rows; freshness compares the artifact with its regeneration, never asking whether the source rows were right, which remains the amend-without-flip guard's residue.
-  - after: gen_components.py derives the component view from four registries and the files' Component headers: components.toml declares components, each file's Component header places that file in one, low-level-requirements.toml's Component cells place the design rows, system-requirements.toml is reached through those rows, and interfaces.toml provides seams. It writes docs/requirements/components.derived.toml; docs/stack.ini [generated] declares kind components, check.py freshness-gates component-view, trunk_step --regen regenerates it on trunk, and the file carries the generated-but-live staleness header. For each component it emits member design rows, their decomposed requirements, perspectives from trace.effective_hats over members, modules, and seams split into internal and boundary by the components layer rule. A requirement with no component appears once in the counted unplaced table; registries cannot distinguish missing decomposition from an all-component constraint, and that judgement has no place in shipped machinery. A requirement in several components appears in each and in each component's sr_shared_refs, so the view never implies exclusive ownership. A seam is placed from its endpoint cells, which name components: it appears in each component it names, internal to the lowest component enclosing every endpoint through part_of (none when an endpoint is an external party or no component encloses them all) and boundary to every other; a seam naming no declared component stays in the unplaced table rather than being dropped. NO ACCEPTANCE CELL APPEARS, EVER: the hand file declares the component and holds its maturity, while this file describes it. With no real CMP row and no view on disk, the generator exits 0 and writes nothing. NOT DISCHARGED: the view has no INTERNALS, so mechanism remains in the named design rows; freshness compares the artifact with its regeneration, never asking whether the source rows were right, which remains the amend-without-flip guard's residue.
-
-### TC TC-195
-_accepted — re-acceptance owed_
-- **Method**
-  - before: The join, the three coverage edges, the standing constraint and the freshness contract, each driven against a two-component spine small enough to reason about by hand. THE JOIN: assert membership comes from the design tier's Component tag, that the requirement tier is reached through it, and that the modules follow. DERIVED NEVER COPIED: a design row carrying no hat cell still contributes its SR parent's perspectives, and re-ruling that one requirement moves the view with no design cell edited. EDGE 1: a requirement with no design child appears in the unplaced table, is counted there, and appears in no component section - visible rather than dropped. EDGE 2: a requirement reaching two components appears in both and is marked shared in both, while one reaching a single component is not. EDGE 3: seams enter the view, an interface with both endpoints inside a component is internal to it while one crossing two is a boundary of BOTH, an UNTAGGED interface is still placed through its endpoints, and one that resolves nowhere is reported as unplaced. NO ACCEPTANCE: with one Accepted and one Drafted component declared in the hand file, no maturity key and neither word appears in any emitted cell. FRESHNESS, DRIVEN BOTH WAYS: --check passes on a fresh view, fails after a registry row moves, and passes again once regenerated; a missing view fails; the written bytes carry no CRLF and two renders agree. VACUITY: a repo whose only CMP row is the inert -000 example writes nothing and exits zero on both paths.
-  - after: The join, the three coverage edges, the standing constraint and the freshness contract, each driven against a two-component spine small enough to reason about by hand. THE JOIN: assert the design rows are placed by the design tier's Component tag and the requirement tier is reached through them, while the modules come from the files' Component headers. DERIVED NEVER COPIED: a design row carrying no hat cell still contributes its SR parent's perspectives, and re-ruling that one requirement moves the view with no design cell edited. EDGE 1: a requirement with no design child appears in the unplaced table, is counted there, and appears in no component section - visible rather than dropped. EDGE 2: a requirement reaching two components appears in both and is marked shared in both, while one reaching a single component is not. EDGE 3: seams enter the view, an interface with both endpoints inside a component is internal to it while one crossing two is a boundary of BOTH, an interface is placed by the components its endpoint cells name, and one naming no component is reported as unplaced. NO ACCEPTANCE: with one Accepted and one Drafted component declared in the hand file, no maturity key and neither word appears in any emitted cell. FRESHNESS, DRIVEN BOTH WAYS: --check passes on a fresh view, fails after a registry row moves, and passes again once regenerated; a missing view fails; the written bytes carry no CRLF and two renders agree. VACUITY: a repo whose only CMP row is the inert -000 example writes nothing and exits zero on both paths.
-_traced — routes to adjudication_
-- **Evidence**
-  - before: tests/test_gen_components.py::test_membership_and_the_requirement_reach; tests/test_gen_components.py::test_the_hat_union_is_DERIVED_from_the_parent_not_copied; tests/test_gen_components.py::test_a_parent_re_ruling_moves_the_view_with_no_design_cell_edited; tests/test_gen_components.py::test_a_childless_requirement_is_listed_ONCE_and_never_dropped; tests/test_gen_components.py::test_a_shared_requirement_appears_in_EVERY_component_it_reaches; tests/test_gen_components.py::test_seams_enter_the_view_split_internal_from_boundary; tests/test_gen_components.py::test_an_untagged_seam_is_placed_by_its_ENDPOINTS; tests/test_gen_components.py::test_an_unplaceable_seam_is_REPORTED_not_silently_excluded; tests/test_gen_components.py::test_the_generated_view_carries_NO_acceptance_cell; tests/test_gen_components.py::test_check_reds_on_a_stale_view_and_greens_once_regenerated; tests/test_gen_components.py::test_check_reds_when_the_view_is_missing_entirely; tests/test_gen_components.py::test_the_written_file_is_LF_and_reproducible; tests/test_gen_components.py::test_a_repo_with_no_real_component_is_VACUOUS; tests/test_gen_components.py::test_the_cli_runs_out_of_process
-  - after: tests/test_gen_components.py::test_membership_and_the_requirement_reach; tests/test_gen_components.py::test_the_hat_union_is_DERIVED_from_the_parent_not_copied; tests/test_gen_components.py::test_a_parent_re_ruling_moves_the_view_with_no_design_cell_edited; tests/test_gen_components.py::test_a_childless_requirement_is_listed_ONCE_and_never_dropped; tests/test_gen_components.py::test_a_shared_requirement_appears_in_EVERY_component_it_reaches; tests/test_gen_components.py::test_seams_enter_the_view_split_internal_from_boundary; tests/test_gen_components.py::test_a_seam_is_placed_by_the_components_its_endpoints_name; tests/test_gen_components.py::test_an_unplaceable_seam_is_REPORTED_not_silently_excluded; tests/test_gen_components.py::test_the_generated_view_carries_NO_acceptance_cell; tests/test_gen_components.py::test_check_reds_on_a_stale_view_and_greens_once_regenerated; tests/test_gen_components.py::test_check_reds_when_the_view_is_missing_entirely; tests/test_gen_components.py::test_the_written_file_is_LF_and_reproducible; tests/test_gen_components.py::test_a_repo_with_no_real_component_is_VACUOUS; tests/test_gen_components.py::test_the_cli_runs_out_of_process
-- **Verifies**
-  - before: SR-070;LLR-199;IF-139;IF-140;IF-141;IF-142;IF-143
-  - after: SR-070;LLR-199;IF-139;IF-140;IF-141;IF-142
-
-### TC TC-460 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-460 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-460
 - **Verifies**: SR-070;LLR-199;IF-140
 - **Level**: Unit
@@ -69,7 +52,8 @@ _traced — routes to adjudication_
 - **Status**: Drafted
 - **Phase**: 6
 
-### TC TC-465 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-465 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-465
 - **Verifies**: SR-070;LLR-199
 - **Level**: Unit
@@ -88,7 +72,8 @@ _traced — routes to adjudication_
 > **Rationale.** Realizes SN-002 (the chain is mechanically verified, not asserted — this row is the boundary-level home of the verdict SN-002's acceptance asks for), SN-012 (optional registries and opt-outs cost a non-user nothing) and SN-025 (the tracked work-item graph the loop derives its next work from is kept coherent). One row because the adopter-observable contract is one: registry rules produce named findings at a declared severity; which rules, at which severities, is the component detail the rows below it decompose. Fan-out re-stamp: the delivered contract is one — a named, row-and-cell-attributed finding at a declared severity, gating or advisory — while the rule inventory it ranges over is open by this row's own acceptance ("a rule added at one of those sites is in this row's scope by default"), so the child count tracks the number of declared rules rather than the number of decisions this row makes, and would climb back through any bound a split bought.
 
 
-### LLR LLR-395 — ADDED since the snapshot, Drafted — never accepted
+### LLR LLR-395 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **LLR-ID**: LLR-395
 - **SR-Refs**: SR-157
 - **Title**: An accepted or founded automated test case that no test file declares is a finding
@@ -101,27 +86,8 @@ _traced — routes to adjudication_
 - **Component**: CMP-006
 - **Phase**: 6
 
-### TC TC-409
-- **Verifies**
-  - before: SR-157;LLR-365;IF-131;IF-263;IF-318
-  - after: SR-157;LLR-365;IF-131
-
-### TC TC-410
-- **Verifies**
-  - before: SR-157;LLR-366;IF-263;IF-318
-  - after: SR-157;LLR-366
-
-### TC TC-428
-- **Verifies**
-  - before: SR-157;IF-263
-  - after: SR-157
-
-### TC TC-429
-- **Verifies**
-  - before: SR-157;IF-263
-  - after: SR-157
-
-### TC TC-475 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-475 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-475
 - **Verifies**: SR-157;LLR-395
 - **Level**: Integration
@@ -140,51 +106,8 @@ _traced — routes to adjudication_
 > **Rationale.** Realizes SN-023 (the parts' connections are as much of the truth as the requirement tree, checked mechanically warn-first — the need's own words), SN-002 (interface rows stay resolvable) and SN-012 (opt-out and vacuity keep the layer free for non-users). One row: the delivered contract is one connectivity verdict; the checkers below it are its decomposition.
 
 
-### LLR LLR-041
-_accepted — re-acceptance owed_
-- **Detail**
-  - before: Loads the interface registry; validates IF ids, SR back-links and Component tags, and emits the best-effort endpoint-module advisory. Malformed or duplicate ids and unresolved SR/Component links are findings; an unmatched module-shaped Provider endpoint stays advisory-only, and an absent interface registry is vacuous.
-  - after: Loads the interface registry; validates IF ids and SR back-links, and holds every endpoint to one of two forms. The owner is one endpoint, and the owner and each requestor and consumer is either a CMP id a live component row has or external: followed by a party the registry header declares on an External party line; a requirement or design id, an id no component row has, a bare or undeclared party, and a path or module are each a strict finding naming the row and the cell, as is an owner naming several endpoints. A row whose owner and far side are all external parties is a strict finding, and so is a registry still carrying a retired cell, the component cell among them; a row naming both or neither far side is advisory. Malformed or duplicate ids and unresolved SR links are findings; an absent interface registry is vacuous.
-_traced — routes to adjudication_
-- **CodeSymbol**
-  - before: interface_findings/integrity_findings
-  - after: interface_findings/integrity_findings/declared_parties/endpoint_problem
-- **Module**
-  - before: project-trajectory/scripts/trace.py
-  - after: project-trajectory/scripts/trace.py;project-trajectory/scripts/trace_text.py
-
-### LLR LLR-042
-_accepted — re-acceptance owed_
-- **Detail**
-  - before: Emits opt-out warn-first findings for missing endpoints/directions, uncited Active seams, and dangling Contracts citations without changing exit status. A source/sink note suppresses its declared direction case; the opt-out home is docs/process.toml [checks] interfaces_check = false; a small or absent inventory is vacuous.
-  - after: Emits opt-out warn-first findings, without changing exit status, for each component holding an inventory module by its header that no interface row names, that owns no row (no Provides) or that is on no row's far side (no Consumes), for uncited seams, and for a Contracts citation naming no row. A source note marks a row's owner and a sink note its far side, suppressing that direction's case; the opt-out home is docs/process.toml [checks] interfaces_check = false; a small or absent inventory is vacuous. Nothing here holds a row to a declaration site: where a contract body sits, and whether one exists, is the definition gate's rule.
-_traced — routes to adjudication_
-- **CodeSymbol**
-  - before: interface_findings/arch_inventory
-  - after: interface_findings/_component_connectivity/arch_inventory
-
-### LLR LLR-067
-_accepted — re-acceptance owed_
-- **Detail**
-  - before: Joins imports, component membership, and declared seams; reports uncovered cross-component edges with strict/plain and vacuity rules. Uncovered mapped edges warn plain and fail --strict; a covering seam (in either direction), an intra-component or unmapped edge, absent imports, the opt-out, and an edge whose destination is a declared shared-kernel module (docs/kernel-modules-allow, checked before the seam/overlap split) each stay silent. The module inventory joined against is scanned LIVE from the source tree under [paths] src (gen_arch_map.scan_inventory), never parsed back out of a committed map, so the join cannot read a stale inventory.
-  - after: Joins imports, component membership read from each file's Component header, and the cover the call rows declare; reports uncovered cross-component edges with strict/plain and vacuity rules. An edge with an endpoint whose header declares no valid component is reported as unclassified, before the cover and the shared kernel are consulted, so it is never treated as internal, covered or exempt. An edge is internal only when both endpoints sit in the same one component. An import from a file of one component into a file of another is covered only by a call row the imported file's component owns that names the importer's component among its requestors; a row on another channel, a row owned the other way round and a row merely naming both components cover nothing. Other uncovered edges warn plain and fail --strict; a covered edge, an internal edge, absent imports, no live component row, the opt-out, and an edge whose destination is a declared shared-kernel module (docs/kernel-modules-allow) each stay silent. The module inventory joined against is scanned LIVE from the source tree under [paths] src (gen_arch_map.scan_inventory), never parsed back out of a committed map, so the join cannot read a stale inventory.
-_traced — routes to adjudication_
-- **CodeSymbol**
-  - before: cross_component_findings/arch_inventory
-  - after: cross_component_findings/_classifiable_edges/_call_cover/arch_inventory
-
-### LLR LLR-373
-- **Detail**
-  - before: module_components in kitlib/spine.py joins the design rows its caller passes in and does not read a file itself. It skips a row whose id is a -000 example or does not start with LLR-. From a kept row it takes the Component tokens that start with CMP-, drops the rest, splits the Module cell with refs, normalizes the parts with norm_module, and adds those tokens to the map under the non-empty keys. The tags are not filtered against the component registry: the callers intersect them with the ids they declare. gen_components places seams by the map; trajectory_arch's How-SW top view, which the right-sizing rule and the containment render share, and its cross-component scan read membership from it. Neither module holds a join of its own.
-  - after: module_components in kitlib/spine.py joins the file declarations its caller passes in, each a file path and the component that file's Component header declares, and does not read a file itself. It normalizes each path with norm_module and adds the component to the map under the non-empty key, dropping a value that does not start with CMP-. Two files can share a key, so a key keeps every component its files declare. The components are not filtered against the component registry. trajectory_arch reads membership from the map in three places: its How-SW top view, which the right-sizing rule and the containment render share, and its cross-component scan, each of which intersects the map with the ids it declares, and its per-component connectivity warns. gen_components reads no map: it lists each component's modules from the declarations themselves, each file under the component its header names, and places each seam from its endpoint cells alone, as LLR-199 states, so a map that answered nothing would move no seam. Neither module holds a join of its own.
-- **Rationale**
-  - before: The join had two copies, in gen_components and in trajectory_arch, and they disagreed on three inputs: a -000 example row, an id not starting LLR- and a token not starting CMP-. On a registry that trace.py --strict passes they agreed, so the disagreement stayed invisible until a registry broke, which is when two answers to one question cost the most. The checker's narrower answer is kept: a placeholder row, or a token that cannot name a component, should not make a membership that the gate-bearing containment and cross-component rules read, and no caller wanted the wider answer, since each intersects the map with its declared ids.
-  - after: The join had two copies, in gen_components and in trajectory_arch, which disagreed only on inputs a registry the strict trace check passes never holds, so the disagreement stayed invisible until a registry broke, which is when two answers to one question cost the most; one home leaves one answer. The narrower answer is kept: a value that cannot name a component makes no membership that the gate-bearing containment and cross-component rules read, and both rules intersect the map with the ids they declare. The component view needs no join, since it lists each component's modules by their own declarations and places each seam from its endpoint cells, so it holds no copy that could disagree.
-- **Title**
-  - before: The module-to-component join has one home, which the component view and the architecture checks both read
-  - after: The module-to-component join has one home, which the architecture checks read and the component view does not need
-
-### LLR LLR-396 — ADDED since the snapshot, Drafted — never accepted
+### LLR LLR-396 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **LLR-ID**: LLR-396
 - **SR-Refs**: SR-159
 - **Title**: A file declares its one component on one header line, read through its type's comment carrier
@@ -197,7 +120,8 @@ _traced — routes to adjudication_
 - **Component**: CMP-006
 - **Phase**: 6
 
-### LLR LLR-397 — ADDED since the snapshot, Drafted — never accepted
+### LLR LLR-397 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **LLR-ID**: LLR-397
 - **SR-Refs**: SR-159
 - **Title**: Every file in the component scope declares a live component, and each that does not is a finding
@@ -210,7 +134,8 @@ _traced — routes to adjudication_
 - **Component**: CMP-006
 - **Phase**: 6
 
-### LLR LLR-398 — ADDED since the snapshot, Drafted — never accepted
+### LLR LLR-398 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **LLR-ID**: LLR-398
 - **SR-Refs**: SR-159
 - **Title**: Each interface's contract body is stated by at most one file on the declared scan surface, a file of the owner's component
@@ -223,64 +148,8 @@ _traced — routes to adjudication_
 - **Component**: CMP-006
 - **Phase**: 6
 
-### TC TC-044
-- **Expected**
-  - before: Integrity and unresolved links fail as declared; endpoint mismatch is advisory; absent registry is vacuous.
-  - after: Integrity, unresolved links and an endpoint outside its two forms fail as declared; absent registry is vacuous.
-- **Method**
-  - before: Run IF id, SR back-link, Component membership, and endpoint-advisory trace cases.
-  - after: Run IF id, SR back-link, Component membership and endpoint-form trace cases.
-
-### TC TC-049
-- **Verifies**
-  - before: SR-159;LLR-049;IF-320
-  - after: SR-159;LLR-049
-
-### TC TC-067
-_accepted — re-acceptance owed_
-- **Expected**
-  - before: Uncovered cross-component edges warn/fail strict; covered, vacuous and declared-kernel cases stay silent.
-  - after: Uncovered cross-component edges warn/fail strict, a row owned the other way round covering nothing; covered (a call row owned by the imported file's component naming the importer's), vacuous and declared-kernel cases stay silent.
-- **Method**
-  - before: Run the cross-component import coverage matrix, including the declared shared-kernel exemption: an edge into a declared kernel module is silent (finding and advisory both), the exemption is one-directional (declaring the SOURCE does not exempt it), an undeclared module or an absent allow-file still fires (fail-safe default), and a malformed allow-file entry (no reason) grants no exemption while being reported and sharing the components_check opt-out.
-  - after: Run the cross-component import coverage matrix, including the declared shared-kernel exemption: an edge into a declared kernel module is silent, the exemption is one-directional (declaring the SOURCE does not exempt it), an undeclared module or an absent allow-file still fires (fail-safe default), and a malformed allow-file entry (no reason) grants no exemption while being reported and sharing the components_check opt-out.
-_traced — routes to adjudication_
-- **Evidence**
-  - before: tests/test_trajectory_arch.py::test_cross_cmp_import_without_seam_warns_plain_fails_strict; tests/test_trajectory_arch.py::test_cross_cmp_import_with_declared_seam_is_silent; tests/test_trajectory_arch.py::test_cross_cmp_seam_covers_either_direction; tests/test_trajectory_arch.py::test_components_check_off_silences_cross_cmp; tests/test_trajectory_arch.py::test_declared_kernel_destination_is_not_a_seam; tests/test_trajectory_arch.py::test_undeclared_module_still_fires_the_hard_finding; tests/test_trajectory_arch.py::test_absent_kernel_allow_file_exempts_nothing; tests/test_trajectory_arch.py::test_kernel_exemption_also_silences_the_overlap_advisory; tests/test_trajectory_arch.py::test_kernel_exemption_is_one_directional; tests/test_trajectory_arch.py::test_kernel_allow_entry_without_a_reason_is_dropped_and_reported; tests/test_trajectory_arch.py::test_kernel_allow_entry_with_empty_reason_is_dropped_and_reported; tests/test_trajectory_arch.py::test_kernel_allow_hygiene_shares_the_components_check_opt_out; tests/test_bootstrap.py::test_scaffold_ships_no_declared_kernel_surface
-  - after: tests/test_trajectory_arch.py::test_cross_cmp_import_without_seam_warns_plain_fails_strict; tests/test_trajectory_arch.py::test_cross_cmp_import_with_declared_seam_is_silent; tests/test_trajectory_arch.py::test_cross_cmp_seam_covers_only_its_own_direction; tests/test_trajectory_arch.py::test_components_check_off_silences_cross_cmp; tests/test_trajectory_arch.py::test_declared_kernel_destination_is_not_a_seam; tests/test_trajectory_arch.py::test_undeclared_module_still_fires_the_hard_finding; tests/test_trajectory_arch.py::test_absent_kernel_allow_file_exempts_nothing; tests/test_trajectory_arch.py::test_kernel_exemption_is_one_directional; tests/test_trajectory_arch.py::test_kernel_allow_entry_without_a_reason_is_dropped_and_reported; tests/test_trajectory_arch.py::test_kernel_allow_entry_with_empty_reason_is_dropped_and_reported; tests/test_trajectory_arch.py::test_kernel_allow_hygiene_shares_the_components_check_opt_out; tests/test_bootstrap.py::test_scaffold_ships_no_declared_kernel_surface
-- **Verifies**
-  - before: SR-159;LLR-067;IF-319
-  - after: SR-159;LLR-067
-
-### TC TC-080
-_accepted — re-acceptance owed_
-- **Method**
-  - before: Run endpoint/direction, source-sink, Active-citation, Contracts, opt-out, and strict non-gating coverage cases.
-  - after: Run per-component connectivity, source-sink, seam-citation, Contracts, opt-out, and strict non-gating coverage cases.
-_traced — routes to adjudication_
-- **Verifies**
-  - before: SR-159;LLR-042;IF-263;IF-316;IF-317
-  - after: SR-159;LLR-042;IF-316
-
-### TC TC-435
-_accepted — re-acceptance owed_
-- **Expected**
-  - before: Each module of a joined Module cell carries the row's tag and no joined key survives; the two-component row keeps both tags; the example row and the non-LLR- row make no membership, the non-CMP- tokens are dropped, and the control row keeps its dangling tag; gen_components binds no module_components of its own, hands the join its loaded design rows once, and with the join answering an empty map reports all three seams unplaced.
-  - after: Each path lands on its normalized module key with its one component; the shared key keeps both components; the lower-case and non-id values make no membership, and the dangling id is kept; gen_components binds no module_components of its own, and with the join answering an empty map the seams still land where their endpoint cells put them, only the one naming no component unplaced.
-- **Method**
-  - before: Load a design registry through the carrier and join it with kitlib.spine.module_components: a row whose Module cell joins two modules and a row tagged into two components; then, beside a control row carrying a well-formed tag that names no component row, in turn a -000 example row, a row whose id does not start with LLR-, and a row mixing a lower-case and a bare token with a CMP- one. Separately, stub the join under gen_components' build over a two-component spine, and read which design rows it is handed and where the seams land.
-  - after: Join a set of file declarations with kitlib.spine.module_components: paths in the kit-prefixed and the bare spelling, a package's __init__.py, a configuration file, two files sharing one module key and declaring two components, a lower-case value, a value that is not an id, and a well-formed id naming no component row. Separately, stub the join to answer an empty map under gen_components' build over a two-component spine, and read where the seams land.
-_traced — routes to adjudication_
-- **Evidence**
-  - before: tests/test_components_registry.py::test_module_components_splits_a_joined_module_cell; tests/test_components_registry.py::test_the_join_keeps_the_narrower_answer_where_its_two_copies_disagreed; tests/test_gen_components.py::test_seam_placement_reads_membership_from_the_one_join
-  - after: tests/test_components_registry.py::test_module_components_keys_each_declared_file_by_its_module; tests/test_gen_components.py::test_seam_placement_reads_the_endpoint_cells_and_no_join
-
-### TC TC-436
-- **Method**
-  - before: Build one source tree under a declared scan root: a package with a sibling module and a nested package, a top-level module, two modules ending in the same package path, and an empty module. Tag one importer into one component and every other module into another, and run the cross-component rule in process for each import form in turn: import of a dotted path, the same with an alias, from a package a submodule, from a module a symbol, from a module a name sharing another module's stem, the three relative shapes (a sibling module, the package itself, two levels up), a relative import in the package's own __init__.py, a relative import in the __init__.py of a package with no module under it, and a bare stem. Then read which edges the rule classifies for an ambiguous bare stem, an ambiguous dotted path, a scanned module absent from the inventory, a relative climb past the top, and a relative import in a package's __init__.py that resolves to the importing module itself. Run the rule once more with a generator lacking the resolver, and draw the dependency diagram for the relative import in the __init__.py of the package with no module under it.
-  - after: Build one source tree under a declared scan root: a package with a sibling module and a nested package, a top-level module, two modules ending in the same package path, and an empty module. Declare one importer's component as one component and every other module's as another, and run the cross-component rule in process for each import form in turn: import of a dotted path, the same with an alias, from a package a submodule, from a module a symbol, from a module a name sharing another module's stem, the three relative shapes (a sibling module, the package itself, two levels up), a relative import in the package's own __init__.py, a relative import in the __init__.py of a package with no module under it, and a bare stem. Then read which edges the rule classifies for an ambiguous bare stem, an ambiguous dotted path, a scanned module absent from the inventory, a relative climb past the top, and a relative import in a package's __init__.py that resolves to the importing module itself. Run the rule once more with a generator lacking the resolver, and draw the dependency diagram for the relative import in the __init__.py of the package with no module under it.
-
-### TC TC-457 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-457 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-457
 - **Verifies**: SR-159;LLR-396
 - **Level**: Unit
@@ -292,7 +161,8 @@ _traced — routes to adjudication_
 - **Status**: Drafted
 - **Phase**: 6
 
-### TC TC-458 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-458 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-458
 - **Verifies**: SR-159;LLR-397;IF-316
 - **Level**: Integration
@@ -304,7 +174,8 @@ _traced — routes to adjudication_
 - **Status**: Drafted
 - **Phase**: 6
 
-### TC TC-459 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-459 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-459
 - **Verifies**: SR-159;LLR-373;LLR-067
 - **Level**: Integration
@@ -316,7 +187,8 @@ _traced — routes to adjudication_
 - **Status**: Drafted
 - **Phase**: 6
 
-### TC TC-462 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-462 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-462
 - **Verifies**: SR-159;LLR-041
 - **Level**: Unit
@@ -328,7 +200,8 @@ _traced — routes to adjudication_
 - **Status**: Drafted
 - **Phase**: 6
 
-### TC TC-463 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-463 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-463
 - **Verifies**: SR-159;LLR-398
 - **Level**: Unit
@@ -340,7 +213,8 @@ _traced — routes to adjudication_
 - **Status**: Drafted
 - **Phase**: 6
 
-### TC TC-464 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-464 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-464
 - **Verifies**: SR-159;LLR-067
 - **Level**: Unit
@@ -352,7 +226,8 @@ _traced — routes to adjudication_
 - **Status**: Drafted
 - **Phase**: 6
 
-### TC TC-467 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-467 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-467
 - **Verifies**: SR-159;LLR-042
 - **Level**: Unit
@@ -364,7 +239,8 @@ _traced — routes to adjudication_
 - **Status**: Drafted
 - **Phase**: 6
 
-### TC TC-474 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-474 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-474
 - **Verifies**: SR-159;LLR-398
 - **Level**: Integration
@@ -383,7 +259,8 @@ _traced — routes to adjudication_
 > **Rationale.** Realizes SN-023's FIRST conjunct — a reviewer sees the project's progress from one dashboard-like file — with SN-010 (what the reviewer reads there is the generated truth, never a hand-kept summary of it). ONE DECISION PER ROW: the integrity of a generated artifact (SR-070) and what that artifact must SHOW are two obligations that fail independently. This row is the progress half; SR-169 is the connection half, along the conjunction SN-023 itself draws. Deliberately NOT folded back into SR-070: a state view that regenerates deterministically, offline and drift-checkably while omitting the work in flight satisfies that row completely and this one not at all. Deliberately NOT folded into SR-169 either: a complete progress view can carry no seam graph whatsoever — the state this repository was in before its interface registry existed — so the two are separately observable and separately buildable. `phase` inherits the parent's 1 rather than tracking its children (which span 1 through 4), because a phase records WHEN a piece shipped, and child-later-than-parent is the ordinary case.
 
 
-### LLR LLR-393 — ADDED since the snapshot, Drafted — never accepted
+### LLR LLR-393 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **LLR-ID**: LLR-393
 - **SR-Refs**: SR-168
 - **Title**: The tiers holding each stage rung are stated once, as data beside the derivation, and held to it by driving it
@@ -396,7 +273,8 @@ _traced — routes to adjudication_
 - **Component**: CMP-006
 - **Phase**: 6
 
-### LLR LLR-394 — ADDED since the snapshot, Drafted — never accepted
+### LLR LLR-394 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **LLR-ID**: LLR-394
 - **SR-Refs**: SR-168
 - **Title**: The Process tab's lifecycle panel draws every stage rung with the tiers holding it and how many rows each holds
@@ -409,7 +287,8 @@ _traced — routes to adjudication_
 - **Component**: CMP-009
 - **Phase**: 6
 
-### TC TC-455 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-455 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-455
 - **Verifies**: SR-168;LLR-393
 - **Level**: Unit
@@ -421,7 +300,8 @@ _traced — routes to adjudication_
 - **Status**: Drafted
 - **Phase**: 6
 
-### TC TC-456 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-456 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-456
 - **Verifies**: SR-168;LLR-394;IF-325
 - **Level**: Integration
@@ -440,49 +320,8 @@ _traced — routes to adjudication_
 > **Rationale.** Realizes SN-023's SECOND conjunct, in the need's own words: the relationships between the parts (which module talks to which, over what contract) are as much of the project's truth as its requirement tree, and scattering them hides architectural drift. ONE DECISION PER ROW: artifact integrity is SR-070's, view content is this tier's, and the content half divides exactly where SN-023 divides. Kept separate from SR-168 rather than filed as one content row because the two fail independently and are built by different means — the progress views read the requirement and work registries, this one reads the declared component and interface registries, and either can be complete while the other is absent. The empty-view clause is load-bearing: a repository that has declared no interfaces yet must get a stated, legible surface, because an empty graph is indistinguishable from a broken generator. WORDED FOR A COLD READER: the row had read "structural units", "seams terminating at the containing boundary" and "the artifact contract's omission rule" — vocabulary a first-time reader cannot resolve, the last of them an internal cross-reference with no id. Same obligations, plainer words, and the absent-registry case now names SR-070 explicitly; the empty-vs-absent split itself is unchanged. `phase` inherits the parent's 1; its children span 1 and 2, the ordinary child-later-than-parent case, which is intended.
 
 
-### LLR LLR-080
-- **Detail**
-  - before: Renders IF-labeled seams in dashboard and architecture views with deterministic table fallback when absent. Declared seams produce labeled graph edges in both views; with no seams the table fallback is preserved. The architecture-map target surface is ruled to retire; the obligation moves with the flows/dashboard rendering.
-  - after: Renders IF-labeled seams in the dashboard view with deterministic table fallback when absent. A row names components and external parties, so its seam is a labeled edge between those nodes, a component endpoint wired to its component's block at the layer that shows it; with no seams the table fallback is preserved. The architecture map's dependency diagram draws imports only, since no row names a module. The architecture-map target surface is ruled to retire; the obligation moves with the flows/dashboard rendering.
-
-### LLR LLR-373
-- **Detail**
-  - before: module_components in kitlib/spine.py joins the design rows its caller passes in and does not read a file itself. It skips a row whose id is a -000 example or does not start with LLR-. From a kept row it takes the Component tokens that start with CMP-, drops the rest, splits the Module cell with refs, normalizes the parts with norm_module, and adds those tokens to the map under the non-empty keys. The tags are not filtered against the component registry: the callers intersect them with the ids they declare. gen_components places seams by the map; trajectory_arch's How-SW top view, which the right-sizing rule and the containment render share, and its cross-component scan read membership from it. Neither module holds a join of its own.
-  - after: module_components in kitlib/spine.py joins the file declarations its caller passes in, each a file path and the component that file's Component header declares, and does not read a file itself. It normalizes each path with norm_module and adds the component to the map under the non-empty key, dropping a value that does not start with CMP-. Two files can share a key, so a key keeps every component its files declare. The components are not filtered against the component registry. trajectory_arch reads membership from the map in three places: its How-SW top view, which the right-sizing rule and the containment render share, and its cross-component scan, each of which intersects the map with the ids it declares, and its per-component connectivity warns. gen_components reads no map: it lists each component's modules from the declarations themselves, each file under the component its header names, and places each seam from its endpoint cells alone, as LLR-199 states, so a map that answered nothing would move no seam. Neither module holds a join of its own.
-- **Rationale**
-  - before: The join had two copies, in gen_components and in trajectory_arch, and they disagreed on three inputs: a -000 example row, an id not starting LLR- and a token not starting CMP-. On a registry that trace.py --strict passes they agreed, so the disagreement stayed invisible until a registry broke, which is when two answers to one question cost the most. The checker's narrower answer is kept: a placeholder row, or a token that cannot name a component, should not make a membership that the gate-bearing containment and cross-component rules read, and no caller wanted the wider answer, since each intersects the map with its declared ids.
-  - after: The join had two copies, in gen_components and in trajectory_arch, which disagreed only on inputs a registry the strict trace check passes never holds, so the disagreement stayed invisible until a registry broke, which is when two answers to one question cost the most; one home leaves one answer. The narrower answer is kept: a value that cannot name a component makes no membership that the gate-bearing containment and cross-component rules read, and both rules intersect the map with the ids they declare. The component view needs no join, since it lists each component's modules by their own declarations and places each seam from its endpoint cells, so it holds no copy that could disagree.
-- **Title**
-  - before: The module-to-component join has one home, which the component view and the architecture checks both read
-  - after: The module-to-component join has one home, which the architecture checks read and the component view does not need
-
-### TC TC-081
-_accepted — re-acceptance owed_
-- **Expected**
-  - before: Seams render as labeled edges in both views; absent seams retain fallback; output is deterministic.
-  - after: With no rows the panel keeps its module table and draws no seam. With rows, each seam is one edge labeled with its interface id, between nodes the panel marks as components or as an external party, and a second render is byte-identical. In the drilled view each component endpoint is wired at the layer that shows its component's block: the parts' row inside their parent's layer, between the two parts' blocks; the part's row at the top, from the parent's block to the other component's block; the party's row at the top, from that component's block to the party's own block; and no other wire is drawn. The dependency diagram draws the import as a solid arrow and reads the same beside the rows as without them, with no dotted edge and no interface id.
-- **Method**
-  - before: Generate dashboard and architecture views with and without declared seams.
-  - after: Generate the dashboard over a source tree no component holds, first with no interface rows, then with rows naming two components and an external party. Generate it again with two top-level components holding the modules, one of them through two parts, and with rows between the two parts, from a part to the other top-level component, and from that component to an external party. Draw the architecture map's dependency diagram over two modules, one importing the other, without rows and beside rows naming components and an external party.
-_traced — routes to adjudication_
-- **Evidence**
-  - before: tests/test_traj_views.py::test_how_sw_graph_renders_seams; tests/test_traj_views.py::test_how_sw_stays_a_table_without_seams; tests/test_gen_arch_map.py::test_contracts_and_if_edges
-  - after: tests/test_traj_views.py::test_how_sw_stays_a_table_without_seams; tests/test_traj_views.py::test_how_sw_graph_draws_component_and_party_nodes; tests/test_traj_views.py::test_a_component_endpoint_wires_to_its_components_block; tests/test_gen_arch_map.py::test_the_dependency_diagram_draws_imports_only
-
-### TC TC-435
-_accepted — re-acceptance owed_
-- **Expected**
-  - before: Each module of a joined Module cell carries the row's tag and no joined key survives; the two-component row keeps both tags; the example row and the non-LLR- row make no membership, the non-CMP- tokens are dropped, and the control row keeps its dangling tag; gen_components binds no module_components of its own, hands the join its loaded design rows once, and with the join answering an empty map reports all three seams unplaced.
-  - after: Each path lands on its normalized module key with its one component; the shared key keeps both components; the lower-case and non-id values make no membership, and the dangling id is kept; gen_components binds no module_components of its own, and with the join answering an empty map the seams still land where their endpoint cells put them, only the one naming no component unplaced.
-- **Method**
-  - before: Load a design registry through the carrier and join it with kitlib.spine.module_components: a row whose Module cell joins two modules and a row tagged into two components; then, beside a control row carrying a well-formed tag that names no component row, in turn a -000 example row, a row whose id does not start with LLR-, and a row mixing a lower-case and a bare token with a CMP- one. Separately, stub the join under gen_components' build over a two-component spine, and read which design rows it is handed and where the seams land.
-  - after: Join a set of file declarations with kitlib.spine.module_components: paths in the kit-prefixed and the bare spelling, a package's __init__.py, a configuration file, two files sharing one module key and declaring two components, a lower-case value, a value that is not an id, and a well-formed id naming no component row. Separately, stub the join to answer an empty map under gen_components' build over a two-component spine, and read where the seams land.
-_traced — routes to adjudication_
-- **Evidence**
-  - before: tests/test_components_registry.py::test_module_components_splits_a_joined_module_cell; tests/test_components_registry.py::test_the_join_keeps_the_narrower_answer_where_its_two_copies_disagreed; tests/test_gen_components.py::test_seam_placement_reads_membership_from_the_one_join
-  - after: tests/test_components_registry.py::test_module_components_keys_each_declared_file_by_its_module; tests/test_gen_components.py::test_seam_placement_reads_the_endpoint_cells_and_no_join
-
-### TC TC-459 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-459 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-459
 - **Verifies**: SR-159;LLR-373;LLR-067
 - **Level**: Integration
@@ -506,7 +345,8 @@ THE STAKEHOLDER-NEED RIDER is in the normative text rather than left to the acce
 WHAT COUNTS AS MOVEMENT is one definition with one home, shared with the amend-without-flip guard: the id column and the Status cell are excluded STRUCTURALLY (the id is the join key rather than content, and folding Status in woul… [233 more chars — read the registry row]
 
 
-### TC TC-461 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-461 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-461
 - **Verifies**: SR-178;LLR-359;IF-326
 - **Level**: Unit
@@ -518,18 +358,6 @@ WHAT COUNTS AS MOVEMENT is one definition with one home, shared with the amend-w
 - **Status**: Drafted
 - **Phase**: 6
 
-## SR-202 — An accepted risk reopens on a failed sample or on any change to what it was accepted for
-
-> **Requirement.** When a sample for an assumption relied on under an accepted risk fails, or the text of the assumption or of a need it served when the risk was accepted changes after that acceptance, the delivered harness shall read the assumption as unproven until the risk is accepted again.
-
-> **Rationale.** A recorded accepted risk is a judgment about a particular assumption serving particular needs, so it cannot outlive a change to either, nor a sample showing the assumption failing. Binding the acceptance to the texts as they stood when it was made is what keeps a later, separate re-acceptance of a changed need from silently carrying the old risk forward. A clock would reopen it for no reason and teach readers to re-accept by reflex, so time alone never reopens it. Accepting again is a reviewed acceptance, like the first acceptance.
-
-
-### LLR LLR-239
-- **Detail**
-  - before: risk_acceptance_act(root, da_id) is the latest commit whose acceptance-act record names the assumption, as accepted or re-accepted, while its accepted_risk is non-empty; re-accepting a risk is re-accepting the row in an act, so it moves the anchor even when no byte of the row changes. Only where no act names the row does it fall back to the first commit at which accepted_risk took its current value. accepted_risk_state compares, at that commit and now, the assumption's cells other than status and accepted_risk, and the need and acceptance cells of each need it served then, derived through that commit's requirements; any difference reads the assumption unproven and is an advisory naming the trigger, and a later re-acceptance of a changed need does not clear it, because the comparison is with the acceptance act, not the latest recorded copy. A failing observation record added in a commit that is not an ancestor of the acceptance act also reads it unproven, ordered by commit ancestry rather than by clock. Time is never read. History too shallow to find the act reads unproven with the reason stated.
-  - after: risk_acceptance_act(root, da_id) is the latest commit whose acceptance-act record names the assumption, as accepted or re-accepted, while its accepted_risk is non-empty; re-accepting a risk is re-accepting the row in an act, so it moves the anchor even when no byte of the row changes. Where no act names the row, nobody accepted the risk and there is no anchor: it walks no history of the live registry for a commit to stand in for the act, and reports the risk unanchored, with a reason naming the assumption and telling the operator to accept the risk in an acceptance act, and the risk reads unproven with that reason. accepted_risk_state compares, at the act's commit and now, the assumption's cells other than status and accepted_risk, and the need and acceptance cells of each need it served then, derived through that commit's requirements; any difference reads the assumption unproven and is an advisory naming the trigger, and a later re-acceptance of a changed need does not clear it, because the comparison is with the acceptance act, not the latest recorded copy. A failing observation record added in a commit that is not an ancestor of the acceptance act also reads it unproven, ordered by commit ancestry rather than by clock. Time is never read. History too shallow to find the act reads unproven with the reason stated.
-
 ## SR-208 — Held-rung changes are refused before they land
 
 > **Requirement.** Where the declared acceptance level holds a snapshotted registry's rung for an operator, the delivered harness shall refuse, before it lands on trunk, both a lane's acceptance claim that is not a CLARITY re-acceptance bound to the row's judged text and a marked autonomous commit outside a lane that moves a held status or makes a held acceptance claim.
@@ -537,7 +365,8 @@ WHAT COUNTS AS MOVEMENT is one definition with one home, shared with the amend-w
 > **Rationale.** The acceptance level names the rungs an operator still accepts, and an automated acceptance of the spine's own rows is already refused. The frame, assumption, surrogate and component registries carry status cells of their own that no automated path was stopped from changing, because the one setting that would stop it defaults to allowing. A policy that declares a rung operator-held without refusing the automated path is a claim, not a control. A lane can carry an acceptance into trunk even when no automated writer made its commit, and an autonomous commit outside a lane can make the same change; protecting only selected writers leaves the held state dependent on who delivered it. Binding the permitted re-acceptance to its judged text prevents a verdict about one text authorizing another, while leaving an unmarked reviewed trunk acceptance to its operator authority.
 
 
-### TC TC-461 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-461 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-461
 - **Verifies**: SR-178;LLR-359;IF-326
 - **Level**: Unit
@@ -556,15 +385,8 @@ WHAT COUNTS AS MOVEMENT is one definition with one home, shared with the amend-w
 > **Rationale.** A requirement meant to be met at an interface is not testable until that interface exists and its reading is either the outcome or carried by an assumption the requirement itself relies on. The frame's crossings are the first such interfaces: they are accepted with the frame at the boundary rung, before any interface row exists, and an assumption already names the crossing it lands on, so the requirement is judged against them there. Judging it again at the architecture rung, against the boundary interfaces that realize the crossings, keeps interfaces after the requirements they answer. Minting interface rows to match a count would produce seams with no contract behind them, so the check reports the gap rather than inventing the seam.
 
 
-### LLR LLR-244
-- **CodeSymbol**
-  - before: module_srs/if_reached_srs/interface_form_gate_findings/crossing_gate_findings/step_findings
-  - after: module_srs/component_srs/if_reached_srs/interface_form_gate_findings/crossing_gate_findings/step_findings/contract_homes
-- **Module**
-  - before: project-trajectory/scripts/assumption_rules.py;project-trajectory/scripts/check.py;project-trajectory/scripts/check_assumption_gate.py
-  - after: project-trajectory/scripts/assumption_rules.py;project-trajectory/scripts/check.py;project-trajectory/scripts/check_assumption_gate.py;project-trajectory/scripts/arch_interfaces.py
-
-### TC TC-466 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-466 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-466
 - **Verifies**: SR-212;LLR-244
 - **Level**: Unit
@@ -576,18 +398,6 @@ WHAT COUNTS AS MOVEMENT is one definition with one home, shared with the amend-w
 - **Status**: Drafted
 - **Phase**: 6
 
-## SR-215 — At a checkpoint, an unjudged, expired or triggered observation test is queued once for re-judging
-
-> **Requirement.** When a work item merges, a release is prepared or a stage gate is checked, the delivered harness shall file one re-judge work item per due observation case: one with no result, one whose result expired, or one whose declared trigger fires after its work-item floor; with no declared trigger, a change to its declared inputs makes it due, subject to that floor. It keeps at most one open item per case, and reports each observation case that cites no written pass criteria as a warning.
-
-> **Rationale.** Judgements cost time and model calls and vary across sessions. Written pass criteria fixed before the first judgement make the pass reviewable. The closed-work floor and the declared trigger are cost limits the operator directed (the PERFORMANCE lens): no change or checkpoint makes an accepted judgement due again within the configured number of closed work items of its latest record, and a declared trigger replaces input changes with the change or checkpoint it names, so a judgement can stand on changes it never judged until a qualifying change or checkpoint meets the floor or its result expires. First judgement and expiry keep missing or old evidence from standing indefinitely.
-
-
-### LLR LLR-293
-- **Detail**
-  - before: Cadence reads the process policy at the committed checkpoint and counts distinct terminal archived WI IDs added since the commit that added the latest observation record. eligible applies the greater of default and case floors, then file globs, component-tagged LLR modules and interface owners, release or stage-gate triggers. An omitted trigger leaves input-digest comparison to rejudge. History is cached per result commit; malformed policy, an unknown trigger and unreadable history raise ValueError. Zero explicitly disables the default floor.
-  - after: Cadence reads the process policy at the committed checkpoint and counts distinct terminal archived WI IDs added since the commit that added the latest observation record. eligible applies the greater of default and case floors, then file globs, component-tagged LLR modules, release or stage-gate triggers. An omitted trigger leaves input-digest comparison to rejudge. History is cached per result commit; malformed policy, an unknown trigger and unreadable history raise ValueError. Zero explicitly disables the default floor.
-
 ## SR-217 — A requirement implemented before its test cases were accepted is reported
 
 > **Requirement.** The delivered harness shall report each system requirement accepted after the project's declared starting point whose implementation has landed on trunk while any of its test cases was not yet accepted for it, reading the order from the committed history.
@@ -595,23 +405,8 @@ WHAT COUNTS AS MOVEMENT is one definition with one home, shared with the amend-w
 > **Rationale.** Tests written after the code tend to describe what the code does rather than what was required, so the order is the evidence that a passing run means the requirement is met. The stage ladder puts test cases before implementation for a project as a whole, but not requirement by requirement, and the committed history is the one record of order that no cell can restate after the fact. Code declaring which requirement or design row it implements is the one event that marks an implementation landing. A requirement's acceptance is its entry into scope, so judging only requirements accepted after a declared starting point keeps a project that adopts the rule from being judged on history written before it; a project that declares none is judged whole. A test case is evidence for a requirement only once it is accepted while it names that requirement: dated from its own acceptance alone, a test case accepted for something else could be re-pointed at code already written and lend it an order it never had. A test case not yet accepted is the same gap at its widest, since its passing run shows only that the code does what unaccepted text says; the report names it with a warning rather than withholding the result, which a reviewer can still weigh.
 
 
-### LLR LLR-257
-- **CodeSymbol**
-  - before: first_acceptance_commits/first_association_commits/first_implementation_commits/history_unreadable/test_first_findings/BUILTIN_STEP_NAMES
-  - after: record_acceptances/first_implementation_commits/history_unreadable/test_first_findings/_ledger_commits/BUILTIN_STEP_NAMES
-- **Module**
-  - before: project-trajectory/scripts/check_test_first.py;project-trajectory/scripts/acceptance_record.py;project-trajectory/scripts/kitlib/config.py;project-trajectory/scripts/check.py
-  - after: project-trajectory/scripts/check_test_first.py;project-trajectory/scripts/acceptance_record.py;project-trajectory/scripts/baseline_snapshot.py;project-trajectory/scripts/kitlib/config.py;project-trajectory/scripts/check.py
-
-### TC TC-250
-- **Expected**
-  - before: Satisfies SR-217's acceptance: implementation landing and each test case's acceptance for the requirement read from history, a re-pointed test case dated at the re-pointing; each test case accepted after the implementation reported naming both commits; each test case not accepted named; each named test case warned as one whose result may not reflect the intended behaviour; a declared start scopes it; unreadable history never passes; order never read from a cell.
-  - after: Satisfies SR-217's acceptance: implementation landing and each test case's acceptance for the requirement read from history, a re-pointed test case dated at the act that re-accepts it; each test case accepted after the implementation reported naming both commits; each test case not accepted named; each named test case warned as one whose result may not reflect the intended behaviour; a declared start scopes it; unreadable history never passes; order never read from a cell.
-- **Method**
-  - before: Driven on real git repositories, in a module registered as slow. A requirement whose test cases were all accepted before the first commit adding an Implements line for it produces nothing. Implementation landing is found both through a line naming the requirement and through a line naming one of its design rows, and the earlier of the two is the landing. A requirement with two test cases accepted after that landing is reported naming the requirement, the implementation commit and both acceptance commits. A commit that accepts one test case while withdrawing another still records the acceptance. A test case accepted for another requirement and re-pointed at this one after its implementation landed is reported, dated at the re-pointing commit, and so is one reached through a design row re-pointed at this requirement after the landing. A test case that does not read accepted is reported by name for a requirement whose implementation has landed, and not for one whose implementation has not; the report line names each late or unaccepted test case with the warning that its result may not reflect the intended behaviour, and --strict refuses it. A requirement with no implementation produces nothing. A declared start after a requirement's acceptance excludes it; no declared start judges the whole history. A test case added already Accepted counts at its birth. A shallow clone, a start commit that does not exist, and a start not on first-parent history are each reported unreadable, never passing, and so are a design registry still under an older carrier and a start before the design registry moved to TOML; a test case that reached the requirement through a design row before that move is dated at or before the move, and one reached through a design row re-pointed after it is dated exactly. Order is read only from commits, never from a cell. The step lists as warn-only in the harness plan.
-  - after: Driven on real git repositories, in a module registered as slow. A requirement whose test cases were all accepted before the first commit adding an Implements line for it produces nothing. Implementation landing is found both through a line naming the requirement and through a line naming one of its design rows, and the earlier of the two is the landing. A requirement with two test cases accepted after that landing is reported naming the requirement, the implementation commit and both acceptance commits. A commit that accepts one test case while withdrawing another still records the acceptance. A test case accepted for another requirement and re-pointed at this one after its implementation landed is reported, dated at the act that re-accepts it, and so is one reached through a design row re-pointed at this requirement after the landing. A test case that does not read accepted is reported by name for a requirement whose implementation has landed, and not for one whose implementation has not; the report line names each late or unaccepted test case with the warning that its result may not reflect the intended behaviour, and --strict refuses it. A requirement with no implementation produces nothing. A declared start after a requirement's acceptance excludes it; no declared start judges the whole history. A test case added already Accepted counts at its birth. A shallow clone, a start commit that does not exist, and a start not on first-parent history are each reported unreadable, never passing, and so are a design registry still under an older carrier and a start before the design registry moved to TOML; the record's copies read under either carrier, so that move dates nothing, and a design row re-pointed after it is dated exactly at its act. Order is read only from commits, never from a cell. The step lists as warn-only in the harness plan.
-
-### TC TC-468 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-468 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-468
 - **Verifies**: SR-217;LLR-257
 - **Level**: Integration
@@ -623,7 +418,8 @@ WHAT COUNTS AS MOVEMENT is one definition with one home, shared with the amend-w
 - **Status**: Drafted
 - **Phase**: 6
 
-### TC TC-469 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-469 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-469
 - **Verifies**: SR-217;LLR-257
 - **Level**: Integration
@@ -635,7 +431,8 @@ WHAT COUNTS AS MOVEMENT is one definition with one home, shared with the amend-w
 - **Status**: Drafted
 - **Phase**: 6
 
-### TC TC-470 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-470 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-470
 - **Verifies**: SR-217;LLR-257
 - **Level**: Integration
@@ -647,7 +444,8 @@ WHAT COUNTS AS MOVEMENT is one definition with one home, shared with the amend-w
 - **Status**: Drafted
 - **Phase**: 6
 
-### TC TC-471 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-471 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-471
 - **Verifies**: SR-217;LLR-257
 - **Level**: Integration
@@ -658,70 +456,5 @@ WHAT COUNTS AS MOVEMENT is one definition with one home, shared with the amend-w
 - **Evidence**: tests/test_check_test_first.py::test_a_record_change_with_no_act_is_unread_never_dated_later;tests/test_check_test_first.py::test_an_act_whose_ledger_is_malformed_is_unread;tests/test_check_test_first.py::test_a_cut_whose_ledger_is_malformed_is_unread
 - **Status**: Drafted
 - **Phase**: 6
-
-## SR-225 — A delegated run closes with a record of the calls it made, where the declared dial asks for one
-
-> **Requirement.** The delivered loop content shall keep the operator's verdict on each delegated decision coupled to the work that acts on it and each delegated run to its record: whatever the declared decision-recording dial, reporting without refusing a record entry that omits a required disclosure field or leaves one blank, treating each run's record as the listing the operator reads, in which an entry with no verdict is not yet seen, and refusing an overrule unless its transition change files or amends open work that cites the entry; and, where that dial asks for a record, refusing to integrate a closing lane whose record is absent, naming where it belongs.
-
-> **Rationale.** A DERIVED requirement, and labelled so. SN-029 asks that a run released to automation get as far as it honestly can, and that an acceptance it makes on a released tier leave a record naming who made it; it does not name the other calls a delegated run makes on the operator's behalf, the ones too settled to hold the run for and not settled enough to be history, so this obligation arrives through the unattended-operations lens rather than through the need's text. A call nobody is told about is the failure that lens listens for: it pages nobody, and a run that seems to pass does so partly because nothing looked at what it chose. Required fields and a close refusal make that record durable rather than an instruction that can be omitted. The obligation is keyed to a dial because how much of the operator's reading a run may claim is the operator's to set; it ships off, so a repository owes nothing until its owner asks. Every close owes the record, a partial close included, because every delegated run closes with one; a lane the machinery closed with no session present is refused too, and that refusal is a hold for a person to write the record rather than a strand. A malformed entry is reported rather than refused, because the record is there and readable and a refusal would hold finished work for a reporting defect. A decision is an already selected direction, so the operator either confirms it or overrules it; acceptance would falsely imply a new selection. A closed verdict makes … [1282 more chars — read the registry row]
-
-
-### LLR LLR-283
-- **Detail**
-  - before: kitlib/decisions.py imports nothing and reads no file, git or environment. record_path(run) is DECISIONS_DIR/<run>.toml under docs/decisions, the run's / becoming - and no other character rewritten; a run name carrying any other character outside the shared run-name alphabet raises ValueError naming the run and each such character. That alphabet excludes /, # and exactly the characters git refuses in any branch name one at a time: ASCII control characters, space, DEL and ~ ^ : ? * [ \, matched ASCII-only, so Unicode whitespace is kept. citations(text) recognizes every character that record_path keeps in the run-name segment; because no record name carries #, its path ends at the first # after docs/decisions/, so each citation has one parse. operator_state(value) returns confirmed, overruled, the empty string for an absent operator value, or None for any other value; its strings are exact. record_findings(text) parses the text as TOML, returning one finding when it does not parse, and otherwise one finding per defect: a decision key that is not a table, an entry of that table whose id is not D-<digits>, an entry that is not a table, a key of REQUIRED_KEYS (decided, alternative, reversal_cost, why_not_escalated, review) absent or not a string, one of the first four blank after trimming, an unrecognized operator value, a retired reviewed key, an overruled entry with a blank review note, a top-level high_risk that is absent or not a list of strings, and each hoisted id the decision table lacks; an id ending -000 is skipped wherever it appears, and other entry keys are not judged. It does not raise. review_queue(text) returns (unseen, overruled, confirmed_count): unseen is each entry whose operator value is absent or unrecognized and every entry carrying the retired reviewed key whatever operator value it carries, overruled is each remaining entry whose operator value is overruled, and confirmed_count counts each remaining confirmed entry. Each list holds dictionaries with id, high_risk, fields and the raw operator value, orders hoisted entries first and then by id, excludes -000, and is empty for a text that does not parse without raising. citation(rel, id) returns <rel>#<id>; citations(text) returns the set of docs/decisions/<run>.toml#D-<digits> tokens whose id is not followed by a digit; newly_overruled(before, after) returns, in id order, entries whose written operator value is overruled in the parseable after text but not in the parseable before text, reading an unparseable before side as no prior overrule and raising ValueError naming a parse error when after does not parse. A retired key or blank review note does not suppress this transition reading. owed(mode, outcomes) is true for mode record or escalate-first with at least one outcome, whatever the outcome, a partial close included. missing_record_refusal(mode, run) returns the merge slot refusal of an owed close with no record: naming the run, record_path(run) and the dial, or, for a refused run name, naming the run and the ValueError; each ends nothing was merged. session_note(mode, run) returns the empty string for off and otherwise the instruction naming record_path(run), the required keys, the two operator values with operator left unset, the hoist and the rule that the record is not an exit, with one further sentence under escalate-first preferring the exits over deciding. pending.decision_records counts the unseen entries review_queue reads in the records under docs/decisions/, prefixes a record's findings with its file, and answers no records where the directory is absent. gen_open_items.record_findings_block renders those findings, by file and entry, as a notice closing the pending operator actions, and nothing when there is none; no entry is listed, since the operator reads the records themselves.
-  - after: kitlib/decisions.py imports nothing and reads no file, git or environment. record_path(run) is DECISIONS_DIR/<run>.toml under docs/decisions, the run's / becoming - and no other character rewritten; a run name carrying any other character outside the shared run-name alphabet raises ValueError naming the run and each such character. That alphabet excludes /, # and exactly the characters git refuses in any branch name one at a time: ASCII control characters, space, DEL and ~ ^ : ? * [ \, matched ASCII-only, so Unicode whitespace is kept. citations(text) recognizes every character that record_path keeps in the run-name segment; because no record name carries #, its path ends at the first # after docs/decisions/, so each citation has one parse. operator_state(value) returns confirmed, overruled, the empty string for an absent operator value, or None for any other value; its strings are exact. record_findings(text) parses the text as TOML, returning one finding when it does not parse, and otherwise one finding per defect: a decision key that is not a table, an entry of that table whose id is not D-<digits>, an entry that is not a table, a key of REQUIRED_KEYS (decided, alternative, reversal_cost, why_not_escalated, review) absent or not a string, one of the first four blank after trimming, an unrecognized operator value, a retired reviewed key, an overruled entry with a blank review note, a top-level high_risk that is absent or not a list of strings, and each hoisted id the decision table lacks; an id ending -000 is skipped wherever it appears, and other entry keys are not judged. It does not raise. review_queue(text) returns (unseen, overruled, confirmed_count): unseen is each entry whose operator value is absent or unrecognized and every entry carrying the retired reviewed key whatever operator value it carries, overruled is each remaining entry whose operator value is overruled, and confirmed_count counts each remaining confirmed entry. Each list holds dictionaries with id, high_risk, fields and the raw operator value, orders hoisted entries first and then by id, excludes -000, and is empty for a text that does not parse without raising. citation(rel, id) returns <rel>#<id>; citations(text) returns the set of docs/decisions/<run>.toml#D-<digits> tokens whose id is not followed by a digit; newly_overruled(before, after) returns, in id order, entries whose written operator value is overruled in the parseable after text but not in the parseable before text, reading an unparseable before side as no prior overrule and raising ValueError naming a parse error when after does not parse. A retired key or blank review note does not suppress this transition reading. owed(mode, outcomes) is true for mode record or escalate-first with at least one outcome, whatever the outcome, a partial close included. missing_record_refusal(mode, run) returns the merge slot refusal of an owed close with no record: naming the run, record_path(run) and the dial, or, for a refused run name, naming the run and the ValueError; each ends nothing was merged. session_note(mode, run) returns the empty string for off and otherwise the instruction naming record_path(run), the routing table's home (the Delegated decisions record section of the process options, by file and heading) without restating any of the table's routes, the two kinds of call that table leaves to record (a reading of scope, and a design choice no spine row states) with any call the session is unsure of, the required keys, the two operator values with operator left unset, the hoist and the rule that the record is not an exit, with one further sentence under escalate-first preferring the exits over deciding. pending.decision_records counts the unseen entries review_queue reads in the records under docs/decisions/, prefixes a record's findings with its file, and answers no records where the directory is absent. gen_open_items.record_findings_block renders those findings, by file and entry, as a notice closing the pending operator actions, and nothing when there is none; no entry is listed, since the operator reads the records themselves.
-
-### TC TC-293
-- **Method**
-  - before: The kitlib.decisions call surface over record texts planted in memory, clause by clause, and the operator surface over records planted on disk. (a) SOUND: a record with complete entries, one hoisted, and a record with no entries and an empty hoist yield no finding. (b) EACH REQUIRED KEY: its absence yields one finding per entry naming the entry and the key; a number, a boolean, a list and a table in it each yield exactly the not-text finding; an empty, a spaces-only and a whitespace-only value yield exactly the blank finding for the first four keys and nothing for review. (c) SHAPE: an entry that is not a table, a decision key that is not a table, an entry id outside D-<digits> and an unparseable text each yield one finding. (d) THE HOIST: a hoist that is a string, a list holding a number, a mixed list or a table, a missing hoist, and a hoisted id the record lacks each yield one finding. (e) EXTRA KEYS on an entry yield none. (f) NEVER RAISES: hostile texts each return a list of strings. (g) INERT: a half-filled -000 entry, hoisted, yields none, and the shipped template yields none, lists nothing for review, carries the -000 example with every required key and an empty review without an operator value, and its header sends the operator to the record files rather than to a page section. (h) THE PATH AND THE OBLIGATION: a run's path is one file under the records directory with a / becoming -, and owed holds under record and escalate-first for a complete, a cancelled, a partial and a mixed close, and not under off or for no outcomes. (i) THE NOTE: session_note is empty under off, names the path, every required key, the hoist, operator = confirmed and operator unset under record, and adds a sentence under escalate-first; session_body appends it to a build session's body and to an adjudication session's body under record and to neither under off, and reviewer_prompt's brief does not carry it under record. (j) THE OPERATOR VERDICT: confirmed is not counted as unseen; absent is not yet seen; overruled is not counted as unseen; each unknown operator value, including a non-string value, is a finding and is not yet seen; the retired reviewed key is a finding and its entry reads as not yet seen whatever operator value accompanies it; and an overruled entry with a blank review note is a finding. (k) THE RECORDS ARE THE LISTING: the operator surface has no Decisions to review section and lists no entry, even with unseen, hoisted and overruled entries on disk; each record's findings, a malformed hoist and an unparseable record included, close its pending operator actions by file and entry without raising, and nothing about the records shows when they are sound or absent; the status snapshot counts unseen entries only across the records, never a -000 entry, and links the records directory, with no count when that directory is absent; review_queue lists the hoisted entries first, then by id.
-  - after: The kitlib.decisions call surface over record texts planted in memory, clause by clause, and the operator surface over records planted on disk. (a) SOUND: a record with complete entries, one hoisted, and a record with no entries and an empty hoist yield no finding. (b) EACH REQUIRED KEY: its absence yields one finding per entry naming the entry and the key; a number, a boolean, a list and a table in it each yield exactly the not-text finding; an empty, a spaces-only and a whitespace-only value yield exactly the blank finding for the first four keys and nothing for review. (c) SHAPE: an entry that is not a table, a decision key that is not a table, an entry id outside D-<digits> and an unparseable text each yield one finding. (d) THE HOIST: a hoist that is a string, a list holding a number, a mixed list or a table, a missing hoist, and a hoisted id the record lacks each yield one finding. (e) EXTRA KEYS on an entry yield none. (f) NEVER RAISES: hostile texts each return a list of strings. (g) INERT: a half-filled -000 entry, hoisted, yields none, and the shipped template yields none, lists nothing for review, carries the -000 example with every required key and an empty review without an operator value, and its header sends the operator to the record files rather than to a page section; that header and the process options' Delegated decisions record section each name the two kinds of call left to record, send a choice a spine row states to its row and the conduct of the run to the commit and the log fragment, and the section keeps the one-way confidence ratchet and no longer routes a call to the record only because it touches a registry, the spine or a kit file. (h) THE PATH AND THE OBLIGATION: a run's path is one file under the records directory with a / becoming -, and owed holds under record and escalate-first for a complete, a cancelled, a partial and a mixed close, and not under off or for no outcomes. (i) THE NOTE: session_note is empty under off, names the path, every required key, the hoist, operator = confirmed and operator unset under record, names that section as the routing table's home and the two kinds of call it leaves to record, each found in that section and in the template's header, carries no registry, spine or kit-file route, and adds a sentence under escalate-first; session_body appends it to a build session's body and to an adjudication session's body under record and to neither under off, and reviewer_prompt's brief does not carry it under record. (j) THE OPERATOR VERDICT: confirmed is not counted as unseen; absent is not yet seen; overruled is not counted as unseen; each unknown operator value, including a non-string value, is a finding and is not yet seen; the retired reviewed key is a finding and its entry reads as not yet seen whatever operator value accompanies it; and an overruled entry with a blank review note is a finding. (k) THE RECORDS ARE THE LISTING: the operator surface has no Decisions to review section and lists no entry, even with unseen, hoisted and overruled entries on disk; each record's findings, a malformed hoist and an unparseable record included, close its pending operator actions by file and entry without raising, and nothing about the records shows when they are sound or absent; the status snapshot counts unseen entries only across the records, never a -000 entry, and links the records directory, with no count when that directory is absent; review_queue lists the hoisted entries first, then by id.
-
-## SR-233 — Review threat model
-
-> **Requirement.** The delivered review process shall limit findings to defects reachable in a normal working environment.
-
-> **Rationale.** A DERIVED requirement, and labelled so. SN-006 requires an unattended run to report failures clearly and to continue until it must surface to an operator; it does not say which hostile host conditions a review must treat as an actionable defect. The unattended-operations lens listens for an unbounded retry: treating a reproduction that depends on a compromised or contrived host as actionable can extend review indefinitely and can demand code that compensates for a host whose integrity the process cannot establish. A stated boundary was chosen over relying on each reviewer to infer it, because an inferred boundary varies by session and cannot stop repeated rework. Fed back to the need: SN-006's acceptance could identify the normal working environment in which a review finding is actionable; until it does, this row is derived and says so.
-
-
-### SR SR-233
-- **AcceptanceCriteria**
-  - before: The review scope includes repository content agents write, supported configurations, and regressions of supported behavior; one authoritative definition excludes a finding whose reproduction requires a compromised or contrived host; the party that rules an out-of-scope finding records its dismissal in one recorded line in the response to the review verdict and, when the run keeps a delegated-decisions record, in that record too, without a code response; and the enumerated set of delivered briefs that judge a review finding each cite that definition without restating its boundary examples. Review directions tie every severity class to a scenario reachable through supported workflows or routes: a fail-open, data-loss, or security path counts only when one reaches it, and a rare or contrived path is MINOR at most or dismissed. A contrived scenario uses a forbidden hand act or an ordering no supported workflow or route produces. Whoever rules a finding re-grades a mislabelled BLOCKER or MAJOR. A specification promise over an input space reaches only what supported workflows or routes produce unless it states otherwise. Dispute directions weigh a scenario's plausibility under that promise, not only host compromise or cost. They classify an out-of-set input as a coverage-extension note when it fails closed and as a finding when it fails open; and convergence review confirms fixes, checks Done-when coverage and regressions, tags each new BLOCKER or MAJOR, and treats a new finding as BLOCKER or MAJOR only when it is a reachable fail-open, data-loss, or Done-when gap.
-  - after: The review scope includes repository content agents write, supported configurations, and regressions of supported behavior; one authoritative definition excludes a finding whose reproduction requires a compromised or contrived host; the party that rules an out-of-scope finding records its dismissal in one recorded line in the response to the review verdict, without a code response; and the enumerated set of delivered briefs that judge a review finding each cite that definition without restating its boundary examples. Review directions tie every severity class to a scenario reachable through supported workflows or routes: a fail-open, data-loss, or security path counts only when one reaches it, and a rare or contrived path is MINOR at most or dismissed. A contrived scenario uses a forbidden hand act or an ordering no supported workflow or route produces. Whoever rules a finding re-grades a mislabelled BLOCKER or MAJOR. A specification promise over an input space reaches only what supported workflows or routes produce unless it states otherwise. Dispute directions weigh a scenario's plausibility under that promise, not only host compromise or cost. They classify an out-of-set input as a coverage-extension note when it fails closed and as a finding when it fails open; and convergence review confirms fixes, checks Done-when coverage and regressions, tags each new BLOCKER or MAJOR, and treats a new finding as BLOCKER or MAJOR only when it is a reachable fail-open, data-loss, or Done-when gap.
-
-### LLR LLR-311
-- **Detail**
-  - before: The §6 bold-lead paragraph `Review threat model` defines the review scope: normal-environment defects include repository content agents write, supported configurations, and regressions of supported behavior; compromised or contrived host reproductions are ruled out, with the ruling party recording the dismissal in one recorded line in the response to the review verdict and, when the run keeps a delegated-decisions record, in that record too, without a code response. The enumerated set of delivered briefs that judge a review finding each cite that bold lead and do not copy its boundary examples. Review directions tie every severity class to a scenario reachable in normal use: a fail-open, data-loss, or security path counts only when a supported workflow or the kit's own routes reach it; a rare or contrived path is MINOR at most, or dismissed. A contrived scenario is a forbidden hand act or ordinary tools in an order no supported workflow or kit route produces; a forbidden hand act includes rewinding the trunk branch, skipping or disabling a hook, or hand-editing generated or ruled state. Whoever rules a finding re-grades a mislabelled BLOCKER or MAJOR. A specification's promise over an input space reaches only what supported workflows and the kit's own routes produce unless it states otherwise. They classify an input outside the declared set as a coverage-extension note when the change fails closed and as a finding when it fails open. Done-when coverage and regression review apply in every stance. Only a convergence-marked round reads no earlier verdict or record, leaves filed plan critiques and lane commit messages unread, locates pre-fix code from the diff and test-history patches without commit messages, confirms each fix with pre-fix-failing or independently checkable evidence, treats a new finding as BLOCKER or MAJOR only when it is a reachable fail-open, data-loss, or Done-when gap, and tags each new BLOCKER or MAJOR as convergence-class when it has that class or as not; its dispute directions weigh a scenario's plausibility under the specification promise, not only host compromise or cost, and exclude SUCCESSOR for a convergence-class finding.
-  - after: The §6 bold-lead paragraph `Review threat model` defines the review scope: normal-environment defects include repository content agents write, supported configurations, and regressions of supported behavior; compromised or contrived host reproductions are ruled out, with the ruling party recording the dismissal in one recorded line in the response to the review verdict, without a code response. The enumerated set of delivered briefs that judge a review finding each cite that bold lead and do not copy its boundary examples. Review directions tie every severity class to a scenario reachable in normal use: a fail-open, data-loss, or security path counts only when a supported workflow or the kit's own routes reach it; a rare or contrived path is MINOR at most, or dismissed. A contrived scenario is a forbidden hand act or ordinary tools in an order no supported workflow or kit route produces; a forbidden hand act includes rewinding the trunk branch, skipping or disabling a hook, or hand-editing generated or ruled state. Whoever rules a finding re-grades a mislabelled BLOCKER or MAJOR. A specification's promise over an input space reaches only what supported workflows and the kit's own routes produce unless it states otherwise. They classify an input outside the declared set as a coverage-extension note when the change fails closed and as a finding when it fails open. Done-when coverage and regression review apply in every stance. Only a convergence-marked round reads no earlier verdict or record, leaves filed plan critiques and lane commit messages unread, locates pre-fix code from the diff and test-history patches without commit messages, confirms each fix with pre-fix-failing or independently checkable evidence, treats a new finding as BLOCKER or MAJOR only when it is a reachable fail-open, data-loss, or Done-when gap, and tags each new BLOCKER or MAJOR as convergence-class when it has that class or as not; its dispute directions weigh a scenario's plausibility under the specification promise, not only host compromise or cost, and exclude SUCCESSOR for a convergence-class finding.
-
-### TC TC-332
-- **Expected**
-  - before: The `Review threat model` bold lead occurs once; its paragraph contains `the content agents write into the repository`, `supported configurations`, `regressions of supported behavior`, `the host itself compromised or contrived`, `is out of scope`, `dismissed in one recorded line`, `by whoever rules the finding`, `in the response to the review verdict`, `delegated-decisions record too, when the run keeps one`, and `never answered with code`; each member of `FINDING_JUDGING_BRIEFS = (pr.REVIEWER, pr.ADJUDICATE_DISPUTE)` cites `§6 "Review threat model"`; and no shipped prompt contains `fake or hostile binary`, `depends on the working directory`, `changed by another process mid-call`, or `a tampered OS or tool`. The shipped directions dismiss a contrived scenario, tie every severity class to reachability, count a fail-open, data-loss, or security path only when a supported workflow or the kit's own routes reach it, re-grade a mislabelled BLOCKER or MAJOR, bound a specification promise to what those routes produce, and weigh dispute plausibility under that promise. They contain each classification, convergence, and SUCCESSOR-bound clause; Done-when coverage and regression review apply in every stance; convergence directions add their confirmation, earlier-record exclusion, finding-tag, and reachability-gated BLOCKER-or-MAJOR clauses.
-  - after: The `Review threat model` bold lead occurs once; its paragraph contains `the content agents write into the repository`, `supported configurations`, `regressions of supported behavior`, `the host itself compromised or contrived`, `is out of scope`, `dismissed in one recorded line`, `by whoever rules the finding`, `in the response to the review verdict`, and `never answered with code`, and does not contain `delegated-decisions record`; each member of `FINDING_JUDGING_BRIEFS = (pr.REVIEWER, pr.ADJUDICATE_DISPUTE)` cites `§6 "Review threat model"`; and no shipped prompt contains `fake or hostile binary`, `depends on the working directory`, `changed by another process mid-call`, or `a tampered OS or tool`. The shipped directions dismiss a contrived scenario, tie every severity class to reachability, count a fail-open, data-loss, or security path only when a supported workflow or the kit's own routes reach it, re-grade a mislabelled BLOCKER or MAJOR, bound a specification promise to what those routes produce, and weigh dispute plausibility under that promise. They contain each classification, convergence, and SUCCESSOR-bound clause; Done-when coverage and regression review apply in every stance; convergence directions add their confirmation, earlier-record exclusion, finding-tag, and reachability-gated BLOCKER-or-MAJOR clauses.
-- **Method**
-  - before: Run test_the_reviewer_brief_links_the_review_threat_model_and_restates_nothing: it reads the §6 bold-lead paragraph, asserts the lead occurs once and the paragraph contains `the content agents write into the repository`, `supported configurations`, `regressions of supported behavior`, `the host itself compromised or contrived`, `is out of scope`, `dismissed in one recorded line`, `by whoever rules the finding`, `in the response to the review verdict`, `delegated-decisions record too, when the run keeps one`, and `never answered with code`; asserts each member of `FINDING_JUDGING_BRIEFS = (pr.REVIEWER, pr.ADJUDICATE_DISPUTE)` cites `§6 "Review threat model"`; and asserts every shipped prompt omits `fake or hostile binary`, `depends on the working directory`, `changed by another process mid-call`, and `a tampered OS or tool`. Run test_the_review_threat_model_dismisses_contrived_scenarios_and_gates_every_class and test_a_spec_promise_reaches_only_what_supported_routes_produce for the contrived-scenario dismissal, every-class gate, promise bound, and dispute plausibility directions. Check the reviewer directions for reachability-tied severity, out-of-set classification, and convergence stance, and the dispute directions for the SUCCESSOR convergence-class bound.
-  - after: Run test_the_reviewer_brief_links_the_review_threat_model_and_restates_nothing: it reads the §6 bold-lead paragraph, asserts the lead occurs once and the paragraph contains `the content agents write into the repository`, `supported configurations`, `regressions of supported behavior`, `the host itself compromised or contrived`, `is out of scope`, `dismissed in one recorded line`, `by whoever rules the finding`, `in the response to the review verdict`, and `never answered with code`, and does not contain `delegated-decisions record`; asserts each member of `FINDING_JUDGING_BRIEFS = (pr.REVIEWER, pr.ADJUDICATE_DISPUTE)` cites `§6 "Review threat model"`; and asserts every shipped prompt omits `fake or hostile binary`, `depends on the working directory`, `changed by another process mid-call`, and `a tampered OS or tool`. Run test_the_review_threat_model_dismisses_contrived_scenarios_and_gates_every_class and test_a_spec_promise_reaches_only_what_supported_routes_produce for the contrived-scenario dismissal, every-class gate, promise bound, and dispute plausibility directions. Check the reviewer directions for reachability-tied severity, out-of-set classification, and convergence stance, and the dispute directions for the SUCCESSOR convergence-class bound.
-
-## SR-243 — Coordinator calls record sessions without committing outside claimed work
-
-> **Requirement.** When the coordinator's tooling launches a model session, the delivered coordinator call capability shall record the session in the usage record, record its log without committing to the shared line of development when it starts outside claimed work, refuse an unsafe resumed authoring carrier before launch, judge the call's changes against its starting state, and provide the sole launch route for author, critic and REVIEW-A calls.
-
-> **Rationale.** A DERIVED requirement, and labelled so. SN-026 requires attributable routing among model families, and SR-222 requires a usage record for sessions the delivered loop launches, but neither reaches a coordinator-started session or states where its record may be committed. The unattended-operations lens identifies a partial or missing call record that leaves unattended progress unrecoverable, while the integrity-and-recoverability lens identifies telemetry committed to unrelated shared work as evidence with ambiguous provenance. Recording every coordinator session through the same usage record while retaining an out-of-work log without a shared commit was chosen over leaving coordinator sessions unrecorded or treating every checkout as a commit authority. Fed back to the need: its acceptance could state that every coordinator-started model session has attributable usage and a recoverable record without changing unrelated shared work. SR-231's rationale supplies the lane-local provenance lens; its adjudication-only boundary remains unchanged.
-
-
-### SR SR-243
-- **AcceptanceCriteria**
-  - before: For session-log recording, claimed work includes a linked worktree whose branch tree or the shared tree carries that branch's active work, including after the local claim has closed. A coordinator-started session in such claimed work records one usage record and its log commits with that work. A session started from the shared checkout, a detached checkout, or an unclaimed branch writes its log without a shared commit. A refused record commit is reported and is never success. A resumed authoring turn continues the recorded thread and refuses before launch when its relevant record is missing, damaged, foreign, or when an uncommitted relevant record is no older than it. The edit check distinguishes an edit from another call's standard record commit, reports edits, treats unreadable history as unable to check, and never reports a refused or unable check as success. Published coordinator guidance names the coordinator-call route as the only Sol or Terra launch path, its blackout refusal and result meanings, and shared-checkout spooling.
-  - after: For session-log recording, claimed work includes a linked worktree whose branch tree or the shared tree carries that branch's active work, including after the local claim has closed. A coordinator-started session in such claimed work records one usage record and its log commits with that work. A session started from the shared checkout, a detached checkout, or an unclaimed branch writes its log without a shared commit. A refused record commit is reported and is never success. A resumed authoring turn continues the recorded thread and refuses before launch when its relevant record is missing, damaged, foreign, or when an uncommitted relevant record is no older than it. The edit check distinguishes an edit from another call's standard record commit, reports edits, treats unreadable history as unable to check, and never reports a refused or unable check as success. Published coordinator guidance names the coordinator-call route as the only launch path for author, critic and REVIEW-A calls, its blackout refusal and result meanings, and shared-checkout spooling.
-- **Requirement**
-  - before: When the coordinator's tooling launches a model session, the delivered coordinator call capability shall record the session in the usage record, record its log without committing to the shared line of development when it starts outside claimed work, refuse an unsafe resumed authoring carrier before launch, judge the call's changes against its starting state, and provide the sole Sol or Terra launch route.
-  - after: When the coordinator's tooling launches a model session, the delivered coordinator call capability shall record the session in the usage record, record its log without committing to the shared line of development when it starts outside claimed work, refuse an unsafe resumed authoring carrier before launch, judge the call's changes against its starting state, and provide the sole launch route for author, critic and REVIEW-A calls.
-
-### TC TC-385
-- **Expected**
-  - before: The cycle guidance names the coordinator-call route as the only Sol or Terra launch path, states their blackout refusal and result meanings, states that shared-checkout calls spool, and contains no retired wrapper or direct resume launch.
-  - after: The cycle guidance names the coordinator-call route as the only launch path for author, critic and REVIEW-A calls, states their blackout refusal and result meanings, states that shared-checkout calls spool, and contains no retired wrapper or direct resume launch.
-- **Method**
-  - before: Read the coordinator-cycle guidance and all synchronized role copies for the required coordinator-call invocation, blackout refusal, outcome meanings, spool behaviour, and retirement of direct Sol and Terra launch recipes.
-  - after: Read the coordinator-cycle guidance and all synchronized role copies for the required coordinator-call invocation, blackout refusal, outcome meanings, spool behaviour, and retirement of direct author, critic and REVIEW-A launch recipes.
 
 </details>
