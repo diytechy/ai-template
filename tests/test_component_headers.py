@@ -179,25 +179,20 @@ def test_the_census_names_every_finding_class_and_keeps_the_valid_ones(tmp_path)
     assert "scripts/example.ini: declares CMP-000, which no live component row" in text
 
 
-def test_the_scope_is_the_grammars_types_under_src_and_the_file_owners(tmp_path):
+def test_the_scope_is_the_grammars_types_under_src_and_the_listed_headers(tmp_path):
     """`README.md` is documentation; a hidden directory and `__pycache__` are
     not source; a file of another type is outside the rule until it states a
-    contract body; a file owner outside `[paths] src` is in, and a directory
-    owner, read through its `README.md`, is not; a file nothing scopes is not
-    walked, whatever it carries.
+    contract body; a file `[arch-map] headers` lists is in, a directory
+    README outside the source root and a README under it among them; a listed
+    path that is no file is a finding; a file nothing scopes is not walked,
+    whatever it carries.
 
     Implements: TC-458"""
-    ifs = (
-        '[interface.IF-001]\nowner = "docs/config.toml"\n'
-        'consumers = ["scripts/ok"]\nchannel = "file"\n\n'
-        '[interface.IF-002]\nowner = "docs/notes/"\n'
-        'consumers = ["scripts/ok"]\nchannel = "file"\n'
-    )
     _repo(
         tmp_path,
         {
             "scripts/ok.py": _mod("CMP-001"),
-            "scripts/README.md": "# Scripts\n",
+            "scripts/README.md": "<!--\nComponent: CMP-001\n-->\n",
             "scripts/.hidden/x.py": _mod(),
             "scripts/__pycache__/x.py": _mod(),
             "scripts/data.json": "{}\n",
@@ -206,11 +201,19 @@ def test_the_scope_is_the_grammars_types_under_src_and_the_file_owners(tmp_path)
             "docs/notes/README.md": "<!-- Contracts: IF-002 -->\n",
             "docs/other.toml": "# component: CMP-001 malformed, unscoped\n",
         },
-        ifs=ifs,
     )
-    _declared, findings = arch_inputs.component_headers(tmp_path)
+    _write(
+        tmp_path,
+        "docs/stack.ini",
+        "[paths]\nsrc = scripts\n[arch-map]\nheaders = docs/config.toml "
+        "docs/notes/README.md scripts/README.md docs/missing.ini\n",
+    )
+    declared, findings = arch_inputs.component_headers(tmp_path)
+    assert declared == {"scripts/ok.py": "CMP-001", "scripts/README.md": "CMP-001"}
     assert sorted(f.split(":")[0] for f in findings) == [
         "docs/config.toml",
+        "docs/missing.ini",
+        "docs/notes/README.md",
         "scripts/lib.rs",
     ], findings
     rs = [f for f in findings if f.startswith("scripts/lib.rs")][0]
@@ -272,7 +275,7 @@ def _edge_repo(root, a_cmp, b_cmp, ifs="", kernel=False, b_extra=None):
 
 
 COVER = (
-    '[interface.IF-001]\nowner = "scripts/b"\nrequestors = ["scripts/a"]\n'
+    '[interface.IF-001]\nowner = "CMP-002"\nrequestors = ["CMP-001"]\n'
     'channel = "call"\ndata = "g()"\n'
 )
 

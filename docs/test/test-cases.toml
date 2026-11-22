@@ -460,9 +460,9 @@ phase = 1
 [test.TC-044]
 verifies = ["SR-159", "LLR-041"]
 level = "Integration"
-method = "Run IF id, SR back-link, Component membership, and endpoint-advisory trace cases."
+method = "Run IF id, SR back-link, Component membership and endpoint-form trace cases."
 tier = "Full"
-expected = """Integrity and unresolved links fail as declared; endpoint mismatch is advisory; absent registry is vacuous."""
+expected = "Integrity, unresolved links and an endpoint outside its two forms fail as declared; absent registry is vacuous."
 automated = "Yes"
 evidence = """tests/test_trace_interfaces.py::test_if_tier_integrity; tests/test_components_registry.py::test_if_component_tag_must_resolve"""
 status = "Accepted"
@@ -502,7 +502,7 @@ status = "Accepted"
 phase = 1
 
 [test.TC-048]
-verifies = ["SR-154", "LLR-048", "IF-260"]
+verifies = ["SR-154", "LLR-048"]
 level = "Integration"
 method = "Run Critique scope detection and redacted rubric/intent/artifact brief cases."
 tier = "Full"
@@ -513,7 +513,7 @@ status = "Accepted"
 phase = 1
 
 [test.TC-049]
-verifies = ["SR-159", "LLR-049", "IF-320"]
+verifies = ["SR-159", "LLR-049"]
 level = "Integration"
 method = "Run TOP_VIEW_MAX, containment, nesting, opt-out, and vacuity cases."
 tier = "Full"
@@ -642,13 +642,13 @@ status = "Accepted"
 phase = 4
 
 [test.TC-067]
-verifies = ["SR-159", "LLR-067", "IF-319"]
+verifies = ["SR-159", "LLR-067"]
 level = "Integration"
 method = "Run the cross-component import coverage matrix, including the declared shared-kernel exemption: an edge into a declared kernel module is silent, the exemption is one-directional (declaring the SOURCE does not exempt it), an undeclared module or an absent allow-file still fires (fail-safe default), and a malformed allow-file entry (no reason) grants no exemption while being reported and sharing the components_check opt-out."
 tier = "Full"
-expected = "Uncovered cross-component edges warn/fail strict; covered, vacuous and declared-kernel cases stay silent."
+expected = "Uncovered cross-component edges warn/fail strict, a row owned the other way round covering nothing; covered (a call row owned by the imported file's component naming the importer's), vacuous and declared-kernel cases stay silent."
 automated = "Yes"
-evidence = """tests/test_trajectory_arch.py::test_cross_cmp_import_without_seam_warns_plain_fails_strict; tests/test_trajectory_arch.py::test_cross_cmp_import_with_declared_seam_is_silent; tests/test_trajectory_arch.py::test_cross_cmp_seam_covers_either_direction; tests/test_trajectory_arch.py::test_components_check_off_silences_cross_cmp; tests/test_trajectory_arch.py::test_declared_kernel_destination_is_not_a_seam; tests/test_trajectory_arch.py::test_undeclared_module_still_fires_the_hard_finding; tests/test_trajectory_arch.py::test_absent_kernel_allow_file_exempts_nothing; tests/test_trajectory_arch.py::test_kernel_exemption_is_one_directional; tests/test_trajectory_arch.py::test_kernel_allow_entry_without_a_reason_is_dropped_and_reported; tests/test_trajectory_arch.py::test_kernel_allow_entry_with_empty_reason_is_dropped_and_reported; tests/test_trajectory_arch.py::test_kernel_allow_hygiene_shares_the_components_check_opt_out; tests/test_bootstrap.py::test_scaffold_ships_no_declared_kernel_surface"""
+evidence = "tests/test_trajectory_arch.py::test_cross_cmp_import_without_seam_warns_plain_fails_strict; tests/test_trajectory_arch.py::test_cross_cmp_import_with_declared_seam_is_silent; tests/test_trajectory_arch.py::test_cross_cmp_seam_covers_only_its_own_direction; tests/test_trajectory_arch.py::test_components_check_off_silences_cross_cmp; tests/test_trajectory_arch.py::test_declared_kernel_destination_is_not_a_seam; tests/test_trajectory_arch.py::test_undeclared_module_still_fires_the_hard_finding; tests/test_trajectory_arch.py::test_absent_kernel_allow_file_exempts_nothing; tests/test_trajectory_arch.py::test_kernel_exemption_is_one_directional; tests/test_trajectory_arch.py::test_kernel_allow_entry_without_a_reason_is_dropped_and_reported; tests/test_trajectory_arch.py::test_kernel_allow_entry_with_empty_reason_is_dropped_and_reported; tests/test_trajectory_arch.py::test_kernel_allow_hygiene_shares_the_components_check_opt_out; tests/test_bootstrap.py::test_scaffold_ships_no_declared_kernel_surface"
 status = "Accepted"
 phase = 1
 
@@ -785,9 +785,9 @@ status = "Accepted"
 phase = 1
 
 [test.TC-080]
-verifies = ["SR-159", "LLR-042", "IF-263", "IF-316", "IF-317"]
+verifies = ["SR-159", "LLR-042", "IF-316"]
 level = "Integration"
-method = """Run endpoint/direction, source-sink, Active-citation, Contracts, opt-out, and strict non-gating coverage cases."""
+method = "Run per-component connectivity, source-sink, seam-citation, Contracts, opt-out, and strict non-gating coverage cases."
 tier = "Full"
 expected = """Every declared coverage gap warns without failing and each suppression/vacuity case stays silent."""
 automated = "Yes"
@@ -1456,7 +1456,7 @@ status = "Accepted"
 phase = 4
 
 [test.TC-148]
-verifies = ["SR-174", "LLR-154", "IF-090"]
+verifies = ["SR-174", "LLR-154"]
 level = "Integration"
 method = """Run the integrator + dispatcher suites' intake-arm cases: a merged branch that amended an accepted SR cell yields the adjudication row as its own mint: commit immediately after the merge commit on trunk (in-slot, serial); the dispatcher's empty-frontier rung 1 mints gap rows and KEEPS DRIVING them in the same run, then exits honestly when every gap already carries a row; a census-mint refusal stops the run loudly; the handback loop tests drive the disposition row the same run mints."""
 tier = "Full"
@@ -1478,7 +1478,7 @@ status = "Accepted"
 phase = 1
 
 [test.TC-150]
-verifies = ["SR-137", "LLR-155", "IF-261"]
+verifies = ["SR-137", "LLR-155"]
 level = "Integration"
 method = """Run the process-config suite over a duplicated declaration, wrong-typed dials and out-of-range dials, and valid policy files containing a dotted key, an inline table or a multi-line string. Assert each guarded entry point refuses a duplicated declaration by naming its key and both homes, that invalid values are refused rather than defaulted, and that valid TOML forms cause no configuration refusal."""
 tier = "Full"
@@ -1588,7 +1588,7 @@ status = "Accepted"
 phase = 6
 
 [test.TC-409]
-verifies = ["SR-157", "LLR-365", "IF-131", "IF-263", "IF-318"]
+verifies = ["SR-157", "LLR-365", "IF-131"]
 level = "Integration"
 method = "Run the trajectory check over tagged test trees in plain and strict modes, absent tests-root and registry cases, a nested tests root, and a bootstrapped scaffold before and at the implementation rung."
 tier = "Full"
@@ -1599,7 +1599,7 @@ status = "Accepted"
 phase = 6
 
 [test.TC-410]
-verifies = ["SR-157", "LLR-366", "IF-263", "IF-318"]
+verifies = ["SR-157", "LLR-366"]
 level = "Integration"
 method = "Exercise evidence that lacks a declaration and a declaration that lacks evidence in plain and strict modes; exercise a Drafted test case; and run the equality check in a bootstrapped scaffold below and at the implementation rung."
 tier = "Full"
@@ -1786,7 +1786,7 @@ status = "Accepted"
 phase = 1
 
 [test.TC-166]
-verifies = ["SR-165", "LLR-172", "IF-320"]
+verifies = ["SR-165", "LLR-172"]
 level = "Integration"
 method = """Run trajectory_arch's component pass (derivation_record_findings, through component_findings as check_trajectory.py runs it) over fixture component registries: (a) a complete derivation record passes silently; (b) a record omitting each element in turn (candidate partitions, objective, constraints, any candidate's score, the selected partition, the operator ruling) is reported once per omission, naming the row and the missing element; (c) each malformed record cell, and each malformed `derivation` citation, is reported; (d) an absent record is reported once, on the row its citers name; (e) a record whose recorded ranking does not recompute from its own objective, constraints and scores is reported, and the recompute runs only on a complete, well-formed record; (f) a selected partition the recorded scores do not rank first is reported, and the SAME record with an override naming that choice is silent; (g) a finding warns plain and fails under --strict; (h) a project declaring no components, and the shipped example -000 rows, are vacuous."""
 tier = "Full"
@@ -1797,7 +1797,7 @@ status = "Accepted"
 phase = 5
 
 [test.TC-167]
-verifies = ["SR-140", "LLR-173", "IF-123", "IF-128", "IF-129"]
+verifies = ["SR-140", "LLR-173", "IF-123", "IF-129"]
 level = "Integration"
 method = """Run the record half of the baseline-snapshot suite over real temp repos - the half TC-153 does not cover, which is drift. (a) VACUITY: with no snapshot directory every reader is vacuous by ABSENCE, load_all returns None rather than {}, and the mechanical flip is a no-op before the first signing. (b) THE BOOTSTRAP GUARD: copy_live REFUSES to create the directory without seed=True, and --seed is proven UNREACHABLE from every loop module, hook and check step, so the first snapshot can only ride the operator's signing commit. (c) THE COPY CONTRACT: the copy is byte-for-byte and preserves repo-relative paths, and a stale other-carrier file for the same stem is DELETED in the same act (or the next resolve raises "exists under BOTH carriers"). (d) UNANCHORED, BOTH DIRECTIONS: an accepted row absent from the snapshot is reported, an acceptance whose snapshot copy reads BELOW acceptance is reported (the case that is only decidable because the copy keeps each row's own Status cell), each as true of an accepted need and an accepted stakeholder as of a spine row, a registry missing from an EXISTING snapshot is reported, and an unparseable snapshot RAISES rather than reading as empty. (e) The snapshot-directory constant has ONE value in both homes, and the `intake.py snapshot` CLI seeds then refreshes. The MIRROR INVARIANT half is TC-173's, so it is not covered twice."""
 tier = "Full"
@@ -2105,13 +2105,13 @@ status = "Accepted"
 phase = 5
 
 [test.TC-195]
-verifies = ["SR-070", "LLR-199", "IF-139", "IF-140", "IF-141", "IF-142", "IF-143"]
+verifies = ["SR-070", "LLR-199", "IF-139", "IF-140", "IF-141", "IF-142"]
 level = "Unit"
-method = """The join, the three coverage edges, the standing constraint and the freshness contract, each driven against a two-component spine small enough to reason about by hand. THE JOIN: assert the design rows are placed by the design tier's Component tag and the requirement tier is reached through them, while the modules come from the files' Component headers. DERIVED NEVER COPIED: a design row carrying no hat cell still contributes its SR parent's perspectives, and re-ruling that one requirement moves the view with no design cell edited. EDGE 1: a requirement with no design child appears in the unplaced table, is counted there, and appears in no component section - visible rather than dropped. EDGE 2: a requirement reaching two components appears in both and is marked shared in both, while one reaching a single component is not. EDGE 3: seams enter the view, an interface with both endpoints inside a component is internal to it while one crossing two is a boundary of BOTH, an UNTAGGED interface is still placed through its endpoints, and one that resolves nowhere is reported as unplaced. NO ACCEPTANCE: with one Accepted and one Drafted component declared in the hand file, no maturity key and neither word appears in any emitted cell. FRESHNESS, DRIVEN BOTH WAYS: --check passes on a fresh view, fails after a registry row moves, and passes again once regenerated; a missing view fails; the written bytes carry no CRLF and two renders agree. VACUITY: a repo whose only CMP row is the inert -000 example writes nothing and exits zero on both paths."""
+method = "The join, the three coverage edges, the standing constraint and the freshness contract, each driven against a two-component spine small enough to reason about by hand. THE JOIN: assert the design rows are placed by the design tier's Component tag and the requirement tier is reached through them, while the modules come from the files' Component headers. DERIVED NEVER COPIED: a design row carrying no hat cell still contributes its SR parent's perspectives, and re-ruling that one requirement moves the view with no design cell edited. EDGE 1: a requirement with no design child appears in the unplaced table, is counted there, and appears in no component section - visible rather than dropped. EDGE 2: a requirement reaching two components appears in both and is marked shared in both, while one reaching a single component is not. EDGE 3: seams enter the view, an interface with both endpoints inside a component is internal to it while one crossing two is a boundary of BOTH, an interface is placed by the components its endpoint cells name, and one naming no component is reported as unplaced. NO ACCEPTANCE: with one Accepted and one Drafted component declared in the hand file, no maturity key and neither word appears in any emitted cell. FRESHNESS, DRIVEN BOTH WAYS: --check passes on a fresh view, fails after a registry row moves, and passes again once regenerated; a missing view fails; the written bytes carry no CRLF and two renders agree. VACUITY: a repo whose only CMP row is the inert -000 example writes nothing and exits zero on both paths."
 tier = "Smoke"
 expected = "Satisfies the acceptance folded into LLR-199 (parent SR-070)"
 automated = "Yes"
-evidence = """tests/test_gen_components.py::test_membership_and_the_requirement_reach; tests/test_gen_components.py::test_the_hat_union_is_DERIVED_from_the_parent_not_copied; tests/test_gen_components.py::test_a_parent_re_ruling_moves_the_view_with_no_design_cell_edited; tests/test_gen_components.py::test_a_childless_requirement_is_listed_ONCE_and_never_dropped; tests/test_gen_components.py::test_a_shared_requirement_appears_in_EVERY_component_it_reaches; tests/test_gen_components.py::test_seams_enter_the_view_split_internal_from_boundary; tests/test_gen_components.py::test_an_untagged_seam_is_placed_by_its_ENDPOINTS; tests/test_gen_components.py::test_an_unplaceable_seam_is_REPORTED_not_silently_excluded; tests/test_gen_components.py::test_the_generated_view_carries_NO_acceptance_cell; tests/test_gen_components.py::test_check_reds_on_a_stale_view_and_greens_once_regenerated; tests/test_gen_components.py::test_check_reds_when_the_view_is_missing_entirely; tests/test_gen_components.py::test_the_written_file_is_LF_and_reproducible; tests/test_gen_components.py::test_a_repo_with_no_real_component_is_VACUOUS; tests/test_gen_components.py::test_the_cli_runs_out_of_process"""
+evidence = "tests/test_gen_components.py::test_membership_and_the_requirement_reach; tests/test_gen_components.py::test_the_hat_union_is_DERIVED_from_the_parent_not_copied; tests/test_gen_components.py::test_a_parent_re_ruling_moves_the_view_with_no_design_cell_edited; tests/test_gen_components.py::test_a_childless_requirement_is_listed_ONCE_and_never_dropped; tests/test_gen_components.py::test_a_shared_requirement_appears_in_EVERY_component_it_reaches; tests/test_gen_components.py::test_seams_enter_the_view_split_internal_from_boundary; tests/test_gen_components.py::test_a_seam_is_placed_by_the_components_its_endpoints_name; tests/test_gen_components.py::test_an_unplaceable_seam_is_REPORTED_not_silently_excluded; tests/test_gen_components.py::test_the_generated_view_carries_NO_acceptance_cell; tests/test_gen_components.py::test_check_reds_on_a_stale_view_and_greens_once_regenerated; tests/test_gen_components.py::test_check_reds_when_the_view_is_missing_entirely; tests/test_gen_components.py::test_the_written_file_is_LF_and_reproducible; tests/test_gen_components.py::test_a_repo_with_no_real_component_is_VACUOUS; tests/test_gen_components.py::test_the_cli_runs_out_of_process"
 status = "Accepted"
 phase = 5
 
@@ -2149,7 +2149,7 @@ status = "Accepted"
 phase = 5
 
 [test.TC-199]
-verifies = ["LLR-203", "IF-262"]
+verifies = ["LLR-203"]
 level = "Integration"
 method = """The inventory's two delivered finding classes, driven where each one can actually fail. THE DOGFOOD DIRECTION, in process against the live MAPPING literal: a declared destination that this repository neither carries nor serves in place out of the kit tree, and which no absence declaration covers, is reported by name; a declared absence whose destination has materialized is reported as stale, with the lifecycle marker exempting only the paths whose presence is a legal state; and the walk is bite-proofed by removing one declared entry and asserting its destination reappears in the finding set, so a walk that had quietly stopped looking could not pass. THE PACKAGE DIRECTION, asked of a REAL bootstrapped scaffold rather than of the kit tree, because the kit's own scripts directory holds every file and a partial copy passes there: the copied helper package must hold exactly the kit's module set - a missing or stale MAPPING row is named as the cause - and must import from where a shipped script sits; and a shipped script importing a sibling the inventory omits is reported against the MAPPING literal read as an AST, never as a whole-file regex, so a comment naming a module cannot mark it mapped. The two package-direction test nodes are ALSO TC-176's evidence, where they back LLR-181/SR-166's materialization claim; TC-199 reads the same nodes for a different arm - LLR-203's MISSING-FILES finding, a MAPPING row absent from the shipped helper package - and asserts nothing about SR-166. One test, two arms, each traced to the row that owns it."""
 tier = "Full"
@@ -3135,7 +3135,7 @@ status = "Accepted"
 phase = 6
 
 [test.TC-266]
-verifies = ["SR-227", "SR-239", "LLR-270", "IF-248", "IF-065"]
+verifies = ["SR-227", "SR-239", "LLR-270", "IF-248"]
 level = "Unit"
 method = "Read the shipped policy file and its template: the template declares adjudicator context_reset_pct 0 and this repository declares the same adjudicator keys, and both declare reviewer context_reset_pct 0 and final_reviewer fresh. At adjudicator dial 0, assert no retained adjudication is planned, runner version is not read, argv and environment equal a fresh session's, no store is written, the loop plan is None, and no keep-warm is built. At reviewer dial 0, assert no review keep is planned or written. A missing, unreadable, non-numeric or boolean reviewer dial reads off and fresh; with the dial on, only a retained adjudication or a scoped review is kept, and persisted reads fresh while the reviewer percent is zero. A final reviewer that is neither fresh nor persisted, whether an invalid word or type, reads off and fresh even with a positive percent, and loop review draws then retain nothing."
 tier = "Smoke"
@@ -3180,7 +3180,7 @@ status = "Accepted"
 phase = 6
 
 [test.TC-268]
-verifies = ["SR-227", "SR-238", "LLR-270", "IF-044", "IF-065"]
+verifies = ["SR-227", "SR-238", "LLR-270"]
 level = "Unit"
 method = "Assert a keep-warm ping is due only with the dial and its minutes on, for an active ANTHROPIC session idle past the minutes while work is pending, and only on a route whose runner bounds a call to one turn (an ANTHROPIC route served through opencode is never pinged), and that an adjudication's lease makes a due ping skip naming the holder. Drive the dispatcher's keep-warm over a retained session with an injected launch that blocks: the tick returns at once with the ping on its own thread holding the lease, a second tick starts nothing and says so, nothing is committed while the ping runs, and once it finishes the next tick writes its session log to the primary-checkout spool without a commit on the tick's own thread; the ping resumed the session, is bounded to one turn, is logged as an ordinary call (role KEEP-WARM, source keep-warm, outcome and occupancy filled) and updated the record and released the lease. Assert an unavailable launch credential skips the ping, states the refusal and releases its lease without changing the session record. A finished ping over a dirty trunk is held and said until the trunk is clean; a ping skipped for a held lease is said once; a ping in flight at the run's end is recorded to the spool over a clean trunk and, over a dirty one, is not recorded and its reason is printed and returned. A ping whose launch raised TreeNotEnded makes the next tick and the run's end raise it, after recording the call to the spool over a clean trunk and unrecorded over a dirty one; a failed recording never replaces it; an ordinary ping failure is still recorded as ERROR and swallowed. The dirty read is the shared primitives' own check over a real repository; and the dispatcher's warmer is built from the routing registry with each row's declared environment."
 tier = "Smoke"
@@ -3791,7 +3791,7 @@ status = "Accepted"
 phase = 6
 
 [test.TC-374]
-verifies = ["SR-238", "LLR-026", "IF-302"]
+verifies = ["SR-238", "LLR-026"]
 level = "Integration"
 method = "Run test_the_job_helpers_import_without_loading_kernel32, test_agent_session_reaches_the_shared_helpers, test_the_cpu_reader_sums_user_and_kernel_time, test_a_tree_not_ended_within_the_bound_raises, test_a_member_the_kill_cannot_open_makes_it_raise, test_a_windows_reading_counts_the_exited_grandchild, test_a_joined_job_counts_an_exited_grandchild, and test_an_outside_process_cannot_raise_a_reading. Assert that the module imports without loading kernel32, the session reaches the shared declarations, the active-process reader governs the session-tree bound, the CPU reader sums user and kernel time, and an unnamed joined job reports its descendants while excluding an outside process."
 tier = "Full"
@@ -3967,7 +3967,7 @@ status = "Accepted"
 phase = 6
 
 [test.TC-389]
-verifies = ["SR-244", "LLR-347", "LLR-349", "LLR-350", "LLR-351", "LLR-355", "LLR-356", "IF-065", "IF-246"]
+verifies = ["SR-244", "LLR-347", "LLR-349", "LLR-350", "LLR-351", "LLR-355", "LLR-356", "IF-246"]
 level = "Integration"
 method = "Ingest, resume, repeat and interrupt fixture sessions, including same-second ending ranges, open last messages, malformed prior headers, and same-name prior logs in the spool, root record directory, and another worktree."
 tier = "Full"
@@ -4143,7 +4143,7 @@ status = "Accepted"
 phase = 6
 
 [test.TC-418]
-verifies = ["SR-154", "SR-241", "LLR-344", "LLR-367", "IF-173"]
+verifies = ["SR-154", "SR-241", "LLR-344", "LLR-367"]
 level = "Integration"
 method = "Run the loop over seeded lanes and read the rounds drawn, the failed-checks records and the passed-checks records."
 tier = "Full"
@@ -4220,7 +4220,7 @@ status = "Accepted"
 phase = 6
 
 [test.TC-425]
-verifies = ["SR-156", "LLR-368", "IF-080", "IF-173"]
+verifies = ["SR-156", "LLR-368", "IF-080"]
 level = "Integration"
 method = "Run refresh integration cases for its declaration and landing-tree checks."
 tier = "Full"
@@ -4253,7 +4253,7 @@ status = "Accepted"
 phase = 6
 
 [test.TC-428]
-verifies = ["SR-157", "IF-263"]
+verifies = ["SR-157"]
 level = "Integration"
 method = "Run the trajectory check over registries and test trees covering each input state of the undeclared-case rule: no registry, no tests root and a registry that does not parse; a placeholder row; a Drafted case holding a note and holding an untagged part; an automated cell reading No, another word, absent and blank; an Accepted and a Founded case, and one whose automated cell is padded and upper-case, each tagged and untagged; a case whose part is in an unreadable file, alone and beside a readable part; an untagged case holding a note, no cell, a whole-file part, a part outside the tests root and an absent path; a misplaced and a malformed tag, alone and beside a valid one; and an untagged part, then tagged."
 tier = "Full"
@@ -4264,7 +4264,7 @@ status = "Accepted"
 phase = 6
 
 [test.TC-429]
-verifies = ["SR-157", "IF-263"]
+verifies = ["SR-157"]
 level = "Integration"
 method = "Walk one test case through a lane's order, Drafted holding a note, then Drafted and tagged, then Accepted and tagged; then out of order, Accepted before its tag, in plain and strict runs with and without work items, and once tagged; then run the same untagged Accepted case in a bootstrapped scaffold below and at the implementation rung, and once tagged."
 tier = "Full"
@@ -4321,11 +4321,11 @@ phase = 6
 [test.TC-435]
 verifies = ["SR-159", "LLR-373"]
 level = "Unit"
-method = "Join a set of file declarations with kitlib.spine.module_components: paths in the kit-prefixed and the bare spelling, a package's __init__.py, a configuration file, two files sharing one module key and declaring two components, a lower-case value, a value that is not an id, and a well-formed id naming no component row. Separately, stub the join under gen_components' build over a two-component spine, and read which declarations it is handed and where the seams land."
+method = "Join a set of file declarations with kitlib.spine.module_components: paths in the kit-prefixed and the bare spelling, a package's __init__.py, a configuration file, two files sharing one module key and declaring two components, a lower-case value, a value that is not an id, and a well-formed id naming no component row. Separately, stub the join to answer an empty map under gen_components' build over a two-component spine, and read where the seams land."
 tier = "Smoke"
-expected = "Each path lands on its normalized module key with its one component; the shared key keeps both components; the lower-case and non-id values make no membership, and the dangling id is kept; gen_components binds no module_components of its own, hands the join the declarations it was given once, and with the join answering an empty map reports all three seams unplaced."
+expected = "Each path lands on its normalized module key with its one component; the shared key keeps both components; the lower-case and non-id values make no membership, and the dangling id is kept; gen_components binds no module_components of its own, and with the join answering an empty map the seams still land where their endpoint cells put them, only the one naming no component unplaced."
 automated = "Yes"
-evidence = "tests/test_components_registry.py::test_module_components_keys_each_declared_file_by_its_module; tests/test_gen_components.py::test_seam_placement_reads_membership_from_the_one_join"
+evidence = "tests/test_components_registry.py::test_module_components_keys_each_declared_file_by_its_module; tests/test_gen_components.py::test_seam_placement_reads_the_endpoint_cells_and_no_join"
 status = "Accepted"
 phase = 6
 
@@ -4497,18 +4497,18 @@ phase = 6
 [test.TC-458]
 verifies = ["SR-159", "LLR-397", "IF-316"]
 level = "Integration"
-method = "Over a repository with two live components and a declared source root, run the census over files that declare a live component, declare none, declare two, carry a malformed line, name an id no row has and name the example id; then over a tree holding a README.md, files under a hidden directory and a bytecode cache, a JSON file, a source file of another type stating a contract body, a configuration file and a directory the interface registry names as owners, and an unscoped file outside the root carrying a malformed line. Run it with only the example component row, and through the component rules with the components check on and off. Run the trajectory check plain and strict over a tree whose imported module declares no component."
+method = "Over a repository with two live components and a declared source root, run the census over files that declare a live component, declare none, declare two, carry a malformed line, name an id no row has and name the example id; then over a tree holding a README.md, files under a hidden directory and a bytecode cache, a JSON file, a source file of another type stating a contract body, a configuration file and a directory README the scan profile's header list names, and an unscoped file outside the root carrying a malformed line; then list a source-root README, a configuration file with no declaration and a path that is no file. Run it with only the example component row, and through the component rules with the components check on and off. Run the trajectory check plain and strict over a tree whose imported module declares no component."
 tier = "Smoke"
-expected = "Only the file declaring a live component is in the declarations, and each other file is one finding naming it and its class, the example id as no live row. The scope reports only the configuration owner and the other-type file, whose finding names its suffix and the contract body. With only the example row the census is empty. The component rules carry the census finding with the check on and nothing with it off. The plain run warns naming the undeclared module and exits 0; the strict run reports it as an error and exits 1."
+expected = "Only the file declaring a live component is in the declarations, and each other file is one finding naming it and its class, the example id as no live row. The scope reports only the two listed files with no declaration and the other-type file, whose finding names its suffix and the contract body; a listed source-root README is in the declarations, and a listed path that is no file is a finding. With only the example row the census is empty. The component rules carry the census finding with the check on and nothing with it off. The plain run warns naming the undeclared module and exits 0; the strict run reports it as an error and exits 1."
 automated = "Yes"
-evidence = "tests/test_component_headers.py::test_the_census_names_every_finding_class_and_keeps_the_valid_ones; tests/test_component_headers.py::test_the_scope_is_the_grammars_types_under_src_and_the_file_owners; tests/test_component_headers.py::test_the_census_is_vacuous_with_no_live_component_row; tests/test_component_headers.py::test_the_census_rides_the_component_rules_and_their_opt_out; tests/test_trajectory_arch.py::test_cross_cmp_unmapped_endpoint_is_unclassified"
+evidence = "tests/test_component_headers.py::test_the_census_names_every_finding_class_and_keeps_the_valid_ones; tests/test_component_headers.py::test_the_scope_is_the_grammars_types_under_src_and_the_listed_headers; tests/test_component_headers.py::test_the_census_is_vacuous_with_no_live_component_row; tests/test_component_headers.py::test_the_census_rides_the_component_rules_and_their_opt_out; tests/test_trajectory_arch.py::test_cross_cmp_unmapped_endpoint_is_unclassified"
 status = "Drafted"
 phase = 6
 
 [test.TC-459]
-verifies = ["SR-159", "LLR-373", "LLR-067", "IF-319"]
+verifies = ["SR-159", "LLR-373", "LLR-067"]
 level = "Integration"
-method = "Over a repository whose design rows tag a module into one component while its header declares none, read the How-SW top view. Then run the cross-component rule over an import edge in turn with the destination undeclared, the importer undeclared, the destination undeclared beside an interface row covering the pair, and the destination undeclared on the shared-kernel list; over an edge whose destination shares its module key with a second file declaring the importer's component; and over an edge inside one component. Run the trajectory check plain over an edge whose destination declares no component."
+method = "Over a repository whose design rows tag a module into one component while its header declares none, read the How-SW top view. Then run the cross-component rule over an import edge in turn with the destination undeclared, the importer undeclared, the destination undeclared beside a call row covering the pair, and the destination undeclared on the shared-kernel list; over an edge whose destination shares its module key with a second file declaring the importer's component; and over an edge inside one component. Run the trajectory check plain over an edge whose destination declares no component."
 tier = "Smoke"
 expected = "The top view follows the headers, not the design rows: the declared module is in its component and the undeclared one is uncontained. Each undeclared case yields one finding naming both modules as unclassified, the covered and kernel cases included. The shared-key edge is the uncovered-seam finding, not silence. The edge inside one component is silent, and the multi-membership advisory no longer exists. The plain trajectory check names the edge as unclassified."
 automated = "Yes"
@@ -4521,7 +4521,7 @@ verifies = ["SR-070", "LLR-199", "IF-140"]
 level = "Unit"
 method = "Over the two-component view fixture, move one source file's header to the other component, add a file no design row names declaring that component, and render the view."
 tier = "Smoke"
-expected = "The moved file leaves its old component's modules and joins the new one's beside the added file; the seam between the two files becomes internal to the new component; the design row tagged into the old component still places its row there."
+expected = "The moved file leaves its old component's modules and joins the new one's beside the added file; the seams stay where their endpoint cells put them; the design row tagged into the old component still places its row there."
 automated = "Yes"
 evidence = "tests/test_gen_components.py::test_the_modules_and_the_seams_follow_the_headers"
 status = "Drafted"
@@ -4535,5 +4535,71 @@ tier = "Smoke"
 expected = "Both digests carry the sha256 prefix and the owner's width; with the width changed, the record's digest follows it."
 automated = "Yes"
 evidence = "tests/test_acceptance_record.py::test_the_text_digest_takes_its_width_from_the_done_when_digest"
+status = "Drafted"
+phase = 6
+
+[test.TC-462]
+verifies = ["SR-159", "LLR-041"]
+level = "Unit"
+method = "Read the party list from a registry header, a mid-line mention and a line under the first table included; judge each endpoint form; run the interface tier over rows whose owner and far side each take one form, over a row whose owner and far side are all external parties, and over a row still carrying the component cell."
+tier = "Smoke"
+expected = "Only the header's party lines declare a party. A component id a live row has and a declared party pass; a path, a module, a requirement id, an unknown component, a bare party and an undeclared one are each a strict finding naming the row and the cell. The all-external row is refused and the component cell is a finding."
+automated = "Yes"
+evidence = "tests/test_if_owner_component.py::test_each_endpoint_takes_one_of_two_forms"
+status = "Drafted"
+phase = 6
+
+[test.TC-463]
+verifies = ["SR-159", "LLR-398"]
+level = "Unit"
+method = "Over a two-component repository, state an interface's body in no file (a locally owned row and an external-owned one), in a file of the owner's component, in a file of another component and in a file with no declaration, in two files, in a file of a component on an external-owned row's far side and in one off it, and declare one with no body; then quote the body in a review record, a plan and the approval snapshot, and in a configuration file the header list names."
+tier = "Smoke"
+expected = "Zero bodies and one in the owner's file are clean; another component's file, an undeclared file and a file off the external row's far side are each one finding naming the file and both components; two files are one finding naming both; the declaration with no body is a finding; the quoted copies are never counted, and the listed configuration file's copy is a second body."
+automated = "Yes"
+evidence = "tests/test_if_owner_component.py::test_one_body_per_interface_in_a_file_of_the_right_component"
+status = "Drafted"
+phase = 6
+
+[test.TC-464]
+verifies = ["SR-159", "LLR-067"]
+level = "Unit"
+method = "Import a file of one component into a file of another, with no row, with a call row owned by the imported file's component naming the importer's, with that row owned the other way round, with a file row and with a command-line row naming the same two components."
+tier = "Smoke"
+expected = "Only the call row owned by the imported file's component naming the importer's covers the edge; every other case is the uncovered-seam finding."
+automated = "Yes"
+evidence = "tests/test_if_owner_component.py::test_only_a_call_row_owned_by_the_imported_component_naming_the_importer_covers"
+status = "Drafted"
+phase = 6
+
+[test.TC-465]
+verifies = ["SR-070", "LLR-199"]
+level = "Unit"
+method = "Place a row inside one component, a row between two, a row with an external endpoint, and a row between two components nested in a third."
+tier = "Smoke"
+expected = "The first is internal to its component; the second and third are boundary rows of each component they name and internal to none; the nested row is internal to the enclosing component and shown in all three."
+automated = "Yes"
+evidence = "tests/test_if_owner_component.py::test_a_row_is_internal_to_the_lowest_component_enclosing_every_endpoint"
+status = "Drafted"
+phase = 6
+
+[test.TC-466]
+verifies = ["SR-212", "LLR-244"]
+level = "Unit"
+method = "Reach requirements from two boundary interfaces, one whose body a design row's file states and one with no body, beside an internal interface whose body another design row's file states; then reach them with no scanned source, the second design row placed in the owner component."
+tier = "Smoke"
+expected = "The first reaches its design row's requirement, the second reaches none, and the internal interface is not judged; with no scanned source both boundary interfaces reach the requirement of the design row placed in their owner component."
+automated = "Yes"
+evidence = "tests/test_if_owner_component.py::test_a_boundary_row_reaches_requirements_through_the_file_stating_its_body"
+status = "Drafted"
+phase = 6
+
+[test.TC-467]
+verifies = ["SR-159", "LLR-042"]
+level = "Unit"
+method = "Run the connectivity warns over two components holding one module each, with one row owned by the second and consumed by an external party."
+tier = "Smoke"
+expected = "The first component is named as named by no row, the second as declaring no Consumes seam, and no warn names a module."
+automated = "Yes"
+evidence = "tests/test_if_owner_component.py::test_connectivity_warns_name_components_not_modules"
 status = "Drafted"
 phase = 6

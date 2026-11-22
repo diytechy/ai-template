@@ -1,4 +1,6 @@
 <!--
+Component: CMP-006
+
 Contracts: IF-161 — the interface seam this directory declares (process.md §8;
 row of record in ../requirements/interfaces.toml).
 

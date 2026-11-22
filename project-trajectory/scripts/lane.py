@@ -24,24 +24,21 @@ protocol (§A4.2 — "the handshake the sketch worried about does not exist").
 
 Component: CMP-008
 
-Contracts: IF-136 — the seam this module declares (process.md §8; row of
-record in docs/requirements/interfaces.toml).
-
-Contract IF-136: the dispatcher's admitted lane table calls three functions
-    here and reads nothing else. `ensure_worktree(root, branch)` returns
-    `(path, error)` for the worktree holding a claimed branch, creating it if
-    needed — the one path both the worker and the refresh use, by construction
-    rather than by two matching literals. `spawn_worker(root, branch, wi_id,
-    args)` returns `(Popen, None)` or `(None, refusal)` for one worker session
-    on that worktree, non-blocking and with stdio inherited, the resolved
-    session dials forwarded as explicit flags so nothing a launcher set is
-    silently dropped. `spawn_refresh(root, branch, tier)` returns a Popen
-    running the station refresh as its own subprocess, so N lanes' checks run
-    concurrently instead of queueing at the dispatcher. What comes back is
-    only the tree-derived signal — the spec moved out of `active/<branch>/` —
-    plus each subprocess's exit code: no state file and no back-channel. This
-    module runs and reports; what an exit code or a failing refresh MEANS is the
-    caller's to decide.
+The dispatcher's admitted lane table calls three functions
+here and reads nothing else. `ensure_worktree(root, branch)` returns
+`(path, error)` for the worktree holding a claimed branch, creating it if
+needed — the one path both the worker and the refresh use, by construction
+rather than by two matching literals. `spawn_worker(root, branch, wi_id,
+args)` returns `(Popen, None)` or `(None, refusal)` for one worker session
+on that worktree, non-blocking and with stdio inherited, the resolved
+session dials forwarded as explicit flags so nothing a launcher set is
+silently dropped. `spawn_refresh(root, branch, tier)` returns a Popen
+running the station refresh as its own subprocess, so N lanes' checks run
+concurrently instead of queueing at the dispatcher. What comes back is
+only the tree-derived signal — the spec moved out of `active/<branch>/` —
+plus each subprocess's exit code: no state file and no back-channel. This
+module runs and reports; what an exit code or a failing refresh MEANS is the
+caller's to decide.
 """
 
 from __future__ import annotations

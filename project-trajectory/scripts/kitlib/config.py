@@ -114,6 +114,34 @@ def read_stack_ini(path, *, fold_keys=True):
     return parse_stack_ini(text, source=str(path), fold_keys=fold_keys)
 
 
+def declared_headers(root):
+    """`([(rel, path)], [rel])`: each file `docs/stack.ini` `[arch-map]
+    headers` lists (whitespace-separated, repository-relative), and each listed
+    path that is not a file. The files outside `[paths] src` whose headers the
+    contract scan and the component census read: the configuration files,
+    registry headers and directory READMEs that state contracts. Nothing
+    outside the source root is read unless it is listed, so a review record, a
+    plan, the approval snapshot or an example document never states a second
+    body. An absent or unreadable profile lists none.
+
+    Implements: SR-159, LLR-398
+    """
+    try:
+        cp = read_stack_ini(Path(root) / STACK_INI)
+    except StackIniError:
+        return [], []
+    if cp is None or not cp.has_option("arch-map", "headers"):
+        return [], []
+    found, missing = [], []
+    for rel in sorted(set(cp.get("arch-map", "headers").split())):
+        path = Path(root) / rel
+        if path.is_file():
+            found.append((rel, path))
+        else:
+            missing.append(rel)
+    return found, missing
+
+
 def parse_stack_ini(text, *, source="<string>", fold_keys=True):
     """`read_stack_ini`'s parse of `docs/stack.ini` text already in hand, under
     the same options; a parse error raises `StackIniError`. For the vocabulary

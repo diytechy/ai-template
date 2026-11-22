@@ -29,22 +29,22 @@ unchanged.
 
 Component: CMP-008
 
-Contracts: IF-041, IF-064 — the interface seams this module declares (process.md §8; rows
-of record in docs/requirements/interfaces.toml).
+Contracts: IF-041 — the interface seam this module declares (process.md §8;
+row of record in docs/requirements/interfaces.toml).
 
-Contract IF-064: the session-launch surface. `build_argv(template, model,
-    prompt)` returns `(argv, stdin_input)` and DECIDES prompt delivery: a
-    template carrying a `{prompt}` placeholder gets it substituted into argv,
-    except that a Windows batch shim is refused there because the shell
-    re-parses it; with no placeholder the prompt is piped to the child's stdin
-    instead, immune to command-line length caps. `run_session(argv, root,
-    timeout, env, on_line, stdin_input)` returns `(exit_code, output,
-    timed_out)` for ONE fresh headless session: stdin is closed, or fed and then
-    closed — never left open for an interactive read, so the child cannot wedge
-    the run — output is pumped by a reader thread, the timeout is per session,
-    and the output is the whole captured stream. `parse_json_result` and the
-    console renderers complete the surface, and the loop re-exports these
-    names, so its own public surface is unchanged.
+The session-launch surface. `build_argv(template, model,
+prompt)` returns `(argv, stdin_input)` and DECIDES prompt delivery: a
+template carrying a `{prompt}` placeholder gets it substituted into argv,
+except that a Windows batch shim is refused there because the shell
+re-parses it; with no placeholder the prompt is piped to the child's stdin
+instead, immune to command-line length caps. `run_session(argv, root,
+timeout, env, on_line, stdin_input)` returns `(exit_code, output,
+timed_out)` for ONE fresh headless session: stdin is closed, or fed and then
+closed — never left open for an interactive read, so the child cannot wedge
+the run — output is pumped by a reader thread, the timeout is per session,
+and the output is the whole captured stream. `parse_json_result` and the
+console renderers complete the surface, and the loop re-exports these
+names, so its own public surface is unchanged.
 
 Contract IF-041: our reading of the configured agent CLI, stated here because
     the CLI's own header is not ours to write. The registry row's command

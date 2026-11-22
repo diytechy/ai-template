@@ -628,8 +628,8 @@ def seam_owner(row):
     """An IF row's OWNER-side endpoint — the providing thing, read off the cell
     (OI-67 ruled (a), 2026-08-29).
 
-    ONE SPELLING, the same one `consumers` uses: a module path, a file or
-    directory path, or an `external:` party. Nothing is derived — the
+    ONE SPELLING, the same one `consumers` uses: a component id or an
+    `external:` party (revision 35, never a requirement id). Nothing is derived — the
     `owner` -> LLR -> `Module` join that `seam_provider` ran until this ruling
     retired with the id-typed owner it read, because a design row's module IS
     the providing thing and a derivable cell was a second spelling of it.
@@ -1474,9 +1474,9 @@ OFFSPINE_KEYS = {
     # are `provider` (OPTIONAL — omitted wherever `owner`→LLR→`module` derives
     # it uniquely) and `consumers` (a LIST, required).
     # THE ROW IS ONE OWNER, ITS CONSUMERS AND A TYPED STATEMENT (OI-67 ruled
-    # (a), 2026-08-29): `owner` is the providing THING — a module path, a file
-    # or directory path, or an `external:` party, the same spelling `consumers`
-    # uses — never a requirement id; `channel` is the closed vocabulary of what
+    # (a), 2026-08-29): `owner` is the providing THING — since revision 35 a
+    # component id or an `external:` party, the same spelling `consumers` uses
+    # — never a requirement id; `channel` is the closed vocabulary of what
     # crosses; `data` the optional short alphabet. `provider`, `req_refs`,
     # `signal` and `signal_note` LEFT the row at that ruling, and `contract`
     # left with them once every definition had moved into its owner's
@@ -1507,7 +1507,9 @@ OFFSPINE_KEYS = {
         # column repo-wide). Read only on a row with a tie-back above.
         "bridged_by",
         "coincident",
-        "component",
+        # `component` LEFT the row at WI-1022 (revision 35): an interface's place
+        # in the component view is derived from its endpoints, which name
+        # components; a row still carrying it is `trace.py`'s strict finding.
         "notes",
     ),
     # The derivation record (SR-165, WI-999): eight flat cells, since the

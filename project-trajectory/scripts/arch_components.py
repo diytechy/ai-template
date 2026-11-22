@@ -11,10 +11,7 @@ rule from `arch_seams`, and checks each component row's derivation record
 
 Component: CMP-006
 
-Contracts: IF-320 — the interface seam this file declares (process.md §8; row
-of record in docs/requirements/interfaces.toml).
-
-Contract IF-320: the component rule surface ``trajectory_arch`` re-exports.
+The component rule surface ``trajectory_arch`` re-exports.
 `component_top_view(root)` returns the containment derivation as a dict
 (`inventory`, `cmps`, `by_id`, `children_of`, `roots_of`, `module_cmps`,
 `module_roots`, `top_roots`, `uncontained`, `count`), the one join the

@@ -12079,6 +12079,72 @@ and `hooks/` (each now carries the kit's own `Component:` line),
 **Project-owned files — edit:** each of your own files in the scope above
 gains its `Component:` line.
 
+### Interface rows name components, not files: each endpoint is a component id or a declared party [since 1b15d07fb]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.
+Variant F's second entry; apply it after the `Component:` header entry above.)*
+
+**What changed.** An interface row's `owner`, and each entry of its
+`requestors` or `consumers`, is a component id (`CMP-###`, a live row of
+`components.toml`) or `external:` followed by a party the registry's header
+declares on a line reading exactly `# External party: <name>`. A path, a
+module, a requirement id, an unknown component and an undeclared party are
+each a `trace.py --strict` finding; the module-owner advisory and the
+endpoint-resolution advisory are gone. The `component` cell leaves the schema
+(a row still carrying it is a strict finding): a row's place in the component
+view is derived from its endpoints. The definition gate becomes uniqueness:
+at most one file states each `Contract IF-###:` body, over the scan surface
+— every file under `[paths] src` of a type the `Component:` grammar carries
+(`README.md` excluded) plus each file a new optional key,
+`docs/stack.ini` `[arch-map] headers` (whitespace-separated, repository-
+relative paths), lists. Zero bodies is valid; two or more is a finding; where
+a body exists its file's `Component:` header names the owner, or, for an
+`external:`-owned row, a component on the row's far side. The owner-exact
+reverse warn and the stray-declaration rule are gone. The cross-component
+rule counts as cover only a `call` row owned by the imported file's
+component naming the importer's component among its requestors (a row on
+another channel, or owned the other way round, covers nothing). The
+interface-form gate (`interface-allocation`) reaches a requirement through
+the file stating each boundary row's body, and the connectivity warns name
+components, not modules.
+
+**What to do.** Rewrite every interface row by this mapping rule, once:
+
+1. An `external:<party>` endpoint stays; add one `# External party: <party>`
+   line to the registry header for each party your rows name.
+2. A path naming a file that declares a component in its `Component:` header
+   becomes that component.
+3. A directory medium, or a hand-edited file with no header, becomes its
+   producing component: the component of the file that writes a generated
+   file, the one a hand-edited file's header declares, the one producing what
+   lands in a directory.
+4. A file outside every component (a test, a tool outside the shipped tree)
+   is dropped from the far side, or named as the `external:` party it serves.
+5. Drop repeats within a cell, keep the far side's key, and delete every
+   `component` cell.
+
+Then list in `docs/stack.ini` `[arch-map] headers` each file outside
+`[paths] src` whose header states a contract (a registry, a configuration
+file, a hook, a directory's `README.md`), and give each a `Component:` line
+naming its row's owner. Run `python scripts/trace.py --strict` and
+`python scripts/check_trajectory.py --strict`: they name every endpoint left
+in the old form, every second body and every body in the wrong component's
+file. A `call` row whose owner and every endpoint are one component is no
+longer needed by any rule; keep it only where its rationale argues for the
+seam. A cross-component import whose only cover was a non-`call` row, or a
+row owned the other way round, needs a `call` row now.
+
+**Kit-owned files — overwrite:** every file the kit ships under `scripts/`
+(the checks, their docstrings and the two `dev-setup` templates, whose
+PowerShell twin now points at the POSIX one's bodies), `stack.ini.template`,
+`registries/interfaces.template.toml`, `registries/README.md`,
+`skills/README.md`, `INTERFACES.template.md`, `EXAMPLE.md`, `PROCESS.md` and
+`PROCESS_OPTIONS.md`.
+
+**Project-owned files — edit:** `docs/requirements/interfaces.toml` (every
+row, its header's party list), `docs/stack.ini` (`[arch-map] headers`), and
+each listed header file's `Component:` line.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

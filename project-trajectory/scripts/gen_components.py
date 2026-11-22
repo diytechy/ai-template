@@ -48,15 +48,15 @@ indistinguishable from one with a bug):
     and the shared list is what makes that visible rather than looking like a
     duplicate.
   * SEAMS ENTER THE VIEW — they are the one input that shows a component's EDGES
-    rather than only its obligations. An IF row is placed by its `Component` tag
-    UNIONED with the components its two endpoints resolve into (endpoint -> the
-    file's `Component:` header, through the same best-effort normalizer
-    `trace.interface_findings` already joins on). The union is deliberate: the
-    tag names the row's owning component while the endpoints span the pair, and
-    a seam between two components is a boundary of BOTH. Classification is the
-    components template's own: both endpoints inside -> `seam_internal_refs`,
-    otherwise -> `seam_boundary_refs`. A row neither tagged nor resolvable is
-    listed in `[unplaced]` rather than dropped.
+    rather than only its obligations. An IF row names its owner and far side
+    as component ids or `external:` parties, and its place is DERIVED from
+    them (variant F; there is no placement cell): it appears in each component
+    it names, as `seam_internal_refs` of the lowest component enclosing every
+    endpoint through `part_of` (none when an endpoint is `external:` or no
+    component encloses them all) and as `seam_boundary_refs` of every other. A
+    seam between two components is a boundary of BOTH. A row naming no
+    component the registry declares is listed in `[unplaced]` rather than
+    dropped.
 
 Stdlib only, cross-platform, deterministic (sorted inputs, no clocks) so the
 `--check` byte-compare is stable in any clone.
@@ -99,7 +99,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import arch_inputs  # noqa: E402  (path set above)
 import spine_carrier  # noqa: E402
 import trace as tr  # noqa: E402
-import trace_text  # noqa: E402
 
 CMP_REL = "docs/requirements/components.toml"
 SR_REL = "docs/requirements/system-requirements.toml"
@@ -143,31 +142,35 @@ def _load(root):
     )
 
 
-def seam_placement(row, mod_comps):
-    """One IF row as `(placed, internal)` — the components it touches, and the
-    subset it is INTERNAL to.
+def seam_placement(row, parents):
+    """One IF row as `(placed, internal)` — the components it is shown in, and
+    the one it is INTERNAL to, from its endpoint cells alone.
 
-    Placement is the declared `Component` tag UNIONED with whatever its endpoints
-    resolve into; internality needs endpoint evidence on BOTH sides, so a row
-    placed only by its tag is a boundary (we have no evidence the far side is
-    inside). Empty `placed` means the row is unplaceable — reported, never
-    dropped.
+    `parents` is `{CMP id: [part_of ids]}`. A row is shown in each component
+    it names, and is internal to the lowest component enclosing every
+    endpoint: the deepest component on every endpoint's `part_of` chain, which
+    is shown too. An `external:` endpoint is enclosed by no component, so a row
+    with one is internal to none. Placement is direction-blind and is for the
+    views only; nothing checks against it.
 
-    The two sides are the owner and its far side — requestors or consumers,
-    whichever the row names (OI-67): both read off the row's own cells, in one
-    spelling, with nothing derived. Placement is direction-blind."""
-    owner = _kitspine.seam_owner(row)
-    ends = [
-        set(mod_comps.get(trace_text.norm_module(owner), ())),
-        {
-            cid
-            for consumer in _kitspine.seam_far_side(row)[1]
-            for cid in mod_comps.get(trace_text.norm_module(consumer), ())
-        },
-    ]
-    placed = set(refs(row.get("Component"))) | ends[0] | ends[1]
-    internal = {c for c in placed if c in ends[0] and c in ends[1]}
-    return placed, internal
+    Implements: SR-070, LLR-199"""
+    ends = [_kitspine.seam_owner(row)] + _kitspine.seam_far_side(row)[1]
+    local = {e for e in ends if e.startswith("CMP-")}
+    chains = [_ancestry(e, parents) for e in ends if e]
+    common = set(chains[0]).intersection(*chains[1:]) if chains else set()
+    lowest = next((c for c in chains[0] if c in common), None) if chains else None
+    internal = {lowest} if lowest else set()
+    return local | internal, internal
+
+
+def _ancestry(cid, parents):
+    """`cid` then its `part_of` ancestors, nearest first, cycle-guarded; an
+    `external:` endpoint has none, not even itself."""
+    chain = []
+    while cid and cid.startswith("CMP-") and cid not in chain:
+        chain.append(cid)
+        cid = next(iter(parents.get(cid, ())), "")
+    return chain
 
 
 def _blank(name):
@@ -219,11 +222,11 @@ def _add_modules(view, declared):
             view[cid]["modules"].add(path)
 
 
-def _add_seams(view, ifs, mod_comps):
+def _add_seams(view, ifs, parents):
     """Fold the seam tier into `view` and return the ids it could not place."""
     unplaced = []
     for row in ifs:
-        placed, internal = seam_placement(row, mod_comps)
+        placed, internal = seam_placement(row, parents)
         placed &= set(view)
         if not placed:
             unplaced.append(row["IF-ID"])
@@ -240,18 +243,15 @@ def build(cmps, srs, llrs, ifs, declared):
     back out of a string.
 
     `declared` is each file's component as its `Component:` header declares it
-    (`arch_inputs.component_headers`). The module -> component map the seams are
-    placed by is `kitlib.spine.module_components` over it, the join's one home,
-    which the checker's containment and cross-component rules read too
-    (WI-1005). It normalizes with the same `norm_module` the endpoints go
-    through here (`trace_text` binds it), so a seam and a header meet on one
-    key.
+    (`arch_inputs.component_headers`), which places the files. A seam is placed
+    from its endpoint cells and the components' `part_of` (`seam_placement`).
 
     Implements: SR-070, LLR-199"""
     view = {r["CMP-ID"]: _blank((r.get("Name") or "").strip()) for r in cmps}
     sr_components = _add_members(view, srs, llrs)
     _add_modules(view, declared)
-    unplaced_seams = _add_seams(view, ifs, _kitspine.module_components(declared))
+    parents = {r["CMP-ID"]: refs(r.get("PartOf")) for r in cmps}
+    unplaced_seams = _add_seams(view, ifs, parents)
     unplaced_srs = sorted(r["SR-ID"] for r in srs if r["SR-ID"] not in sr_components)
     return view, {"sr_refs": unplaced_srs, "seam_refs": sorted(unplaced_seams)}
 

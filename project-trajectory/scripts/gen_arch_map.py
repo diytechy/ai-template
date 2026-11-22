@@ -140,8 +140,9 @@ Contract IF-131: the ARCH-INVENTORY and seam-declaration grammar the spine check
     read. `scan_inventory(src_roots)` hands the coverage, containment and
     cross-component rules the live source AST, and
     `contracts_grammar_findings`, `file_contracts`, `file_grammar_findings`,
-    `owner_files` and `ContractsGrammarError` hand them the `Contracts:` marker
-    and `Contract IF-###:` body grammar. `resolve_import(token, importer,
+    `header_files`, `source_files` and
+    `ContractsGrammarError` hand them the `Contracts:` marker, the
+    `Contract IF-###:` body grammar and the scan surface they read. `resolve_import(token, importer,
     modules, packages)` names the one module an inventory import token reaches
     from its importer, or None for a token that names no module, names
     several, or climbs past the top; `package_paths(src_roots)` gives the
@@ -194,6 +195,7 @@ from pathlib import Path
 
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
+from kitlib import config as _kitconfig
 from kitlib.config import utf8_console as _utf8_console
 
 # The spine ROW cell vocabulary — what a Module / Endpoint cell reduces to.
@@ -780,36 +782,43 @@ def file_contracts(path):
     return sorted(ids), (_contract_bodies(lines, ids) if ids else {})
 
 
-def _resolve_owner_path(root, owner):
-    """The tree path an IF owner names, or None: tried verbatim under `root`
-    and under the kit's own home, the two spellings the registry uses."""
-    for base in (owner, "project-trajectory/" + owner):
-        candidate = root / base
-        if candidate.exists():
-            return candidate
-    return None
+def source_files(src_dir):
+    """`(scoped, other)`: the files under one source root of a type the
+    `Component:` grammar carries, `README.md` excluded as documentation, and
+    the files of any other type. A hidden part or bytecode cache is not source.
+
+    Implements: SR-159, LLR-397
+    """
+    scoped, other = [], []
+    for _root, _base, path in _walk_roots([src_dir], "*"):
+        if path.is_file() and path.name != "README.md":
+            typed = path.suffix.lower() in COMPONENT_TYPES
+            (scoped if typed else other).append(path)
+    return scoped, other
 
 
-def owner_files(root, if_rows):
-    """`[(owner_as_written, path)]` for every IF row whose owner is a FILE in
-    the tree rather than a Python module or an `external:` party — the files
-    the contract scan reads beside the module walk. A directory owner declares
-    through its `README.md` when it has one and is skipped otherwise; a `.py`
-    owner is the module walk's, not this list's. Sorted, deduplicated."""
+def header_files(root, src_roots):
+    """`[(label, path)]`: the non-Python files the contract scan reads beside
+    the module walk. Each non-`.py` file of a grammar type under a source
+    root, labelled from the root's parent as a module is, then each declared
+    header file (`kitlib.config.declared_headers`), labelled by its
+    repository path. One
+    entry per file, sorted by label.
+
+    Implements: SR-159, LLR-398
+    """
     seen, out = set(), []
-    for r in if_rows or []:
-        owner = _kitspine.seam_owner(r)
-        if not owner or owner.startswith("external:") or owner in seen:
-            continue
-        path = _resolve_owner_path(Path(root), owner)
-        if path is None or path.suffix == ".py":
-            continue
-        if path.is_dir():
-            path = path / "README.md"
-            if not path.is_file():
-                continue
-        seen.add(owner)
-        out.append((owner, path))
+    for src in src_roots:
+        src = Path(src)
+        base = src.parent if src.name else src
+        for path in source_files(src)[0]:
+            if path.suffix.lower() != ".py":
+                seen.add(path.resolve())
+                out.append((path.relative_to(base).as_posix(), path))
+    for rel, path in _kitconfig.declared_headers(root)[0]:
+        if path.resolve() not in seen:
+            seen.add(path.resolve())
+            out.append((rel, path))
     return sorted(out)
 
 
@@ -1383,15 +1392,15 @@ def _grammar_refusal(grammar_errors, source, exc):
     grammar_errors.append((source, str(exc)))
 
 
-def scan_contracts(src_roots, owner_files=(), grammar_errors=None):
+def scan_contracts(src_roots, header_files=(), grammar_errors=None):
     """`([(source, summary, ids, bodies)], [unreadable])` — every module AND
-    every file owner declaring a seam, sorted by path so the rendered block is
+    every header file declaring a seam, sorted by path so the rendered block is
     byte-stable, plus the sources the scan could NOT read.
 
-    `owner_files` is `owner_files()`'s list — the registries, config files and
-    hooks the IF registry names as owners — read through `file_contracts` so a
-    non-Python owner is listed beside the modules, under the path the registry
-    spells. The second half of the tuple is the point: a reference that
+    `header_files` is `header_files()`'s list — the non-Python scripts under
+    the source root and the declared registries, config files, hooks and
+    READMEs — read through `file_contracts` so a non-Python file is listed
+    beside the modules, under its label. The second half of the tuple is the point: a reference that
     silently omitted a source it failed to parse would report a clean, fresh
     document over a tree it had not actually read. The caller renders the list.
 
@@ -1407,7 +1416,7 @@ def scan_contracts(src_roots, owner_files=(), grammar_errors=None):
     refusal there disarms the whole gate (`check_trajectory._declaration_sites`
     did exactly that until the arm existed)."""
     out, unreadable = [], []
-    for owner, path in owner_files:
+    for owner, path in header_files:
         try:
             ids, bodies = file_contracts(path)
         except (UnicodeDecodeError, OSError) as exc:
@@ -1417,10 +1426,7 @@ def scan_contracts(src_roots, owner_files=(), grammar_errors=None):
             _grammar_refusal(grammar_errors, owner, exc)
             continue
         if ids:
-            head = next(
-                (ln for ln in header_lines(path) if ln and _marker_ids(ln) is None), ""
-            )
-            out.append((owner, head, ids, bodies))
+            out.append((owner, _header_summary(path), ids, bodies))
     for _root, base, path in _walk_roots(src_roots, "*.py"):
         rel = path.relative_to(base).with_suffix("").as_posix()
         try:
@@ -1448,7 +1454,14 @@ def scan_contracts(src_roots, owner_files=(), grammar_errors=None):
     return sorted(out), unreadable
 
 
-def build_contract_reference(src_roots, owner_files=()):
+def _header_summary(path):
+    """A file header's summary: its first line that is neither a `Contracts:`
+    marker nor a `Component:` declaration."""
+    lines = [ln for ln in header_lines(path) if ln and _marker_ids(ln) is None]
+    return next((ln for ln in lines if not COMPONENT_RE.match(ln)), "")
+
+
+def build_contract_reference(src_roots, header_files=()):
     """The rendered interface-reference block: the contracts modules STATE, then
     a compact list of the seams they declare and do not state.
 
@@ -1460,12 +1473,12 @@ def build_contract_reference(src_roots, owner_files=()):
     seen is what this whole build exists to stop."""
     note = (
         "_Generated by `scripts/gen_arch_map.py --contracts-doc` from each "
-        "owner's `Contracts:` declaration and `Contract IF-###:` bodies — a "
+        "file's `Contracts:` declaration and `Contract IF-###:` bodies — a "
         "module docstring (AST, no import) or a registry, config or hook "
         "file's comment header. Do not edit by hand; run the check harness to "
         "refresh._"
     )
-    records, unreadable = scan_contracts(src_roots, owner_files)
+    records, unreadable = scan_contracts(src_roots, header_files)
     if not records and not unreadable:
         return note + "\n\n_(no declared interface seams scanned)_"
 
@@ -1527,13 +1540,10 @@ def _contracts_doc_exit(src_roots, args):
     cost it nothing. What that trades away is the same and is stated the same
     way — deleting the doc disarms this gate silently, and what catches THAT is
     the `[generated]` declaration plus the links into it, not this run."""
-    # The file owners come from the registry the same flag names for the
-    # diagram; its home is `docs/requirements/`, two levels under the root.
-    registry = Path(args.interfaces)
-    root = registry.resolve().parent.parent.parent
-    generated = build_contract_reference(
-        src_roots, owner_files(root, load_interfaces(registry))
-    )
+    # The declared header files are read relative to the repository root,
+    # the registry's home `docs/requirements/` two levels under it.
+    root = Path(args.interfaces).resolve().parent.parent.parent
+    generated = build_contract_reference(src_roots, header_files(root, src_roots))
     stale = False
     for doc in [Path(d) for d in args.contracts_doc]:
         if not doc.exists():
@@ -1699,8 +1709,8 @@ def _seam_edges(if_rows, known_norm):
     """The module<->module IF seams as `(src_node, dst_node, IF-###)` triples,
     in the direction the information runs: owner -> consumer on a `consumers`
     row, requestor -> owner on a `requestors` row. A row whose owner sits
-    outside the map draws nothing: a seam owned by a file or an external actor
-    is a How-SW dashboard node, not a code-import edge."""
+    outside the map draws nothing: a row names components and external
+    parties, which are How-SW dashboard nodes, not code-import edges."""
     edges = set()
     for r in if_rows or []:
         iid = (r.get("IF-ID") or "").strip()

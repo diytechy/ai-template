@@ -15,18 +15,15 @@ Stdlib only (`ctypes`, `functools`), and no sibling import.
 
 Component: CMP-008
 
-Contracts: IF-302 — the interface seam this module declares (process.md §8;
-row of record in docs/requirements/interfaces.toml).
-
-Contract IF-302: win32() -> (kernel32, ntdll), declared once and cached, with
-    the prototypes the job calls need (among them SetInformationJobObject,
-    IsProcessInJob, GetCurrentProcess and SetPriorityClass); JobAccounting, the basic-accounting
-    structure; job_active_processes(job) -> int, the job's active-process
-    count, raising OSError when the query fails; create_joined_job() -> job,
-    a new unnamed job the calling process has joined, raising OSError when it
-    cannot be made or joined; job_cpu_seconds(job) -> float, the user plus
-    kernel seconds of every process the job has held, raising OSError when
-    the query fails.
+`win32() -> (kernel32, ntdll)`, declared once and cached, with
+the prototypes the job calls need (among them SetInformationJobObject,
+IsProcessInJob, GetCurrentProcess and SetPriorityClass); JobAccounting, the basic-accounting
+structure; job_active_processes(job) -> int, the job's active-process
+count, raising OSError when the query fails; create_joined_job() -> job,
+a new unnamed job the calling process has joined, raising OSError when it
+cannot be made or joined; job_cpu_seconds(job) -> float, the user plus
+kernel seconds of every process the job has held, raising OSError when
+the query fails.
 """
 
 import ctypes

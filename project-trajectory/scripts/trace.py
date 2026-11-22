@@ -75,8 +75,9 @@ acceptance-brief SLUG` (WI-503) copies CURRENT.md to a dated, IMMUTABLE
 `check.py --acceptance-immutable` refuses any other commit that touches one. Warn-only
 advisories (loud on stdout + in the report, never gating): an unpinned
 comparative acceptance-criterion, an LLR reading below Accepted while every
-citing TC is Accepted (WI-129), a missing knowledge pack, and an interface
-endpoint that resolves to no LLR Module. The report always carries the
+citing TC is Accepted (WI-129), and a missing knowledge pack; an interface
+endpoint that is no live component id or declared party is a strict finding.
+The report always carries the
 vouched-vs-mechanized acceptance split (process.md §4 "Vouch") and, when the SR
 registry tags Aspect, a per-aspect count.
 
@@ -295,12 +296,13 @@ try:
         ac_advisories,
         allow_key,
         cite_advisories,
+        declared_parties,
+        endpoint_problem,
         ears_advisories,
         form_findings,
         is_allowed,
         is_drafted,
         is_example,
-        module_endpoints,
         norm_module,
         off_spine_advisories,
         paraphrase_advisories,
@@ -351,12 +353,13 @@ except ImportError:  # pragma: no cover - in-process fallback
         ac_advisories,
         allow_key,
         cite_advisories,
+        declared_parties,
+        endpoint_problem,
         ears_advisories,
         form_findings,
         is_allowed,  # noqa: F401 - re-exported: the allow-key tests read it here
         is_drafted,
         is_example,
-        module_endpoints,
         norm_module,
         off_spine_advisories,
         paraphrase_advisories,
@@ -680,9 +683,8 @@ ENUM_FIELDS = {
     # `Direction` joined at the 2026-08-15 interface rework (plan step 1) and
     # LEFT at WI-455 (OI-60 ruled (a), 2026-08-23) — so this tier now closes one
     # vocabulary, not two. The column stated FLOW, and flow is no longer stated:
-    # it is READ, provider→consumers, off the two endpoint cells. The
-    # coverage half a `Consumes` row carried is unharmed — `_declared_seam_pairs`
-    # reads the endpoint pair, which the header always said it took both ways.
+    # it is READ, provider→consumers, off the two endpoint cells, and the
+    # cross-component cover reads a `call` row's requestors (`_call_cover`).
     "IF": {
         "Channel": set(check_trajectory._kitspine.IF_CHANNELS),
         "Status": {"Drafted", "Accepted"},
@@ -1810,52 +1812,39 @@ def triangle_findings(tcs, llrs):
 
 
 # The module-path normalizer MOVED TO trace_text.py at re-tier v2 S5 (WI-464),
-# unchanged: `module_endpoints` and the endpoint classifier there read the same
-# two naming conventions this module's seam rules do, so one home there beat a
-# fourth copy here. Aliased back under the private name so this module's call
-# sites read as before.
+# unchanged, so one home there beat a fourth copy here. Aliased back under the
+# private name so this module's call sites read as before.
 _norm_module = norm_module
 
 
-def interface_findings(ifs, module_ids, root=None):
+def interface_findings(ifs, cmp_ids, parties, root=None):
     """The IF-### seam tier's own integrity rules (process.md §8), as
     ``(findings, advisories)``.
 
-    *findings* join the --strict failure set: an `Owner` cell that names a
-    requirement or design ID, or several endpoints, is the wrong SHAPE — since
-    OI-67 (ruled (a), 2026-08-29) the owner is the providing THING, in the one
-    spelling `Consumers` uses (a module path, a file or directory path, or an
-    `external:` party), and the requirement it answers to is REACHED through
-    it, never stated on the row. *advisories* are warn-only: a row naming both
-    `Requestors` and `Consumers`, or neither, has no direction (incomplete, as
-    an empty required cell is — warn-first for the same migration reason); a
-    module-shaped owner that no design row's `Module` names and whose header
-    declares no `Implements:` line traces to no requirement — reported, never gated,
-    because a file- or external-owned seam legitimately has no design row and
-    the class that does is a debt list, not a gate.
+    *findings* join the --strict failure set. Every endpoint, the `Owner` and
+    each `Requestors` or `Consumers` entry, is one of two forms (revision 35):
+    a `CMP-###` id a live component row has, or `external:` followed by a
+    party the registry header declares (`trace_text.endpoint_problem`). A
+    requirement or design id, an id no component row has, an undeclared party
+    and a path or module are each a finding naming the row and the cell; so is
+    an `Owner` naming several endpoints. *advisories* are warn-only: a row
+    naming both `Requestors` and `Consumers`, or neither, has no direction
+    (incomplete, as an empty required cell is).
 
-    A row whose owner is `external:` and whose far side names no in-tree
-    endpoint is a finding of the same strict class: it is not a seam of THIS
-    system at all — a crossing between two external parties lives in
-    `external.toml` — and, mechanically, a row with no kit module on either
-    side has nowhere to put its definition, since the definition's one home is
-    an owner's header and an external party's header is not ours to write.
+    A row whose owner is `external:` and whose far side names no component is
+    a finding of the same strict class: it is not a seam of THIS system at all
+    — a crossing between two external parties lives in `external.toml` — and a
+    row with no component on either side has nowhere to put its definition.
 
-    The `Req-Refs` back-link this function once policed left with the cell;
-    seam-to-test coverage was never on it (it joins on a TC's `Verifies`). A
-    registry still carrying one of the five RETIRED cells (`Contract`,
-    `Provider`, `Req-Refs`, `Signal`, `SignalNote`) is a finding too — the
-    wrong SHAPE, as an id-shaped owner is: the definition lives in the owner's
-    `Contract IF-###:` body and the other four are derived or subsumed, so a
-    value in any of them is a second, unread copy of a fact that has one home.
-    Detected by PRESENCE, per registry — see `_retired_cell_findings`.
+    A registry still carrying one of the RETIRED cells (`Contract`,
+    `Provider`, `Req-Refs`, `Signal`, `SignalNote`, `Component`) is a finding
+    too, detected by PRESENCE, per registry (`_retired_cell_findings`): the
+    definition lives in a `Contract IF-###:` body, and a row's place in the
+    component view is derived from its endpoints.
 
     Implements: SR-159, LLR-041
     """
     findings, advisories = [], []
-    norm_modules = {_norm_module(m) for m in module_ids}
-    norm_modules.discard("")
-    implementers = _implementing_modules(root)
     findings.extend(_retired_cell_findings(ifs, root))
     for r in ifs:
         iid = r["IF-ID"]
@@ -1863,8 +1852,7 @@ def interface_findings(ifs, module_ids, root=None):
         has_con = bool((r.get("Consumers") or "").strip())
         if has_req == has_con:
             # Warn-first like the required-cell rule it is a form of: a row
-            # with no far side is INCOMPLETE (an adopter mid-migration), where
-            # an id-shaped owner below is WRONG — the retired meaning, stated.
+            # with no far side is INCOMPLETE (an adopter mid-migration).
             advisories.append(
                 f"IF {iid} names {'both' if has_req else 'neither'} Requestors "
                 "and Consumers — the far side names the DIRECTION (requestors "
@@ -1878,54 +1866,42 @@ def interface_findings(ifs, module_ids, root=None):
         if len(ends) != 1:
             findings.append(
                 f"IF {iid} Owner={cell!r} names {len(ends)} endpoints — one row "
-                "has ONE owner, the thing the information plugs into"
+                "has ONE owner, the component the information plugs into"
             )
             continue
-        owner = ends[0]
-        if _ID_SHAPED_RE.match(owner):
-            findings.append(
-                f"IF {iid} Owner={owner!r} names a requirement or design id — the "
-                "owner is the providing THING (a module path, a file or "
-                "directory path, or `external:<party>`); the requirement is "
-                "reached through it, never stated on the row"
-            )
-            continue
-        if owner.startswith(EXTERNAL_ENDPOINT_PREFIX):
-            # NO IN-TREE ENDPOINT ON EITHER SIDE. The external arm of the
-            # definition gate states our reading of an external surface in the
-            # header of the kit module that FACES it — so a row whose far side
-            # is external too has no such module, owes its definition nowhere,
-            # and passed every rule on this tier (adversarial review
-            # 2026-08-29, F2). A row with NO far side at all is deliberately
-            # left to the warn-first advisory above: that is one incompleteness
-            # and it is reported once, at the severity the migration was ruled.
-            far = _far_endpoints(r)
-            if far and all(e.startswith(EXTERNAL_ENDPOINT_PREFIX) for e in far):
+        for col, endpoint in [("Owner", ends[0])] + [
+            (col, e) for col in ("Requestors", "Consumers") for e in _cell_ends(r, col)
+        ]:
+            problem = endpoint_problem(endpoint, cmp_ids, parties)
+            if problem:
                 findings.append(
-                    f"IF {iid} has no in-tree endpoint — owner {owner!r} and "
-                    "its far side are all `external:`; a crossing between two "
-                    "external parties is not a seam of this system "
-                    "(external.toml), and a row with no kit module on either "
-                    "side has no home for its definition"
+                    f"IF {iid} {col}={endpoint!r} {problem} (an endpoint is a "
+                    "`CMP-###` id or an `external:` party the registry header "
+                    "declares, never a file; process.md §8)"
                 )
-            continue
-        if owner.endswith("/") or not module_endpoints(owner):
-            continue  # a file or directory medium: no design row is expected
-        norm = _norm_module(owner)
-        if norm_modules and norm not in norm_modules and norm not in implementers:
-            advisories.append(
-                f"IF {iid} owner {owner!r} is named by no design row's Module and "
-                "declares no `Implements:` line — this seam traces to no "
-                "requirement (warn-only; name the module on a design row, or "
-                "declare its parents in the module header)"
+        far = _far_endpoints(r)
+        if (
+            ends[0].startswith(EXTERNAL_ENDPOINT_PREFIX)
+            and far
+            and all(e.startswith(EXTERNAL_ENDPOINT_PREFIX) for e in far)
+        ):
+            findings.append(
+                f"IF {iid} has no in-tree endpoint — owner {ends[0]!r} and "
+                "its far side are all `external:`; a crossing between two "
+                "external parties is not a seam of this system "
+                "(external.toml), and a row with no component on either "
+                "side has no home for its definition"
             )
     return findings, advisories
 
 
-# An `Owner` cell that is an ID rather than a thing: the shape OI-67 retired.
-_ID_SHAPED_RE = re.compile(r"^(?:SN|SR|LLR|TC|IF|CMP|B|EXT|REL)-\d+$")
+def _cell_ends(row, col):
+    """One endpoint cell's entries, split on `;` only."""
+    return [e.strip() for e in (row.get(col) or "").split(";") if e.strip()]
 
-# The five cells OI-67 took off the row, as (carrier column, TOML key): a
+
+# The five cells OI-67 took off the row, and the placement cell revision 35
+# derived (WI-1022), as (carrier column, TOML key): a
 # carrier that still maps the column hands the row the column name, one that
 # no longer maps it hands the key back as itself, and both spellings are the
 # same retired cell.
@@ -1935,6 +1911,7 @@ _IF_RETIRED_CELLS = (
     ("Req-Refs", "req_refs"),
     ("Signal", "signal"),
     ("SignalNote", "signal_note"),
+    ("Component", "component"),
 )
 
 
@@ -2012,31 +1989,6 @@ def _retired_cell_findings(ifs, root):
             "`data`; delete the cell (process.md §8)"
         )
     return out
-
-
-def _implementing_modules(root):
-    """The normalized module keys whose header declares an `Implements:` line —
-    the second way an owner reaches the spine — or an empty set when there is
-    no source surface to read (no root, `files` mode, a copied script).
-
-    The report keys each file relative to the source root's PARENT (its paths
-    open with the root's own last segment), so a key is rebuilt from that
-    parent: joined to the whole declared root it names `scripts/scripts/<mod>`
-    under the kit's own profile, and matches no owner."""
-    if gen_arch_map is None or root is None:
-        return set()
-    try:
-        src, mode = check_trajectory._arch_scan_profile(root)
-    except (OSError, ValueError):  # pragma: no cover - not this rule's finding
-        return set()
-    if mode == "files":
-        return set()
-    src_dir = root / src.strip().replace("\\", "/").rstrip("/")
-    if not src_dir.exists():
-        return set()
-    sites, _known = gen_arch_map.implements_report([src_dir])
-    base = src_dir.parent
-    return {_norm_module((base / rel).relative_to(root).as_posix()) for rel in sites}
 
 
 def placeholder_findings(label, raw_rows):
@@ -3016,85 +2968,6 @@ def if_note_advisories(ifs, allow=()):
     return cite_advisories(
         [(ifs, ("IF", "IF-ID", IF_REASON_CELLS))], allow, IF_CITE_MESSAGE
     )
-
-
-# `EXTERNAL_ENDPOINT_PREFIX` (the declared "deliberately outside this tree" marker
-# and the reasoning for a value-prefix over a column) MOVED TO trace_text.py at
-# re-tier v2 S5 (WI-464), unchanged and imported back above: `_module_shaped` has
-# to skip a marked endpoint too, and the endpoint value GRAMMAR is a text rule.
-
-
-def if_endpoint_class_advisories(ifs, module_ids, root):
-    """Classify every IF endpoint that is NOT an arch-map module, warn-first.
-
-    THIS EXISTS BECAUSE THOSE ROWS WERE POLICED BY NOTHING, measured at
-    `81a142c2`: 45 of 113 IF rows have at least one endpoint carrying no
-    component tag, which makes `check_trajectory.cross_component_findings`
-    VACUOUS for them — and the containment rule that was assumed to cover them
-    cannot, because the two rules range over disjoint object classes. Containment
-    tests that every arch-map MODULE is in some CMP; the untagged endpoints are
-    data files, directories and external actors, which are never arch-map
-    modules. So a pass from either rule said nothing at all about these rows.
-
-    THE RULE, since the 2026-08-15 rework (plan step 2): an endpoint — in
-    `Owner`, `Requestors` **or** `Consumers` (`ThisProject`/`Counterpart` until WI-455,
-    `Provider` until OI-67) — that resolves to no module, no file and
-    no directory AND carries no `external:` marker is a NAMED finding. A
-    file/directory endpoint and a marked external one are both legitimate and
-    stay counted-not-named; the summary still reports every class, because the
-    vacuity it records is real whatever the endpoint turns out to be.
-
-    Warn-first, like every rule in this pipe: it never joins a failure set at any
-    gate. Promotion is a later, separate decision, and the reason to hold is that
-    the marker is a NEW convention — an adopter mid-migration would fail for a
-    vocabulary their registry predates."""
-    norm_modules = {_norm_module(m) for m in module_ids}
-    norm_modules.discard("")
-    absences = _declared_absences(root)
-    files, external, unknown, rows_hit = [], [], [], set()
-    for r in ifs:
-        iid = r.get("IF-ID") or "(unnamed row)"
-        for col in ("Owner", "Requestors", "Consumers"):
-            # A `;`-joined cell is SEVERAL endpoints, and reading it as one is
-            # how a real seam gets reported as a dangling path (IF-097 names
-            # three modules). Split on `;` only — an endpoint may legitimately
-            # contain a space (`downstream adopter`) or a comma.
-            cell = (r.get(col) or "").strip()
-            for endpoint in [e.strip() for e in cell.split(";") if e.strip()]:
-                if endpoint.startswith(EXTERNAL_ENDPOINT_PREFIX):
-                    rows_hit.add(iid)
-                    named = endpoint[len(EXTERNAL_ENDPOINT_PREFIX) :].strip()
-                    if named:
-                        external.append(named)
-                    else:
-                        # A bare marker names nobody, which is the one way this
-                        # convention can be worse than the guess it replaced.
-                        unknown.append((iid, col, endpoint))
-                    continue
-                if _norm_module(endpoint) in norm_modules:
-                    continue
-                rows_hit.add(iid)
-                if _resolves_in_tree(root, endpoint) or endpoint in absences:
-                    files.append(endpoint)
-                else:
-                    unknown.append((iid, col, endpoint))
-    if not rows_hit:
-        return []
-    out = [
-        "IF endpoint coverage: {} of {} row(s) carry an endpoint that is not an "
-        "arch-map module, so the cross-component rules are VACUOUS for them — "
-        "{} resolve to a file or directory in the tree, {} are marked "
-        "`external:`, {} resolve to nothing".format(
-            len(rows_hit), len(ifs), len(files), len(external), len(unknown)
-        )
-    ]
-    for iid, col, endpoint in unknown:
-        out.append(
-            "IF {} {}={!r} resolves to no module, file or directory — name a "
-            "real endpoint, or mark it `{}<actor>` if it is deliberately "
-            "outside this tree".format(iid, col, endpoint, EXTERNAL_ENDPOINT_PREFIX)
-        )
-    return out
 
 
 def if_verified_by_advisories(ifs, tc_ids, llr_ids):
@@ -5212,6 +5085,7 @@ class Registries:
     provenance_allow: tuple
     hat_names: set
     hat_speaks_for: dict
+    if_parties: frozenset
 
 
 @dataclass(frozen=True)
@@ -5494,7 +5368,19 @@ def load_registries(docs):
         # hat's `speaks_for` rides the same read (SR-213).
         hat_names=hat_names,
         hat_speaks_for=hat_speaks_for,
+        # The parties an `external:` endpoint may name, read from the interface
+        # registry's header here for the same reason (revision 35).
+        if_parties=load_if_parties(docs),
     )
+
+
+def load_if_parties(docs):
+    """The interface registry header's declared parties, or none when the
+    registry is absent (`trace_text.declared_parties`)."""
+    live = spine_carrier.resolve(docs / "requirements" / "interfaces.toml")
+    if live is None or not live.is_file():
+        return frozenset()
+    return declared_parties(live.read_text(encoding="utf-8"))
 
 
 def verification_basis(srs):
@@ -5732,11 +5618,10 @@ def analyze(reg, args):
     )
     knowledge_advisories = knowledge_pack_advisories(cmps, docs)
 
-    # Interface seams (IF-###, process.md §8): an owner of the wrong SHAPE joins
-    # the --strict failure set; an owner that reaches no requirement is a
-    # warn-only advisory (module_ids reused from the PB back-link check above).
+    # Interface seams (IF-###, process.md §8): an endpoint that is not a live
+    # component or a declared party joins the --strict failure set.
     interface_backlink_findings, interface_advisories = interface_findings(
-        ifs, module_ids, docs.parent
+        ifs, {r["CMP-ID"] for r in cmps}, reg.if_parties, docs.parent
     )
     # The depth-0 FRAME's own resolution rules (WI-442): a crossing's Entity and
     # a relationship's From/To must name declared entities, and an IF row's
@@ -5797,7 +5682,6 @@ def analyze(reg, args):
         + hat_advisories
         + if_data_advisories(ifs, docs.parent)
         + if_note_advisories(ifs, prov_allow)
-        + if_endpoint_class_advisories(ifs, module_ids, docs.parent)
         + if_verified_by_advisories(ifs, {t["TC-ID"] for t in tcs}, llr_ids)
         + if_carriage_advisories(ifs)
     )
@@ -6291,7 +6175,9 @@ def render_report(reg, findings, args, forest):
     if ifs:
         lines += ["", "## Interface seams (process.md §8)", ""]
         lines += (
-            [f"{len(ifs)} interface-seam row(s); every Owner is one providing thing."]
+            [
+                f"{len(ifs)} interface-seam row(s); every endpoint is a component or a declared party."
+            ]
             if not interface_backlink_findings
             else [f"- {f}" for f in interface_backlink_findings]
         )

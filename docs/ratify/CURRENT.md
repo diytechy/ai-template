@@ -19,7 +19,7 @@ _Acceptance provenance: the last commit to move a `Status` cell in a snapshotted
 
 _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into acceptance or arrives accepted, `--accepts` names it or `--reaccepts` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
 
-- `docs/requirements/interfaces.toml` — 4 changed, 2 added, 0 removed since the snapshot; ruling(s): WI-1014, WI-1021.
+- `docs/requirements/interfaces.toml` — 238 changed, 2 added, 30 removed since the snapshot; ruling(s): WI-1014, WI-1021.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-1021.
 
 
@@ -30,7 +30,7 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 9 chain(s): SR-070, SR-157, SR-159, SR-168, SR-169, SR-178, SR-208, SR-225, SR-233</summary>
+<summary>Waiting for automated adjudication — 11 chain(s): SR-070, SR-157, SR-159, SR-168, SR-169, SR-178, SR-208, SR-212, SR-215, SR-225, SR-233</summary>
 
 ## SR-070 — Generated views are offline, deterministic and drift-checkable
 
@@ -42,12 +42,20 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 ### LLR LLR-199
 - **Detail**
   - before: gen_components.py derives the component view from four registries: components.toml declares components, low-level-requirements.toml provides Component membership, system-requirements.toml is reached through that membership, and interfaces.toml provides seams. It writes docs/requirements/components.derived.toml; docs/stack.ini [generated] declares kind components, check.py freshness-gates component-view, trunk_step --regen regenerates it on trunk, and the file carries the generated-but-live staleness header. For each component it emits member design rows, their decomposed requirements, perspectives from trace.effective_hats over members, modules, and seams split into internal and boundary by the components layer rule. A requirement with no component appears once in the counted unplaced table; registries cannot distinguish missing decomposition from an all-component constraint, and that judgement has no place in shipped machinery. A requirement in several components appears in each and in each component's sr_shared_refs, so the view never implies exclusive ownership. A seam is placed from its Component tag unioned with components resolved from endpoints through trace_text.norm_module; an unresolved seam stays in the unplaced table rather than being dropped. NO ACCEPTANCE CELL APPEARS, EVER: the hand file declares the component and holds its maturity, while this file describes it. With no real CMP row and no view on disk, the generator exits 0 and writes nothing. NOT DISCHARGED: the view has no INTERNALS, so mechanism remains in the named design rows; freshness compares the artifact with its regeneration, never asking whether the source rows were right, which remains the amend-without-flip guard's residue.
-  - after: gen_components.py derives the component view from four registries and the files' Component headers: components.toml declares components, each file's Component header places that file in one, low-level-requirements.toml's Component cells place the design rows, system-requirements.toml is reached through those rows, and interfaces.toml provides seams. It writes docs/requirements/components.derived.toml; docs/stack.ini [generated] declares kind components, check.py freshness-gates component-view, trunk_step --regen regenerates it on trunk, and the file carries the generated-but-live staleness header. For each component it emits member design rows, their decomposed requirements, perspectives from trace.effective_hats over members, modules, and seams split into internal and boundary by the components layer rule. A requirement with no component appears once in the counted unplaced table; registries cannot distinguish missing decomposition from an all-component constraint, and that judgement has no place in shipped machinery. A requirement in several components appears in each and in each component's sr_shared_refs, so the view never implies exclusive ownership. A seam is placed from its Component tag unioned with the components its endpoints' file headers declare, matched through trace_text.norm_module; an unresolved seam stays in the unplaced table rather than being dropped. NO ACCEPTANCE CELL APPEARS, EVER: the hand file declares the component and holds its maturity, while this file describes it. With no real CMP row and no view on disk, the generator exits 0 and writes nothing. NOT DISCHARGED: the view has no INTERNALS, so mechanism remains in the named design rows; freshness compares the artifact with its regeneration, never asking whether the source rows were right, which remains the amend-without-flip guard's residue.
+  - after: gen_components.py derives the component view from four registries and the files' Component headers: components.toml declares components, each file's Component header places that file in one, low-level-requirements.toml's Component cells place the design rows, system-requirements.toml is reached through those rows, and interfaces.toml provides seams. It writes docs/requirements/components.derived.toml; docs/stack.ini [generated] declares kind components, check.py freshness-gates component-view, trunk_step --regen regenerates it on trunk, and the file carries the generated-but-live staleness header. For each component it emits member design rows, their decomposed requirements, perspectives from trace.effective_hats over members, modules, and seams split into internal and boundary by the components layer rule. A requirement with no component appears once in the counted unplaced table; registries cannot distinguish missing decomposition from an all-component constraint, and that judgement has no place in shipped machinery. A requirement in several components appears in each and in each component's sr_shared_refs, so the view never implies exclusive ownership. A seam is placed from its endpoint cells, which name components: it appears in each component it names, internal to the lowest component enclosing every endpoint through part_of (none when an endpoint is an external party or no component encloses them all) and boundary to every other; a seam naming no declared component stays in the unplaced table rather than being dropped. NO ACCEPTANCE CELL APPEARS, EVER: the hand file declares the component and holds its maturity, while this file describes it. With no real CMP row and no view on disk, the generator exits 0 and writes nothing. NOT DISCHARGED: the view has no INTERNALS, so mechanism remains in the named design rows; freshness compares the artifact with its regeneration, never asking whether the source rows were right, which remains the amend-without-flip guard's residue.
 
 ### TC TC-195
+_accepted — re-acceptance owed_
 - **Method**
   - before: The join, the three coverage edges, the standing constraint and the freshness contract, each driven against a two-component spine small enough to reason about by hand. THE JOIN: assert membership comes from the design tier's Component tag, that the requirement tier is reached through it, and that the modules follow. DERIVED NEVER COPIED: a design row carrying no hat cell still contributes its SR parent's perspectives, and re-ruling that one requirement moves the view with no design cell edited. EDGE 1: a requirement with no design child appears in the unplaced table, is counted there, and appears in no component section - visible rather than dropped. EDGE 2: a requirement reaching two components appears in both and is marked shared in both, while one reaching a single component is not. EDGE 3: seams enter the view, an interface with both endpoints inside a component is internal to it while one crossing two is a boundary of BOTH, an UNTAGGED interface is still placed through its endpoints, and one that resolves nowhere is reported as unplaced. NO ACCEPTANCE: with one Accepted and one Drafted component declared in the hand file, no maturity key and neither word appears in any emitted cell. FRESHNESS, DRIVEN BOTH WAYS: --check passes on a fresh view, fails after a registry row moves, and passes again once regenerated; a missing view fails; the written bytes carry no CRLF and two renders agree. VACUITY: a repo whose only CMP row is the inert -000 example writes nothing and exits zero on both paths.
-  - after: The join, the three coverage edges, the standing constraint and the freshness contract, each driven against a two-component spine small enough to reason about by hand. THE JOIN: assert the design rows are placed by the design tier's Component tag and the requirement tier is reached through them, while the modules come from the files' Component headers. DERIVED NEVER COPIED: a design row carrying no hat cell still contributes its SR parent's perspectives, and re-ruling that one requirement moves the view with no design cell edited. EDGE 1: a requirement with no design child appears in the unplaced table, is counted there, and appears in no component section - visible rather than dropped. EDGE 2: a requirement reaching two components appears in both and is marked shared in both, while one reaching a single component is not. EDGE 3: seams enter the view, an interface with both endpoints inside a component is internal to it while one crossing two is a boundary of BOTH, an UNTAGGED interface is still placed through its endpoints, and one that resolves nowhere is reported as unplaced. NO ACCEPTANCE: with one Accepted and one Drafted component declared in the hand file, no maturity key and neither word appears in any emitted cell. FRESHNESS, DRIVEN BOTH WAYS: --check passes on a fresh view, fails after a registry row moves, and passes again once regenerated; a missing view fails; the written bytes carry no CRLF and two renders agree. VACUITY: a repo whose only CMP row is the inert -000 example writes nothing and exits zero on both paths.
+  - after: The join, the three coverage edges, the standing constraint and the freshness contract, each driven against a two-component spine small enough to reason about by hand. THE JOIN: assert the design rows are placed by the design tier's Component tag and the requirement tier is reached through them, while the modules come from the files' Component headers. DERIVED NEVER COPIED: a design row carrying no hat cell still contributes its SR parent's perspectives, and re-ruling that one requirement moves the view with no design cell edited. EDGE 1: a requirement with no design child appears in the unplaced table, is counted there, and appears in no component section - visible rather than dropped. EDGE 2: a requirement reaching two components appears in both and is marked shared in both, while one reaching a single component is not. EDGE 3: seams enter the view, an interface with both endpoints inside a component is internal to it while one crossing two is a boundary of BOTH, an interface is placed by the components its endpoint cells name, and one naming no component is reported as unplaced. NO ACCEPTANCE: with one Accepted and one Drafted component declared in the hand file, no maturity key and neither word appears in any emitted cell. FRESHNESS, DRIVEN BOTH WAYS: --check passes on a fresh view, fails after a registry row moves, and passes again once regenerated; a missing view fails; the written bytes carry no CRLF and two renders agree. VACUITY: a repo whose only CMP row is the inert -000 example writes nothing and exits zero on both paths.
+_traced — routes to adjudication_
+- **Evidence**
+  - before: tests/test_gen_components.py::test_membership_and_the_requirement_reach; tests/test_gen_components.py::test_the_hat_union_is_DERIVED_from_the_parent_not_copied; tests/test_gen_components.py::test_a_parent_re_ruling_moves_the_view_with_no_design_cell_edited; tests/test_gen_components.py::test_a_childless_requirement_is_listed_ONCE_and_never_dropped; tests/test_gen_components.py::test_a_shared_requirement_appears_in_EVERY_component_it_reaches; tests/test_gen_components.py::test_seams_enter_the_view_split_internal_from_boundary; tests/test_gen_components.py::test_an_untagged_seam_is_placed_by_its_ENDPOINTS; tests/test_gen_components.py::test_an_unplaceable_seam_is_REPORTED_not_silently_excluded; tests/test_gen_components.py::test_the_generated_view_carries_NO_acceptance_cell; tests/test_gen_components.py::test_check_reds_on_a_stale_view_and_greens_once_regenerated; tests/test_gen_components.py::test_check_reds_when_the_view_is_missing_entirely; tests/test_gen_components.py::test_the_written_file_is_LF_and_reproducible; tests/test_gen_components.py::test_a_repo_with_no_real_component_is_VACUOUS; tests/test_gen_components.py::test_the_cli_runs_out_of_process
+  - after: tests/test_gen_components.py::test_membership_and_the_requirement_reach; tests/test_gen_components.py::test_the_hat_union_is_DERIVED_from_the_parent_not_copied; tests/test_gen_components.py::test_a_parent_re_ruling_moves_the_view_with_no_design_cell_edited; tests/test_gen_components.py::test_a_childless_requirement_is_listed_ONCE_and_never_dropped; tests/test_gen_components.py::test_a_shared_requirement_appears_in_EVERY_component_it_reaches; tests/test_gen_components.py::test_seams_enter_the_view_split_internal_from_boundary; tests/test_gen_components.py::test_a_seam_is_placed_by_the_components_its_endpoints_name; tests/test_gen_components.py::test_an_unplaceable_seam_is_REPORTED_not_silently_excluded; tests/test_gen_components.py::test_the_generated_view_carries_NO_acceptance_cell; tests/test_gen_components.py::test_check_reds_on_a_stale_view_and_greens_once_regenerated; tests/test_gen_components.py::test_check_reds_when_the_view_is_missing_entirely; tests/test_gen_components.py::test_the_written_file_is_LF_and_reproducible; tests/test_gen_components.py::test_a_repo_with_no_real_component_is_VACUOUS; tests/test_gen_components.py::test_the_cli_runs_out_of_process
+- **Verifies**
+  - before: SR-070;LLR-199;IF-139;IF-140;IF-141;IF-142;IF-143
+  - after: SR-070;LLR-199;IF-139;IF-140;IF-141;IF-142
 
 ### TC TC-460 — ADDED since the snapshot, Drafted — never accepted
 - **TC-ID**: TC-460
@@ -55,9 +63,21 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Level**: Unit
 - **Method**: Over the two-component view fixture, move one source file's header to the other component, add a file no design row names declaring that component, and render the view.
 - **Tier**: Smoke
-- **Expected**: The moved file leaves its old component's modules and joins the new one's beside the added file; the seam between the two files becomes internal to the new component; the design row tagged into the old component still places its row there.
+- **Expected**: The moved file leaves its old component's modules and joins the new one's beside the added file; the seams stay where their endpoint cells put them; the design row tagged into the old component still places its row there.
 - **Automated**: Yes
 - **Evidence**: tests/test_gen_components.py::test_the_modules_and_the_seams_follow_the_headers
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-465 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-465
+- **Verifies**: SR-070;LLR-199
+- **Level**: Unit
+- **Method**: Place a row inside one component, a row between two, a row with an external endpoint, and a row between two components nested in a third.
+- **Tier**: Smoke
+- **Expected**: The first is internal to its component; the second and third are boundary rows of each component they name and internal to none; the nested row is internal to the enclosing component and shown in all three.
+- **Automated**: Yes
+- **Evidence**: tests/test_if_owner_component.py::test_a_row_is_internal_to_the_lowest_component_enclosing_every_endpoint
 - **Status**: Drafted
 - **Phase**: 6
 
@@ -81,6 +101,26 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Component**: CMP-006
 - **Phase**: 6
 
+### TC TC-409
+- **Verifies**
+  - before: SR-157;LLR-365;IF-131;IF-263;IF-318
+  - after: SR-157;LLR-365;IF-131
+
+### TC TC-410
+- **Verifies**
+  - before: SR-157;LLR-366;IF-263;IF-318
+  - after: SR-157;LLR-366
+
+### TC TC-428
+- **Verifies**
+  - before: SR-157;IF-263
+  - after: SR-157
+
+### TC TC-429
+- **Verifies**
+  - before: SR-157;IF-263
+  - after: SR-157
+
 ## SR-159 — Declared-architecture connectivity gaps are reported
 
 > **Requirement.** The delivered harness shall report declared-architecture connectivity gaps — an unresolvable interface row, an undeclared endpoint or direction, a cross-component import no declared interface covers, an invalid spec interface citation, and a top view past its declared bound — warn-first with --strict gating, vacuous where the optional inventories are absent.
@@ -88,15 +128,38 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 > **Rationale.** Realizes SN-023 (the parts' connections are as much of the truth as the requirement tree, checked mechanically warn-first — the need's own words), SN-002 (interface rows stay resolvable) and SN-012 (opt-out and vacuity keep the layer free for non-users). One row: the delivered contract is one connectivity verdict; the checkers below it are its decomposition.
 
 
+### LLR LLR-041
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: Loads the interface registry; validates IF ids, SR back-links and Component tags, and emits the best-effort endpoint-module advisory. Malformed or duplicate ids and unresolved SR/Component links are findings; an unmatched module-shaped Provider endpoint stays advisory-only, and an absent interface registry is vacuous.
+  - after: Loads the interface registry; validates IF ids and SR back-links, and holds every endpoint to one of two forms. The owner is one endpoint, and the owner and each requestor and consumer is either a CMP id a live component row has or external: followed by a party the registry header declares on an External party line; a requirement or design id, an id no component row has, a bare or undeclared party, and a path or module are each a strict finding naming the row and the cell, as is an owner naming several endpoints. A row whose owner and far side are all external parties is a strict finding, and so is a registry still carrying a retired cell, the component cell among them; a row naming both or neither far side is advisory. Malformed or duplicate ids and unresolved SR links are findings; an absent interface registry is vacuous.
+_traced — routes to adjudication_
+- **CodeSymbol**
+  - before: interface_findings/integrity_findings
+  - after: interface_findings/integrity_findings/declared_parties/endpoint_problem
+- **Module**
+  - before: project-trajectory/scripts/trace.py
+  - after: project-trajectory/scripts/trace.py;project-trajectory/scripts/trace_text.py
+
+### LLR LLR-042
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: Emits opt-out warn-first findings for missing endpoints/directions, uncited Active seams, and dangling Contracts citations without changing exit status. A source/sink note suppresses its declared direction case; the opt-out home is docs/process.toml [checks] interfaces_check = false; a small or absent inventory is vacuous.
+  - after: Emits opt-out warn-first findings, without changing exit status, for each component holding an inventory module by its header that no interface row names, that owns no row (no Provides) or that is on no row's far side (no Consumes), for uncited seams, and for a Contracts citation naming no row. A source note marks a row's owner and a sink note its far side, suppressing that direction's case; the opt-out home is docs/process.toml [checks] interfaces_check = false; a small or absent inventory is vacuous. Nothing here holds a row to a declaration site: where a contract body sits, and whether one exists, is the definition gate's rule.
+_traced — routes to adjudication_
+- **CodeSymbol**
+  - before: interface_findings/arch_inventory
+  - after: interface_findings/_component_connectivity/arch_inventory
+
 ### LLR LLR-067
 _accepted — re-acceptance owed_
 - **Detail**
   - before: Joins imports, component membership, and declared seams; reports uncovered cross-component edges with strict/plain and vacuity rules. Uncovered mapped edges warn plain and fail --strict; a covering seam (in either direction), an intra-component or unmapped edge, absent imports, the opt-out, and an edge whose destination is a declared shared-kernel module (docs/kernel-modules-allow, checked before the seam/overlap split) each stay silent. The module inventory joined against is scanned LIVE from the source tree under [paths] src (gen_arch_map.scan_inventory), never parsed back out of a committed map, so the join cannot read a stale inventory.
-  - after: Joins imports, component membership read from each file's Component header, and declared seams; reports uncovered cross-component edges with strict/plain and vacuity rules. An edge with an endpoint whose header declares no valid component is reported as unclassified, before the declared seams and the shared kernel are consulted, so it is never treated as internal, covered or exempt. An edge is internal only when both endpoints sit in the same one component. Other uncovered edges warn plain and fail --strict; a covering seam (in either direction), an internal edge, absent imports, no live component row, the opt-out, and an edge whose destination is a declared shared-kernel module (docs/kernel-modules-allow) each stay silent. The module inventory joined against is scanned LIVE from the source tree under [paths] src (gen_arch_map.scan_inventory), never parsed back out of a committed map, so the join cannot read a stale inventory.
+  - after: Joins imports, component membership read from each file's Component header, and the cover the call rows declare; reports uncovered cross-component edges with strict/plain and vacuity rules. An edge with an endpoint whose header declares no valid component is reported as unclassified, before the cover and the shared kernel are consulted, so it is never treated as internal, covered or exempt. An edge is internal only when both endpoints sit in the same one component. An import from a file of one component into a file of another is covered only by a call row the imported file's component owns that names the importer's component among its requestors; a row on another channel, a row owned the other way round and a row merely naming both components cover nothing. Other uncovered edges warn plain and fail --strict; a covered edge, an internal edge, absent imports, no live component row, the opt-out, and an edge whose destination is a declared shared-kernel module (docs/kernel-modules-allow) each stay silent. The module inventory joined against is scanned LIVE from the source tree under [paths] src (gen_arch_map.scan_inventory), never parsed back out of a committed map, so the join cannot read a stale inventory.
 _traced — routes to adjudication_
 - **CodeSymbol**
   - before: cross_component_findings/arch_inventory
-  - after: cross_component_findings/_classifiable_edges/arch_inventory
+  - after: cross_component_findings/_classifiable_edges/_call_cover/arch_inventory
 
 ### LLR LLR-373
 - **Detail**
@@ -121,36 +184,78 @@ _traced — routes to adjudication_
 - **SR-Refs**: SR-159
 - **Title**: Every file in the component scope declares a live component, and each that does not is a finding
 - **Module**: project-trajectory/scripts/arch_inputs.py;project-trajectory/scripts/gen_arch_map.py;project-trajectory/scripts/arch_components.py
-- **CodeSymbol**: component_headers/_component_scope/states_contract_body/component_findings
-- **Detail**: The scope is closed. It holds every file under the declared source root whose type has a declaration carrier, a path part that is hidden or a bytecode cache skipped and a README.md excluded as documentation, and every file the interface registry names as an owner, a directory owner excluded since it is read through its README. Each file in the scope whose declaration is absent, doubled or malformed, or names a component no live row of the component registry has, an example row's id included, is a finding that names the file and its problem. A file that declares a live component belongs to it, and every other file in the scope belongs to no component. A file of another type under the source root is outside the rule unless its header opens a contract body, which is then a finding naming its type. A file outside the scope is not walked. With no live component row the rule is vacuous and no file belongs to any component. The findings are component findings: a warning without strict checking, an error under it, and none when the process settings turn the components check off.
+- **CodeSymbol**: component_headers/_component_scope/states_contract_body/component_findings/source_files
+- **Detail**: The scope is closed. It holds every file under the declared source root whose type has a declaration carrier, a path part that is hidden or a bytecode cache skipped and a README.md excluded as documentation, and every file the scan profile's declared header list names, a directory README among them; that one surface is the one the contract body rule reads too, and a listed path that is not a file is a finding. Each file in the scope whose declaration is absent, doubled or malformed, or names a component no live row of the component registry has, an example row's id included, is a finding that names the file and its problem. A file that declares a live component belongs to it, and every other file in the scope belongs to no component. A file of another type under the source root is outside the rule unless its header opens a contract body, which is then a finding naming its type. A file outside the scope is not walked. With no live component row the rule is vacuous and no file belongs to any component. The findings are component findings: a warning without strict checking, an error under it, and none when the process settings turn the components check off.
 - **Rationale**: A membership that a missing header could silently empty would let the cross-component rule pass over a file nobody placed, so every file the rule reads must be accounted for, and the scope must be closed so that an unknown file type is neither a guess nor an unresolvable finding. Below the architecture rung there is no partition to declare into, so the rule waits for the first live component.
 - **TestRefs**: TC-458
 - **Status**: Drafted
 - **Component**: CMP-006
 - **Phase**: 6
 
+### LLR LLR-398 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-398
+- **SR-Refs**: SR-159
+- **Title**: Each interface's contract body is stated by at most one file on the declared scan surface, a file of the owner's component
+- **Module**: project-trajectory/scripts/arch_interfaces.py;project-trajectory/scripts/gen_arch_map.py;project-trajectory/scripts/kitlib/config.py
+- **CodeSymbol**: contract_body_findings/_uniqueness_findings/_external_body_findings/_declaration_sites/header_files/declared_headers
+- **Detail**: The scan surface is every file under the declared source root of a type the component grammar carries, a README excluded, and every file the scan profile's declared header list names; nothing else is read, so a body quoted in a review record, a plan, the approval snapshot or an example document is never counted. At most one file on the surface states each interface's contract body: zero is valid, the row's data cell being the contract's home until code states it, and two or more is one finding naming every file. Where a body exists, its file's component declaration names the row's owner; for a row owned by an external party it names a component the row lists among its consumers or requestors, and any other component, or none, is a finding. A file declaring an interface it states no body for, and a header the contract grammar refuses, are findings too. The findings warn on a plain run and fail under strict checking, and none appear when the process settings turn the interfaces check off or the scan has no surface.
+- **Rationale**: Two copies of a contract are two definitions waiting to disagree, and a contract stated in another component's file puts the definition outside the component that answers for it. Counting only the declared surface keeps every quotation of a contract in the record from reading as a second one, and zero bodies stays valid because a new interface is defined by its row before any code exists.
+- **TestRefs**: TC-463
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 6
+
+### TC TC-044
+- **Expected**
+  - before: Integrity and unresolved links fail as declared; endpoint mismatch is advisory; absent registry is vacuous.
+  - after: Integrity, unresolved links and an endpoint outside its two forms fail as declared; absent registry is vacuous.
+- **Method**
+  - before: Run IF id, SR back-link, Component membership, and endpoint-advisory trace cases.
+  - after: Run IF id, SR back-link, Component membership and endpoint-form trace cases.
+
+### TC TC-049
+- **Verifies**
+  - before: SR-159;LLR-049;IF-320
+  - after: SR-159;LLR-049
+
 ### TC TC-067
 _accepted — re-acceptance owed_
+- **Expected**
+  - before: Uncovered cross-component edges warn/fail strict; covered, vacuous and declared-kernel cases stay silent.
+  - after: Uncovered cross-component edges warn/fail strict, a row owned the other way round covering nothing; covered (a call row owned by the imported file's component naming the importer's), vacuous and declared-kernel cases stay silent.
 - **Method**
   - before: Run the cross-component import coverage matrix, including the declared shared-kernel exemption: an edge into a declared kernel module is silent (finding and advisory both), the exemption is one-directional (declaring the SOURCE does not exempt it), an undeclared module or an absent allow-file still fires (fail-safe default), and a malformed allow-file entry (no reason) grants no exemption while being reported and sharing the components_check opt-out.
   - after: Run the cross-component import coverage matrix, including the declared shared-kernel exemption: an edge into a declared kernel module is silent, the exemption is one-directional (declaring the SOURCE does not exempt it), an undeclared module or an absent allow-file still fires (fail-safe default), and a malformed allow-file entry (no reason) grants no exemption while being reported and sharing the components_check opt-out.
 _traced — routes to adjudication_
 - **Evidence**
   - before: tests/test_trajectory_arch.py::test_cross_cmp_import_without_seam_warns_plain_fails_strict; tests/test_trajectory_arch.py::test_cross_cmp_import_with_declared_seam_is_silent; tests/test_trajectory_arch.py::test_cross_cmp_seam_covers_either_direction; tests/test_trajectory_arch.py::test_components_check_off_silences_cross_cmp; tests/test_trajectory_arch.py::test_declared_kernel_destination_is_not_a_seam; tests/test_trajectory_arch.py::test_undeclared_module_still_fires_the_hard_finding; tests/test_trajectory_arch.py::test_absent_kernel_allow_file_exempts_nothing; tests/test_trajectory_arch.py::test_kernel_exemption_also_silences_the_overlap_advisory; tests/test_trajectory_arch.py::test_kernel_exemption_is_one_directional; tests/test_trajectory_arch.py::test_kernel_allow_entry_without_a_reason_is_dropped_and_reported; tests/test_trajectory_arch.py::test_kernel_allow_entry_with_empty_reason_is_dropped_and_reported; tests/test_trajectory_arch.py::test_kernel_allow_hygiene_shares_the_components_check_opt_out; tests/test_bootstrap.py::test_scaffold_ships_no_declared_kernel_surface
-  - after: tests/test_trajectory_arch.py::test_cross_cmp_import_without_seam_warns_plain_fails_strict; tests/test_trajectory_arch.py::test_cross_cmp_import_with_declared_seam_is_silent; tests/test_trajectory_arch.py::test_cross_cmp_seam_covers_either_direction; tests/test_trajectory_arch.py::test_components_check_off_silences_cross_cmp; tests/test_trajectory_arch.py::test_declared_kernel_destination_is_not_a_seam; tests/test_trajectory_arch.py::test_undeclared_module_still_fires_the_hard_finding; tests/test_trajectory_arch.py::test_absent_kernel_allow_file_exempts_nothing; tests/test_trajectory_arch.py::test_kernel_exemption_is_one_directional; tests/test_trajectory_arch.py::test_kernel_allow_entry_without_a_reason_is_dropped_and_reported; tests/test_trajectory_arch.py::test_kernel_allow_entry_with_empty_reason_is_dropped_and_reported; tests/test_trajectory_arch.py::test_kernel_allow_hygiene_shares_the_components_check_opt_out; tests/test_bootstrap.py::test_scaffold_ships_no_declared_kernel_surface
+  - after: tests/test_trajectory_arch.py::test_cross_cmp_import_without_seam_warns_plain_fails_strict; tests/test_trajectory_arch.py::test_cross_cmp_import_with_declared_seam_is_silent; tests/test_trajectory_arch.py::test_cross_cmp_seam_covers_only_its_own_direction; tests/test_trajectory_arch.py::test_components_check_off_silences_cross_cmp; tests/test_trajectory_arch.py::test_declared_kernel_destination_is_not_a_seam; tests/test_trajectory_arch.py::test_undeclared_module_still_fires_the_hard_finding; tests/test_trajectory_arch.py::test_absent_kernel_allow_file_exempts_nothing; tests/test_trajectory_arch.py::test_kernel_exemption_is_one_directional; tests/test_trajectory_arch.py::test_kernel_allow_entry_without_a_reason_is_dropped_and_reported; tests/test_trajectory_arch.py::test_kernel_allow_entry_with_empty_reason_is_dropped_and_reported; tests/test_trajectory_arch.py::test_kernel_allow_hygiene_shares_the_components_check_opt_out; tests/test_bootstrap.py::test_scaffold_ships_no_declared_kernel_surface
+- **Verifies**
+  - before: SR-159;LLR-067;IF-319
+  - after: SR-159;LLR-067
+
+### TC TC-080
+_accepted — re-acceptance owed_
+- **Method**
+  - before: Run endpoint/direction, source-sink, Active-citation, Contracts, opt-out, and strict non-gating coverage cases.
+  - after: Run per-component connectivity, source-sink, seam-citation, Contracts, opt-out, and strict non-gating coverage cases.
+_traced — routes to adjudication_
+- **Verifies**
+  - before: SR-159;LLR-042;IF-263;IF-316;IF-317
+  - after: SR-159;LLR-042;IF-316
 
 ### TC TC-435
 _accepted — re-acceptance owed_
 - **Expected**
   - before: Each module of a joined Module cell carries the row's tag and no joined key survives; the two-component row keeps both tags; the example row and the non-LLR- row make no membership, the non-CMP- tokens are dropped, and the control row keeps its dangling tag; gen_components binds no module_components of its own, hands the join its loaded design rows once, and with the join answering an empty map reports all three seams unplaced.
-  - after: Each path lands on its normalized module key with its one component; the shared key keeps both components; the lower-case and non-id values make no membership, and the dangling id is kept; gen_components binds no module_components of its own, hands the join the declarations it was given once, and with the join answering an empty map reports all three seams unplaced.
+  - after: Each path lands on its normalized module key with its one component; the shared key keeps both components; the lower-case and non-id values make no membership, and the dangling id is kept; gen_components binds no module_components of its own, and with the join answering an empty map the seams still land where their endpoint cells put them, only the one naming no component unplaced.
 - **Method**
   - before: Load a design registry through the carrier and join it with kitlib.spine.module_components: a row whose Module cell joins two modules and a row tagged into two components; then, beside a control row carrying a well-formed tag that names no component row, in turn a -000 example row, a row whose id does not start with LLR-, and a row mixing a lower-case and a bare token with a CMP- one. Separately, stub the join under gen_components' build over a two-component spine, and read which design rows it is handed and where the seams land.
-  - after: Join a set of file declarations with kitlib.spine.module_components: paths in the kit-prefixed and the bare spelling, a package's __init__.py, a configuration file, two files sharing one module key and declaring two components, a lower-case value, a value that is not an id, and a well-formed id naming no component row. Separately, stub the join under gen_components' build over a two-component spine, and read which declarations it is handed and where the seams land.
+  - after: Join a set of file declarations with kitlib.spine.module_components: paths in the kit-prefixed and the bare spelling, a package's __init__.py, a configuration file, two files sharing one module key and declaring two components, a lower-case value, a value that is not an id, and a well-formed id naming no component row. Separately, stub the join to answer an empty map under gen_components' build over a two-component spine, and read where the seams land.
 _traced — routes to adjudication_
 - **Evidence**
   - before: tests/test_components_registry.py::test_module_components_splits_a_joined_module_cell; tests/test_components_registry.py::test_the_join_keeps_the_narrower_answer_where_its_two_copies_disagreed; tests/test_gen_components.py::test_seam_placement_reads_membership_from_the_one_join
-  - after: tests/test_components_registry.py::test_module_components_keys_each_declared_file_by_its_module; tests/test_gen_components.py::test_seam_placement_reads_membership_from_the_one_join
+  - after: tests/test_components_registry.py::test_module_components_keys_each_declared_file_by_its_module; tests/test_gen_components.py::test_seam_placement_reads_the_endpoint_cells_and_no_join
 
 ### TC TC-436
 - **Method**
@@ -173,23 +278,71 @@ _traced — routes to adjudication_
 - **TC-ID**: TC-458
 - **Verifies**: SR-159;LLR-397;IF-316
 - **Level**: Integration
-- **Method**: Over a repository with two live components and a declared source root, run the census over files that declare a live component, declare none, declare two, carry a malformed line, name an id no row has and name the example id; then over a tree holding a README.md, files under a hidden directory and a bytecode cache, a JSON file, a source file of another type stating a contract body, a configuration file and a directory the interface registry names as owners, and an unscoped file outside the root carrying a malformed line. Run it with only the example component row, and through the component rules with the components check on and off. Run the trajectory check plain and strict over a tree whose imported module declares no component.
+- **Method**: Over a repository with two live components and a declared source root, run the census over files that declare a live component, declare none, declare two, carry a malformed line, name an id no row has and name the example id; then over a tree holding a README.md, files under a hidden directory and a bytecode cache, a JSON file, a source file of another type stating a contract body, a configuration file and a directory README the scan profile's header list names, and an unscoped file outside the root carrying a malformed line; then list a source-root README, a configuration file with no declaration and a path that is no file. Run it with only the example component row, and through the component rules with the components check on and off. Run the trajectory check plain and strict over a tree whose imported module declares no component.
 - **Tier**: Smoke
-- **Expected**: Only the file declaring a live component is in the declarations, and each other file is one finding naming it and its class, the example id as no live row. The scope reports only the configuration owner and the other-type file, whose finding names its suffix and the contract body. With only the example row the census is empty. The component rules carry the census finding with the check on and nothing with it off. The plain run warns naming the undeclared module and exits 0; the strict run reports it as an error and exits 1.
+- **Expected**: Only the file declaring a live component is in the declarations, and each other file is one finding naming it and its class, the example id as no live row. The scope reports only the two listed files with no declaration and the other-type file, whose finding names its suffix and the contract body; a listed source-root README is in the declarations, and a listed path that is no file is a finding. With only the example row the census is empty. The component rules carry the census finding with the check on and nothing with it off. The plain run warns naming the undeclared module and exits 0; the strict run reports it as an error and exits 1.
 - **Automated**: Yes
-- **Evidence**: tests/test_component_headers.py::test_the_census_names_every_finding_class_and_keeps_the_valid_ones; tests/test_component_headers.py::test_the_scope_is_the_grammars_types_under_src_and_the_file_owners; tests/test_component_headers.py::test_the_census_is_vacuous_with_no_live_component_row; tests/test_component_headers.py::test_the_census_rides_the_component_rules_and_their_opt_out; tests/test_trajectory_arch.py::test_cross_cmp_unmapped_endpoint_is_unclassified
+- **Evidence**: tests/test_component_headers.py::test_the_census_names_every_finding_class_and_keeps_the_valid_ones; tests/test_component_headers.py::test_the_scope_is_the_grammars_types_under_src_and_the_listed_headers; tests/test_component_headers.py::test_the_census_is_vacuous_with_no_live_component_row; tests/test_component_headers.py::test_the_census_rides_the_component_rules_and_their_opt_out; tests/test_trajectory_arch.py::test_cross_cmp_unmapped_endpoint_is_unclassified
 - **Status**: Drafted
 - **Phase**: 6
 
 ### TC TC-459 — ADDED since the snapshot, Drafted — never accepted
 - **TC-ID**: TC-459
-- **Verifies**: SR-159;LLR-373;LLR-067;IF-319
+- **Verifies**: SR-159;LLR-373;LLR-067
 - **Level**: Integration
-- **Method**: Over a repository whose design rows tag a module into one component while its header declares none, read the How-SW top view. Then run the cross-component rule over an import edge in turn with the destination undeclared, the importer undeclared, the destination undeclared beside an interface row covering the pair, and the destination undeclared on the shared-kernel list; over an edge whose destination shares its module key with a second file declaring the importer's component; and over an edge inside one component. Run the trajectory check plain over an edge whose destination declares no component.
+- **Method**: Over a repository whose design rows tag a module into one component while its header declares none, read the How-SW top view. Then run the cross-component rule over an import edge in turn with the destination undeclared, the importer undeclared, the destination undeclared beside a call row covering the pair, and the destination undeclared on the shared-kernel list; over an edge whose destination shares its module key with a second file declaring the importer's component; and over an edge inside one component. Run the trajectory check plain over an edge whose destination declares no component.
 - **Tier**: Smoke
 - **Expected**: The top view follows the headers, not the design rows: the declared module is in its component and the undeclared one is uncontained. Each undeclared case yields one finding naming both modules as unclassified, the covered and kernel cases included. The shared-key edge is the uncovered-seam finding, not silence. The edge inside one component is silent, and the multi-membership advisory no longer exists. The plain trajectory check names the edge as unclassified.
 - **Automated**: Yes
 - **Evidence**: tests/test_component_headers.py::test_the_top_view_reads_the_headers_and_not_the_design_rows; tests/test_component_headers.py::test_an_edge_touching_an_undeclared_module_is_unclassified; tests/test_component_headers.py::test_a_key_two_files_share_silences_no_edge; tests/test_component_headers.py::test_an_edge_inside_one_component_is_silent_and_the_advisory_is_gone; tests/test_trajectory_arch.py::test_cross_cmp_unmapped_endpoint_is_unclassified
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-462 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-462
+- **Verifies**: SR-159;LLR-041
+- **Level**: Unit
+- **Method**: Read the party list from a registry header, a mid-line mention and a line under the first table included; judge each endpoint form; run the interface tier over rows whose owner and far side each take one form, over a row whose owner and far side are all external parties, and over a row still carrying the component cell.
+- **Tier**: Smoke
+- **Expected**: Only the header's party lines declare a party. A component id a live row has and a declared party pass; a path, a module, a requirement id, an unknown component, a bare party and an undeclared one are each a strict finding naming the row and the cell. The all-external row is refused and the component cell is a finding.
+- **Automated**: Yes
+- **Evidence**: tests/test_if_owner_component.py::test_each_endpoint_takes_one_of_two_forms
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-463 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-463
+- **Verifies**: SR-159;LLR-398
+- **Level**: Unit
+- **Method**: Over a two-component repository, state an interface's body in no file (a locally owned row and an external-owned one), in a file of the owner's component, in a file of another component and in a file with no declaration, in two files, in a file of a component on an external-owned row's far side and in one off it, and declare one with no body; then quote the body in a review record, a plan and the approval snapshot, and in a configuration file the header list names.
+- **Tier**: Smoke
+- **Expected**: Zero bodies and one in the owner's file are clean; another component's file, an undeclared file and a file off the external row's far side are each one finding naming the file and both components; two files are one finding naming both; the declaration with no body is a finding; the quoted copies are never counted, and the listed configuration file's copy is a second body.
+- **Automated**: Yes
+- **Evidence**: tests/test_if_owner_component.py::test_one_body_per_interface_in_a_file_of_the_right_component
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-464 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-464
+- **Verifies**: SR-159;LLR-067
+- **Level**: Unit
+- **Method**: Import a file of one component into a file of another, with no row, with a call row owned by the imported file's component naming the importer's, with that row owned the other way round, with a file row and with a command-line row naming the same two components.
+- **Tier**: Smoke
+- **Expected**: Only the call row owned by the imported file's component naming the importer's covers the edge; every other case is the uncovered-seam finding.
+- **Automated**: Yes
+- **Evidence**: tests/test_if_owner_component.py::test_only_a_call_row_owned_by_the_imported_component_naming_the_importer_covers
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-467 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-467
+- **Verifies**: SR-159;LLR-042
+- **Level**: Unit
+- **Method**: Run the connectivity warns over two components holding one module each, with one row owned by the second and consumed by an external party.
+- **Tier**: Smoke
+- **Expected**: The first component is named as named by no row, the second as declaring no Consumes seam, and no warn names a module.
+- **Automated**: Yes
+- **Evidence**: tests/test_if_owner_component.py::test_connectivity_warns_name_components_not_modules
 - **Status**: Drafted
 - **Phase**: 6
 
@@ -257,6 +410,11 @@ _traced — routes to adjudication_
 > **Rationale.** Realizes SN-023's SECOND conjunct, in the need's own words: the relationships between the parts (which module talks to which, over what contract) are as much of the project's truth as its requirement tree, and scattering them hides architectural drift. ONE DECISION PER ROW: artifact integrity is SR-070's, view content is this tier's, and the content half divides exactly where SN-023 divides. Kept separate from SR-168 rather than filed as one content row because the two fail independently and are built by different means — the progress views read the requirement and work registries, this one reads the declared component and interface registries, and either can be complete while the other is absent. The empty-view clause is load-bearing: a repository that has declared no interfaces yet must get a stated, legible surface, because an empty graph is indistinguishable from a broken generator. WORDED FOR A COLD READER: the row had read "structural units", "seams terminating at the containing boundary" and "the artifact contract's omission rule" — vocabulary a first-time reader cannot resolve, the last of them an internal cross-reference with no id. Same obligations, plainer words, and the absent-registry case now names SR-070 explicitly; the empty-vs-absent split itself is unchanged. `phase` inherits the parent's 1; its children span 1 and 2, the ordinary child-later-than-parent case, which is intended.
 
 
+### LLR LLR-080
+- **Detail**
+  - before: Renders IF-labeled seams in dashboard and architecture views with deterministic table fallback when absent. Declared seams produce labeled graph edges in both views; with no seams the table fallback is preserved. The architecture-map target surface is ruled to retire; the obligation moves with the flows/dashboard rendering.
+  - after: Renders IF-labeled seams in the dashboard view with deterministic table fallback when absent. A row names components and external parties, so its seam is a labeled edge between those nodes, a component endpoint wired to its component's block at the layer that shows it; with no seams the table fallback is preserved. The architecture map's dependency diagram draws imports only, since no row names a module. The architecture-map target surface is ruled to retire; the obligation moves with the flows/dashboard rendering.
+
 ### LLR LLR-373
 - **Detail**
   - before: module_components in kitlib/spine.py joins the design rows its caller passes in and does not read a file itself. It skips a row whose id is a -000 example or does not start with LLR-. From a kept row it takes the Component tokens that start with CMP-, drops the rest, splits the Module cell with refs, normalizes the parts with norm_module, and adds those tokens to the map under the non-empty keys. The tags are not filtered against the component registry: the callers intersect them with the ids they declare. gen_components places seams by the map; trajectory_arch's How-SW top view, which the right-sizing rule and the containment render share, and its cross-component scan read membership from it. Neither module holds a join of its own.
@@ -266,20 +424,20 @@ _traced — routes to adjudication_
 _accepted — re-acceptance owed_
 - **Expected**
   - before: Each module of a joined Module cell carries the row's tag and no joined key survives; the two-component row keeps both tags; the example row and the non-LLR- row make no membership, the non-CMP- tokens are dropped, and the control row keeps its dangling tag; gen_components binds no module_components of its own, hands the join its loaded design rows once, and with the join answering an empty map reports all three seams unplaced.
-  - after: Each path lands on its normalized module key with its one component; the shared key keeps both components; the lower-case and non-id values make no membership, and the dangling id is kept; gen_components binds no module_components of its own, hands the join the declarations it was given once, and with the join answering an empty map reports all three seams unplaced.
+  - after: Each path lands on its normalized module key with its one component; the shared key keeps both components; the lower-case and non-id values make no membership, and the dangling id is kept; gen_components binds no module_components of its own, and with the join answering an empty map the seams still land where their endpoint cells put them, only the one naming no component unplaced.
 - **Method**
   - before: Load a design registry through the carrier and join it with kitlib.spine.module_components: a row whose Module cell joins two modules and a row tagged into two components; then, beside a control row carrying a well-formed tag that names no component row, in turn a -000 example row, a row whose id does not start with LLR-, and a row mixing a lower-case and a bare token with a CMP- one. Separately, stub the join under gen_components' build over a two-component spine, and read which design rows it is handed and where the seams land.
-  - after: Join a set of file declarations with kitlib.spine.module_components: paths in the kit-prefixed and the bare spelling, a package's __init__.py, a configuration file, two files sharing one module key and declaring two components, a lower-case value, a value that is not an id, and a well-formed id naming no component row. Separately, stub the join under gen_components' build over a two-component spine, and read which declarations it is handed and where the seams land.
+  - after: Join a set of file declarations with kitlib.spine.module_components: paths in the kit-prefixed and the bare spelling, a package's __init__.py, a configuration file, two files sharing one module key and declaring two components, a lower-case value, a value that is not an id, and a well-formed id naming no component row. Separately, stub the join to answer an empty map under gen_components' build over a two-component spine, and read where the seams land.
 _traced — routes to adjudication_
 - **Evidence**
   - before: tests/test_components_registry.py::test_module_components_splits_a_joined_module_cell; tests/test_components_registry.py::test_the_join_keeps_the_narrower_answer_where_its_two_copies_disagreed; tests/test_gen_components.py::test_seam_placement_reads_membership_from_the_one_join
-  - after: tests/test_components_registry.py::test_module_components_keys_each_declared_file_by_its_module; tests/test_gen_components.py::test_seam_placement_reads_membership_from_the_one_join
+  - after: tests/test_components_registry.py::test_module_components_keys_each_declared_file_by_its_module; tests/test_gen_components.py::test_seam_placement_reads_the_endpoint_cells_and_no_join
 
 ### TC TC-459 — ADDED since the snapshot, Drafted — never accepted
 - **TC-ID**: TC-459
-- **Verifies**: SR-159;LLR-373;LLR-067;IF-319
+- **Verifies**: SR-159;LLR-373;LLR-067
 - **Level**: Integration
-- **Method**: Over a repository whose design rows tag a module into one component while its header declares none, read the How-SW top view. Then run the cross-component rule over an import edge in turn with the destination undeclared, the importer undeclared, the destination undeclared beside an interface row covering the pair, and the destination undeclared on the shared-kernel list; over an edge whose destination shares its module key with a second file declaring the importer's component; and over an edge inside one component. Run the trajectory check plain over an edge whose destination declares no component.
+- **Method**: Over a repository whose design rows tag a module into one component while its header declares none, read the How-SW top view. Then run the cross-component rule over an import edge in turn with the destination undeclared, the importer undeclared, the destination undeclared beside a call row covering the pair, and the destination undeclared on the shared-kernel list; over an edge whose destination shares its module key with a second file declaring the importer's component; and over an edge inside one component. Run the trajectory check plain over an edge whose destination declares no component.
 - **Tier**: Smoke
 - **Expected**: The top view follows the headers, not the design rows: the declared module is in its component and the undeclared one is uncontained. Each undeclared case yields one finding naming both modules as unclassified, the covered and kernel cases included. The shared-key edge is the uncovered-seam finding, not silence. The edge inside one component is silent, and the multi-membership advisory no longer exists. The plain trajectory check names the edge as unclassified.
 - **Automated**: Yes
@@ -329,6 +487,50 @@ WHAT COUNTS AS MOVEMENT is one definition with one home, shared with the amend-w
 - **Evidence**: tests/test_acceptance_record.py::test_the_text_digest_takes_its_width_from_the_done_when_digest
 - **Status**: Drafted
 - **Phase**: 6
+
+## SR-212 — With the assumption gate on, interface-form requirements are bridged at their crossings and reached and bridged at the architecture rung
+
+> **Requirement.** Where the assumption gate is enabled, the delivered harness shall fail, for each system requirement of interface form, the boundary gate when the requirement is not recorded as coincident and names a crossing on which no assumption it cites lands, and the architecture gate when no boundary interface reaches it or a reaching boundary interface neither records it as coincident nor bridges it by an assumption the requirement also cites.
+
+> **Rationale.** A requirement meant to be met at an interface is not testable until that interface exists and its reading is either the outcome or carried by an assumption the requirement itself relies on. The frame's crossings are the first such interfaces: they are accepted with the frame at the boundary rung, before any interface row exists, and an assumption already names the crossing it lands on, so the requirement is judged against them there. Judging it again at the architecture rung, against the boundary interfaces that realize the crossings, keeps interfaces after the requirements they answer. Minting interface rows to match a count would produce seams with no contract behind them, so the check reports the gap rather than inventing the seam.
+
+
+### LLR LLR-244
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: module_srs(llrs) maps each normalized design Module to the requirements its rows name in SR-Refs, with norm_module as the one normalizer. if_reached_srs(ifs, llrs) maps each boundary interface, one carrying a from- or to-external tie-back, through its owner to those requirements. interface_form_gate_findings judges each requirement whose form is interface against every boundary interface reaching it: one reached by none fails naming the requirement and stating that no boundary interface reaches it; each reaching interface with no Coincident whose BridgedBy shares no assumption with the requirement's DA-Refs fails naming the requirement and that interface, so one valid interface never excuses another invalid one. check.py gains a built-in step `interface-allocation` at the DevStg-Arch threshold, gated by the same setting. crossing_gate_findings(srs, das, bifs) is the Boundary arm over the frame's crossings: each interface-form requirement with no Coincident fails once for each declared crossing its Boundary-Refs names on which no assumption in its DA-Refs lands (EffectAt), naming the requirement and that crossing; a crossing the frame does not declare is left to the frame's own reference rule. check.py gains a built-in step `crossing-allocation` at the DevStg-Boundary threshold, gated by the same setting. The relation is derived here and never recorded on an interface, and the stage fold gains no interface parameter.
+  - after: module_srs(llrs) maps each normalized design Module to the requirements its rows name in SR-Refs, with norm_module as the one normalizer. if_reached_srs(ifs, llrs, homes) maps each boundary interface, one carrying a from- or to-external tie-back, through the one file stating its contract body (homes, from the definition gate's scan) to those requirements; a row with no body yet reaches none, and where no source is scanned (files mode) a row reaches the requirements of the design rows placed in its owner component. interface_form_gate_findings judges each requirement whose form is interface against every boundary interface reaching it: one reached by none fails naming the requirement and stating that no boundary interface reaches it; each reaching interface with no Coincident whose BridgedBy shares no assumption with the requirement's DA-Refs fails naming the requirement and that interface, so one valid interface never excuses another invalid one. check.py gains a built-in step `interface-allocation` at the DevStg-Arch threshold, gated by the same setting. crossing_gate_findings(srs, das, bifs) is the Boundary arm over the frame's crossings: each interface-form requirement with no Coincident fails once for each declared crossing its Boundary-Refs names on which no assumption in its DA-Refs lands (EffectAt), naming the requirement and that crossing; a crossing the frame does not declare is left to the frame's own reference rule. check.py gains a built-in step `crossing-allocation` at the DevStg-Boundary threshold, gated by the same setting. The relation is derived here and never recorded on an interface, and the stage fold gains no interface parameter.
+_traced — routes to adjudication_
+- **CodeSymbol**
+  - before: module_srs/if_reached_srs/interface_form_gate_findings/crossing_gate_findings/step_findings
+  - after: module_srs/if_reached_srs/interface_form_gate_findings/crossing_gate_findings/step_findings/contract_homes
+- **Module**
+  - before: project-trajectory/scripts/assumption_rules.py;project-trajectory/scripts/check.py;project-trajectory/scripts/check_assumption_gate.py
+  - after: project-trajectory/scripts/assumption_rules.py;project-trajectory/scripts/check.py;project-trajectory/scripts/check_assumption_gate.py;project-trajectory/scripts/arch_interfaces.py
+
+### TC TC-466 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-466
+- **Verifies**: SR-212;LLR-244
+- **Level**: Unit
+- **Method**: Reach requirements from two boundary interfaces, one whose body a design row's file states and one with no body, beside an internal interface whose body another design row's file states; then reach them with no scanned source, the second design row placed in the owner component.
+- **Tier**: Smoke
+- **Expected**: The first reaches its design row's requirement, the second reaches none, and the internal interface is not judged; with no scanned source both boundary interfaces reach the requirement of the design row placed in their owner component.
+- **Automated**: Yes
+- **Evidence**: tests/test_if_owner_component.py::test_a_boundary_row_reaches_requirements_through_the_file_stating_its_body
+- **Status**: Drafted
+- **Phase**: 6
+
+## SR-215 — At a checkpoint, an unjudged, expired or triggered observation test is queued once for re-judging
+
+> **Requirement.** When a work item merges, a release is prepared or a stage gate is checked, the delivered harness shall file one re-judge work item per due observation case: one with no result, one whose result expired, or one whose declared trigger fires after its work-item floor; with no declared trigger, a change to its declared inputs makes it due, subject to that floor. It keeps at most one open item per case, and reports each observation case that cites no written pass criteria as a warning.
+
+> **Rationale.** Judgements cost time and model calls and vary across sessions. Written pass criteria fixed before the first judgement make the pass reviewable. The closed-work floor and the declared trigger are cost limits the operator directed (the PERFORMANCE lens): no change or checkpoint makes an accepted judgement due again within the configured number of closed work items of its latest record, and a declared trigger replaces input changes with the change or checkpoint it names, so a judgement can stand on changes it never judged until a qualifying change or checkpoint meets the floor or its result expires. First judgement and expiry keep missing or old evidence from standing indefinitely.
+
+
+### LLR LLR-293
+- **Detail**
+  - before: Cadence reads the process policy at the committed checkpoint and counts distinct terminal archived WI IDs added since the commit that added the latest observation record. eligible applies the greater of default and case floors, then file globs, component-tagged LLR modules and interface owners, release or stage-gate triggers. An omitted trigger leaves input-digest comparison to rejudge. History is cached per result commit; malformed policy, an unknown trigger and unreadable history raise ValueError. Zero explicitly disables the default floor.
+  - after: Cadence reads the process policy at the committed checkpoint and counts distinct terminal archived WI IDs added since the commit that added the latest observation record. eligible applies the greater of default and case floors, then file globs, component-tagged LLR modules, release or stage-gate triggers. An omitted trigger leaves input-digest comparison to rejudge. History is cached per result commit; malformed policy, an unknown trigger and unreadable history raise ValueError. Zero explicitly disables the default floor.
 
 ## SR-225 — A delegated run closes with a record of the calls it made, where the declared dial asks for one
 

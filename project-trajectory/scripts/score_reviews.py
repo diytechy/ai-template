@@ -44,7 +44,8 @@ truth.
 
 Component: CMP-008
 
-Contracts: IF-046 — the interface seam this module declares (process.md §8; row of record in docs/requirements/interfaces.toml).
+Contracts: IF-046, IF-047, IF-160 — the interface seams this module declares
+(process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-046: agent_loop imports this module for the round's scoring pass
     and consumes five names. `parse_verdict(text)` turns one verdict block into
@@ -61,6 +62,23 @@ Contract IF-046: agent_loop imports this module for the round's scoring pass
     the scoreboard is decayed advisory state, never a source of truth. Severity
     hygiene and the anti-gaming tripwires are returned as gates, never folded
     into a score, and length never scores positively.
+Contract IF-047: the review record. One `*.md` verdict file per reviewer per
+    round under `docs/reviews/`, each carrying its findings in the log's block
+    form — one line per finding, `[SEVERITY]` then the anchor then the issue
+    then the concrete change — and closing with one machine line,
+    `VERDICT: APPROVE|CHANGES-REQUESTED findings=N`, which is the only line a
+    reader parses. A declared finding count that disagrees with the counted
+    finding lines is a tripwire, not a score.
+Contract IF-160: `docs/reviews/scoreboard.txt`, written by this scorer and by
+    nothing else. A four-line `#` banner naming its writer, then one
+    `provider <name> substance=<float> rounds=<int>` line per provider in
+    sorted order, then one `round <n> verdict= tier= margin= primary=
+    tripwire= contradiction=` line per recorded round in order. Recording a
+    round first reads the standing tallies back, then rewrites the whole file —
+    the standing tallies decayed by a declared factor, the new round appended
+    — LF on every platform, so the same inputs give the same bytes. It is
+    ADVISORY state: nothing here auto-selects the next round's routing, and no
+    gate takes it as evidence.
 """
 
 import argparse

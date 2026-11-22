@@ -34,29 +34,27 @@ imported by that one module (ADOPTING.md §6).
 
 Component: CMP-006
 
-Contracts: IF-076, IF-143 — the seams this module declares (process.md §8; rows
-of record in docs/requirements/interfaces.toml).
+The TEXT predicate surface `trace.py` imports is rows in, findings out, and
+nothing else: no I/O, no git, no filesystem, no argv.
+`provenance_findings(srs, llrs, tcs)` and `form_findings(srs, llrs, tcs)`
+return GATING findings that join `trace.py --strict`'s exit code;
+`ac_advisories`, `paraphrase_advisories`, `provenance_advisories`,
+`off_spine_advisories`, `sr_artifact_advisories`, `sn_artifact_advisories`,
+`sr_fanout_advisories` and `ears_advisories` return warn-only advisories
+that never join a failure set. `refs`, `is_example` and `is_drafted` are the
+shared row primitives, re-exported from `kitlib.spine` so the dependency
+runs one way. The finding STRINGS are part of this promise: the golden
+files assert them byte for byte, so a reworded finding is a deliberate,
+reviewed change. `declared_parties(text)` and `endpoint_problem(endpoint,
+cmp_ids, parties)` are the interface endpoint grammar `trace.interface_findings`
+judges each endpoint cell by.
 
-Contract IF-076: the spine-row TEXT predicate surface `trace.py` imports. Rows in,
-    findings out, and nothing else: no I/O, no git, no filesystem, no argv.
-    `provenance_findings(srs, llrs, tcs)` and `form_findings(srs, llrs, tcs)`
-    return GATING findings that join `trace.py --strict`'s exit code;
-    `ac_advisories`, `paraphrase_advisories`, `provenance_advisories`,
-    `off_spine_advisories`, `sr_artifact_advisories`, `sn_artifact_advisories`,
-    `sr_fanout_advisories` and `ears_advisories` return warn-only advisories
-    that never join a failure set. `refs`, `is_example` and `is_drafted` are the
-    shared row primitives, re-exported from `kitlib.spine` so the dependency
-    runs one way. The finding STRINGS are part of this promise — the golden
-    files assert them byte for byte, so a reworded finding is a deliberate,
-    reviewed change.
-Contract IF-143: `norm_module(endpoint)` — the naming-convention-neutral module
-    key, re-exported here from `kitlib.spine`: a leading `project-trajectory/`,
-    any source extension and a trailing `/__init__` are stripped, so
-    `scripts/x` on a seam endpoint and `project-trajectory/scripts/x.py` on a
-    design row reduce to one key. It is the SAME normalizer
-    `trace.interface_findings` joins on, so a component placement and the
-    advisory that reports an unresolvable endpoint can never answer
-    differently.
+`norm_module(endpoint)` — the naming-convention-neutral module
+key, re-exported here from `kitlib.spine`: a leading `project-trajectory/`,
+any source extension and a trailing `/__init__` are stripped, so
+a short `scripts/x` and `project-trajectory/scripts/x.py` on a design row
+reduce to one key, the key a design row's module and a file's declaration
+meet on.
 
 Requirements: LLR-004 (ac_advisories), LLR-133 (provenance_findings),
 LLR-134 (form_findings), LLR-135 (paraphrase_advisories),
@@ -1300,42 +1298,55 @@ def sr_fanout_advisories(srs, llrs, bound=SR_FANOUT_MAX):
     return out
 
 
-def _module_shaped(endpoint):
-    """Is this endpoint a MODULE reference at all — the only class the
-    reachability question (`trace.interface_findings`: does a module-shaped
-    owner reach a requirement?) ranges over?
-
-    Everything else in the endpoint grammar (module-or-path-or-`external:`) is
-    wi455's counterpart-TRANSFORM business, not a disagreement: 45 of 122
-    counterparts are non-module facts (B2, measured), and reading a data file or a
-    named external actor as "the module the owner should have named" would put a
-    false accusation in the report for every one of them.
-
-    So: an `external:` claim is out (someone declared it outside this tree), a
-    `docs/` path is out (the documentation tree holds no modules), an endpoint
-    carrying WHITESPACE is out (`agent CLI`, `downstream adopter` — prose names an
-    actor, never a path), and a path whose extension is not a source extension is
-    out (`.csv`, `.toml`, `.md`). A path with no extension stays IN, because the
-    short arch-map form (`scripts/check_perf`) is spelled exactly that way.
-
-    KNOWN OVER-DETECT, accepted: a bare DIRECTORY endpoint is indistinguishable
-    from a short-form module path without touching the filesystem, and this
-    predicate is pure. Warn-only, so the cost is one hint to argue with."""
-    e = (endpoint or "").strip().replace("\\", "/")
-    if not e or e.startswith(EXTERNAL_ENDPOINT_PREFIX) or e.startswith("docs/"):
-        return False
-    if any(ch.isspace() for ch in e):
-        return False
-    if "." not in e.rsplit("/", 1)[-1]:
-        return True
-    return e.endswith(MODULE_EXTS)
+# A party line in the interface registry's leading comment block: the CLOSED
+# list an `external:` endpoint names from (revision 35's owner form).
+_PARTY_LINE_RE = re.compile(r"^#\s*External party:\s*(\S.*?)\s*$")
+_CMP_ID_RE = re.compile(r"^CMP-\d+$")
+_REQUIREMENT_ID_RE = re.compile(r"^(?:SN|SR|LLR|TC|IF|B|EXT|REL|DA|SUR)-\d+$")
 
 
-def module_endpoints(cell):
-    """The MODULE-shaped endpoints of one `;`-joined endpoint cell.
+def declared_parties(text):
+    """The parties the interface registry declares: each line of its leading
+    comment block reading `# External party: <name>`, the name stripped. The
+    block ends at the first line that is neither blank nor a comment, so a
+    line under a table declares nothing.
 
-    Split on `;` ONLY — an endpoint may legitimately contain a space or a comma,
-    and reading a multi-endpoint cell as one string is how a real seam gets
-    reported as a disagreement (IF-097 names three modules)."""
-    parts = (p.strip() for p in (cell or "").split(";"))
-    return [p for p in parts if _module_shaped(p)]
+    Implements: SR-159, LLR-041
+    """
+    parties = set()
+    for line in (text or "").splitlines():
+        stripped = line.strip()
+        if stripped and not stripped.startswith("#"):
+            break
+        found = _PARTY_LINE_RE.match(stripped)
+        if found:
+            parties.add(found.group(1))
+    return frozenset(parties)
+
+
+def endpoint_problem(endpoint, cmp_ids, parties):
+    """Why one interface endpoint is not one of its two forms, or None.
+
+    An endpoint is a `CMP-###` id a live component row has, or `external:`
+    followed by a party the registry header declares. A requirement or design
+    id is named as such (the owner is never a requirement id), and anything
+    else, a path or a module among it, is not an endpoint at all.
+
+    Implements: SR-159, LLR-041
+    """
+    e = (endpoint or "").strip()
+    if e.startswith(EXTERNAL_ENDPOINT_PREFIX):
+        party = e[len(EXTERNAL_ENDPOINT_PREFIX) :].strip()
+        if not party:
+            return "names no party after `external:`"
+        if party not in parties:
+            return (
+                "names a party the registry header does not declare (add "
+                "`# External party: {}` there in the row's own commit)".format(party)
+            )
+        return None
+    if _CMP_ID_RE.match(e):
+        return None if e in cmp_ids else "names no live component row"
+    if _REQUIREMENT_ID_RE.match(e):
+        return "names a requirement or design id — an endpoint is a component"
+    return "is not a component id or an `external:` party"

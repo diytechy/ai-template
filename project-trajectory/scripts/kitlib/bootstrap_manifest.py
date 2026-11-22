@@ -7,10 +7,7 @@ selection, policy migration, and writes remain in ``bootstrap``.
 
 Component: CMP-009
 
-Contracts: IF-262 — the interface seam this file declares (process.md §8; row
-of record in docs/requirements/interfaces.toml).
-
-Contract IF-262: ``bootstrap`` imports and re-exports ``MAPPING`` and
+``bootstrap`` imports and re-exports ``MAPPING`` and
 ``mapping_entries`` from this module. Consumers receive the ordered scaffold
 inventory as source/destination/reference triples; this module performs no I/O
 and imports no command-layer sibling.

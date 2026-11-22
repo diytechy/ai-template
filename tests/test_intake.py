@@ -2255,9 +2255,9 @@ def context_repo(tmp_path):
     # states no `Data` — this fixture is the only place that fallback runs.
     (req / "interfaces.csv").write_text(
         "IF-ID,Owner,Consumers,Channel,Contract,Version,"
-        "Status,Component,Notes\n"
-        'IF-001,scripts/widget,scripts/check,cli,"widget CLI: exits 1 on '
-        'a bad widget",v1,Accepted,CMP-001,\n',
+        "Status,Notes\n"
+        'IF-001,CMP-001,CMP-001,cli,"widget CLI: exits 1 on '
+        'a bad widget",v1,Accepted,\n',
         encoding="utf-8",
         newline="\n",
     )
@@ -2314,7 +2314,7 @@ def test_the_context_block_renders_from_real_joins_in_failure_cost_order(tmp_pat
     assert "LLR-001" in text and "src/widget.py" in text and "widget_f" in text
     assert "tests/test_widget.py" in text  # the TC evidence map
     assert "docs/knowledge/widgetry" in text  # LLR.Component -> CMP.Knowledge
-    assert "IF-001" in text  # IF seams via LLR.Module
+    assert "IF-001" in text  # IF seams via LLR.Component
     assert "docs/reviews/WI-002-REVIEW-A.md" in text  # precedent reviews
     # ...in the ruled order (content order by failure cost: the refuted
     # precedent first, premise risk second, then the maps).

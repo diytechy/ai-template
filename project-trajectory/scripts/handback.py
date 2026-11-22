@@ -65,24 +65,21 @@ decides which outcome a cycle reached, and the writes live here.
 
 Component: CMP-008
 
-Contracts: IF-137 — the interface seam this module declares (process.md §8; row
-of record in docs/requirements/interfaces.toml).
-
-Contract IF-137: the terminal-outcome WRITES for the two lane closes that are
-    not a clean merge. `close_partial(root, branch, reason, fields)` commits the
-    lane's work as-is, writes an IMMUTABLE per-close report under
-    `docs/handbacks/` in the SAME commit as the move, and moves every claimed
-    spec to the terminal `partial/` folder; it returns `(closed WI ids, None)`
-    or `(None, refusal)` and refuses rather than half-closing.
-    `quarantine(root, branch, why)` is the ruled failure arm: the failing diff is
-    kept as a checks-inert `.patch` under the work tree, every non-bookkeeping path
-    is reverted to the lane's merge base, and it returns a refusal string or
-    None. Neither function DECIDES which outcome a lane reached — that judgement
-    is the caller's — so decision and write stay in separate modules and every
-    lane still ends in a merge. Under the loop marker every commit either makes
-    carries the `Loop-Session` trailer, and a staged tree that would change a
-    status the acceptance level holds for an operator is refused before it is
-    written.
+The terminal-outcome WRITES for the two lane closes that are
+not a clean merge. `close_partial(root, branch, reason, fields)` commits the
+lane's work as-is, writes an IMMUTABLE per-close report under
+`docs/handbacks/` in the SAME commit as the move, and moves every claimed
+spec to the terminal `partial/` folder; it returns `(closed WI ids, None)`
+or `(None, refusal)` and refuses rather than half-closing.
+`quarantine(root, branch, why)` is the ruled failure arm: the failing diff is
+kept as a checks-inert `.patch` under the work tree, every non-bookkeeping path
+is reverted to the lane's merge base, and it returns a refusal string or
+None. Neither function DECIDES which outcome a lane reached — that judgement
+is the caller's — so decision and write stay in separate modules and every
+lane still ends in a merge. Under the loop marker every commit either makes
+carries the `Loop-Session` trailer, and a staged tree that would change a
+status the acceptance level holds for an operator is refused before it is
+written.
 """
 
 from __future__ import annotations

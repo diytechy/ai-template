@@ -7,16 +7,16 @@ honest while four things hold, so they are asserted here over the LIVE
 registry rather than argued in a log:
 
 * **no retired cell survives** — a row still carrying `provider`, `req_refs`,
-  `signal` or `signal_note` (or the WI-455 trio before them) would read as
-  empty to every updated reader while looking authored to a human;
+  `signal`, `signal_note` or `component` (or the WI-455 trio before them)
+  would read as empty to every updated reader while looking authored to a
+  human;
 * **the far side is exactly one of `requestors` / `consumers`** — the key is
   the direction, and a row naming both or neither has none;
-* **every owner is one THING, never an id** — the requirement a seam answers
-  to is reached through the owner, and an `SR-###`/`LLR-###` in the cell is
-  the shape the ruling retired;
-* **every owner resolves** — a module in the tree, a file or directory that
-  exists, or a marked `external:` party — and is never on its own consumer
-  side, which would be a module talking to itself;
+* **every owner is one component, never a requirement id or a file** — an
+  `SR-###`/`LLR-###` or a path in the cell is a shape the rulings retired;
+* **every endpoint resolves** — a component id a live row has, or an
+  `external:` party the registry header declares (revision 35); a component
+  may sit on both sides of its own row, files of it reading what it emits;
 * **every channel is in the closed set**, so the typed statement types.
 
 The legacy `contract` cell is deliberately NOT asserted absent here: it is
@@ -45,9 +45,11 @@ RETIRED = {
     "direction",
     "this_project",
     "counterpart",
+    "component",
 }
-_ID_SHAPED = re.compile(r"^(?:SN|SR|LLR|TC|IF|CMP|B|EXT|REL)-\d+$")
-_SUFFIXES = ("", ".py", ".md", ".toml", ".csv", ".ini", ".html", ".yml")
+_ID_SHAPED = re.compile(r"^(?:SN|SR|LLR|TC|IF|B|EXT|REL)-\d+$")
+LIVE_CMPS = ROOT / "docs" / "requirements" / "components.toml"
+TRACE_TEXT = load_script("trace_text")
 
 
 def _live_rows():
@@ -59,13 +61,9 @@ def _live_rows():
 
 
 def _resolves(endpoint):
-    if endpoint.startswith("external:"):
-        return bool(endpoint[len("external:") :].strip())
-    for base in (endpoint, "project-trajectory/" + endpoint):
-        for suffix in _SUFFIXES:
-            if (ROOT / (base + suffix)).exists():
-                return True
-    return False
+    cmps = set(tomllib.loads(LIVE_CMPS.read_text(encoding="utf-8"))["component"])
+    parties = TRACE_TEXT.declared_parties(LIVE_IFS.read_text(encoding="utf-8"))
+    return TRACE_TEXT.endpoint_problem(endpoint, cmps, parties) is None
 
 
 def test_no_live_row_carries_a_retired_cell():
@@ -93,18 +91,16 @@ def test_no_live_row_carries_a_retired_cell():
     assert [rid for rid, cells in raw.items() if not cells.get("channel")] == []
 
 
-def test_every_owner_is_one_thing_that_resolves_and_is_not_its_own_consumer():
+def test_every_endpoint_is_a_live_component_or_a_declared_party():
     for row in _live_rows():
         rid = row["IF-ID"]
         owner = KIT.seam_owner(row)
         assert owner and ";" not in owner, rid
         assert not _ID_SHAPED.match(owner), rid
-        assert _resolves(owner), (rid, owner)
         _inbound, far = KIT.seam_far_side(row)
         assert far, rid
-        # An endpoint is never on both sides of its own seam: that reads as a
-        # module talking to itself, which is no seam at all.
-        assert KIT.norm_module(owner) not in {KIT.norm_module(c) for c in far}, rid
+        for endpoint in [owner] + far:
+            assert _resolves(endpoint), (rid, endpoint)
 
 
 def test_every_channel_is_in_the_closed_set():

@@ -402,7 +402,10 @@ def test_release_trigger_rejudge_brief_still_composes(tmp_path):
     assert values["tc"] == "TC-002"
 
 
-def test_component_trigger_matches_interface_owner_module_name(tmp_path):
+def test_component_trigger_reads_no_interface_row(tmp_path):
+    # An interface row names components, not files (WI-1022), and its
+    # placement cell retired, so no interface row lends the trigger a path: a
+    # change to a file only an interface row once named does not fire it.
     root, _ = cadence_repo(tmp_path, "component:CMP-002")
     _write(
         root,
@@ -412,7 +415,7 @@ def test_component_trigger_matches_interface_owner_module_name(tmp_path):
     _write(root, "project-trajectory/scripts/logic.py", "# component changed\n")
     close_work(root, 10)
     sha = close_work(root, 11)
-    assert case_due(root, sha)
+    assert not case_due(root, sha)
 
 
 def drafts_by_case(drafts):

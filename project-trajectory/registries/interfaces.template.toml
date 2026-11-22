@@ -30,21 +30,21 @@
 #
 # A row with neither key is an internal seam. That absence IS the statement —
 # there is no column to set to "internal" and get wrong. A row whose owner AND
-# far side are all `external:` parties has no in-tree endpoint — no module
-# whose header can hold our reading of the surface — so it is not a seam of
-# this repo, and `trace.py --strict` refuses it.
+# far side are all `external:` parties has no in-tree endpoint — no component
+# whose file can hold our reading of the surface — so it is not a seam of
+# this repo, and `trace.py --strict` refuses it. A row names no file in an
+# endpoint cell: its owner and far side are components and parties.
 #
 # THE FIELDS.
 #
 # owner — REQUIRED. The providing THING, in the one spelling `consumers` uses:
-# a module path (`scripts/check`), a file or directory path (`docs/stack.ini`,
-# `docs/work/`), or an `external:` party (`external:git`). NEVER a requirement
-# or design id: the requirement the seam answers to is REACHED through the
-# owner — the design rows whose `module` names it, or the `Implements:` line
-# in its header — and is not stated on the row. An id-shaped owner is a
-# finding; a module-shaped owner that reaches no requirement is a warning. A
-# GENERATED FILE IS OWNED BY THE MODULE THAT WRITES IT; a hand-edited file is
-# owned as itself and declares in its own header.
+# a component id (`CMP-###`, a live row of your components registry) or an
+# `external:` party the list below declares (`external:git`). Never a
+# requirement id, and never a file: the owner is the PRODUCING component. A
+# generated file is owned by the component of the file that writes it; a
+# hand-edited file by the component its own header declares; a directory
+# medium by the component that produces what lands there. Any other owner is
+# a `trace.py --strict` finding.
 #
 # requestors / consumers — THE FAR SIDE NAMES THE DIRECTION; exactly ONE of the
 # two is set, a LIST either way. `requestors` put information INTO the surface
@@ -53,11 +53,16 @@
 # the exit code, the stdout). The owner defines the surface in both cases; the
 # key says which way the information runs, so one row is one direction by
 # construction. Both or neither is a finding. Name the sides you have
-# MEASURED, and an open-ended class as `external:<class>`. Every endpoint cell
-# is validated against the tree, warn-first: an endpoint that resolves to
-# nothing is named individually. The `external:` PREFIX says an endpoint is
-# deliberately outside this tree; a path your `docs/declared-absences`
-# declares counts as resolved.
+# MEASURED. Each entry takes the owner's forms, a component id or a declared
+# `external:` party; anything else is a `trace.py --strict` finding. A `call`
+# row owned by component Y naming X among its requestors is what covers an
+# import from a file of X into a file of Y (the cross-component rule).
+#
+# external parties — THE CLOSED LIST an `external:` endpoint names from: one
+# line per party in this header, reading exactly `# External party: <name>`
+# (for example `# External party: git`). A row introducing a new party adds
+# its line in the same commit; an unlisted party is a `trace.py --strict`
+# finding. This template declares none.
 #
 # channel — REQUIRED, CLOSED: what crosses, typed.
 #     cli        an invocation surface: argv flags and arguments
@@ -102,8 +107,6 @@
 # means settled AND DEMONSTRATED, and an acceptance says the seam is AGREED.
 # Flipping a cell to `Accepted` is an operator act in a reviewed commit.
 #
-# component — OPTIONAL `CMP-###` membership tag.
-#
 # bridged_by / coincident — OPTIONAL, and read only on a BOUNDARY row (one with
 # a tie-back above). A boundary seam's reading reaches a stakeholder's outcome
 # either through claims about the world, or because the reading IS the outcome:
@@ -117,31 +120,32 @@
 # `trace.py --strict` finding. Neither is checked until your assumptions registry
 # holds its first real (non-`-000`) row: until then nothing here is asked. `bridged_by` is a pointer (moving it re-opens no
 # acceptance); `coincident` is a statement the row makes, so declaring or changing
-# it re-opens the row's. No requirement id goes here: the requirement a seam
-# answers is reached through its owner, as above.
+# it re-opens the row's. No requirement id goes here: an interface lists no
+# requirement it carries.
 #
 # notes — OPTIONAL free prose; argument, never citation. Honesty valve: the
 # FIRST word `source` (produces output, consumes nothing declared) marks the
 # row's owner, `sink` (consumes, produces nothing) marks its far side,
 # silencing the missing-seam coverage warn for that side.
 #
-# THE GATE IS ARMED: a row whose owner declares it but states no `Contract
-# IF-###:` body is a `check_trajectory --strict` finding — an interface with
-# no definition — and so is a source whose header the contract grammar refuses
-# (its declared rows count as unstated). An owner that declares NOTHING only
-# WARNS: the row is on the migration list, visible in the reference's summary
-# line, and is not gated. An `external:`-owned
-# row is stated by the kit module on its FAR SIDE (the consumer that reads the
-# external surface, or the requestor that drives it), the one in-tree home of
-# our reading of that surface. The retired cells — `contract`, `provider`,
-# `req_refs`, `signal`, `signal_note` — are `trace.py --strict` findings
-# wherever they still appear. A CSV registry may carry the same `#` header:
-# every kit reader strips a leading comment block before the header row.
+# THE GATE IS ARMED, AND IT IS UNIQUENESS: at most one file states each
+# `Contract IF-###:` body, over the scan surface — the files under your
+# `[paths] src` and the files `docs/stack.ini` `[arch-map] headers` lists.
+# Zero bodies is valid (the row is the contract until code states it); two or
+# more is a `check_trajectory --strict` finding. Where a body exists, its
+# file's `Component:` header names the owner, or, for an `external:`-owned
+# row, a component the row lists among its consumers or requestors. A file
+# declaring an id it states no body for, and a header the contract grammar
+# refuses, are findings too. The retired cells — `contract`, `provider`,
+# `req_refs`, `signal`, `signal_note`, `component` — are `trace.py --strict`
+# findings wherever they still appear. A CSV registry may carry the same `#`
+# header: every kit reader strips a leading comment block before the header
+# row.
 
 [interface.IF-000]
-owner = "EXAMPLE - delete on first real entry"
-requestors = ["a-side-that-puts-information-INTO-the-owner - set THIS or consumers, never both"]
-consumers = ["a-side-that-takes-what-the-owner-emits - set THIS or requestors, never both"]
+owner = "CMP-000"
+requestors = ["CMP-000"]
+consumers = ["external:EXAMPLE - a component that takes what the owner emits, or a declared party; set THIS or requestors, never both"]
 channel = "exit-code"
 data = "0 pass | 1 fail | 2 usage - the alphabet when finite, else a schema pointer, 160 chars at most"
 rationale = """WHY the seam is drawn here - the argument, never the citation: what breaks without the seam and which alternative lost, in prose that stands alone, with no work-item id, ruling, sitting, review-round or open-item reference, decision id, edit verb or date stamp - that history belongs in the log (process.md section 3). Empty is allowed; delete the key rather than leaving it blank."""
@@ -153,5 +157,4 @@ interface_from_external = "B-000"
 interface_to_external = "B-000"
 bridged_by = ["DA-000"]
 coincident = "WHY this seam's reading IS the stakeholder's outcome, when no assumption stands between them - a boundary row keeps bridged_by OR this, and the example carries both only because a template declares every column the schema states."
-component = "CMP-000"
 notes = """`carried_by` here names IF-000 only because a template declares every column the schema states and IF-000 is the only id in this file - a row may NOT carry itself, and the check says so. DELETE the key unless this seam really rides a larger one. Honesty valve: put the word source (produces output, consumes nothing declared) or sink (consumes, produces nothing) here to silence the missing-seam coverage warn - source marks this row's owner, sink marks its consumers. The example carries BOTH tie-back keys because a template declares every column the schema states - a real row carries only the crossing direction(s) it realizes, and MOST rows carry neither, so delete them unless this row really realizes a declared boundary crossing. A tie-back on an internal seam is the one error this schema cannot catch for you: a crossing id that resolves is indistinguishable from a crossing id that belongs."""

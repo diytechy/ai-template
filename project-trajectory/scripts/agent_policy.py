@@ -8,10 +8,10 @@ harnessing, assignment state, and telemetry remain in ``agent_common``.
 
 Component: CMP-008
 
-Contracts: IF-261, IF-291 — the interface seam this file declares (process.md §8; row
+Contracts: IF-291 — the interface seam this file declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
 
-Contract IF-261: ``agent_common`` imports and re-exports this module's policy
+``agent_common`` imports and re-exports this module's policy
 readers and findings. A docs path or parsed policy is supplied; normalized dial
 values, authority decisions, or explicit refusal strings are returned. The
 module writes nothing and launches only the existing derived-stage fallback.

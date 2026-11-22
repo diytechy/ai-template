@@ -7,20 +7,21 @@ unchanged.
 
 Component: CMP-009
 
-Contracts: IF-052, IF-227 — the seams this module declares (process.md §8;
-rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-227 — the seam this module declares (process.md §8; row of
+record in docs/requirements/interfaces.toml).
 
-Contract IF-052: the dashboard's Process tab reads the recorded derived stage
-    through `_stage_value(root)`, which the gen_trajectory facade re-exports
-    and traj_panels.process_panel calls. It returns the `stage` field of
-    `docs/stage`, addressed BY NAME rather than by line position, and None in
-    every case where the repo has no readable stage record — the file absent,
-    or carrying a value the stage vocabulary does not know. None is the tab's
-    OMIT condition, so a stage-less repo renders byte-identically instead of
-    showing a blank rung. The read is of the COMMITTED record and never of a
-    fresh derivation: this module is a source for a generated artifact whose
-    freshness is gated elsewhere, so the page and the file it cites always
-    describe one commit.
+The dashboard's Process tab reads the recorded derived stage
+through `_stage_value(root)`, which the gen_trajectory facade re-exports
+and traj_panels.process_panel calls. It returns the `stage` field of
+`docs/stage`, addressed BY NAME rather than by line position, and None in
+every case where the repo has no readable stage record — the file absent,
+or carrying a value the stage vocabulary does not know. None is the tab's
+OMIT condition, so a stage-less repo renders byte-identically instead of
+showing a blank rung. The read is of the COMMITTED record and never of a
+fresh derivation: this module is a source for a generated artifact whose
+freshness is gated elsewhere, so the page and the file it cites always
+describe one commit.
+
 Contract IF-227: the per-need assumption view's data, which the gen_trajectory
     facade reads and hands to `traj_views.need_assumption_block`.
     `need_assumptions(root)` returns `{need id: {"assumptions", "joint",

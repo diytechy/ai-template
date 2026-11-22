@@ -24,28 +24,29 @@ surface is unchanged. Stdlib only, Python 3.11+, Windows/POSIX.
 
 Component: CMP-008
 
-Contracts: IF-065, IF-189, IF-224 — the interface seams this module declares (process.md
-§8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-189, IF-224 — the interface seams this module declares
+(process.md §8; rows of record in docs/requirements/interfaces.toml).
 
-Contract IF-065: the shared coordinator primitives the session engine and the
-    serial integrator both stand on. The typed exit codes and `END_STATES`; the
-    `git` / `head_sha` / `head_sha_full` wrappers and the dirty-tree family; the
-    declared-surface reads (`declared_policy`, `read_agent_loop_config`,
-    `pause_reason`, the blackout window) and `stop_banner`; the per-worktree
-    kernel advisory lock, whose held descriptor lives HERE so every caller in a
-    process shares one lock namespace and `acquire_lock` / `release_lock` cannot
-    disagree about what is held; the worker-assignment primitives
-    (`WI_TOKEN_RE`, `sanitize_train`, `parse_wi_id`, `load_wi_registry`,
-    `train_evidence`); `loop_claimed`, the one reader of whether the loop
-    claimed a lane, which the integrator's merge slot reads a lane's claim
-    through and which answers a claim log it cannot read as unreadable, never
-    unclaimed; `parse_map`; `preflight`, the launchability refusal; and
-    the session-log family — every log through one shared writer, with
-    planner/probe/interactive launches through one durable invocation boundary,
-    the regenerated iteration index and telemetry commit — with the generated
-    run-state write. The names
-    were extracted verbatim and `agent_loop` re-exports every historical one, so
-    this layer adds a home without changing a public surface.
+The shared coordinator primitives the session engine and the
+serial integrator both stand on. The typed exit codes and `END_STATES`; the
+`git` / `head_sha` / `head_sha_full` wrappers and the dirty-tree family; the
+declared-surface reads (`declared_policy`, `read_agent_loop_config`,
+`pause_reason`, the blackout window) and `stop_banner`; the per-worktree
+kernel advisory lock, whose held descriptor lives HERE so every caller in a
+process shares one lock namespace and `acquire_lock` / `release_lock` cannot
+disagree about what is held; the worker-assignment primitives
+(`WI_TOKEN_RE`, `sanitize_train`, `parse_wi_id`, `load_wi_registry`,
+`train_evidence`); `loop_claimed`, the one reader of whether the loop
+claimed a lane, which the integrator's merge slot reads a lane's claim
+through and which answers a claim log it cannot read as unreadable, never
+unclaimed; `parse_map`; `preflight`, the launchability refusal; and
+the session-log family — every log through one shared writer, with
+planner/probe/interactive launches through one durable invocation boundary,
+the regenerated iteration index and telemetry commit — with the generated
+run-state write. The names
+were extracted verbatim and `agent_loop` re-exports every historical one, so
+this layer adds a home without changing a public surface.
+
 Contract IF-189: `default_base(root)`, the integration base a claimed branch's
     change is read from by the per-change readability report: the merge base of
     HEAD with the declared trunk, in a single checkout as in a linked worktree;
