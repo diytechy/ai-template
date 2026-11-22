@@ -12224,12 +12224,13 @@ first hold accepted, so a test case re-pointed at a requirement is accepted
 for it at the act that re-accepts it, not at the commit that changed its
 text. An act made on a side branch is ordered at the trunk commit that
 brought it. The record's first commit at its current path is its cut: what
-it carries is dated at or before it, and nothing earlier, in any earlier
-spelling of the record, is read. In a repository that ran
+it carries is dated at or before it while its ledger records an act, and
+nothing earlier, in any earlier spelling of the record, is read. In a repository that ran
 `migrate_vocabulary.py`, the cut is the commit that moved the record. Three
 things read as an order that cannot be read, never a pass: a change to the
-copies that added no ledger entry, a malformed ledger on the walk, and a row
-accepted at the tip that no act accepted (no record, or an empty ledger).
+copies that added no ledger entry, a malformed ledger on the walk (at the
+cut too, as with no ledger or an empty one there), and a row accepted at
+the tip that no act accepted (no record, or an empty ledger).
 `first_acceptance_commits` and `first_association_commits` are replaced by
 `record_acceptances`. `baseline_snapshot._ledger_commits` takes the record's
 other files to walk (`also`) and a tip (`rev`).

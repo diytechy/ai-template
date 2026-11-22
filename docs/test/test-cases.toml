@@ -4629,21 +4629,21 @@ phase = 6
 [test.TC-470]
 verifies = ["SR-217", "LLR-257"]
 level = "Integration"
-method = "A requirement and its test case read Accepted in the registries with no act on record, once with no record at all and once with a record holding only an empty act ledger, and the requirement's code landed."
+method = "A requirement and its test case read Accepted in the registries with no act on record, once with no record at all and once with a record holding only an empty act ledger, and the requirement's code landed. Then the record's first copy holds them accepted beside no act ledger, and beside an empty one, with the code landing after that copy."
 tier = "Full"
-expected = "The test case's order, and with a declared start the requirement's own, is reported unread, never as a pass; the run exits 0, and 1 under --strict."
+expected = "The test case's order, and with a declared start the requirement's own, is reported unread, never as a pass, and never settled by the copy's date; the run exits 0, and 1 under --strict."
 automated = "Yes"
-evidence = "tests/test_check_test_first.py::test_acceptances_no_act_records_are_unread_never_passing"
+evidence = "tests/test_check_test_first.py::test_acceptances_no_act_records_are_unread_never_passing;tests/test_check_test_first.py::test_a_cut_whose_ledger_holds_no_act_is_unread"
 status = "Drafted"
 phase = 6
 
 [test.TC-471]
 verifies = ["SR-217", "LLR-257"]
 level = "Integration"
-method = "A commit rewrites the record's test-case copy, flipping a test case into acceptance, and adds no ledger entry; a later act copies the registry again. Separately, an act whose committed ledger numbers its entry like the one before it."
+method = "A commit rewrites the record's test-case copy, flipping a test case into acceptance, and adds no ledger entry; a later act copies the registry again. Separately, an act whose committed ledger numbers its entry like the one before it, and a record's first copy holding accepted rows beside a ledger that numbers two entries alike, with the code landing after it."
 tier = "Full"
-expected = "The gap and the malformed act are each read as a change no act dated: what they carry is reported unread at their commit, never as a pass and never dated at the later act, and each is listed among the record's gaps."
+expected = "The gap and the malformed act are each read as a change no act dated: what they carry is reported unread at their commit, never as a pass and never dated at the later act, and each is listed among the record's gaps; what the first copy carries beside the malformed ledger is unread too, never settled by its date."
 automated = "Yes"
-evidence = "tests/test_check_test_first.py::test_a_record_change_with_no_act_is_unread_never_dated_later;tests/test_check_test_first.py::test_an_act_whose_ledger_is_malformed_is_unread"
+evidence = "tests/test_check_test_first.py::test_a_record_change_with_no_act_is_unread_never_dated_later;tests/test_check_test_first.py::test_an_act_whose_ledger_is_malformed_is_unread;tests/test_check_test_first.py::test_a_cut_whose_ledger_is_malformed_is_unread"
 status = "Drafted"
 phase = 6

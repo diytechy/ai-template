@@ -875,7 +875,59 @@ def test_acceptances_no_act_records_are_unread_never_passing(
     assert ctf.main(["--root", str(h.root), "--src", "src", "--strict"]) == 1
 
 
+def _cut_without_an_act(root, ledger):
+    """The record's first copy holds SR-001 and TC-001 accepted beside a
+    ledger that is `absent`, `empty` or `malformed`, and SR-001's code lands
+    after it, so a date at or before the cut would settle the order."""
+    h = History(root)
+    h.sr("SR-001", "Accepted").tc("TC-001", ["SR-001"], "Accepted")._registries()
+    for rel in TABLES:
+        if (h.root / rel).is_file():
+            dest = h.root / RECORD / rel
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(h.root / rel, dest)
+    if ledger == "empty":
+        h.write(LEDGER, "# ACCEPTANCE ACTS, appended by `intake.py snapshot`.\n")
+    elif ledger == "malformed":
+        entry = (
+            '[[act]]\nseq = 1\ndate = "2026-11-22"\naccepted = ["SR-001", "TC-001"]\n'
+            'reaccepted = []\ncopied = ["{}", "{}"]\n'.format(SR_REG, TC_REG)
+        )
+        h.write(LEDGER, entry + "\n" + entry)  # two entries numbered 1
+    cut = h.commit("the record's first copy", registries=False)
+    landing = h.write("src/app.py", implements("SR-001")).commit("code")
+    return h, cut, landing
+
+
+@pytest.mark.parametrize("ledger", ["absent", "empty"])
+def test_a_cut_whose_ledger_holds_no_act_is_unread(tmp_path, ctf, ledger):
+    """The record's first copy holds accepted rows, but its ledger holds no
+    act: no act vouches for the copy, so what it carries is unread, never
+    settled by the cut's date, although the code landed after the cut.
+
+    Implements: TC-470"""
+    h, cut, landing = _cut_without_an_act(tmp_path / "repo", ledger)
+    assert ctf.record_acceptances(h.root).cuts == [cut]
+    findings = _judge(ctf, h.root)
+    assert as_tuples(findings) == [("SR-001", landing, [])]
+    assert as_unread(findings) == [("SR-001", [("TC-001", cut)])]
+    assert ctf.main(["--root", str(h.root), "--src", "src", "--strict"]) == 1
+
+
 # --- TC-471: a change to the record with no act, and a malformed ledger -------
+
+
+def test_a_cut_whose_ledger_is_malformed_is_unread(tmp_path, ctf):
+    """The record's first copy holds accepted rows beside a ledger that
+    numbers two entries alike: which acts it records cannot be read, so what
+    the cut carries is unread, never settled by the cut's date.
+
+    Implements: TC-471"""
+    h, cut, landing = _cut_without_an_act(tmp_path / "repo", "malformed")
+    findings = _judge(ctf, h.root)
+    assert as_tuples(findings) == [("SR-001", landing, [])]
+    assert as_unread(findings) == [("SR-001", [("TC-001", cut)])]
+    assert ctf.main(["--root", str(h.root), "--src", "src", "--strict"]) == 1
 
 
 def test_a_record_change_with_no_act_is_unread_never_dated_later(tmp_path, ctf):

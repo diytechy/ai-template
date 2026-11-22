@@ -218,7 +218,9 @@ decides.
   `baseline_snapshot._ledger_commits`, each one's copies against its
   parents'. An act's commit dates what its copies first hold accepted. The
   record's first commit at its current path is its cut: what it carries is
-  at or before it, and the record's earlier spelling is never read (D3;
+  at or before it while its ledger records an act (unread with none, an
+  empty or a malformed one), and the record's earlier spelling is never
+  read (D3;
   the coordinator's ruling of 2026-11-22). Since the cut, every change to
   the copies that carries a flip or a new pair adds a ledger entry. LLR-257's
   text says so.

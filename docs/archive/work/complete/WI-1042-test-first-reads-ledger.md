@@ -46,8 +46,10 @@ reader and acceptance-act rule:
   carried into acceptance and each pair new in its copies, so a re-pointing
   is accepted at the act that re-accepts it, not at its text commit;
 - **the cut** (no parent holds the record at its current path) dates what it
-  carries at or before itself, and nothing before it is read; here it is the
-  vocabulary move `2bee2b551`;
+  carries at or before itself while its ledger records an act, and nothing
+  before it is read; with no ledger at the cut, an empty one or a malformed
+  one, what it carries is unread (review round 1); here the cut is the
+  vocabulary move `2bee2b551`, whose ledger holds 182 acts;
 - **a gap** (a flip or a new pair with no entry), and a commit whose ledger
   or its parent's is malformed, leave what they carry unread, never dated at
   a later act.
@@ -76,9 +78,11 @@ prints, at `6915cde7d` (57 s) and at `4f62438e5` (15 s): "test-first: OK -
 no requirement accepted since the declared start f6dd5b87a1 has a test case
 accepted after its implementation landed or not accepted"; `--strict` exits
 0. The cut reached trunk at `f6dd5b87a`, the declared start, so the 138
-requirements it carries are out of scope. SR-247, the one requirement an act
-accepted after the cut (seq 183, `9b377be1e` on `maint/vocabulary`), is placed
-at that same commit.
+requirements it carries are out of scope. SR-247 is the one requirement an
+act accepted after the cut: that act's own commit is `9b377be1e` (seq 183),
+after the cut on the side branch `maint/vocabulary`, and it reaches trunk's
+first-parent line at `f6dd5b87a`, the declared start, so SR-247 is out of
+scope too.
 <!-- fig: cmd="python project-trajectory/scripts/check_test_first.py --root . --src project-trajectory/scripts" rev="6915cde7d and 4f62438e5" -->
 
 **Trust states and their tests (Done-when 4).** Each act in the tests is
@@ -87,10 +91,11 @@ taken with `copy_live`, the producer. An act's commit dates its rows:
 `test_an_act_on_a_side_branch_is_ordered_where_it_reached_trunk` (TC-468).
 The cut: `test_the_record_before_its_cut_is_never_read` (TC-469), over a
 record in the earlier spelling moved on a side branch. No ledger or an empty
-one: `test_acceptances_no_act_records_are_unread_never_passing` (TC-470). A
-gap and a malformed ledger:
-`test_a_record_change_with_no_act_is_unread_never_dated_later` and
-`test_an_act_whose_ledger_is_malformed_is_unread` (TC-471). A shallow clone:
+one: `test_acceptances_no_act_records_are_unread_never_passing`, and at the
+cut, `test_a_cut_whose_ledger_holds_no_act_is_unread` (TC-470). A gap and a
+malformed ledger: `test_a_record_change_with_no_act_is_unread_never_dated_later`,
+`test_an_act_whose_ledger_is_malformed_is_unread`, and at the cut,
+`test_a_cut_whose_ledger_is_malformed_is_unread` (TC-471). A shallow clone:
 the existing `test_a_shallow_clone_is_reported_unreadable_never_passing`. The
 TC-250 cases moved onto acts.
 
@@ -116,6 +121,19 @@ TC-250 cases moved onto acts.
 - `trace.py --root . --strict` and `check_trajectory.py --root . --strict`:
   exit 0. `plan_coverage.py --item`: OK, 7 clauses. The unfiltered suite was
   not run.
+- Review round 1 (the commit after `18afb666e`): the cut's ledger is
+  validated. The three new cut tests failed on `18afb666e`'s code, `3 failed
+  in 29.92s`, each `[] == [...]` (the cut's date settled the order). After
+  the fix: `tests/test_check_test_first.py` `43 passed in 195.96s
+  (0:03:15)`; it and the modules the fix reaches (`test_acceptance_record`,
+  `test_bootstrap`, `test_commit_floor_census`, `test_module_size_ratchet`,
+  `test_rule_sync`, `test_resync_pack`, `test_check_resync`,
+  `test_dogfood_sync`, `test_import_layers`, `test_complexity_ratchet`):
+  `285 passed, 1 skipped in 575.67s (0:09:35)`; `run_menu.py smoke`: `3717
+  passed, 3 skipped, 18 warnings in 123.05s (0:02:03)`, the CPU budget WARN
+  only; `trace.py --strict` and `check_trajectory --strict` exit 0. The
+  verdict here is unchanged.
+  <!-- fig: cmd="python -m pytest -q -n auto --basetemp D:/rt1042/t tests/test_check_test_first.py <the 10 modules named>; python project-trajectory/scripts/run_menu.py smoke" rev="the review-round commit (its tree before the commit); the red run on 18afb666e's code under the new tests" -->
 
 **Sizes.** `baseline_snapshot.py` 964 -> 966 SLOC and `check_test_first.py`
 342 -> 410, both under the 1000 threshold. The complexity ratchet is

@@ -63,9 +63,12 @@ anything happened.
 AN ACCEPTANCE WITHOUT AN EXACT DATE. The record's first commit at its current
 path is its CUT. Nothing before it is read, in whatever spelling the record had
 then (D3: no compatibility readers; formats in git history are cut cleanly),
-and each acceptance its copies carry was made AT OR BEFORE it: a first copy
-cannot tell an acceptance it made from one it found. In this repository the
-cut is the vocabulary move, which reached trunk at the declared start. A row
+and each acceptance its copies carry was made AT OR BEFORE it, while its act
+ledger records an act: a first copy cannot tell an acceptance it made from
+one it found. With no ledger at the cut, an empty one or a malformed one, no
+act stands behind the copies, and what they carry is unread. In this
+repository the cut is the vocabulary move, which reached trunk at the
+declared start. A row
 moved into `Accepted` from a word outside the closed status vocabulary (a
 rename, not the act) was likewise accepted at or before its act. Such a date
 still settles the order when it falls at or before the landing (for a
@@ -371,15 +374,29 @@ def _placed(root, sha, line, index):
     return lo
 
 
+def _cut_ledger_unread(root, sha):
+    """Why the cut at `sha` cannot vouch for what its copies carry, or None
+    when its act ledger records an act: with no ledger, an empty one or a
+    malformed one, no act stands behind the copies (the Trust ruling)."""
+    text = git_out(root, ["show", "{}:{}".format(sha, _LEDGER)])
+    try:
+        acts = baseline_snapshot.parse_acts(text)
+    except baseline_snapshot.ActLedgerError:
+        return LEDGER_UNREADABLE
+    return None if acts else UNRECORDED
+
+
 def _what_commit(root, sha, befores):
     """`(kind, at)` for one record commit, `befores` being its parents' record
     (None for a parent without one): the CUT when no parent holds the record,
-    whose copies carry acceptances made at or before it; an ACT when it added a
+    whose copies carry acceptances made at or before it while its ledger
+    records an act, and unread acceptances when it holds no ledger, an empty
+    one or a malformed one (`_cut_ledger_unread`); an ACT when it added a
     ledger entry, which dates what it carries exactly; otherwise a GAP, a
     change no act made, and a malformed ledger at it or its parent reads the
     same way, since which acts it added cannot be read."""
     if all(b is None for b in befores):
-        return "cut", Acceptance(sha, False)
+        return "cut", Acceptance(sha, False, _cut_ledger_unread(root, sha))
     try:
         added = baseline_snapshot._acts_at(root, sha)
     except baseline_snapshot.ActLedgerError:
@@ -420,7 +437,8 @@ def record_acceptances(root, rev="HEAD", line=None):
     accepted while it names the requirement, directly or through a design row
     whose `SR-Refs` name it in that same copy, so a re-pointing is dated at
     the act that re-accepts it. The cut dates what it carries at or before
-    itself and nothing before it is read; a gap leaves what it carries unread,
+    itself while its ledger records an act, and nothing before it is read; a
+    cut whose ledger records none, and a gap, leave what they carry unread,
     and a later act never re-dates a row or pair already recorded.
 
     Implements: SR-217, LLR-257
