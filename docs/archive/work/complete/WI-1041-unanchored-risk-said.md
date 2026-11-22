@@ -148,6 +148,20 @@ releases them):
 the same module. This branch does not touch that function. Both branches
 append a RESYNC entry at the end of §4 and regenerate the same views.
 
+**Review** (the coordinator, 2026-11-21; queue-drill HANDOFF §4 step 4).
+Round 1 over `ca7039691..598839305`, the generated views and this spec's
+copies withheld and the spec at the tip given whole: OpenAI Sol
+(`gpt-6.1-sol`, low, via `codex exec`) read the whole diff, and Gemini
+Hydrogen (`gemini-4-hydrogen-low`, via the Antigravity CLI) the prose part
+by file reference. The brief asked both to judge, by name, whether the new
+outcome stays within SR-202's acceptance criteria ("An assumption with a
+recorded accepted risk is read as covered by that risk"). Hydrogen judged
+that it does: read as recorded by an acceptance act, a risk no act names
+has no recorded acceptance to be covered by. No assumption in this
+repository records an accepted risk, so the change moves no reading here.
+Sol: `VERDICT: APPROVE findings=0`. Hydrogen: `VERDICT: APPROVE
+findings=0`. No findings, so no further round.
+
 ## Context
 
 Filed on trunk on 2026-11-21 from WI-1036's history-reader audit, class (c)

@@ -38,3 +38,6 @@ commit hooks on. The record is in the row's Deliverable
 - **Byte deltas:** `RESYNC_PACK.md` 737,613 -> 738,909 (unbudgeted). No
   budgeted file was touched.
 - **Acts owed:** LLR-239's re-acceptance (its Detail drift).
+- **Review:** round 1, OpenAI Sol (low) over the whole diff and Gemini
+  Hydrogen (low, the Antigravity CLI) over the prose, both asked to judge
+  the change against SR-202 by name: both `VERDICT: APPROVE findings=0`.
