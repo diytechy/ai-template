@@ -56,3 +56,7 @@ the row's Deliverable
   `test_trace_briefs`: `197 passed in 129.61s (0:02:09)`.
   <!-- fig: derived="the totals are those the Deliverable's round-1 test line declares, with its command and revision" -->
 - **Acts owed:** none.
+- **Review:** round 1, OpenAI Sol (low) over the whole diff and Gemini
+  Hydrogen (low, the Antigravity CLI) over the prose: Hydrogen APPROVE; Sol
+  one MINOR (an undecodable ledger raised through `last_act`), adopted and
+  fixed in `5dc1c9174`. Round 2, narrow: Sol `VERDICT: APPROVE findings=0`.

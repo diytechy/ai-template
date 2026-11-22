@@ -154,6 +154,22 @@ touched.
 
 **Acts owed:** none. No spine row changed and no status moved.
 
+**Review** (the coordinator, 2026-11-21; queue-drill HANDOFF §4 step 4).
+Round 1 over `7048e6a6f..d6ccdb587` (the branch's net change over trunk,
+the WI-1041 merge included), the generated views, the plan and this spec's
+copies withheld and the spec at the tip given whole: OpenAI Sol
+(`gpt-6.1-sol`, low, via `codex exec`) read the whole diff, and Gemini
+Hydrogen (`gemini-4-hydrogen-low`, via the Antigravity CLI) the prose part
+by file reference. Both were asked to confirm `risk_acceptance_act` keeps
+trunk's behaviour on the shared walk, WI-1041's end included, and to judge
+D-001's three states. Hydrogen: `VERDICT: APPROVE findings=0`. Sol:
+`VERDICT: CHANGES-REQUESTED findings=1`, a MINOR confirmed by execution
+and adopted: invalid UTF-8 in the ledger raised `UnicodeDecodeError`
+through `last_act`, against D-001's "never raises". Fixed in
+`5dc1c9174`, inside `last_act` only (red first). Round 2, narrow, over
+`d6ccdb587..5dc1c9174` with round 1's finding and the ruling prepended:
+Sol, `VERDICT: APPROVE findings=0`.
+
 ## Context
 
 Filed on trunk on 2026-11-21 from WI-1036's history-reader audit, class (c)
