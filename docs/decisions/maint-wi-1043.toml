@@ -1,0 +1,8 @@
+high_risk = []
+
+[decision.D-001]
+decided = "A helper that only a test exercises has no caller, so traj_parse._git is deleted, and with it the two tp._git assertions in tests/test_traj_parse.py and the gen_trajectory facade's re-export. The no-reference grep covers code (scripts, tests, skills, templates and shipped docs); historical records (docs/log.md, docs/iteration/, docs/reviews/, docs/archive/, the history-reader audit and the scope critiques) keep their mentions."
+alternative = "Count the test as a caller and keep traj_parse._git, landing only integrate._last_commit_time (which breaks the ruling that both deletions land together in one commit); or widen the grep to the records and rewrite what they say happened."
+reversal_cost = "One commit restoring the ten-line helper, its facade re-export and the two assertions. Nothing else reads it."
+why_not_escalated = "A reading of scope. The builder stopped and reported the test caller, which the audit and the spec had both missed, and the coordinator ruled: production has no caller, Done-when 1's 'no remaining reference' already requires removing the re-export and the test lines, and `_run_captured`'s off-git degradation stays pinned by the same test's `_asof` assertions (an OSError from the shim and a real git outside a repository)."
+review = ""

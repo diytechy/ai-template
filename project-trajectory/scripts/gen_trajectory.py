@@ -147,7 +147,6 @@ else:
         WORKSTREAM_LABELS,
         _asof,
         _stage_value,
-        _git,
         _okf_frontmatter,
         _okf_nodes,
         _process_doc,

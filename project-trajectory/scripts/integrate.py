@@ -1470,13 +1470,6 @@ def _loop_trailer_refusal(root, branch):
     return refusal
 
 
-def _last_commit_time(root, ref, *pathspec):
-    code, out = ac.git(root, "log", "-1", "--format=%ct", ref, "--", *pathspec)
-    if code != 0 or not out.strip():
-        return None
-    return int(out.strip().splitlines()[0])
-
-
 def _commit_message(root, rev):
     """The full commit message of `rev`, or "" when it cannot be read."""
     code, out = ac.git(root, "log", "-1", "--format=%B", rev)

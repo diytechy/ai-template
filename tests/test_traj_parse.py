@@ -20,13 +20,14 @@ import subprocess
 import sys
 
 import pytest
-from conftest import load_script
+from conftest import load_script, skip_without_env_gates
 
 
 # --- WI-346: the one local spine loader + the one capture helper ---------------
 # Three functions (`arch_icicle`, `spine_stats`, `_spine_pending`) each re-derived
-# the SR/LLR/TC `read_rows(...) if id.startswith(...)` triple, and `_asof`/`_git`
-# each spelled out the same five subprocess capture keywords — nine sanctioned
+# the SR/LLR/TC `read_rows(...) if id.startswith(...)` triple, and two git
+# readers (`_asof` and one since deleted, which nothing called) each spelled out
+# the same five subprocess capture keywords — nine sanctioned
 # census blocks (`spine-load-repeat`, `subprocess-capture`). Extracted to
 # `_spine(root, skip_example=False)` and `_run_captured(argv)`.
 
@@ -174,22 +175,39 @@ def test_run_captured_states_the_five_keywords_and_degrades_off_git(
     assert proc.stdout.strip() == "hi"  # captured + decoded, not bytes/None
 
     # 2. No child at all: `_run_captured` deliberately does NOT swallow the
-    #    OSError — the callers own the degrade, which is what lets a future
+    #    OSError — the caller owns the degrade, which is what lets a future
     #    caller see a failure this helper has no business deciding about.
+    tried = []
+
     def boom(argv, **kwargs):
+        tried.append(argv)
         raise OSError("no git here")
 
     monkeypatch.setattr(tp, "subprocess", _SubprocessShim(boom))
     with pytest.raises(OSError):
         tp._run_captured(["git", "--version"])
-    # ...and both callers degrade to their empty forms rather than propagate.
-    # (No registry is seeded: `_git`/`_asof` read git, not the work items.)
-    assert tp._git(tmp_path, "rev-parse", "HEAD") == (1, "")
+    # ...and its caller, `_asof`, degrades to its empty form rather than
+    # propagate. One source is seeded: with none, `_asof` returns "" before it
+    # ever calls `_run_captured`, and the degrade would go unexercised. The
+    # recorded call proves the "" came through the `except OSError`.
+    (tmp_path / "README.md").write_text("# probe\n", encoding="utf-8")
+    tried.clear()
     assert tp._asof(tmp_path) == ""
+    assert [argv[3] for argv in tried] == ["log"]
 
     # 3. Real git, no repo: the other off-git shape (a child that RUNS and
-    #    fails). tmp_path is not a work tree, so git exits nonzero.
+    #    fails). The ceiling keeps git from finding a repository above
+    #    tmp_path, so git runs and exits nonzero, and `_asof` reads that as "".
     monkeypatch.undo()
-    code, out = tp._git(tmp_path, "rev-parse", "--verify", "--quiet", "HEAD")
-    assert code != 0 and out.strip() == ""
+    skip_without_env_gates("git")
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path))
+    ran = []
+
+    def real(argv, **kwargs):
+        ran.append(subprocess.run(argv, **kwargs))
+        return ran[-1]
+
+    monkeypatch.setattr(tp, "subprocess", _SubprocessShim(real))
     assert tp._asof(tmp_path) == ""
+    assert [proc.args[3] for proc in ran] == ["log"]
+    assert ran[0].returncode != 0 and ran[0].stdout.strip() == ""
