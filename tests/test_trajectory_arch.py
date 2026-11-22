@@ -1168,7 +1168,8 @@ def test_the_gate_shares_the_interfaces_check_opt_out_and_the_files_mode_vacuity
 ):
     """The process settings' `[checks] interfaces_check = false` and its
     legacy one-word file each silence the gate, and a scan with no surface,
-    files mode or an absent source root, is vacuous.
+    files mode or an absent source root, is vacuous: a listed header whose
+    body is a finding while the source root is scanned is not read then.
 
     Implements: TC-474"""
     root = _gate_repo(tmp_path, '"""A.\n\nContracts: IF-001"""\n')
@@ -1182,13 +1183,21 @@ def test_the_gate_shares_the_interfaces_check_opt_out_and_the_files_mode_vacuity
     process.write_text("[checks]\ninterfaces_check = true\n", encoding="utf-8")
     assert check_trajectory.contract_body_findings(root)
     process.unlink()
-    (root / "docs" / "stack.ini").write_text(
-        "[paths]\nsrc = scripts\n[arch-map]\nmode = files\n", encoding="utf-8"
+    (root / "docs" / "conf.toml").write_text(
+        "# Component: CMP-002\n#\n# Contracts: IF-001\n#\n"
+        "# Contract IF-001: a body in another component's file.\n",
+        encoding="utf-8",
+    )
+    stack = root / "docs" / "stack.ini"
+    listed = "[arch-map]\nheaders = docs/conf.toml\n"
+    stack.write_text("[paths]\nsrc = scripts\n" + listed, encoding="utf-8")
+    scanned = check_trajectory.contract_body_findings(root)
+    assert any("docs/conf.toml" in f for f in scanned), scanned
+    stack.write_text(
+        "[paths]\nsrc = scripts\n" + listed + "mode = files\n", encoding="utf-8"
     )
     assert check_trajectory.contract_body_findings(root) == []
-    (root / "docs" / "stack.ini").write_text(
-        "[paths]\nsrc = absent\n", encoding="utf-8"
-    )
+    stack.write_text("[paths]\nsrc = absent\n" + listed, encoding="utf-8")
     assert check_trajectory.contract_body_findings(root) == []
 
 

@@ -22,8 +22,12 @@ and `trace.py --bump-ids` raised the TC mark to 475.
 
 - `732d08500`: the row text, the two new test cases, the tests they cite
   and the regenerated views.
-- The close-out commit after it: this Deliverable, the move to `complete/`
-  and the log fragment.
+- `3fa852a18`: the close-out, this Deliverable, the move to `complete/` and
+  the log fragment.
+- The commit after it, at the coordinator's request before the review
+  ("LLR-373's title and rationale and LLR-398's scan surface follow the
+  code"): the two text mismatches the close-out had left found, TC-474 and
+  its test following LLR-398, and this Deliverable updated.
 
 **LLR-373** (Accepted; Detail only, so it drifts). The code: the join
 (`kitlib.spine.module_components`) is read by three rules on the
@@ -40,9 +44,20 @@ states, so a map that answered nothing would move no seam (TC-435's
 Expected). "The callers intersect them with the ids they declare" is
 narrowed to the two that do, and the connectivity warns are named as the
 third reader. The amendment adds no name the naming rule forbids: every
-carrier in the cell is the accepted text's own. Its title and rationale are
-unchanged, since the Done-when names the Detail: see "Left for the
-coordinator".
+carrier in the cell is the accepted text's own.
+
+At the coordinator's request, so that a sitting reading the row whole finds
+it consistent, its title and rationale follow the Detail too (both drift;
+no other cell changes). The title no longer says the component view reads
+the join: "The module-to-component join has one home, which the
+architecture checks read and the component view does not need". The
+rationale drops the join's pre-WI-1021 inputs (a `-000` example row, an id
+not starting LLR-), keeps the narrower answer as the Detail states it (a
+value that cannot name a component makes no membership), says the two
+gate-bearing rules intersect the map with their declared ids, where it said
+every caller did, and adds why the component view needs no copy. It names
+no carrier the accepted text did not, and drops one (`trace.py --strict`
+becomes "the strict trace check").
 
 **TC-081** (Accepted; Method and Expected, so it drifts; Evidence, a traced
 cell, which routes to adjudication). It now states LLR-080's rendering:
@@ -105,14 +120,29 @@ existing test TC-474 cites for it:
 - the `interfaces_check` opt-out and no-surface vacuity:
   `test_the_gate_shares_the_interfaces_check_opt_out_and_the_files_mode_vacuity`,
   which turned the check off only through its legacy one-word file and gains
-  two arms: `[checks] interfaces_check = false`, then `true`, in the process
-  settings, and a source root that does not exist, with no header listed;
+  `[checks] interfaces_check = false`, then `true`, in the process settings;
+  its no-surface arms now list a configuration file whose body is a finding
+  while the source root is scanned, and read none in files mode or with the
+  source root pointed at a directory that does not exist (it read files
+  mode with nothing listed before);
 - a body in a file with no marker refused:
   `test_a_body_with_no_marker_is_refused_not_skipped`;
 - a listed Python file read through its docstring:
   `test_a_python_file_listed_outside_the_source_root_is_read_as_a_module`.
 
 LLR-398's `test_refs` reads `TC-463; TC-474`.
+
+**LLR-398's scan surface** (Drafted), at the coordinator's request. Its
+Detail placed a listed header file on the surface whatever the source root,
+while the code (`_no_surface_reason`, ahead of `_declaration_sites`) reads
+no surface at all in files mode or with the source root absent, a listed
+header included. The Detail now says so: the surface exists only when the
+scan profile is not in its files mode and the declared source root is
+present, and then holds the files it held before; in files mode, or with
+the source root absent, there is no surface, so a file the header list
+names is not read either. No code changed. TC-474's Method and Expected,
+and its opt-out test, follow (above), so the new clause is verified rather
+than only consistent.
 
 **LLR-395: TC-475** (new, Drafted, Integration, Full; verifies SR-157 and
 LLR-395). Its Method and Expected are TC-428's and TC-429's together, with
@@ -135,8 +165,8 @@ same tests plus the failing-test case, and the re-point would leave three
 cases verifying one row on one evidence set. What remains is a
 duplication, TC-428 and TC-429 verifying SR-157 directly on evidence
 TC-475 also cites; whether to retire them is a separate call, not
-WI-1038's Done-when. The coordinator may cancel WI-1038 as superseded by
-WI-1048.
+WI-1038's Done-when. WI-1038 is superseded by WI-1048; the coordinator
+cancels it on trunk at the merge.
 
 **Red first.** Each new test or arm passed on its first run, since the
 behaviour it pins exists. Each was then shown to fail under a deliberate
@@ -148,10 +178,13 @@ mutation of the code it pins, reverted before any commit:
 - the module table's class renamed: the strengthened table test,
   `1 failed, 65 deselected in 1.12s`;
 - `read_interfaces_check_enabled` ignoring the process settings: the
-  extended opt-out test, `1 failed, 171 deselected in 0.61s`. The
-  absent-source-root arm did not fail when its no-surface reason was
-  removed, since a scan of no source root and no listed header reads
-  nothing either way: it pins the observable, not the mechanism;
+  extended opt-out test, `1 failed, 171 deselected in 0.61s`. In the build
+  commit its absent-source-root arm, with no header listed, did not fail
+  when its no-surface reason was removed, since such a scan reads nothing
+  either way. The follow-up commit lists a header in both no-surface arms,
+  and each reason removed now fails the test: files mode
+  `1 failed, 172 deselected in 0.54s`, the absent source root
+  `1 failed, 172 deselected in 0.92s`;
 - `_undeclared_case_findings` ignoring a declaration: the failing-test
   case, `1 failed, 172 deselected in 0.88s`;
 - a tier's name in the rung table changed: the literal-mapping assertion,
@@ -177,15 +210,33 @@ mutation of the code it pins, reverted before any commit:
   `check_trajectory.py --strict`: clean. `scripts/check_resync.py`: "OK, no
   shipped path changed", so no RESYNC entry is owed. The build commit passed
   the hook (29 steps, all PASS).
+- The follow-up commit (LLR-373's title and rationale, LLR-398's Detail,
+  TC-474 and its test): the modules reading those rows and the registries,
+  the changed test module, and the whole-tree tests, `test_trajectory_arch`,
+  `test_if_owner_component`, `test_gen_components`,
+  `test_components_registry`, `test_cell_classes`, `test_check_test_first`,
+  `test_evidence_join`, `test_id_watermark`, `test_parent_first`,
+  `test_rule_sync`, `test_trace_rules`, `test_trace_coherence`,
+  `test_dogfood_sync`, `test_import_layers`, `test_module_size_ratchet`:
+  `540 passed, 1 skipped, 18 warnings in 187.15s (0:03:07)`.
+  <!-- fig: cmd="python -m pytest -q -p no:cacheprovider -n 12 --basetemp D:/rt1048/t <the 15 modules listed>" rev="3fa852a18 (with the follow-up's tree, before its commit)" -->
+  `run_menu.py smoke`: `3717 passed, 3 skipped, 18 warnings in 128.86s (0:02:08)`,
+  its CPU line 671.9 s against 540, a WARN only.
+  <!-- fig: cmd="python project-trajectory/scripts/run_menu.py smoke" rev="3fa852a18 (with the follow-up's tree, before its commit)" -->
+  `trace.py --root . --strict`: `orphans=0 integrity=0`;
+  `check_trajectory.py --strict`: clean.
 
 **Byte deltas** (none budgeted or watched):
-`docs/requirements/low-level-requirements.toml` 630,605 -> 631,191 (+586);
-`docs/test/test-cases.toml` 681,090 -> 688,637 (+7,547).
+`docs/requirements/low-level-requirements.toml` 630,605 -> 631,471 (+866;
++586 at the build commit);
+`docs/test/test-cases.toml` 681,090 -> 688,876 (+7,786; +7,547 at the build
+commit).
 
 **What the second sitting owes.** From this branch:
 
-- Amendments (drifted `Accepted` rows): LLR-373 (Detail) and TC-081 (Method
-  and Expected; its Evidence change routes as a traced cell). LLR-080's
+- Amendments (drifted `Accepted` rows): LLR-373 (Title, Detail and
+  Rationale) and TC-081 (Method and Expected; its Evidence change routes as
+  a traced cell). LLR-080's
   amendment, ruled MEANING and not blessed by WI-1047 because TC-081 was
   stale, is owed again, with TC-081 now matching it.
 - First acceptance (`Drafted`, each with a verifying test case): LLR-393
@@ -196,7 +247,7 @@ Everything else WI-1047's sitting judged is owed unchanged by this branch:
 the twenty amendments it ruled re-acceptable and the thirteen rows it ruled
 ACCEPT, since its act was refused.
 
-**Findings** (outside this row's scope; nothing changed for them):
+**Found and not changed** (outside this row's scope):
 
 - `gen_arch_map`'s dependency diagram still draws a dotted seam edge for a
   row whose owner and far side name modules in the map (`_seam_edges`,
@@ -206,18 +257,15 @@ ACCEPT, since its act was refused.
   read that as no contradiction of LLR-080 and left the older arm.
 - The flat How-SW graph now draws component nodes, but its legend lists
   only module, file and external actor.
-- LLR-398 places a listed header file on the scan surface whatever the
-  source root, while the code reads no surface at all in files mode or with
-  an absent source root, a listed header included. TC-474 states the two
-  cases tested, which hold under either reading.
-
-**Left for the coordinator.** LLR-373's title still says the component view
-reads the join ("which the component view and the architecture checks both
-read"), which its Detail now says it does not, and its rationale's "a
-placeholder row" names the join's input before WI-1021. The Done-when, and
-the instruction to edit only the cells it names, kept both as they are;
-each is a one-cell text amendment if the coordinator wants it in this
-sitting.
+- A question for later: should a files-mode adopter have its listed headers
+  scanned? LLR-398 now states what the code does, that files mode (and an
+  absent source root) leaves no contract-body surface, so a configuration
+  file or registry header the scan profile lists is not held to one body
+  per interface there. The header list exists to put such files on the
+  surface, and files mode is the profile of a project whose source the
+  symbol scan does not read, so an adopter in files mode may expect its
+  listed headers checked. Changing that is a code and row change for its
+  own work item, not this one.
 
 ## Context
 
