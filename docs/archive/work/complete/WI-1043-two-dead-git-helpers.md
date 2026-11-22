@@ -116,6 +116,15 @@ fragment.
   budget WARN only (748.0 s against 540). The failure is the vocabulary red.
   <!-- fig: cmd="python project-trajectory/scripts/run_menu.py smoke" rev=13ad36174 -->
 - The build commit's hook: 29 steps, all PASS.
+- Review round 1 (Sol's MINOR, adopted): the test's off-git checks now seed
+  `README.md`, so `_asof` reaches `_run_captured`. The `OSError` shim and a
+  real git outside a repository (under `GIT_CEILING_DIRECTORIES`) each record
+  the `log` call. With `_asof`'s `except OSError` removed by a temporary
+  mutation, the test as built passed and the new one fails (`OSError: no git
+  here`). After the fix, `tests/test_traj_parse.py` gives `3 passed in
+  2.46s`, and the seven targeted modules give `1 failed, 99 passed, 1 skipped
+  in 50.08s`, the failure being the vocabulary red.
+  <!-- fig: cmd="python -m pytest -q tests/test_traj_parse.py; then the seven targeted modules as above" rev="67e4c9cec plus the review round 1 fix" -->
 - The unfiltered suite was not run.
 
 **Outside this row: one red.**

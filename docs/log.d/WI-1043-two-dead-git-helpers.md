@@ -34,6 +34,12 @@ commit hooks on. The record is in the row's Deliverable
   clean; `check_resync` OK), and the tier gives `1 failed, 3713 passed, 3
   skipped, 18 warnings in 158.18s (0:02:38)`, with a CPU budget WARN only.
   The build commit's hook: 29 PASS. The unfiltered suite was not run.
+  Review round 1 (Sol's MINOR, adopted): the test's off-git checks seed a
+  source so `_asof` reaches `_run_captured`, and each records its `log` call.
+  The test now fails with `_asof`'s `except OSError` removed. After the fix:
+  `3 passed in 2.46s` for `tests/test_traj_parse.py`, and `1 failed, 99
+  passed, 1 skipped in 50.08s` for the seven targeted modules (the
+  vocabulary red).
   <!-- fig: derived="the totals are those the Deliverable's Tests list declares, each with its command and revision" -->
 - **Outside this row:** every failure left is
   `test_stage_ladder::test_this_repo_is_clean_at_the_ERROR_severity`, a

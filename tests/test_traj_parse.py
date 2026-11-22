@@ -20,7 +20,7 @@ import subprocess
 import sys
 
 import pytest
-from conftest import load_script
+from conftest import load_script, skip_without_env_gates
 
 
 # --- WI-346: the one local spine loader + the one capture helper ---------------
@@ -177,17 +177,37 @@ def test_run_captured_states_the_five_keywords_and_degrades_off_git(
     # 2. No child at all: `_run_captured` deliberately does NOT swallow the
     #    OSError — the caller owns the degrade, which is what lets a future
     #    caller see a failure this helper has no business deciding about.
+    tried = []
+
     def boom(argv, **kwargs):
+        tried.append(argv)
         raise OSError("no git here")
 
     monkeypatch.setattr(tp, "subprocess", _SubprocessShim(boom))
     with pytest.raises(OSError):
         tp._run_captured(["git", "--version"])
     # ...and its caller, `_asof`, degrades to its empty form rather than
-    # propagate. (No registry is seeded: `_asof` reads git, not the work items.)
+    # propagate. One source is seeded: with none, `_asof` returns "" before it
+    # ever calls `_run_captured`, and the degrade would go unexercised. The
+    # recorded call proves the "" came through the `except OSError`.
+    (tmp_path / "README.md").write_text("# probe\n", encoding="utf-8")
+    tried.clear()
     assert tp._asof(tmp_path) == ""
+    assert [argv[3] for argv in tried] == ["log"]
 
     # 3. Real git, no repo: the other off-git shape (a child that RUNS and
-    #    fails). tmp_path is not a work tree, so git exits nonzero.
+    #    fails). The ceiling keeps git from finding a repository above
+    #    tmp_path, so git runs and exits nonzero, and `_asof` reads that as "".
     monkeypatch.undo()
+    skip_without_env_gates("git")
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path))
+    ran = []
+
+    def real(argv, **kwargs):
+        ran.append(subprocess.run(argv, **kwargs))
+        return ran[-1]
+
+    monkeypatch.setattr(tp, "subprocess", _SubprocessShim(real))
     assert tp._asof(tmp_path) == ""
+    assert [proc.args[3] for proc in ran] == ["log"]
+    assert ran[0].returncode != 0 and ran[0].stdout.strip() == ""
