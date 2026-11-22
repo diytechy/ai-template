@@ -30,7 +30,7 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 10 chain(s): SR-070, SR-157, SR-159, SR-168, SR-169, SR-178, SR-208, SR-225, SR-233, SR-243</summary>
+<summary>Waiting for automated adjudication — 11 chain(s): SR-070, SR-157, SR-159, SR-168, SR-169, SR-178, SR-202, SR-208, SR-225, SR-233, SR-243</summary>
 
 ## SR-070 — Generated views are offline, deterministic and drift-checkable
 
@@ -310,6 +310,18 @@ WHAT COUNTS AS MOVEMENT is one definition with one home, shared with the amend-w
 - **Evidence**: tests/test_acceptance_record.py::test_the_text_digest_takes_its_width_from_the_done_when_digest
 - **Status**: Drafted
 - **Phase**: 6
+
+## SR-202 — An accepted risk reopens on a failed sample or on any change to what it was accepted for
+
+> **Requirement.** When a sample for an assumption relied on under an accepted risk fails, or the text of the assumption or of a need it served when the risk was accepted changes after that acceptance, the delivered harness shall read the assumption as unproven until the risk is accepted again.
+
+> **Rationale.** A recorded accepted risk is a judgment about a particular assumption serving particular needs, so it cannot outlive a change to either, nor a sample showing the assumption failing. Binding the acceptance to the texts as they stood when it was made is what keeps a later, separate re-acceptance of a changed need from silently carrying the old risk forward. A clock would reopen it for no reason and teach readers to re-accept by reflex, so time alone never reopens it. Accepting again is a reviewed acceptance, like the first acceptance.
+
+
+### LLR LLR-239
+- **Detail**
+  - before: risk_acceptance_act(root, da_id) is the latest commit whose acceptance-act record names the assumption, as accepted or re-accepted, while its accepted_risk is non-empty; re-accepting a risk is re-accepting the row in an act, so it moves the anchor even when no byte of the row changes. Only where no act names the row does it fall back to the first commit at which accepted_risk took its current value. accepted_risk_state compares, at that commit and now, the assumption's cells other than status and accepted_risk, and the need and acceptance cells of each need it served then, derived through that commit's requirements; any difference reads the assumption unproven and is an advisory naming the trigger, and a later re-acceptance of a changed need does not clear it, because the comparison is with the acceptance act, not the latest recorded copy. A failing observation record added in a commit that is not an ancestor of the acceptance act also reads it unproven, ordered by commit ancestry rather than by clock. Time is never read. History too shallow to find the act reads unproven with the reason stated.
+  - after: risk_acceptance_act(root, da_id) is the latest commit whose acceptance-act record names the assumption, as accepted or re-accepted, while its accepted_risk is non-empty; re-accepting a risk is re-accepting the row in an act, so it moves the anchor even when no byte of the row changes. Where no act names the row, nobody accepted the risk and there is no anchor: it walks no history of the live registry for a commit to stand in for the act, and reports the risk unanchored, with a reason naming the assumption and telling the operator to accept the risk in an acceptance act, and the risk reads unproven with that reason. accepted_risk_state compares, at the act's commit and now, the assumption's cells other than status and accepted_risk, and the need and acceptance cells of each need it served then, derived through that commit's requirements; any difference reads the assumption unproven and is an advisory naming the trigger, and a later re-acceptance of a changed need does not clear it, because the comparison is with the acceptance act, not the latest recorded copy. A failing observation record added in a commit that is not an ancestor of the acceptance act also reads it unproven, ordered by commit ancestry rather than by clock. Time is never read. History too shallow to find the act reads unproven with the reason stated.
 
 ## SR-208 — Held-rung changes are refused before they land
 

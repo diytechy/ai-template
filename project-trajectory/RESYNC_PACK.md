@@ -12079,6 +12079,30 @@ and `hooks/` (each now carries the kit's own `Component:` line),
 **Project-owned files — edit:** each of your own files in the scope above
 gains its `Component:` line.
 
+### An accepted risk no acceptance act names reads unanchored, not bound to a commit found in history [since ca7039691]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** When no entry in the act ledger
+(`docs/archive/last_accepted/acts.toml`) names an assumption, accepted or
+re-accepted, `risk_acceptance_act` in `scripts/baseline_snapshot.py` no longer
+binds its accepted risk to the first commit at which the row's
+`accepted_risk` took its current value. It returns no anchor, with a reason
+naming the assumption and telling you to accept the risk in an acceptance
+act, and it walks no history of the live registry. Such a risk now reads
+unproven: where the frame declares a crossing, `trace.py` advises it, and the
+release gate's `assumption-evidence` step no longer lets it cover a falsified
+assumption.
+
+**What to do.** For each assumption whose accepted risk no ledger entry
+names, accept the risk in an act: a `Drafted` row's first acceptance (its
+`Status` move and `intake.py snapshot` in one commit), or
+`intake.py snapshot --reaccepts DA-###` for a row already accepted. Until
+then it reads unproven, and a falsified one fails the release gate where the
+gate is on.
+
+**Kit-owned files — overwrite:** `scripts/baseline_snapshot.py`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

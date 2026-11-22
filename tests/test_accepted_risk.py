@@ -241,6 +241,45 @@ def test_the_act_that_accepted_it_is_the_anchor(repo):
     assert anchor == act, reason
 
 
+def test_a_risk_no_act_names_is_unanchored_and_no_history_is_walked(
+    tmp_path, monkeypatch
+):
+    """With no acceptance act naming the assumption, nobody accepted its risk,
+    so there is no anchor to find: the reader says so, naming the assumption
+    and the act it owes, and walks no history of the live registry for a
+    commit to bind it to. The risk was committed unchanged before an act that
+    named other rows, so a walk would have found a commit to call its act."""
+    root = tmp_path / "repo"
+    root.mkdir()
+    for rel, text in FILES.items():
+        (root / rel).parent.mkdir(parents=True, exist_ok=True)
+        (root / rel).write_text(text.lstrip("\n"), encoding="utf-8")
+    _git(root, "init", "-q")
+    pin_autocrlf(root)
+    _git(root, "config", "user.email", "test@example.com")
+    _git(root, "config", "user.name", "Test")
+    _commit(root, "draft the assumption, its accepted risk written")
+    SNAP.copy_live(root, seed=True)
+    _commit(root, "an act accepting the needs and requirements, not DA-001")
+    calls = []
+    real_git = SNAP._git
+
+    def spy(where, argv, *rest, **kw):
+        calls.append(list(argv))
+        return real_git(where, argv, *rest, **kw)
+
+    monkeypatch.setattr(SNAP, "_git", spy)
+    anchor, reason = SNAP.risk_acceptance_act(root, "DA-001")
+    assert anchor is None, reason
+    assert "DA-001" in reason and "unanchored" in reason, reason
+    assert "accept it in an acceptance act" in reason, reason
+    walks = [argv for argv in calls if argv and argv[0] in ("log", "rev-list")]
+    assert walks and all(DA_REL not in argv for argv in walks), walks
+    state, reasons = _state(root)
+    assert state == RULES.RISK_UNPROVEN
+    assert any("DA-001" in r and "unanchored" in r for r in reasons), reasons
+
+
 def test_with_no_evidence_an_accepted_risk_reads_covered(repo):
     root, _act = repo
     assert _state(root) == (RULES.RISK_COVERED, [])
