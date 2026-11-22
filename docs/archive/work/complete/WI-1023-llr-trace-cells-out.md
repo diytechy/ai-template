@@ -275,6 +275,38 @@ placement sentence, the id table and four column mentions); `PROCESS_OPTIONS.md`
 - The RESYNC entry is anchored at `73aa095ce`, the merged base, as
   `check_resync` requires after the merge.
 
+**Review** (the coordinator, 2026-11-22; queue-drill HANDOFF §4 step 4).
+Round 1 over `73aa095ce..bcbc00bd6`, the generated views, the plan and this
+spec's copies withheld and the spec at the tip given whole; the design
+registry's diff was given as the base with the three cells stripped (checked
+row for row with tomllib) against the tip, the eight dogfood skill copies as
+notes (byte-equal to the kit's). OpenAI Sol (`gpt-6.1-sol`, low) read it in
+two halves (code 94 s, registries and documents 54 s); Gemini Hydrogen
+(`gemini-4-hydrogen-low`, the Antigravity CLI) read the prose: APPROVE, no
+findings, the D3 question put to both by name. Sol raised four distinct
+findings, each confirmed by reading and adopted: the migration turned CRLF
+into LF against LLR-407's "every other byte" (raised MAJOR by both halves,
+regraded MINOR, since adopters carry the kit's `eol=lf` attributes); it did
+not handle a multi-line literal string; SR-248 and LLR-403 omitted the
+`Drafted` exemption of the no-test rule; LLR-263's rationale still named the
+retired cell. The coordinator added two from the second adjudication
+sitting (WI-1049), which refused to bless amendments that add code names:
+this branch's LLR-244 and LLR-263 rewrites added parameter names to call
+signatures. All six answered in `4c105adf0`: the migration reads bytes and
+tracks both delimiters (red first, `2 failed, 5 deselected`); SR-248 and
+LLR-403 exempt a `Drafted` row and TC-480 cites the test of both sides;
+LLR-244 and LLR-263 restated without signatures; TC-484 covers the two new
+tests. Over the 18 affected modules `567 passed, 2 skipped in 112.38s`;
+`trace.py --strict` and `check_trajectory --strict` clean. Round 2 narrow
+over `bcbc00bd6..4c105adf0`: Sol and Hydrogen both APPROVE, no findings.
+
+**At the merge into trunk:** trunk reverted LLR-244's `detail` to its
+accepted text by the operator's ruling (2026-11-22, `0333b64f0`, so WI-1049's
+act could be taken); this branch's LLR-244, which states F-2's and this
+row's behaviour without code names, is taken over it. **Left stale, not
+amended here:** SR-221 (`Accepted`) still says "for a module a design row
+names"; it is WI-1018's kind (row text a lane leaves stale), noted there.
+
 ## Context
 
 Variant F's third row (F-3), filed on trunk on 2026-11-21 (queue-drill

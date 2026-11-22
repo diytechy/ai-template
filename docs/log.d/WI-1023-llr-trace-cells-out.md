@@ -53,3 +53,8 @@ record is in the row's Deliverable
   skipped, 18 warnings in 260.45s (0:04:20)` and smoke `3721 passed, 3
   skipped, 18 warnings in 100.13s (0:01:40)`.
   <!-- fig: cmd="python -m pytest -q -n auto (and the module reruns the Deliverable lists); python project-trajectory/scripts/run_menu.py smoke" rev="the worktree ahead of 19749ec70; 8e7d43c6f" -->
+- **Review**: round 1, Sol in two halves (four MINORs, one raised MAJOR and
+  regraded) and Hydrogen APPROVE, plus two coordinator findings from the
+  second adjudication sitting's rule against amendments that add code
+  names; all six answered in `4c105adf0`; round 2 narrow, both APPROVE. The
+  record is in the Deliverable.
