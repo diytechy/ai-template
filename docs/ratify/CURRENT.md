@@ -89,9 +89,14 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 
 
 ### LLR LLR-067
+_accepted — re-acceptance owed_
 - **Detail**
   - before: Joins imports, component membership, and declared seams; reports uncovered cross-component edges with strict/plain and vacuity rules. Uncovered mapped edges warn plain and fail --strict; a covering seam (in either direction), an intra-component or unmapped edge, absent imports, the opt-out, and an edge whose destination is a declared shared-kernel module (docs/kernel-modules-allow, checked before the seam/overlap split) each stay silent. The module inventory joined against is scanned LIVE from the source tree under [paths] src (gen_arch_map.scan_inventory), never parsed back out of a committed map, so the join cannot read a stale inventory.
   - after: Joins imports, component membership read from each file's Component header, and declared seams; reports uncovered cross-component edges with strict/plain and vacuity rules. An edge with an endpoint whose header declares no valid component is reported as unclassified, before the declared seams and the shared kernel are consulted, so it is never treated as internal, covered or exempt. An edge is internal only when both endpoints sit in the same one component. Other uncovered edges warn plain and fail --strict; a covering seam (in either direction), an internal edge, absent imports, no live component row, the opt-out, and an edge whose destination is a declared shared-kernel module (docs/kernel-modules-allow) each stay silent. The module inventory joined against is scanned LIVE from the source tree under [paths] src (gen_arch_map.scan_inventory), never parsed back out of a committed map, so the join cannot read a stale inventory.
+_traced — routes to adjudication_
+- **CodeSymbol**
+  - before: cross_component_findings/arch_inventory
+  - after: cross_component_findings/_classifiable_edges/arch_inventory
 
 ### LLR LLR-373
 - **Detail**

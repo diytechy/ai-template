@@ -70,7 +70,9 @@ under `--strict`, the `components_check` opt-out.
 Under the Trust ruling an import edge touching an undeclared file is
 reported as unclassified before the seams and the kernel are read, and an
 edge is internal only inside one component, so a key two files share
-(`check.py`, `check.sh`) silences nothing. `derive_stage` reads no
+(`check.py`, `check.sh`) silences nothing; and since an import's endpoints
+are the Python modules the inventory walks, only their declarations place
+an edge (review round 1). `derive_stage` reads no
 membership (the DevStg-Arch rung reads only the component rows' status and
 standing), so it is unchanged; the plan records the reading. No check
 compares a design row's `component` cell with a header.
@@ -211,6 +213,28 @@ green, `14 passed in 0.83s`.
 `PROCESS_OPTIONS.md` 202,180 -> 202,304 (+124, watched); the byte-budget
 skill 4,742 -> 4,631 (cap 5,000; its two watched rows re-stamped, three
 copies); `RESYNC_PACK.md` 734,651 -> 737,613 (unbudgeted).
+
+**Review round 1 (2026-11-21, over `1aa6c439a..2e22775b6`):** Argon
+(prose) APPROVE, no findings. Sol three MINORs:
+
+- Adopted: an undeclared `b.py` took the component a declared `b.sh` on
+  its module key named, so its import edges were classified, not reported
+  unclassified (the Trust ruling). `arch_seams._classifiable_edges` now
+  builds edge membership from the Python modules' declarations only, the
+  import graph's nodes. Red first: the unclassified-edge test's new case
+  failed on the old code (`1 failed, 1 passed`); green after, with every
+  test module importing `arch_seams`, `trajectory_arch` or
+  `check_trajectory` and the whole-tree tests, `2207 passed, 2 skipped in
+  856.20s (0:14:16)`.
+  <!-- fig: cmd="python -m pytest -q -n auto <the 57 importing modules, the ratchets, test_import_layers, test_dogfood_sync>" rev="the worktree after 2e22775b6" -->
+- Adopted: `_classifiable_edges` carried `Implements: LLR-067` but was not
+  in LLR-067's `code_symbol` (rubric K3); the cell gains it, a traced-cell
+  change that owes no act.
+- Dismissed by the coordinator: a parenthesized module docstring is a
+  docstring to Python but not to the reader, which reports the file absent.
+  True, but no file is written that way and the reader fails closed (a
+  visible finding, never a wrong component); the operator takes only
+  realistic findings.
 
 ## Context
 

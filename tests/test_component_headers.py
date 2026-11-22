@@ -278,21 +278,30 @@ COVER = (
 
 
 UNDECLARED = {
-    "target-undeclared": ("CMP-001", None, "", False),
-    "importer-undeclared": (None, "CMP-002", "", False),
-    "covered": ("CMP-001", None, COVER, False),
-    "kernel": ("CMP-001", None, "", True),
+    "target-undeclared": ("CMP-001", None, "", False, None),
+    "importer-undeclared": (None, "CMP-002", "", False, None),
+    "covered": ("CMP-001", None, COVER, False, None),
+    "kernel": ("CMP-001", None, "", True, None),
+    # `b.sh` shares `b.py`'s module key but is no import's endpoint.
+    "shell-on-the-key": (
+        "CMP-001",
+        None,
+        "",
+        False,
+        {"scripts/b.sh": "# Component: CMP-001\n"},
+    ),
 }
 
 
 def test_an_edge_touching_an_undeclared_module_is_unclassified(tmp_path):
     """The Trust ruling: the edge is reported before the cover and the kernel
-    are read, so neither can make it internal or exempt.
+    are read, so neither can make it internal or exempt; nor can a declared
+    file of another type that shares the module's key.
 
     Implements: TC-459"""
-    for case, (a_cmp, b_cmp, ifs, kernel) in UNDECLARED.items():
+    for case, (a_cmp, b_cmp, ifs, kernel, extra) in UNDECLARED.items():
         root = tmp_path / case
-        _edge_repo(root, a_cmp, b_cmp, ifs=ifs, kernel=kernel)
+        _edge_repo(root, a_cmp, b_cmp, ifs=ifs, kernel=kernel, b_extra=extra)
         findings = arch_seams.cross_component_findings(root)
         assert len(findings) == 1, (case, findings)
         assert "scripts/a" in findings[0] and "scripts/b" in findings[0], case

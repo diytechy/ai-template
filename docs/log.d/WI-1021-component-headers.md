@@ -6,7 +6,11 @@ is in the spec's Context, and WI-1045 is filed on trunk for
 `acceptance_record.py`'s landing rules. The acts owed go to automated
 adjudication.
 
-Review: pending (the coordinator).
+Review: round 1, Argon (prose) APPROVE; Sol three MINORs, two adopted (an
+undeclared Python module no longer takes a same-stem file's component on
+its import edges; LLR-067's `code_symbol` gains `_classifiable_edges`), one
+dismissed by the coordinator (a parenthesized module docstring, which no
+file uses and which the reader reports absent).
 
 Built on the maintenance branch `maint/wi-1021` from `1aa6c439a`, with the
 commit hooks on. The record is in the row's Deliverable

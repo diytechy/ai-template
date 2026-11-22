@@ -232,7 +232,13 @@ def _classifiable_edges(root):
     cmp_ids = {c["id"] for c in load_cmps(spine_carrier.load(root / CMP_CSV, "CMP-ID"))}
     if not cmp_ids:
         return
-    raw = _kitspine.module_components(component_headers(root)[0])
+    # An import's endpoints are the Python modules the inventory walks, so only
+    # their declarations place an edge: a declared `b.sh` on `b.py`'s key must
+    # not lend its component to an undeclared `b.py` (the Trust ruling).
+    declared = component_headers(root)[0]
+    raw = _kitspine.module_components(
+        {path: cmp for path, cmp in declared.items() if path.endswith(".py")}
+    )
     membership = {n: tags & cmp_ids for n, tags in raw.items()}
     modules = {_norm_module(m) for m in names} - {""}
     src, _mode = _arch_scan_profile(root)
