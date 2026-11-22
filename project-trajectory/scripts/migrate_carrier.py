@@ -894,16 +894,17 @@ def _seed_channel(owner):
 
 
 def _if_block_cells(lines):
-    """`{key: (start, end)}` line spans of one `[interface.IF-###]` block,
-    multi-line strings included."""
+    """`{key: (start, end)}` line spans of one `[interface.IF-###]` or
+    `[design.LLR-###]` block, multi-line strings included, basic (`\"\"\"`) and
+    literal (`'''`) alike; a line keeps its own end, LF or CRLF."""
     cells, i = {}, 1
     while i < len(lines):
         km = _KEY_RE.match(lines[i])
         if km:
-            start, val = i, km.group(2)
-            if val.startswith('"""') and val.count('"""') == 1:
+            start, delim = i, km.group(2)[:3]
+            if delim in ('"""', "'''") and km.group(2).count(delim) == 1:
                 i += 1
-                while '"""' not in lines[i]:
+                while delim not in lines[i]:
                     i += 1
             cells[km.group(1)] = (start, i)
         i += 1
@@ -1057,7 +1058,8 @@ def drop_llr_trace_cells(root, write):
     path = root / LLR_REL
     if not path.is_file():
         return ["{}: absent, nothing to migrate".format(LLR_REL)], []
-    text = path.read_text(encoding="utf-8")
+    # Decoded from bytes, untranslated: a CRLF registry is written back CRLF.
+    text = path.read_bytes().decode("utf-8")
     before = tomllib.loads(text)
     out, changed = [], 0
     for blk in re.split(r"(?m)^(?=\[design\.)", text):

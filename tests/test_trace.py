@@ -784,6 +784,7 @@ LLR-002,SR-001,Drafted sub-part,src/demo,addfast,"A not-yet-tested decomposition
 
 
 def test_draft_llr_is_exempt_from_tc_rule(scaffold):
+    """Implements: TC-480"""
     make_minimal_project(scaffold)
     llrs = scaffold / "docs" / "requirements" / "low-level-requirements.csv"
     llrs.write_text(DRAFT_LLRS, encoding="utf-8")

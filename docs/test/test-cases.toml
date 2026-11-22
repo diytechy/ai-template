@@ -4662,11 +4662,11 @@ phase = 6
 [test.TC-480]
 verifies = ["SR-248", "LLR-403"]
 level = "Unit"
-method = "Place design rows over test cases naming interfaces: one case naming two interfaces owned by two components, a second naming one of them for two rows, a case naming an interface an external party owns, a case naming no interface and an example case. Count the unplaced rows, and build the component view from the same rows."
+method = "Place design rows over test cases naming interfaces: one case naming two interfaces owned by two components, a second naming one of them for two rows, a case naming an interface an external party owns, a case naming no interface and an example case. Count the unplaced rows, and build the component view from the same rows. Then run the strict check over a project whose design row decomposes a requirement and is verified by no test case, first with the row Drafted and then with it Accepted."
 tier = "Smoke"
-expected = "The first row is placed at both components and the second at the one its case names; the external owner and the interface-free case place nothing, and the example case is not read. The two unplaced rows are counted and named on one line that changes no exit code, and the component view holds each placed row and its requirement in its components and lists the unplaced rows."
+expected = "The first row is placed at both components and the second at the one its case names; the external owner and the interface-free case place nothing, and the example case is not read. The two unplaced rows are counted and named on one line that changes no exit code, and the component view holds each placed row and its requirement in its components and lists the unplaced rows. The Drafted row is not reported as lacking a test case and the check passes; Accepted, it is reported as having no test case, naming the row, and the check fails."
 automated = "Yes"
-evidence = "tests/test_llr_trace_cells.py::test_a_design_row_is_placed_through_the_interfaces_its_cases_name"
+evidence = "tests/test_llr_trace_cells.py::test_a_design_row_is_placed_through_the_interfaces_its_cases_name; tests/test_trace.py::test_draft_llr_is_exempt_from_tc_rule"
 status = "Drafted"
 phase = 6
 
@@ -4706,10 +4706,10 @@ phase = 6
 [test.TC-484]
 verifies = ["SR-036", "LLR-407"]
 level = "Unit"
-method = "Migrate a design-row registry whose first row carries all three retired cells, one with a multi-line value, beside a prose cell quoting a file-cell assignment, and whose second row carries none: once reporting only, once writing, once more, and through the command line."
+method = "Migrate a design-row registry whose first row carries all three retired cells, one with a multi-line value, beside a prose cell quoting a file-cell assignment, and whose second row carries none: once reporting only, once writing, once more, and through the command line. Then migrate a registry written with CRLF line ends whose retired cells include a multi-line value beside a kept multi-line cell, and a registry whose retired cell is a multi-line literal string beside a kept multi-line literal cell quoting the basic-string delimiter and a file-cell assignment."
 tier = "Smoke"
-expected = "The reporting run counts one row and writes nothing; the writing run removes exactly the three cells, keeps the quoted text and every other byte, and its result reads under the loader's key rule; the next run counts none and writes nothing; the command exits 0."
+expected = "The reporting run counts one row and writes nothing; the writing run removes exactly the three cells, keeps the quoted text and every other byte, and its result reads under the loader's key rule; the next run counts none and writes nothing; the command exits 0. The CRLF registry is written back byte for byte less the three cells' lines, every line end still CRLF; the literal value is removed whole, and the kept literal cell and every other byte stay as written."
 automated = "Yes"
-evidence = "tests/test_llr_trace_cells.py::test_the_migration_drops_the_three_cells_and_nothing_else"
+evidence = "tests/test_llr_trace_cells.py::test_the_migration_drops_the_three_cells_and_nothing_else; tests/test_llr_trace_cells.py::test_the_migration_drops_a_multi_line_literal_value; tests/test_llr_trace_cells.py::test_the_migration_keeps_crlf_line_ends"
 status = "Drafted"
 phase = 6

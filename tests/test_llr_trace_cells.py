@@ -276,3 +276,60 @@ def test_the_migration_drops_the_three_cells_and_nothing_else(tmp_path):
         "0 row(s) lose module, code_symbol and component"
     )
     assert migrate_carrier.main(["--root", str(tmp_path), "--llr-trace-cells"]) == 0
+
+
+def test_the_migration_keeps_crlf_line_ends(tmp_path):
+    """Implements: TC-484"""
+    # Every other byte kept means the line ends too: a CRLF registry comes back
+    # CRLF, a multi-line value's inner line end included.
+    before = (
+        "# the registry header\r\n\r\n"
+        "[design.LLR-001]\r\n"
+        'sr_refs = ["SR-001"]\r\n'
+        'module = "src/a.py"\r\n'
+        'code_symbol = """run/\r\n'
+        'classify"""\r\n'
+        'detail = """Two\r\n'
+        'lines"""\r\n'
+        'component = "CMP-001"\r\n'
+        'status = "Accepted"\r\n'
+    )
+    after = (
+        "# the registry header\r\n\r\n"
+        "[design.LLR-001]\r\n"
+        'sr_refs = ["SR-001"]\r\n'
+        'detail = """Two\r\n'
+        'lines"""\r\n'
+        'status = "Accepted"\r\n'
+    )
+    reg = _write(tmp_path, LLR_REL, before)
+    report, written = migrate_carrier.drop_llr_trace_cells(tmp_path, write=True)
+    assert written == [reg] and reg.read_bytes() == after.encode("utf-8")
+
+
+def test_the_migration_drops_a_multi_line_literal_value(tmp_path):
+    """Implements: TC-484"""
+    # A multi-line literal string is a multi-line value too, and a kept literal
+    # cell quoting a basic-string delimiter and an assignment stays whole.
+    before = (
+        "[design.LLR-001]\n"
+        'sr_refs = ["SR-001"]\n'
+        "code_symbol = '''run/\n"
+        "classify'''\n"
+        "detail = '''Prose quoting \"\"\" and a cell:\n"
+        'module = "kept, it is text"\n'
+        "'''\n"
+        'status = "Drafted"\n'
+    )
+    after = (
+        "[design.LLR-001]\n"
+        'sr_refs = ["SR-001"]\n'
+        "detail = '''Prose quoting \"\"\" and a cell:\n"
+        'module = "kept, it is text"\n'
+        "'''\n"
+        'status = "Drafted"\n'
+    )
+    reg = _write(tmp_path, LLR_REL, before)
+    report, written = migrate_carrier.drop_llr_trace_cells(tmp_path, write=True)
+    assert written == [reg] and reg.read_bytes() == after.encode("utf-8")
+    assert report[0].endswith("1 row(s) lose module, code_symbol and component")

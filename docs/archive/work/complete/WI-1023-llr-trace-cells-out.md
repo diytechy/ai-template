@@ -157,7 +157,8 @@ flipped nothing):
   cell or comment), LLR-199 (placement in the component view and the unplaced
   table), LLR-201 (PB `Refs`; the LLR component arm), LLR-210 (the shared-file
   signal through the index), LLR-244 (`module_srs`, `if_reached_srs` and the
-  files-mode reach), LLR-263 (the listing through the index), LLR-293 (the
+  files-mode reach), LLR-263 (the listing through the index, its detail and
+  its rationale), LLR-293 (the
   `component:` trigger reads the headers); SR-212 (acceptance: "through the
   files its design rows' back-links are in"; its `Hat-Refs` left as they are,
   deliberately, since no perspective changes); TC-195, TC-197, TC-239 and
