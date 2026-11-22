@@ -502,10 +502,11 @@ def spec_bodies(root):
     return out
 
 
-def touched_modules(root, row, llrs=None, body=""):
-    """The module set a row would edit: the `Module` cells of every LLR on the
-    row's SR-Refs (the `intake._code_map_lines` join the worker brief already
-    makes), plus any module path the row's own Context/Done-when names.
+def touched_modules(root, row, llrs=None, body="", index=None):
+    """The module set a row would edit: the files realizing every LLR on the
+    row's SR-Refs, as the Implements index reads them up from the code's tags
+    (`index`, `{spine id: [file, ...]}`, read when not handed in; a design row
+    names no file), plus any module path the row's own Context/Done-when names.
 
     BOTH HALVES, because each is blind where the other sees. The LLR join is
     authoritative and traceable but says nothing about a row that cites no SR —
@@ -513,25 +514,33 @@ def touched_modules(root, row, llrs=None, body=""):
     why it is anchored on a `.py` suffix and why this whole signal is a
     pre-filter feeding a judge rather than a finding of its own.
 
-    Compared by BASENAME. A row's prose writes `intake.py` where an LLR's
-    `Module` cell writes `project-trajectory/scripts/intake.py`, and a signal
-    that only fired when two rows spelled a path the same way would fire on
-    almost nothing."""
+    Compared by BASENAME. A row's prose writes `intake.py` where the index
+    writes `project-trajectory/scripts/intake.py`, and a signal that only fired
+    when two rows spelled a path the same way would fire on almost nothing."""
     llrs = _llr_rows(root) if llrs is None else llrs
+    index = _index(root) if index is None else index
     srs = set(refs(_cell(row, "SR-Refs")))
     named = _MODULE_RE.findall(_cell(row, "Title") + " " + (body or ""))
-    return _llr_modules(srs, llrs) | {Path(name).name for name in named}
+    return _llr_modules(srs, llrs, index) | {Path(name).name for name in named}
 
 
-def _llr_modules(srs, llrs):
-    """The `Module` basenames of every LLR row owned by one of `srs`."""
+def _llr_modules(srs, llrs, index):
+    """The basenames of the files the index names for every LLR row owned by
+    one of `srs`."""
     return {
-        Path(mod.strip()).name
+        Path(path).name
         for llr in llrs
         if srs & set(refs(llr.get("SR-Refs")))
-        for mod in (llr.get("Module") or "").split(";")
-        if mod.strip()
+        for path in index.get((llr.get("LLR-ID") or "").strip(), ())
     }
+
+
+def _index(root):
+    """The Implements index (`arch_inputs.implements_index`, through the
+    validator's re-export, imported here for `pair_findings`' reason)."""
+    import check_trajectory as ct
+
+    return ct.implements_index(Path(root))
 
 
 def _llr_rows(root):
@@ -570,11 +579,12 @@ def pair_findings(root, rows, bodies=None):
     queued = [r for r in queued_work(rows) if not is_example(_cell(r, "WI-ID"))]
     out = list(ct.queue_conflict_pairs(_model(queued)))
     llrs = _llr_rows(root)
+    index = ct.implements_index(Path(root))
     bodies = spec_bodies(root) if bodies is None else bodies
     facts = {
         _cell(r, "WI-ID"): (
             _commissioning_docs(r),
-            touched_modules(root, r, llrs, bodies.get(_cell(r, "WI-ID"), "")),
+            touched_modules(root, r, llrs, bodies.get(_cell(r, "WI-ID"), ""), index),
         )
         for r in queued
     }

@@ -632,19 +632,48 @@ def test_node_adopter_upgrade_preserves_populated_operator_content(resync, tmp_p
     catalogue = run_py(["scripts/gen_prompt_catalog.py"], cwd=supported)
     assert catalogue.returncode == 0, catalogue.stdout + catalogue.stderr
 
+    # The current loader refuses a key a requirement tier does not declare
+    # (WI-1023), so the old SR columns take their documented migrations before
+    # the carrier conversion and after it: `Verification` its current name,
+    # through the vocabulary migrator, and each `Area` cell, which names a
+    # component here, is deleted as the `Aspect` entry directs.
+    # Its exit is not this leg's oracle: it also asks for the old and new
+    # scratchpads to be merged by hand, a step outside the registries.
+    vocabulary = run_py(["scripts/migrate_vocabulary.py", "--root", "."], cwd=supported)
+    assert (
+        "registry rewritten: docs/requirements/system-requirements.csv"
+        in vocabulary.stdout
+    ), vocabulary.stdout + vocabulary.stderr
+
     checked = run_py(
         ["scripts/migrate_carrier.py", "--root", ".", "--check"], cwd=supported
     )
     assert checked.returncode == 0, checked.stdout + checked.stderr
     migrated = run_py(["scripts/migrate_carrier.py", "--root", "."], cwd=supported)
     assert migrated.returncode == 0, migrated.stdout + migrated.stderr
+    trace_cells = run_py(
+        ["scripts/migrate_carrier.py", "--root", ".", "--llr-trace-cells"],
+        cwd=supported,
+    )
+    assert trace_cells.returncode == 0, trace_cells.stdout + trace_cells.stderr
+    srs_toml = supported / "docs/requirements/system-requirements.toml"
+    srs_toml.write_text(
+        "".join(
+            line
+            for line in srs_toml.read_text(encoding="utf-8").splitlines(keepends=True)
+            if not line.startswith("Area = ")
+        ),
+        encoding="utf-8",
+    )
     converted = []
     for line in migrated.stdout.splitlines():
         if line.startswith("migrate_carrier: ") and " -> " in line:
             converted.append(line.removeprefix("migrate_carrier: ").split(" -> ", 1)[0])
     assert converted, migrated.stdout + migrated.stderr
     _adopter_git(supported, "add", "-A")
-    _adopter_git(supported, "rm", "-q", *converted, "pytest.ini")
+    # `-f`: the vocabulary migration above rewrote a converted source in place,
+    # so it is staged with changes, and the conversion retires it all the same.
+    _adopter_git(supported, "rm", "-q", "-f", *converted, "pytest.ini")
 
     # A legacy policy is deliberately introduced only on the migration copy so
     # this focused arm proves the explicit CLI conversion itself, rather than

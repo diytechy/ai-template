@@ -330,22 +330,24 @@ def test_a_boundary_row_reaches_requirements_through_the_file_stating_its_body()
         {"IF-ID": "IF-003", "Owner": "CMP-001"},
     ]
     llrs = [
-        {
-            "LLR-ID": "LLR-001",
-            "Module": "project-trajectory/scripts/a.py",
-            "SR-Refs": "SR-001",
-        },
-        {"LLR-ID": "LLR-002", "Module": "scripts/b.py", "SR-Refs": "SR-002"},
+        {"LLR-ID": "LLR-001", "SR-Refs": "SR-001"},
+        {"LLR-ID": "LLR-002", "SR-Refs": "SR-002"},
     ]
+    # The files realizing each design row, as the code's own tags say.
+    index = {
+        "LLR-001": ["project-trajectory/scripts/a.py"],
+        "LLR-002": ["scripts/b.py"],
+    }
     homes = {"IF-001": "project-trajectory/scripts/a.py", "IF-003": "scripts/b.py"}
-    assert assumption_rules.if_reached_srs(ifs, llrs, homes) == {
+    assert assumption_rules.if_reached_srs(ifs, llrs, homes, index, []) == {
         "IF-001": ["SR-001"],
         "IF-002": [],
     }
     # With no scanned source (`files` mode) there are no homes: each boundary
-    # row reaches the requirements of the design rows placed in its owner.
-    llrs[1]["Component"] = "CMP-001"
-    assert assumption_rules.if_reached_srs(ifs, llrs, None) == {
+    # row reaches the requirements of the design rows placed in its owner,
+    # LLR-002 placed there by the case verifying it at IF-003.
+    tcs = [{"TC-ID": "TC-001", "Verifies": "LLR-002; IF-003"}]
+    assert assumption_rules.if_reached_srs(ifs, llrs, None, index, tcs) == {
         "IF-001": ["SR-002"],
         "IF-002": ["SR-002"],
     }

@@ -199,11 +199,10 @@ Contents: 1 Invocations · 2 Claiming · 3 Landing · 4 Rebasing ·
     - source sentences kept;
     - no cell identical to its source;
     - no U+FFFD, `Â§` or `â€`;
-    - traced cells keep every entry that still names a real test or
-      symbol.
-    - a `code_symbol` cell is one `/`-joined list, so compare it symbol
-      by symbol: a turn that split one row's map across two rows dropped
-      six still-tagged symbols a whole-entry compare missed (wi-978 D-014).
+    - traced cells keep every entry that still names a real test;
+      compare a joined list entry by entry: a turn that split one row's map
+      across two rows dropped six still-tagged entries a whole-cell compare
+      missed (wi-978 D-014).
 
     A string replace can land on another row holding the same text: one
     module edit meant for LLR-061 landed on LLR-037.
@@ -787,7 +786,7 @@ commit of its own, move it to trunk's tip
   one way in every mode (operator, 2026-10-07). This order is not yet proven on a
   same-registry checkpoint, so record the first one. `--accepts` splits on
   `;`, so never put one in a ref. A traced-only change owes no sitting.
-  A traced cell changed after the act (a `code_symbol` a later fix adds)
+  A traced cell changed after the act (an `evidence` part a later fix adds)
   leaves the registry off its anchor: re-anchor it in the LANE, as its last
   spine commit, with
   `"$PY" "$SCRIPTS/intake.py" snapshot --accepts "<registry>=<ref>"`
@@ -1043,7 +1042,7 @@ lane commit being replayed.
 - Acts collide too: check `acts.toml` after every rebase for duplicate act
   seqs (the skill's §4 latches sittings to avoid them).
 - A lane rebased after its act turn, onto a trunk that moved an accepted
-  row's traced cells (`module`, `code_symbol`, `evidence`), replays its act
+  row's traced cells (`evidence`, `test_refs`), replays its act
   commits' snapshot copies unchanged, so each no longer equals its live
   file at that commit. The registry-integrity step reads that as a landed
   divergence in the committed history and refuses every later commit, so
@@ -1131,8 +1130,8 @@ lane commit being replayed.
 - When a move makes an accepted cell's module-qualified name false, drop
   the qualifier and keep the accepted symbol: a swapped qualifier adds a
   name to row text, which a sitting returns (wi-976 sitting 015).
-- The author has dropped an existing `code_symbol` entry as "nonexistent"
-  (observed with Terra). Grep every symbol it removes before committing.
+- The author has dropped an existing trace entry as "nonexistent"
+  (observed with Terra). Grep every name it removes before committing.
 - On a large change set (WI-834: about 30 cells) one author turn (observed
   with Terra) applies three to five cells, then ends saying the rest "did
   not apply". Resume the same

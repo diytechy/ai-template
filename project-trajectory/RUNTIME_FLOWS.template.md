@@ -27,8 +27,9 @@ was deleted must fail this gate, so the check ignores the title heading.
 
 Author one sequence diagram per key user-visible scenario, and **always one
 for anything concurrent / asynchronous / non-blocking** — that's where
-reviewers misread registry rows. Participants are planned modules (the LLR
-`Module` column); cite the ids a diagram renders in its title or `Note`s.
+reviewers misread registry rows. Participants are planned components or
+files (a design row names neither; the component view shows where each row is
+placed); cite the ids a diagram renders in its title or `Note`s.
 Replace this example:
 
 ```mermaid

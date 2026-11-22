@@ -262,20 +262,17 @@ copy carries drifted accepted text that the act neither flips nor names; an
 
 ## 4. LLR — Low-Level Requirements
 
-**11 columns.** The decomposition tier: *how* an SR is met, in named code.
+**8 columns.** The decomposition tier: *how* an SR is met. A row names no file, symbol or component (WI-1023): the files realizing it are read up from the code's `Implements:` tags (`arch_inputs.implements_index`), and its placement is derived (§4.2). The loader refuses a row carrying a key the tier does not declare.
 
 | Column | Required | Vocabulary / default | Effect |
 |---|---|---|---|
 | `LLR-ID` | ✔ | `LLR-<digits>` | Join key; the same three integrity rules as SR. |
 | `SR-Refs` | ✔ | `;`-joined SR ids | **The canonical SR↔LLR link.** Empty → orphan ("no SR parent"); unknown target → orphan; citing a **superseded** SR → integrity. |
 | `Title` | ✔ | free text | Node label. |
-| `Module` | ✔ | repo path | Doubles as a **join target**: the set of `Module` values is added to the PB back-link target set and to the IF-endpoint advisory join. Normalised by stripping a leading `project-trajectory/` segment and any of `.py .sh .ps1 .ts .js .go .rs .cmd`. |
-| `CodeSymbol` | ✔ | function/type name | Required non-empty, and **resolved against real code** — `check_doc_refs.py`'s `symbol_findings` is the LLR tier's *discharge* test (§4.2). Also read by `gen_okf.py` for the knowledge bundle. |
 | `Detail` | ✔ | decomposition detail, **not** an SR paraphrase | Accepted prose. |
 | `Rationale` | ✘ | free text | **Deliberately not required** — "a short decomposition row's why IS its parent SR's, so requiring one everywhere would manufacture the restatement the column exists to prevent." Accepted when present. |
 | `TestRefs` | ✘ | `(see TC)` | **Inert** — see §12.1. |
 | `Status` | ✔ | closed, as SR | `Drafted` HOLDS THE `DevStg-LLReqs` RUNG OPEN (`spine_stage`: `any(is_drafted(r) for r in llrs)`) and exempts the row from "no TC". Otherwise **does not move the stage** — §4.1. |
-| `Component` | ✘ | `CMP-###` | Optional membership tag, validated against the CMP registry only when that registry is non-empty. |
 | `Phase` | ✘ | digit-parseable | = the parent SR's Phase by convention. Same arming rule. |
 
 ### 4.1 LLR Status does not gate — on purpose
@@ -304,56 +301,19 @@ LLR every citing TC of which is `Accepted` — is now the finding on the TC-to-L
 edge, reported from the first accepted TC rather than only once all of them
 are.
 
-### 4.2 `CodeSymbol` must BIND — the discharge test, and what the cell may name
+### 4.2 Discharge and placement are derived (WI-1023)
 
-`symbol_findings` in `check_doc_refs.py` (WI-429; accepted as built by operator
-ruling **OI-20**, 2026-08-13). A live LLR row must carry **at least one**
-identifier-shaped `CodeSymbol` token that binds at module scope in one of the
-`.py` modules its `Module` cell names — `CodeSymbol` supplies the tokens,
-`Module` supplies the **search scope**, and the `;`-joined module list is read
-as a **union**, never as a positional pairing. Warn-first; **hard under
-`--strict`** at the `[step:doc-refs]` DevStg-Impl step.
-
-**The grammar, ruled with the acceptance.** ADMISSIBLE in `CodeSymbol`:
-
-- a **resolvable code symbol** — function, class, method or module constant.
-  Private `_`-names and constants count: the oracle is
-  `gen_arch_map.module_bindings`, not the rendered public-API module map, which
-  drops exactly what 41 of this repo's live rows name;
-- a **module path** — the module itself is the realization artifact;
-- a designed **PART SOURCE** — a physical part authored as parametric code. It
-  binds like any other symbol. (A *bought* part never reaches this tier: it is a
-  `PART` row owned by an `IF` row.)
-
-NOT admissible: a **generated artifact** (its generator is the realization) or a
-**prose contract** (a description of behaviour is not a name). Four live rows
-are therefore **honestly unfounded** rather than founded by widening the grammar
-to fit them — the cell names a function local, a label that never existed, or an
-HTML attribute that merely looks like an identifier.
-
-**Why anchor and not per-token.** A per-token rule fails 31 of 149 rows on
-arrival, 18 for tokens that were never symbol claims — enforcing a grammar no
-ruling had given the cell. Per-token misses file as *untraced* and are counted
-every run, so a later tightening stays available rather than hidden. Same trade
-ruling **R2** made on the sibling `Evidence` cell: validate the coarse claim,
-rule the fine one prose.
-
-**This rule is the decomposition FLOOR.** Under OI-21's ladder, rung 4
-terminates where a token binds: a requirement that still needs allocating to
-sub-parts is an SR for that sub-scope; one that binds to code is the bottom. An
-*advisory* version would make D-9's `Founded` rung vacuous for one of four
-tiers, which is why it gates.
-
-**The non-`.py` skip is REPORTED, never silent** (the OI-28 guard, WI-449). A
-row naming only non-Python modules — a hook, a shell template — has no Python
-name to bind, so discharge is not computed for it. That skip is correct and
-unchanged, but it used to produce **no output at all**, which is a fail-open now
-that template paths are ruled admissible in `Module` as realization artifacts.
-Each such row now prints one `ADVISORY -` line naming the row and its modules
-(folding to a single counted line past 15 rows). Advisory is a **third ink**
-with its own meaning here: `WARN` gates under `--strict`, `UNTRACED` never gates
-and is hidden without `--show-untraced`, `ADVISORY` never gates and is never
-hidden.
+The `Module`/`CodeSymbol` binding this section once described (WI-429, OI-20)
+retired with the cells, and with it `check_doc_refs.symbol_findings` and its
+oracle `gen_arch_map.module_bindings` (SR-180, LLR-180 and TC-175 retired to
+SR-248, LLR-403 and TC-480). A design row is discharged by the evidence of its
+kind: a test case verifying it, which the orphan rules require. It is
+**placed** at the owner component of each interface a test case verifying it
+names (`kitlib.spine.llr_placement`); one placed nowhere is listed and counted
+(`trace.py`'s `placement:` line, the component view's `[unplaced] llr_refs`),
+never refused. The files realizing a row are the `Implements:` index's, read
+by `--tests-for`, the interface-form gate's reach, the consolidation census
+and the build brief's code map.
 
 ---
 
@@ -798,7 +758,7 @@ When an **`Accepted`** spine row is amended, `staged_spine_amendments` in
 | Registry | **Traced** (amend freely) | **Accepted** (opens a re-accept window) |
 |---|---|---|
 | SR | `SN-Refs`, `Boundary-Refs`, `Hat-Refs`, `Phase`, `Aspect`, `Lifecycle`, `DA-Refs` | `Title`, `Requirement`, `Rationale`, `AcceptanceCriteria`, `Permutations`, `Priority`, `VerificationMethod`, `Coincident`, `Form` |
-| LLR | `Module`, `CodeSymbol`, `TestRefs`, `Component`, `Phase`, `SR-Refs`, `Hat-Refs` | `Title`, `Detail`, `Rationale` |
+| LLR | `TestRefs`, `Phase`, `SR-Refs`, `Hat-Refs` (and the retired `Module`, `CodeSymbol`, `Component`, still classed traced for the snapshot and history) | `Title`, `Detail`, `Rationale` |
 | TC | `Verifies`, `Evidence`, `Automated`, `Phase`, `Assumption-Refs` | `Method`, `Expected`, `Parameters`, `Level`, `Tier`, `Inputs`, `MaxAge`, `Sampling`, `SampleSize`, `AcceptanceRule`, `Trigger`, `Rubric`, `MinWorkItems` |
 | SN | `Stakeholder-Refs`, `Source` | every other need cell (the residual) |
 | IF (off-spine) | `BridgedBy` | every other interface cell, `Coincident` included (the residual) |
@@ -934,8 +894,8 @@ All optional; all vacuous when absent or `-000`-only.
 |---|---|---|---|
 | `docs/requirements/interfaces.toml` | `IF-###` | `Owner` (a component id or an `external:` party), `Requestors` / `Consumers` (exactly one), `interface_from_external` / `interface_to_external` | Every endpoint — the `Owner` and each `Requestors` / `Consumers` entry — is a `CMP-###` id a live component row has or `external:` followed by a party the registry header declares (`# External party: <name>`, revision 35); any other endpoint (a path, a module, a requirement or design id, an unknown component, a bare or undeclared party) and a multi-endpoint `Owner` join the `--strict` failure set, and so does a directional tie-back naming a crossing `external.toml` does not declare. A row whose owner AND far side are all `external:` parties joins it too — it has no in-tree endpoint, so no component whose file can hold our reading of the surface, and a crossing between two external parties is not a seam of this system. **Warn-only**: a row naming both far sides or neither. Citable from a TC's `Verifies`. The six RETIRED cells (`Contract`, `Provider`, `Req-Refs`, `Signal`, `SignalNote`, `Component`) are found per REGISTRY by KEY PRESENCE through `spine_carrier.columns` — a TOML row that sets one, even to `""`, or a legacy CSV header that still declares the column — one `--strict` finding per key, naming the rows or the header column (OI-67 slice 6). The `Data` cell carries FIVE warn-first rules: the four FORM rules (no work-item id, no `D-<n>` citation, no rationale connective, a 160-character ceiling) plus a CONTENT rule — a `SCHED_*` / `Foo.bar` / `CONSTANT_NAME` token must resolve in the declared source surface and a named path must exist, vacuous where there is no surface (`[arch-map] mode = files`) and silent on a path `docs/declared-absences` declares. **The definition gate** is `check_trajectory.contract_body_findings` — WARN plain, ERROR under `--strict` (which `check.py` passes at or above `DevStg-Impl`; a direct run passes it any time), sharing `[checks] interfaces_check` — over the scan surface (every file under `[paths] src` of a type the `Component:` grammar carries, `README.md` excluded, plus each file `docs/stack.ini` `[arch-map] headers` lists; nothing else, so the approval snapshot, `docs/reviews/`, `docs/plans/` and example documents never state a second body): at most one file states each `Contract IF-###:` body (zero is valid; two or more is one finding naming every file); where a body exists its file's `Component:` header names the owner, or for an `external:`-owned row a component the row lists among its consumers or requestors; a file declaring an id on its `Contracts:` marker with no body; a source whose header the contract grammar refuses (its declared rows count as unstated, the scan continues). The cross-component rule counts as cover only a `call` row owned by the imported file's component naming the importer's among its requestors. The optional `VerifiedBy` cell (a `TC-###` or an `LLR-###`; empty = "verified in its own right") is checked for RESOLUTION only, warn-first. On a BOUNDARY row (one with a tie-back) the optional `BridgedBy` names the assumptions carrying the seam's reading to an outcome and `Coincident` says why its reading is the outcome (SR-211, `assumption_rules.interface_bridge_findings`): a `BridgedBy` entry no assumption row declares joins the `--strict` failure set (class `interface`); a boundary row with neither is one advisory naming it; an internal row is not read. |
 | `docs/requirements/external.toml` — the depth-0 FRAME (WI-442) | `EXT-###` (entities), `B-##` (boundary crossings), `REL-###` (relationships) | crossing `Entity`; relationship `From`/`To`; entity `Mediates` | THREE tiers on ONE path, keyed by id column. Every reference must resolve to a declared entity, joining the `--strict` failure set — **and crossings or relationships declared with NO entity at all are a finding of their own**, not a vacuous pass. Required fields per tier: EXT `Name`/`Class`/`Description`/`Status`; B `Entity`/`Direction`/`Carries`/`Status`; REL `From`/`To`/`Kind`/`Flow`/`Status`. `Status` (`Drafted`\|`Accepted`) is the one maturity field, shared with the IF tier, and **rung 1 of the stage ladder reads it** — `spine_rules.boundary_incomplete` caps the repo at `DevStg-Boundary` while any crossing is `Drafted`. Realization coverage (a crossing with no realizing IF row) is REPORTED and never gated: decision 6, deferred by ruling. An SR names its crossing(s) in `Boundary-Refs` — resolution hard, coverage advisory (SN-037). An entity's optional `Mediates` names the ONE entity it acts for; naming an undeclared entity or the row itself joins the same failure set (`frame_rules.mediation_findings`, SR-195), and its one reader is the assumption tier's reach check. |
-| performance budgets | `PB-###` | `Refs` | Must resolve to a real SR id, LLR id, **or LLR `Module` path**. Empty `Refs` → finding. |
-| `docs/requirements/components.toml` | `CMP-###` | `PartOf`, `SupersededBy`, `Derivation` | Must name real CMP ids. When non-empty, every `Component` tag on LLR/IF/PART/ASSET must resolve. `Knowledge` refs under `docs/knowledge/` are **warn-only**. Each real row holds the partition's derivation record (`Candidates`, `Objective`, `Constraints`, `Scores`, `Selected`, `Ruling`, optional `Override`) or cites, with `Derivation`, the one row holding it (SR-165): `trajectory_arch.derivation_record_findings`, inside `component_findings`, reports an absent, incomplete, malformed or inconsistent record — WARN plain, ERROR under `--strict`, sharing `[checks] components_check` — and recomputes the ranking only for a record with none of the first three. |
+| performance budgets | `PB-###` | `Refs` | Must resolve to a real SR or LLR id (a design row names no file since WI-1023, so a path resolves to nothing). Empty `Refs` → finding. |
+| `docs/requirements/components.toml` | `CMP-###` | `PartOf`, `SupersededBy`, `Derivation` | Must name real CMP ids. When non-empty, every `Component` tag on IF/PART/ASSET must resolve; a design row carries none, its placement derived from the interfaces its verifying test cases name (`kitlib.spine.llr_placement`). `Knowledge` refs under `docs/knowledge/` are **warn-only**. Each real row holds the partition's derivation record (`Candidates`, `Objective`, `Constraints`, `Scores`, `Selected`, `Ruling`, optional `Override`) or cites, with `Derivation`, the one row holding it (SR-165): `trajectory_arch.derivation_record_findings`, inside `component_findings`, reports an absent, incomplete, malformed or inconsistent record — WARN plain, ERROR under `--strict`, sharing `[checks] components_check` — and recomputes the ranking only for a record with none of the first three. |
 | procurement | `PART-###` | `Component` | membership only |
 | assets | `ASSET-###` | `Component` | membership only |
 | `docs/requirements/hats.toml` — the declared perspectives | hat NAME (`[hat.SECURITY]`; no numeric space, so no `-000` row) | SR/LLR `Hat-Refs` | Resolution is HARD: a `Hat-Refs` naming a hat the roster does not declare joins the `--strict` failure set (class `hat`). Coverage is warn-only FOREVER — one advisory counting rows attributable to no perspective, one naming hats no row is attributable to, and BOTH are suppressed entirely until at least one row fills the cell, so adopting the kit is quiet. Coverage counts **effective** sets (`trace.effective_hats`: a row's own refs unioned with its `SR-Refs` parents'), never cells — an LLR's cell holds only what its own decomposition raised, and copying a parent's hats down is the staleness this derivation exists to forbid. Vacuous with no roster (absence is opt-out for the whole layer); `trace.py` reads NAMES and each hat's `speaks_for`, and `scripts/hats.py` remains the sole validator of roster content. Two more references resolve into the same `hat` class: a hat's optional `speaks_for` (one `STK-##` id, shape-checked by `hats.py`) naming a stakeholder the needs file's list does not declare, vacuous with no list (SR-213); and an assumption's `ObstacleHats` naming a hat the roster does not declare, every name failing when there is no roster (SR-214, `assumption_rules.obstacle_hat_findings`). |

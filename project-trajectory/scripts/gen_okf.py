@@ -463,10 +463,9 @@ def emit(root):
         cid = r["LLR-ID"].strip()
         body = ["**Detail.** {}".format((r.get("Detail") or "").strip())]
         body += field("Rationale", r.get("Rationale"))
-        mod = (r.get("Module") or "").strip()
-        sym = (r.get("CodeSymbol") or "").strip()
-        if mod or sym:
-            body.append("\n**Code.** `{}` — `{}`".format(mod, sym))
+        # No `**Code.**` line: a design row names no file or symbol since
+        # WI-1023, and the bundle exports what the registries say; the files
+        # realizing a row are the code's `Implements:` tags.
         body += links(
             "Decomposes", split_refs(r.get("SR-Refs", "")), "system-requirements"
         )

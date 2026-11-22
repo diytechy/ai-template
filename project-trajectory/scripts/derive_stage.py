@@ -394,7 +394,9 @@ def _spine_at(root, rev):
                 break
         if not found:
             return None
-        return spine_rules.load_spine(Path(tmp) / "docs")
+        # History is read as it was written: a revision before a schema
+        # change keeps the cells it retired, so the key rule is not applied.
+        return spine_rules.load_spine(Path(tmp) / "docs", declared=False)
 
 
 def _by_id(spine):

@@ -44,7 +44,7 @@ copying a subset of it — so a class added here reaches both call sites, or
 neither, by construction, and the drift this row exists to fix cannot
 reopen by one side forgetting to update its own copy. Both modules keep their
 long-standing public names (`KEY_RE`, `TOKEN_RES`, `_SECRET_RES`) as VIEWS over
-this table, so no LLR `code_symbol` cell and no call site changes shape.
+this table, so no call site changes shape.
 
 Pure data — `re` and `typing` only, no sibling import — so it is safe for
 `bootstrap.py` to import (the package's one asserted rule) without dragging a

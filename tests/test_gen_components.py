@@ -2,10 +2,11 @@
 
 The claims this module holds, one per thing the ruling actually decided:
 
-  * the JOIN — design rows placed by the design tier's `Component` tag, the
-    requirement tier reached THROUGH it, the perspectives DERIVED (never
-    copied), each file's membership from its `Component:` header, the seams
-    placed by tag or by endpoint;
+  * the JOIN — design rows placed through the interfaces their verifying
+    test cases name (a row names no component since WI-1023), the requirement
+    tier reached THROUGH them, the perspectives DERIVED (never copied), each
+    file's membership from its `Component:` header, the seams placed by their
+    endpoints;
   * the THREE COVERAGE EDGES the brief refused to let the execution paper
     over — a requirement that reaches no component, one that reaches several,
     and whether seams enter the view at all. Each is asserted as a VISIBLE
@@ -60,16 +61,22 @@ status = "Accepted"
 LLRS = """[design.LLR-001]
 sr_refs = ["SR-001"]
 title = "in alpha"
-module = "project-trajectory/scripts/alpha.py"
-component = "CMP-001"
 status = "Accepted"
 
 [design.LLR-002]
 sr_refs = ["SR-001", "SR-002"]
 title = "in beta"
-module = "project-trajectory/scripts/beta.py"
-component = "CMP-002"
 hat_refs = ["MAINTAINER"]
+status = "Accepted"
+"""
+
+# Each design row sits at the owner of the interface its verifying case names.
+TCS = """[test.TC-001]
+verifies = ["LLR-001", "IF-002"]
+status = "Accepted"
+
+[test.TC-002]
+verifies = ["LLR-002", "IF-004"]
 status = "Accepted"
 """
 
@@ -87,6 +94,11 @@ channel = "call"
 owner = "external:somebody"
 consumers = ["external:somebody-else"]
 channel = "bytes"
+
+[interface.IF-004]
+owner = "CMP-002"
+consumers = ["external:somebody"]
+channel = "bytes"
 """
 
 
@@ -94,11 +106,12 @@ channel = "bytes"
 def repo(tmp_path):
     """A two-component spine small enough to reason about by hand and wide
     enough to carry all three coverage edges at once, its two source files
-    each declaring the component its design row is tagged into."""
+    each declaring the component its design row is placed in."""
     _write(tmp_path, "docs/requirements/components.toml", CMPS)
     _write(tmp_path, "docs/requirements/system-requirements.toml", SRS)
     _write(tmp_path, "docs/requirements/low-level-requirements.toml", LLRS)
     _write(tmp_path, "docs/requirements/interfaces.toml", IFS)
+    _write(tmp_path, "docs/test/test-cases.toml", TCS)
     _write(tmp_path, "docs/stack.ini", "[paths]\nsrc = project-trajectory/scripts\n")
     _declare(tmp_path, "alpha", "CMP-001")
     _declare(tmp_path, "beta", "CMP-002")
@@ -200,7 +213,9 @@ def test_seams_enter_the_view_split_internal_from_boundary(repo):
     # IF-001 crosses the two, so it is a BOUNDARY of BOTH — a seam belongs to
     # each side of itself, which is what makes the view show a component's edges.
     assert view["CMP-001"]["seam_boundary_refs"] == ["IF-001"]
-    assert view["CMP-002"]["seam_boundary_refs"] == ["IF-001"]
+    # IF-004 has an external party on its far side: a boundary of CMP-002 and
+    # internal to nothing.
+    assert view["CMP-002"]["seam_boundary_refs"] == ["IF-001", "IF-004"]
 
 
 def test_a_seam_is_placed_by_the_components_its_endpoints_name(repo):
@@ -233,11 +248,11 @@ def test_seam_placement_reads_the_endpoint_cells_and_no_join(repo, monkeypatch):
 
 
 def test_the_modules_and_the_seams_follow_the_headers(repo):
-    """A file's component is its header, not the design row naming it: moving
-    alpha's header to CMP-002 moves alpha into CMP-002's modules, while the
-    design row tagged CMP-001 still places LLR-001 there and the seams stay
-    where their endpoint cells put them. A file no design row names is listed
-    by its header alone.
+    """A file's component is its header: moving alpha's header to CMP-002 moves
+    alpha into CMP-002's modules, while the case verifying LLR-001 at an
+    interface CMP-001 owns still places the row there and the seams stay where
+    their endpoint cells put them. A file no design row names is listed by its
+    header alone.
 
     Implements: TC-460"""
     _declare(repo, "alpha", "CMP-002")
@@ -288,10 +303,11 @@ def test_check_reds_on_a_stale_view_and_greens_once_regenerated(repo):
     gen = load_script(GEN)
     assert gen.main(["--root", str(repo)]) == 0
     assert gen.main(["--root", str(repo), "--check"]) == 0
-    # The real failure mode: a registry row moves and nobody regenerates.
-    llrs = repo / "docs" / "requirements" / "low-level-requirements.toml"
-    llrs.write_text(
-        LLRS.replace('component = "CMP-002"', 'component = "CMP-001"'),
+    # The real failure mode: a registry row moves and nobody regenerates. Its
+    # verifying case now names an interface CMP-001 owns, which moves the row.
+    tcs = repo / "docs" / "test" / "test-cases.toml"
+    tcs.write_text(
+        TCS.replace('["LLR-002", "IF-004"]', '["LLR-002", "IF-002"]'),
         encoding="utf-8",
         newline="\n",
     )

@@ -303,6 +303,14 @@ own. Pack §3 inverts that twice, and in opposite directions:
 Take the pack entry's word over the class here; it is the more specific rule and
 it says so in place.
 
+**A filled registry the kit's schema now refuses.** Since the design rows lost
+their `module`, `code_symbol` and `component` cells, every kit script refuses a
+design-row registry still carrying one, so this migration runs before any
+other check of the re-sync: `python scripts/migrate_carrier.py
+--llr-trace-cells` removes the three cells in place and nothing else, and the
+removal then owes one acceptance act over your accepted design rows (trace
+cells removed, requirement text unchanged). The pack's entry gives the steps.
+
 The anchor the whole procedure turns on is `docs/kit-version` — the kit short-SHA
 + date `bootstrap.py` stamps at scaffold time (§1), which is what makes a re-sync
 a **diff** instead of a guess. Pack §1.1 says what to do with it, including the

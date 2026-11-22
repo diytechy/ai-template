@@ -244,10 +244,11 @@ def test_every_ref_cell_read_splits_through_the_one_home(tmp_path):
     assert consolidate._superseded({"Supersedes": "WI-1 WI-2"}) == {"WI-1", "WI-2"}
     model = consolidate._model([{"WI-ID": "WI-9", "SR-Refs": pair}])
     assert model[0]["srs"] == ["SR-1", "SR-2"]
-    llrs = [{"LLR-ID": "LLR-1", "SR-Refs": "SR-2 SR-3", "Module": "a/one.py"}]
-    assert consolidate._llr_modules({"SR-3"}, llrs) == {"one.py"}
+    llrs = [{"LLR-ID": "LLR-1", "SR-Refs": "SR-2 SR-3"}]
+    index = {"LLR-1": ["a/one.py"]}
+    assert consolidate._llr_modules({"SR-3"}, llrs, index) == {"one.py"}
     assert consolidate.touched_modules(
-        tmp_path, {"SR-Refs": "SR-9, SR-3"}, llrs=llrs
+        tmp_path, {"SR-Refs": "SR-9, SR-3"}, llrs=llrs, index=index
     ) == {"one.py"}
     assert intake._owning_srs(
         [{"id": "LLR-1", "routed": {"SR-Refs": ("SR-1, SR-2", "SR-4")}}]
@@ -256,7 +257,7 @@ def test_every_ref_cell_read_splits_through_the_one_home(tmp_path):
     req = tmp_path / "docs" / "requirements"
     req.mkdir(parents=True)
     (req / "low-level-requirements.toml").write_text(
-        '[design.LLR-1]\nsr_refs = "SR-2, SR-3"\nmodule = "a/one.py"\n',
+        '[design.LLR-1]\nsr_refs = "SR-2, SR-3"\n',
         encoding="utf-8",
     )
     wanted = adjudicate_brief._cited_spine(

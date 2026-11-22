@@ -188,6 +188,10 @@ def judged_repo(tmp_path, *, expired=(), unrecorded=()):
                 NOW + datetime.timedelta(days=28),
             )
         record(root, tc, observed=observed, expires=expires, inputs=inputs.get(tc))
+    # A source file declaring its component (the cadence's `component:`
+    # trigger reads membership from the headers), committed with the records
+    # so it is no change since them.
+    _write(root, "src/a.py", '"""A member.\n\nComponent: CMP-001\n"""\n')
     return root, _commit(root, "judged")
 
 
@@ -205,12 +209,22 @@ def cadence_repo(tmp_path, trigger="", floor=2, *, expired=(), unrecorded=()):
         writer.writerow(row)
     _write(root, TC_CSV, out.getvalue())
     _write(root, "docs/process.toml", "[checks]\nobservation_min_work_items = 2\n")
+    # Component membership is each file's own `Component:` header (a design
+    # row names no file or component since WI-1023): `src/a.py`, written with
+    # the records, is CMP-001's.
     _write(
         root,
-        "docs/requirements/low-level-requirements.toml",
-        '[design.LLR-001]\nmodule = "src/a.txt"\ncomponent = "CMP-001"\n',
+        "docs/requirements/components.toml",
+        '[component.CMP-001]\nname = "one"\nstatus = "Accepted"\n',
     )
     return root, _commit(root, "cadence policy")
+
+
+def _touch(root, rel):
+    """Change `rel`, keeping what it already says (a member keeps its header)."""
+    path = root / rel
+    before = path.read_text(encoding="utf-8") if path.is_file() else ""
+    return _write(root, rel, before + "# moved\n")
 
 
 def close_work(root, number):
@@ -229,7 +243,7 @@ def case_due(root, sha, checkpoint="merge"):
     "trigger,checkpoint,path",
     [
         ("files:src/*.txt", "merge", "src/b.txt"),
-        ("component:CMP-001", "merge", "src/a.txt"),
+        ("component:CMP-001", "merge", "src/a.py"),
         ("release", "release", None),
         ("stage-gate", "stage-gate", None),
         ("", "merge", "src/b.txt"),
@@ -238,7 +252,7 @@ def case_due(root, sha, checkpoint="merge"):
 def test_trigger_waits_for_closed_work_floor(tmp_path, trigger, checkpoint, path):
     root, _ = cadence_repo(tmp_path, trigger)
     if path:
-        _write(root, path, "trigger moved\n")
+        _touch(root, path)
     sha = close_work(root, 10)
     assert not case_due(root, sha, checkpoint)
     sha = close_work(root, 11)

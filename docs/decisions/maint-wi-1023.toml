@@ -1,0 +1,22 @@
+high_risk = []
+
+[decision.D-001]
+decided = "The generated evidence column is written by a command, `trace.py --regen-evidence`, and held current by the existing tag-and-evidence equality rule in `check_trajectory --strict`; it is not a step of `trunk_step.py --regen`."
+alternative = "Add an `evidence` step to `trunk_step.REGEN_STEPS`, so the trunk's regeneration rewrites the test-case registry like the other generated views."
+reversal_cost = "One commit adding the step and `docs/test/test-cases.toml` to its write set, and the plan gate and bookkeeping commit then treat a spine registry as a generated view."
+why_not_escalated = "A design choice no spine row states. LLR-406 says a command writes the cells, not where it runs. The regen step's write set is read as the set of generated views by the bookkeeping commit and the plan gate, and naming a spine registry there would make a claim or a mint refuse whenever a session holds an uncommitted test-case edit; the equality check already fails the strict lint the moment a cell is stale, so nothing is left unchecked."
+review = ""
+
+[decision.D-002]
+decided = "Two readers of the retired cells retire rather than read the Implements index or placement: the OKF bundle's design-row `**Code.**` line and the acceptance brief's `Module:`/`Component:` meta line."
+alternative = "Render the index's files on the OKF page and the derived placement in the acceptance brief."
+reversal_cost = "A small commit in `gen_okf.py` and `trace.py`, and a regenerated bundle and brief."
+why_not_escalated = "A reading of scope: Done-when 2 lets a reader read the index or retire. The bundle exports what the registries say, and its export is off in this repository; a sitting judges a row's text, and placement is the component view's. The views that place rows (the component view, the state view's design-row detail, the build brief) read placement."
+review = ""
+
+[decision.D-003]
+decided = "`spine_carrier.SPINE_COLUMN` keeps mapping `module`, `code_symbol` and `component` to their column names, and `acceptance_record.SPINE_TRACED_CELLS` keeps classing `Module`, `CodeSymbol` and `Component` traced, although the keys left the design tier's schema."
+alternative = "Drop the three names from both tables with the schema (the plan said so for the column map)."
+reversal_cost = "Dropping them after the batch act re-takes the snapshot copy costs one commit; dropping them before it would make every accepted design row read as drifted."
+why_not_escalated = "A design choice LLR-404 implies but does not state: the snapshot copy and every revision before the removal still carry the keys, a column the traced table does not name reads as accepted, and an unmapped key reads under its lowercase name, which the table does not name either; so both names stay for the removal to read as the traced change the batch act records."
+review = ""

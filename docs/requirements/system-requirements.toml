@@ -1036,27 +1036,6 @@ status = "Accepted"
 phase = 4
 delivered_with = ["SR-156", "SR-170"]
 
-[requirement.SR-180]
-title = "A design row is discharged only by a realization symbol that resolves"
-sn_refs = ["SN-002", "SN-003"]
-boundary_refs = ["B-09"]
-hat_refs = ["TEST-ENGINEER"]
-requirement = """If none of the realization symbols a design-tier row names resolves within any implementation unit that same row names, then the delivered harness shall report that row as undischarged."""
-rationale = """Realizes SN-002 — the chain from need to test is trustworthy because it is mechanically verified rather than manually asserted, and the bottom rung of that chain is the claim a design row makes that the code it names exists. Without this row the spine states a terminating condition for every tier except the one that decides when decomposition is finished: a reader learns from the registries when a need is answered, when a requirement is decomposed and when a test verifies it, and cannot learn from them when a design row is done. The condition that settles it is built and gates, so what the spine lacks is the statement, not the mechanism, and an adopter inherits the gate without inheriting any statement of what it demands.
-
-Realizes SN-003 in the row's altitude, which is the load-bearing half of the wording rather than a stylistic preference. The obligation names no language: a realization symbol, an implementation unit, and a rule that decides whether the one resolves in the other are terms every stack carries, and the resolution rule is read from the declared stack profile exactly as the harness commands are. A row naming one language's file extension would ship one stack's requirement to every adopter — and it would buy nothing, because the association is answerable off the shelf in any stack by a multi-language tag index that asks only whether a name exists in a unit. What has to hold is the association; the form it is recorded in is no part of the obligation, which is what lets the row sit at this altitude honestly.
-
-Two alternatives lost. Per-token exactness — every named token must resolve — asks a harsher question than discharge, and on real registries it fails rows for tokens that were never symbol claims: a local, an attribute, a prose fragment. The anchor validates the coarse claim (the code is real, at a unit that is real, under a name that is really there) and counts the fine misses, so tightening the cell's grammar stays available instead of being hidden behind a pass. Folding the obligation into the documentation-drift row also lost: a design row is a specification, not a documentation surface, and an unresolved realization symbol is a completeness verdict rather than drift, so the fold would put two decisions in one row.
-
-Stated so it cannot be read in: nothing here obliges source code to carry a back-link naming the requirement it implements. That is the opposite direction, it rests on weaker evidence than this one, and it is a separate question this row neither states nor implies."""
-acceptance_criteria = """A design-tier row naming a realization symbol that resolves in one of the implementation units the same row names is discharged; a row whose named symbols all fail to resolve is reported and gates at the declared release stage; a named symbol that fails to resolve beside a sibling on the same row that resolves is counted and never gates, so tightening the cell stays possible without reopening the gate. The unit cell is read as a union, never as a positional pairing with the symbol cell: a row naming several units is discharged by one symbol resolving in any one of them. A row naming only units the declared stack profile carries no resolution rule for is reported as skipped-with-reason and is not counted as discharged, so a row the harness cannot judge never reads as a pass; an example placeholder row is out of scope, so a freshly generated scaffold is silent here. The resolution rule is read off the declared stack profile rather than restated in this row; for the current profile it is a name bound at module scope, or defined at class scope, in a source module of that profile's language."""
-priority = "M"
-verification_method = "Test"
-status = "Accepted"
-phase = 5
-coincident = """The needs ask for a chain verified rather than asserted; a design row reported undischarged when none of its named symbols resolves is that verification's verdict."""
-aspect = "trajectory"
-
 [requirement.SR-181]
 title = "A spine edit that lowers the effective stage surfaces as a phase change"
 sn_refs = ["SN-004", "SN-008"]
@@ -1491,7 +1470,7 @@ boundary_refs = ["B-09"]
 hat_refs = ["TEST-ENGINEER"]
 requirement = "Where the assumption gate is enabled, the delivered harness shall fail, for each system requirement of interface form, the boundary gate when the requirement is not recorded as coincident and names a crossing on which no assumption it cites lands, and the architecture gate when no boundary interface reaches it or a reaching boundary interface neither records it as coincident nor bridges it by an assumption the requirement also cites."
 rationale = """A requirement meant to be met at an interface is not testable until that interface exists and its reading is either the outcome or carried by an assumption the requirement itself relies on. The frame's crossings are the first such interfaces: they are accepted with the frame at the boundary rung, before any interface row exists, and an assumption already names the crossing it lands on, so the requirement is judged against them there. Judging it again at the architecture rung, against the boundary interfaces that realize the crossings, keeps interfaces after the requirements they answer. Minting interface rows to match a count would produce seams with no contract behind them, so the check reports the gap rather than inventing the seam."""
-acceptance_criteria = "At the boundary rung, a requirement of interface form recorded as coincident passes, and any other fails the boundary gate once for each declared crossing its boundary references name on which no assumption it cites lands, naming the requirement and that crossing; a crossing the frame does not declare is not judged here. At the architecture rung, a requirement of interface form reached, through the modules its design rows name, by at least one boundary interface, every such interface coincident or bridged by an assumption the requirement cites, passes; one reached by none fails the architecture gate naming the requirement and stating that no boundary interface reaches it; each reaching interface bridged only by assumptions the requirement does not cite fails it naming the requirement and that interface, however many other reaching interfaces pass; requirements of the other two forms are out of scope; with the gate disabled the same conditions are advisory."
+acceptance_criteria = "At the boundary rung, a requirement of interface form recorded as coincident passes, and any other fails the boundary gate once for each declared crossing its boundary references name on which no assumption it cites lands, naming the requirement and that crossing; a crossing the frame does not declare is not judged here. At the architecture rung, a requirement of interface form reached, through the files its design rows' back-links are in, by at least one boundary interface, every such interface coincident or bridged by an assumption the requirement cites, passes; one reached by none fails the architecture gate naming the requirement and stating that no boundary interface reaches it; each reaching interface bridged only by assumptions the requirement does not cite fails it naming the requirement and that interface, however many other reaching interfaces pass; requirements of the other two forms are out of scope; with the gate disabled the same conditions are advisory."
 priority = "S"
 verification_method = "Test"
 status = "Accepted"
@@ -2010,3 +1989,18 @@ status = "Accepted"
 phase = 6
 aspect = "process"
 da_refs = ["DA-014"]
+
+[requirement.SR-248]
+title = "A design row is discharged by the evidence of its kind, and where it sits is derived"
+sn_refs = ["SN-002", "SN-003"]
+boundary_refs = ["B-09"]
+hat_refs = ["TEST-ENGINEER"]
+requirement = "The delivered harness shall report as undischarged a design-tier row past its Drafted status that no test case verifies, and shall derive the components a design-tier row sits in from the interfaces its verifying test cases name, listing and counting a row placed in none rather than refusing it."
+rationale = "Realizes SN-002: the chain from need to test is trustworthy because it is mechanically verified, and its bottom rung is the claim a design row makes that it is delivered. That claim is discharged by the evidence of the row's own kind: a test case verifying it, executable through its declared tests or an inspection, analysis or attestation through its declared evidence. A row that constrains an interface is also discharged through that interface's realization once the registries record which rows constrain which interface; until they do, the test-case relation is the whole rule. A row still Drafted is being written and makes no such claim yet, so the rule reaches it once it leaves Drafted. Binding discharge to a code symbol the row names pointed down at the code, so every rename reopened an accepted row while the code's own back-links already stated the same link upward.\n\nRealizes SN-003 in the row's altitude. Where a row sits follows from what it is verified at: the interfaces its verifying cases name, each owned by a component, so placement is derived and never restated on the row. A row placed nowhere is a decomposition whose interface is not yet named, which is legal and visible, so it is counted and listed rather than refused.\n\nStated so it cannot be read in: nothing here obliges source code to carry a back-link naming the row it implements. A back-link is encouraged, read where present, and never demanded."
+acceptance_criteria = "A design row verified by at least one live test case, of any verification kind, is discharged; one past Drafted that none verifies is reported by the orphan rules naming the row, and a Drafted row that none verifies is not reported while it stays Drafted. A design row is placed at the owner component of each interface that a test case verifying it names, once per component; an interface owned by an external party places nothing; a row placed at several components is placed at each. A row placed nowhere is listed and counted by the generated component view and counted by the strict check's report, and its being unplaced never fails a check. No design row states its component, its files or its symbols; the files realizing it are read from the back-links in the code, and a row no back-link names is simply absent from that reading."
+priority = "M"
+verification_method = "Test"
+status = "Drafted"
+phase = 6
+coincident = "The needs ask for a chain verified rather than asserted; a design row reported undischarged when no test case verifies it is that verification's verdict."
+aspect = "trajectory"

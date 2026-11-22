@@ -1,27 +1,29 @@
 #!/usr/bin/env python3
-"""Tag crosschecks: `Implements:` tags against design rows, test-file tags against test cases.
+"""Test-file tags against test cases, and the evidence column generated from them.
 
-Two rules over declarations written beside the code and the tests. The
-CodeSymbol crosscheck (`codesymbol_crosscheck_findings`, warn-first) holds
-each live LLR's `Implements:` tag site to its row's `Module` and `CodeSymbol`
-cells. The test-file tag rule (`tc_tag_findings`) reports each refused tag,
-each difference between a test case's tags and its `Evidence` cell, and each
-accepted automated case no test declares. Their inputs come from
-`arch_inputs`; ``trajectory_arch`` re-exports them for ``check_trajectory``.
+The test-file tag rule (`tc_tag_findings`) reports each refused tag, each
+difference between a test case's tags and its `Evidence` cell, and each
+accepted automated case no test declares. The evidence column is generated
+from the same tags (`generated_evidence`, `evidence_regen`, `write_evidence`):
+a cell's test-file parts follow the tags, and its other parts stay as written.
+Their inputs come from `arch_inputs`; ``trajectory_arch`` re-exports them for
+``check_trajectory``. The `Implements:`-tag crosscheck against a design row's
+`Module` and `CodeSymbol` cells retired with the cells (WI-1023): a design row
+names no file or symbol, and the files realizing it are read up from the tags
+(`arch_inputs.implements_index`).
 
 Component: CMP-006
 
 The tag rule surface ``trajectory_arch`` re-exports.
-`codesymbol_crosscheck_findings(root)` returns one finding string per
-`Implements:` tag site that its row's `CodeSymbol` and `Module` cells do not
-contain, `[]` in files mode, with no source root or with no design rows to
-compare. `tc_tag_findings(root, tests_dir)` returns each refused tag as
+`tc_tag_findings(root, tests_dir)` returns each refused tag as
 `<file>:<line>: <shape>: <detail>`, then the tag and evidence differences,
 then the accepted automated cases no test declares, `[]` with no test-case
-registry. Both read `gen_arch_map`'s walks, and neither writes.
+registry. `evidence_regen(root, tests_dir)` returns `{TC id: (before, after)}`
+for each cell the tags would change, and `write_evidence(root, tests_dir)`
+writes those cells and nothing else into the test-case registry. They read
+`gen_arch_map`'s walks; only `write_evidence` writes.
 """
 
-import re
 import sys
 from pathlib import Path
 
@@ -32,7 +34,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     from kitlib import spine as _kitspine
 
 import spine_carrier
-from arch_inputs import LLR_CSV, TC_CSV, _arch_scan_profile, _norm_module, _split_refs
+from arch_inputs import TC_CSV
 
 try:
     import gen_arch_map
@@ -44,155 +46,10 @@ except ImportError:
         gen_arch_map = None
 
 
-# --- Implements-tag vs CodeSymbol crosscheck (WI-502; OI-53 ruled (d)) --------
-# The 2026-08-21 closing review found the CodeSymbol dozen (WI-501) by hand:
-# resolve every `Implements:` tag's ENCLOSING def/class and compare it against
-# its row's `CodeSymbol`/`Module` claim. This promotes that manual method into
-# a continuous warn-first finding, so the next stale batch is measured rather
-# than rediscovered by campaign. WARN-FIRST FOREVER by the ruling — no
-# allowlist, no `--strict` arm — because it checks a TRACED, not ACCEPTED,
-# cell (process.md §8's `Module`/`CodeSymbol`/`TestRefs` "traced, not
-# accepted" posture, cited at check_trajectory.py:77) and a mismatch is
-# routine drift, not a defect to gate a commit over.
-#
-# ONE HOME for the AST walk (WI-486): `gen_arch_map.implements_report` builds
-# the (tag site -> enclosing symbol) map and the known-symbol-name set; this
-# function only compares them against the registry, the way `arch_inventory`
-# already consumes `gen_arch_map.scan_inventory` rather than re-walking trees.
-_CODESYMBOL_SPLIT_RE = re.compile(r"[/;]|\s\+\s")
-
-
-def _codesymbol_candidates(cell):
-    """A `CodeSymbol` cell's symbol names, trimmed. `CodeSymbol` is authored
-    prose-adjacent, not a strict machine grammar — measured across the live
-    registry it mixes `/` (`run/classify`), `;` (`tier_legend...; STATUS_GLYPH`)
-    and a spaced ` + ` (`PHASE_ACCENTS + _ring_ink`) as the same "and also"
-    join, sometimes in one cell. Splitting on all three costs nothing when a
-    candidate is real prose rather than a name — an unmatched fragment simply
-    never satisfies containment — and undercounts nothing a single-character
-    splitter would have caught, so the wider split is the conservative one."""
-    return [c.strip() for c in _CODESYMBOL_SPLIT_RE.split(cell or "") if c.strip()]
-
-
-def _codesymbol_site_finding(
-    rid, site, qualname, module_cell, code_symbol_cell, module_ok, known_names
-):
-    """One `codesymbol_crosscheck_findings` tag site, resolved to a finding
-    string or `None` — split out so the caller's loop stays a plain walk
-    (C901) and this comparison, the actual rule, reads as one thing. See
-    `codesymbol_crosscheck_findings` for the containment/mismatch/unresolvable
-    vocabulary this implements."""
-    candidates = _codesymbol_candidates(code_symbol_cell)
-    if not candidates:
-        contained = module_ok and qualname == ""
-    else:
-        # Containment reads BOTH directions of the dotted path: a cell naming
-        # the CLASS (`RoutingState`) is a prefix of a method's qualname, but
-        # the registry just as often names the bare METHOD (`stall_verdict`,
-        # no `RoutingState.` qualifier) — the rendered map's own `methods` row
-        # lists them unqualified, and most live CodeSymbol cells follow that
-        # convention. A suffix match covers that shape without opening the
-        # door to a coincidental same-named method on an unrelated class:
-        # `Foo.stall_verdict` and `Bar.stall_verdict` both satisfy a bare
-        # `stall_verdict` cell, which is the map's own granularity limit, not
-        # one this rule invents.
-        contained = module_ok and any(
-            qualname == c or qualname.startswith(c + ".") or qualname.endswith("." + c)
-            for c in candidates
-        )
-    if contained:
-        return None
-    enclosing = qualname or "(module scope)"
-    resolvable = any(
-        c == n or n.endswith("." + c) for c in candidates for n in known_names
-    )
-    if candidates and not resolvable:
-        return (
-            "{} tag at {} encloses `{}`, but the row's CodeSymbol `{}` does "
-            "not resolve to any def/class under the scanned source — "
-            "unresolvable, not matched (Module `{}`)".format(
-                rid, site, enclosing, code_symbol_cell, module_cell
-            )
-        )
-    return "{} tag at {} encloses `{}`, but the row's CodeSymbol claims `{}` (Module `{}`)".format(
-        rid, site, enclosing, code_symbol_cell or "(module-only)", module_cell
-    )
-
-
-def codesymbol_crosscheck_findings(root):
-    """Every live LLR's `Implements:` tag site under the declared arch-map
-    source surface (`docs/stack.ini` `[paths] src`), checked by CONTAINMENT
-    against its row's `CodeSymbol` + `Module` cells: a tag inside
-    `RoutingState.note_session` satisfies a cell naming `RoutingState`; a tag
-    at module scope satisfies a module-only (empty `CodeSymbol`) cell. Two
-    finding shapes, distinguished so a reader (and the regression tests) can
-    tell "the cell names a different REAL symbol" from "the cell names
-    nothing resolvable at all" (a function-local variable, or a symbol that
-    is simply gone) — the WI-429 census defect this crosscheck is built to
-    keep from recurring silently:
-
-    - **mismatch**: at least one of the cell's candidate names IS a real
-      def/class somewhere in the scanned surface, just not one that contains
-      this tag's site.
-    - **unresolvable**: none of the cell's candidate names resolve to any
-      real def/class anywhere in the surface — the cell cannot be verified,
-      and reporting it as a silent match would be the false-quiet defect
-      `docs/enforcement-audit.md` item 5 already names for a neighboring
-      grammar (`Contracts:`); this rule does not inherit that shape.
-
-    `[]` (vacuous) when `[arch-map] mode = files` (no parser) or the LLR
-    registry has no `Module`/`CodeSymbol` cells to compare against. A tag
-    naming an id with no live LLR row, or an LLR id with an empty `Module`
-    AND `CodeSymbol` (nothing claimed), is silently skipped — orphan/schema
-    integrity is `trace.py`'s finding, not this one's."""
-    if gen_arch_map is None:
-        return []
-    src, mode = _arch_scan_profile(root)
-    if mode == "files":
-        return []
-    src_dir = root / src.strip().replace("\\", "/").rstrip("/")
-    if not src_dir.exists():
-        return []
-    rows = {}
-    for r in spine_carrier.load(root / LLR_CSV, "LLR-ID"):
-        lid = (r.get("LLR-ID") or "").strip()
-        if not lid.startswith("LLR-") or lid.endswith("-000"):
-            continue
-        module_cell = (r.get("Module") or "").strip()
-        code_symbol_cell = (r.get("CodeSymbol") or "").strip()
-        if module_cell or code_symbol_cell:
-            rows[lid] = (module_cell, code_symbol_cell)
-    if not rows:
-        return []
-    sites, known_names = gen_arch_map.implements_report([src_dir])
-    findings = []
-    for rel, tags in sorted(sites.items()):
-        file_module = _norm_module(rel)
-        for lineno, ids, qualname in tags:
-            for rid in ids:
-                if rid not in rows:
-                    continue
-                module_cell, code_symbol_cell = rows[rid]
-                declared_modules = {_norm_module(m) for m in _split_refs(module_cell)}
-                module_ok = not declared_modules or file_module in declared_modules
-                finding = _codesymbol_site_finding(
-                    rid,
-                    "{}:{}".format(rel, lineno),
-                    qualname,
-                    module_cell,
-                    code_symbol_cell,
-                    module_ok,
-                    known_names,
-                )
-                if finding:
-                    findings.append(finding)
-    return findings
-
-
-# Test-file tags and `Evidence` cells are two homes of one fact, and this check
-# holds them equal only until the evidence column is generated from the tags.
-# That work deletes this helper and its one call in `tc_tag_findings`. Nothing
-# here builds the retirement.
+# Test-file tags and `Evidence` cells are one fact: the cell's test-file parts
+# are generated from the tags (`generated_evidence`, below), and this check is
+# what "checked current" reads. The generator is the identity exactly when the
+# parts equal the tags, so a cell this check passes is the generated cell.
 def _tag_evidence_findings(rows, tags, refused, tests_dir):
     """Each difference between a live TC's tags and its `Evidence` parts under
     `tests_dir`, as `<TC>: evidence without a tag: <node>` or `<TC>: tag without
@@ -275,3 +132,170 @@ def tc_tag_findings(root, tests_dir):
         lines += _tag_evidence_findings(rows, tags, refused, tests_dir)
         lines += _undeclared_case_findings(rows, tags, refused)
     return lines
+
+
+# --- The evidence column, generated from the tags (WI-1023) ------------------
+# A test case's `Evidence` cell names its tests, and the tests name their case:
+# two homes of one fact. The test-file half is generated from the tags, read
+# as LLR-366 reads it, and everything else the cell says stays authored and is
+# kept as written: a part outside the declared tests root (a CI workflow, an
+# inspection or review record), a parenthetical note, and a part in a file the
+# tag reader refused as unreadable, whose declarations nobody can see.
+
+
+def _tests_prefix(tests_dir):
+    """The declared tests root as the path prefix its parts start with; `""`
+    for a root of `.`, which holds every part (LLR-366's reading)."""
+    return "".join(p + "/" for p in Path(tests_dir.replace("\\", "/")).parts)
+
+
+def _drop_span(cell, start, end):
+    """`cell` without the token at `start:end` and the separator after it, or,
+    for the last token, the separator before it."""
+    after = end + len(cell[end:]) - len(cell[end:].lstrip(" \t\n;"))
+    if after < len(cell):
+        return cell[:start] + cell[after:]
+    head = cell[:start].rstrip(" \t\n;")
+    return head + cell[after:]
+
+
+def generated_evidence(cell, tagged, tests_dir, refused=()):
+    """One test case's `Evidence` cell as the tags make it.
+
+    `tagged` is the case's declared nodes (`read_test_tags`' map, one case's
+    set), `tests_dir` the declared tests root and `refused` the files the tag
+    reader could not read. A tests-root part a tag declares is kept as written,
+    a parametrized case included; one no tag declares is dropped with its
+    separator; a declared node the cell lacks is appended, `; `-joined and
+    sorted. Every other part, every note and every part in a refused file stays
+    verbatim. The identity whenever the parts equal the tags.
+
+    Implements: SR-157, LLR-406"""
+    prefix = _tests_prefix(tests_dir)
+    cell = cell or ""
+    present, drops = set(), []
+    for token, start, end in _kitspine.evidence_spans(cell):
+        if token.startswith("("):
+            continue
+        path, _sep, node = token.partition("::")
+        path = path.split("#", 1)[0].replace("\\", "/")
+        if not path.startswith(prefix) or path in refused:
+            continue
+        part = path + "::" + node.split("[", 1)[0] if node else path
+        if part in tagged:
+            present.add(part)
+        else:
+            drops.append((start, end))
+    for start, end in reversed(drops):
+        cell = _drop_span(cell, start, end)
+    added = sorted(set(tagged) - present)
+    if not added:
+        return cell
+    kept = cell.rstrip(" \t\n;")
+    return "; ".join(([kept] if kept else []) + added)
+
+
+def evidence_regen(root, tests_dir):
+    """`{TC id: (before, after)}` for each live test case whose `Evidence`
+    cell the tags would change (`generated_evidence`), `{}` when every cell is
+    current, with no test-case registry, or with no tests root.
+
+    Implements: SR-157, LLR-406"""
+    if gen_arch_map is None or spine_carrier.resolve(root / TC_CSV) is None:
+        return {}
+    if not (root / tests_dir).is_dir():
+        return {}
+    rows = spine_carrier.load(root / TC_CSV, "TC-ID", False)
+    live = {(r.get("TC-ID") or "").strip() for r in rows}
+    tags, findings = gen_arch_map.read_test_tags(root, tests_dir, live)
+    refused = {f["file"] for f in findings if f["shape"] == "unreadable"}
+    out = {}
+    for row in rows:
+        tc = (row.get("TC-ID") or "").strip()
+        before = row.get("Evidence") or ""
+        after = generated_evidence(before, set(tags.get(tc, ())), tests_dir, refused)
+        if after != before:
+            out[tc] = (before, after)
+    return out
+
+
+_TOML_DELIMS = ('"""', "'''")
+
+
+def _extend(keys, tables, last, end):
+    """Stretch key `last`'s span, and its table's, to end before line `end`."""
+    keys[last] = (keys[last][0], end)
+    tables[last[0]] = (tables[last[0]][0], end)
+
+
+def _table_spans(lines):
+    """`{table header: (first key line, end)}` over a TOML text's lines, and
+    `{(table header, key): (start, end)}` for each top-level key, multi-line
+    strings tracked so a line inside one is data, never a key or a header."""
+    tables, keys = {}, {}
+    header, last, open_delim = None, None, None
+    for i, line in enumerate(lines):
+        if open_delim is not None:
+            if line.count(open_delim) % 2:
+                open_delim = None
+                _extend(keys, tables, last, i + 1)
+            continue
+        stripped = line.strip()
+        if stripped.startswith("[") and stripped.endswith("]"):
+            header = stripped
+            tables[header] = (i + 1, i + 1)
+        elif header is not None and "=" in stripped and not stripped.startswith("#"):
+            last = (header, stripped.split("=", 1)[0].strip())
+            keys[last] = (i, i + 1)
+            _extend(keys, tables, last, i + 1)
+            open_delim = next((d for d in _TOML_DELIMS if line.count(d) % 2), None)
+    return tables, keys
+
+
+def write_evidence(root, tests_dir):
+    """Write each changed cell `evidence_regen` returns into the test-case
+    registry in place, and return the ids written, sorted. Only those `evidence`
+    lines move; every other byte, comments, order and newline style included,
+    is kept. A cell that becomes empty leaves its key (an empty cell is an
+    absent key); a case with none gains one after its last key. The rewrite is
+    re-read and refused, writing nothing, unless it parses to the same rows
+    with exactly those cells changed.
+
+    Implements: SR-157, LLR-406"""
+    changed = evidence_regen(root, tests_dir)
+    if not changed:
+        return []
+    path = spine_carrier.resolve(root / TC_CSV)
+    if path.suffix != ".toml":
+        raise SystemExit(
+            "arch_tags: the evidence column is written into the TOML carrier "
+            "only; convert {} first (scripts/migrate_carrier.py)".format(path)
+        )
+    with open(path, "r", encoding="utf-8-sig", newline="") as fh:
+        raw = fh.read()
+    eol = "\r\n" if "\r\n" in raw else "\n"
+    lines = raw.split(eol)
+    tables, keys = _table_spans(lines)
+    edits = []
+    for tc, (_before, after) in changed.items():
+        header = "[{}.{}]".format(spine_carrier.REGISTRY_TABLE["TC-ID"], tc)
+        new = ["evidence = " + _kitspine.toml_string(after)] if after else []
+        if (header, "evidence") in keys:
+            edits.append(keys[(header, "evidence")] + (new,))
+        elif header in tables:
+            edits.append((tables[header][1], tables[header][1], new))
+    for start, end, new in sorted(edits, reverse=True):
+        lines[start:end] = new
+    text = eol.join(lines)
+    expected = spine_carrier.rows_from_text(raw, "TC-ID", ".toml") or {}
+    for tc, (_before, after) in changed.items():
+        expected[tc].pop("Evidence", None)
+        if after:
+            expected[tc]["Evidence"] = after
+    if spine_carrier.rows_from_text(text, "TC-ID", ".toml") != expected:
+        raise SystemExit(
+            "arch_tags: REFUSED - the evidence rewrite of {} did not re-read as "
+            "the generated cells and nothing else; nothing written".format(path)
+        )
+    path.write_text(text, encoding="utf-8", newline="")
+    return sorted(changed)

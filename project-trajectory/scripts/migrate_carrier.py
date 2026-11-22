@@ -46,7 +46,10 @@ Contract IF-103: this CLI rewrites the registries under
     it reads them and writes beside them, consuming no other kit module. The
     default arm converts each `.md`/`.csv` registry to its `.toml` carrier;
     `--if-shape` rewrites an old-shape `interfaces.toml` to the owner /
-    requestors-or-consumers / channel / data shape. EVERY conversion is
+    requestors-or-consumers / channel / data shape; `--llr-trace-cells`
+    removes `module`, `code_symbol` and `component` from every design row of
+    `low-level-requirements.toml`, refusing unless the rewrite re-reads as
+    the same rows less exactly those cells. EVERY conversion is
     round-tripped against an oracle built from the RAW source, never from the
     converter's own parse: each cell that does not survive is printed as a
     `migrate_carrier: LOSSY - ...` line on stderr and the run exits 1, so a
@@ -891,16 +894,17 @@ def _seed_channel(owner):
 
 
 def _if_block_cells(lines):
-    """`{key: (start, end)}` line spans of one `[interface.IF-###]` block,
-    multi-line strings included."""
+    """`{key: (start, end)}` line spans of one `[interface.IF-###]` or
+    `[design.LLR-###]` block, multi-line strings included, basic (`\"\"\"`) and
+    literal (`'''`) alike; a line keeps its own end, LF or CRLF."""
     cells, i = {}, 1
     while i < len(lines):
         km = _KEY_RE.match(lines[i])
         if km:
-            start, val = i, km.group(2)
-            if val.startswith('"""') and val.count('"""') == 1:
+            start, delim = i, km.group(2)[:3]
+            if delim in ('"""', "'''") and km.group(2).count(delim) == 1:
                 i += 1
-                while '"""' not in lines[i]:
+                while delim not in lines[i]:
                     i += 1
             cells[km.group(1)] = (start, i)
         i += 1
@@ -1017,6 +1021,73 @@ def convert_if_shape(root, write):
     return report, written
 
 
+# --- the design rows' trace cells leave (WI-1023, variant F's third row) -------
+# A design row names no file, symbol or component: the files realizing it are
+# read up from the code's `Implements:` tags and its placement is derived, so
+# `module`, `code_symbol` and `component` leave the schema, and the loader
+# refuses a row still carrying one. This arm removes them IN PLACE, every
+# other byte kept, a multi-line value and a prose cell quoting `module = ...`
+# included, and refuses unless the rewrite re-reads as the same registry less
+# exactly those cells. Old formats have this one home (D3): no other script
+# reads the retired cells.
+LLR_TRACE_CELLS = ("module", "code_symbol", "component")
+
+
+def _drop_cells(blk, keys):
+    """One `[design.*]` block without the top-level `keys`, and whether any went."""
+    lines = blk.splitlines(keepends=True)
+    cells = _if_block_cells(lines)
+    skip = {
+        i
+        for key in keys
+        if key in cells
+        for i in range(cells[key][0], cells[key][1] + 1)
+    }
+    return "".join(line for i, line in enumerate(lines) if i not in skip), bool(skip)
+
+
+def drop_llr_trace_cells(root, write):
+    """Remove `module`, `code_symbol` and `component` from every design row of
+    `docs/requirements/low-level-requirements.toml`. Returns `(report_lines,
+    written_paths)`: one line counting the rows that lose a cell, and the
+    registry when `write` and a row changed. Raises on a registry that does not
+    parse, or on a rewrite that does not re-read as the same rows less exactly
+    those cells; nothing is written then.
+
+    Implements: SR-036, LLR-407"""
+    path = root / LLR_REL
+    if not path.is_file():
+        return ["{}: absent, nothing to migrate".format(LLR_REL)], []
+    # Decoded from bytes, untranslated: a CRLF registry is written back CRLF.
+    text = path.read_bytes().decode("utf-8")
+    before = tomllib.loads(text)
+    out, changed = [], 0
+    for blk in re.split(r"(?m)^(?=\[design\.)", text):
+        if blk.startswith("[design."):
+            blk, dropped = _drop_cells(blk, LLR_TRACE_CELLS)
+            changed += dropped
+        out.append(blk)
+    new_text = "".join(out)
+    expected = dict(before)
+    expected["design"] = {
+        rid: {k: v for k, v in row.items() if k not in LLR_TRACE_CELLS}
+        for rid, row in (before.get("design") or {}).items()
+    }
+    if tomllib.loads(new_text) != expected:
+        raise SystemExit(
+            "migrate_carrier: REFUSED - removing the design rows' trace cells from "
+            "{} did not re-read as the same rows less those cells; nothing "
+            "written".format(path)
+        )
+    written = []
+    if changed and write:
+        path.write_bytes(new_text.encode("utf-8"))
+        written.append(path)
+    return [
+        "{}: {} row(s) lose module, code_symbol and component".format(LLR_REL, changed)
+    ], written
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="CSV/markdown registries -> TOML (OI-12)")
     ap.add_argument("--root", default=".")
@@ -1031,10 +1102,18 @@ def main(argv=None):
         help="rewrite an old-shape interfaces.toml in place (OI-67): owner / "
         "requestors|consumers / channel / data; --check reports without writing",
     )
+    ap.add_argument(
+        "--llr-trace-cells",
+        action="store_true",
+        help="remove module, code_symbol and component from every design row of "
+        "low-level-requirements.toml in place (WI-1023); --check reports "
+        "without writing",
+    )
     args = ap.parse_args(argv)
     root = Path(args.root).resolve()
-    if args.if_shape:
-        report, written = convert_if_shape(root, write=not args.check)
+    if args.if_shape or args.llr_trace_cells:
+        arm = convert_if_shape if args.if_shape else drop_llr_trace_cells
+        report, written = arm(root, write=not args.check)
         for line in report:
             print("migrate_carrier: " + line)
         print(

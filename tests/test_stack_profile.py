@@ -512,7 +512,6 @@ def _script(name):
 
 _TESTS_FOR_LLRS = """[design.LLR-001]
 sr_refs = ["SR-001"]
-module = "src/m.py"
 status = "Accepted"
 """
 _TESTS_FOR_TCS = """[test.TC-001]
@@ -592,6 +591,12 @@ def _tests_for(docs):
         _TESTS_FOR_LLRS, encoding="utf-8"
     )
     (docs / "test" / "test-cases.toml").write_text(_TESTS_FOR_TCS, encoding="utf-8")
+    # The file realizing the row says so itself: the listing reads the
+    # repository's `Implements:` tags (a design row names no file).
+    (docs.parent / "src").mkdir(parents=True, exist_ok=True)
+    (docs.parent / "src" / "m.py").write_text(
+        "# Implements: LLR-001\n", encoding="utf-8"
+    )
     out = io.StringIO()
     with contextlib.redirect_stdout(out):
         rc = trace._cmd_tests_for(docs, "src/m.py")

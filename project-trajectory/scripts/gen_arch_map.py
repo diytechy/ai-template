@@ -108,7 +108,7 @@ Marker pairs (the templates ship with them):
 
 Component: CMP-006
 
-Contracts: IF-010, IF-028, IF-117, IF-131, IF-132, IF-150, IF-199, IF-310 — the
+Contracts: IF-010, IF-028, IF-131, IF-132, IF-150, IF-199, IF-310 — the
 interface seams this module declares (process.md §8; rows of record in
 docs/requirements/interfaces.toml).
 
@@ -128,14 +128,6 @@ Contract IF-028: the `sym:` ORACLE. `scan_inventory(src_roots, strict=False)`
     `sym:<module>.<name>` reference is held to. A module that cannot be read or
     parsed is recorded as a parse error instead of ending the walk, so one
     broken file costs its own rows rather than the run.
-Contract IF-117: the SYMBOL-BINDING oracle behind the LLR `CodeSymbol` anchor
-    rule. `module_bindings(tree)` returns every name a module binds at module
-    scope plus its class-level `def` names — private helpers and module
-    constants included, both of which the rendered public-API view drops and
-    live design rows name. The caller owns the parse, so the function is pure
-    and a file that will not parse costs that one row's rule, not the run. It is
-    deliberately not answered from the rendered map: that view would report real
-    code as missing.
 Contract IF-131: the ARCH-INVENTORY and seam-declaration grammar the spine checks
     read. `scan_inventory(src_roots)` hands the coverage, containment and
     cross-component rules the live source AST, and
@@ -382,47 +374,6 @@ def implements(node, source_lines):
     for i in range(max(0, start - 4), start):
         ids.update(backlink_ids(source_lines[i]))
     return sorted(ids)
-
-
-def module_bindings(tree):
-    """Every name a module BINDS at module scope, plus class-level `def` names.
-
-    The rendered map is deliberately a PUBLIC-API view — `scan_module` drops
-    `_`-prefixed names and never lists a module constant — so the map cannot
-    answer "does this name exist here". A spine consumer needs that question
-    answered: measured at WI-429, 41 of the kit's 149 live LLR `CodeSymbol`
-    cells name a private helper (`_ring_ink`), a module constant
-    (`STATUS_FILL`) or a class method, all of which are real code and none of
-    which the rendered table can see.
-
-    So the binding set lives HERE, next to the walk that renders the map, and
-    not in the consumer: a second AST symbol parser in a second script is the
-    D-6/F5 hazard — a copy that has not learned a node type does not fail
-    loudly, it silently reports "that symbol does not exist". Two walks inside
-    ONE file is the residual cost, and it is pinned rather than trusted:
-    `tests/test_arch_map.py` asserts every public item `scan_module` renders is
-    in this set, for every module in the repo.
-
-    Module scope only, by design. A local variable inside a function is not a
-    name the module offers, and treating one as a binding would make the
-    consumer's answer meaningless (the census found `budget_findings` and
-    `tier_legend` cited as symbols when both are function locals)."""
-    names = set()
-    for node in tree.body:
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            names.add(node.name)
-        elif isinstance(node, ast.ClassDef):
-            names.add(node.name)
-            for sub in node.body:
-                if isinstance(sub, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                    names.add(sub.name)
-        elif isinstance(node, ast.Assign):
-            for target in node.targets:
-                if isinstance(target, ast.Name):
-                    names.add(target.id)
-        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
-            names.add(node.target.id)
-    return names
 
 
 class ContractsGrammarError(ValueError):
@@ -1984,18 +1935,17 @@ def backlink_coverage(src_roots, row_ids, exts=BACKLINK_EXTS):
 
 # --- ENCLOSING-SYMBOL RESOLUTION (WI-502; OI-53 ruled (d)) -------------------
 # The declaration grammar above (`backlink_ids`) answers "does this LINE
-# declare an id"; this answers "which def/class TEXTUALLY CONTAINS that line" —
-# the question check_trajectory's CodeSymbol crosscheck needs to compare a
-# tag's real site against the registry row's `CodeSymbol`/`Module` claim. AST,
-# Python-only (unlike the language-agnostic `scan_backlinks` above): resolving
-# an enclosing symbol needs a parser, so this half of the shared grammar stops
-# at `.py`. ONE HOME (WI-486): check_trajectory imports `implements_report`
-# rather than re-walking the tree — a second AST symbol walk in a second module
-# is exactly the D-6/F5 hazard `module_bindings` above already argues against.
+# declare an id"; this answers "which def/class TEXTUALLY CONTAINS that line",
+# and which names the surface defines at all. AST, Python-only (unlike the
+# language-agnostic `scan_backlinks` above): resolving an enclosing symbol needs
+# a parser, so this half of the shared grammar stops at `.py`. ONE HOME
+# (WI-486): `trace.py`'s contract-symbol tripwire reads `implements_report`'s
+# name set rather than re-walking the tree. (Its first consumer, the crosscheck
+# holding each tag site to a design row's `CodeSymbol` cell, retired with the
+# cell at WI-1023.)
 def _scope_index(tree):
     """`[(start_line, end_line, dotted_qualname)]` for every def/class in
-    `tree`, at any nesting depth (unlike `module_bindings`, which is
-    module-scope-only by design for the rendered map's public-API view). A
+    `tree`, at any nesting depth. A
     method's range nests inside its class's, so picking the entry with the
     LARGEST `start_line` that still contains a target line is the innermost
     (most specific) enclosing scope."""
@@ -2112,10 +2062,10 @@ def implements_report(src_roots):
     `declaration_sites`; `known_names` is the set of every name `_scope_index`
     or `_top_level_targets` found anywhere in the surface (dotted def/class
     qualnames plus bare module-level constants) — a real symbol exists in
-    this set wherever it lives, so a `CodeSymbol` cell naming something
-    outside it is naming a function-local variable or a symbol that is gone,
-    not a stale-but-real one. The one AST walk check_trajectory's CodeSymbol
-    crosscheck consumes (WI-502; the `scan_inventory` idiom above)."""
+    this set wherever it lives, so a contract naming something outside it is
+    naming a function-local variable or a symbol that is gone, not a
+    stale-but-real one. The one AST walk `trace.py`'s contract-symbol tripwire
+    consumes (WI-502; the `scan_inventory` idiom above)."""
     sites = {}
     known = set()
     for _root, base, path in _walk_roots(src_roots, "*.py"):

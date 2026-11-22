@@ -12263,6 +12263,75 @@ every check that reads it, is unchanged.
 
 **Kit-owned files — overwrite:** `scripts/kitlib/spine.py`.
 
+### Design rows lose their `module`, `code_symbol` and `component` cells; the code's tags name the files and placement is derived [since 73aa095ce]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.
+Variant F's third entry; apply it after the interface-owner entry above.)*
+
+**What changed.** A design row (`LLR-###`) names no file, symbol or
+component. The three cells leave the schema, and every kit script that reads
+a requirement registry in its TOML carrier refuses a row carrying a key its
+tier does not declare, naming the row and the key: a need, system
+requirement, design row or test case. The approval snapshot is read without
+that rule until the act that re-takes it. The files realizing a design row
+are read from the code's `Implements:` tags, one index over `[paths] src` and
+`[arch-map] headers`: `trace.py --tests-for` lists through it (it exits 1
+when no tagged file matches), and so do the interface-form gate's reach, the
+consolidation census and the build brief. A design row is placed at the
+owner component of each interface a test case verifying it names (an
+`external:` owner places nothing); one placed nowhere is counted on
+`trace.py`'s `placement:` line and listed in the component view's new
+`[unplaced] llr_refs` (with `design_rows_unplaced` in `[derived]`), never
+refused. The views, the knowledge-pack advisory and the observation
+cadence's `component:` trigger read placement or, for the trigger, the
+`Component:` headers. `trace.py --strict-schema` no longer requires the
+cells, and the `check_doc_refs.py` symbol anchor, its advisory and its
+unbound-module count are gone with them, as is `check_trajectory.py`'s
+`Implements:`-against-`CodeSymbol` warning. A performance budget's `Refs`
+resolve against SR and LLR ids only: a module path is now an unknown ref.
+`trace.py --regen-evidence` writes each test case's `evidence` cell as the
+test files' tags generate it, the parts under the declared tests root only;
+the existing tag-and-evidence equality check is what holds the column
+current.
+
+**What to do.** Before anything else, run
+`python scripts/migrate_carrier.py --llr-trace-cells --check`, then without
+`--check`: it removes the three cells from every design row of
+`docs/requirements/low-level-requirements.toml` in place and refuses unless
+nothing else changed (a CSV registry converts to TOML first, with the default
+arm). Then:
+
+1. Run `python scripts/trace.py --strict`; any other key your requirement
+   rows carry that the schema does not declare is named, and is yours to
+   delete or move. A key nothing read used to pass silently: an older kit's
+   SR `Verification` column takes its current name through
+   `scripts/migrate_vocabulary.py`, best run before the carrier conversion,
+   and its `Area` column follows the `Aspect` entry above.
+2. Replace each module path in a `performance-budgets.csv` `Refs` cell with
+   the SR or LLR ids the budget bounds.
+3. Where a design row's file mattered to a reader (`--tests-for`, the build
+   brief), add an `Implements: LLR-###` line to that file; a back-link stays
+   encouraged, never required.
+4. Read the component view: rows placed nowhere are listed. A row is placed
+   by naming, in a test case verifying it, the interface it is observed at.
+5. Take one acceptance act for the removal over your accepted design rows,
+   recorded as "trace cells removed, requirement text unchanged": the cells
+   are traced, so no accepted text moved, and
+   `python scripts/intake.py snapshot --accepts
+   "low-level-requirements.toml=<ref>"`, the reference naming that ruling,
+   re-takes the snapshot's copy.
+
+**Kit-owned files — overwrite:** every file the kit ships under `scripts/`,
+`registries/low-level-requirements.template.toml`,
+`registries/performance-budgets.template.csv`, `RUNTIME_FLOWS.template.md`,
+`PROCESS.md`, `PROCESS_OPTIONS.md`, `EXAMPLE.md`, `ADOPTING.md`, `README.md`,
+`KICKOFF_PROMPT.md`, `MULTI_REPO.md`, the prompts under `prompts/` and the
+skills under `skills/`.
+
+**Project-owned files — edit:** `docs/requirements/low-level-requirements.toml`
+(the migration), `docs/requirements/performance-budgets.csv` (`Refs`), and
+your own `docs/runtime-flows.md` where its prose named a design row's module.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

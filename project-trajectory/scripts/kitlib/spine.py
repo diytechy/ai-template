@@ -95,8 +95,11 @@ __all__ = [
     "sn_all_ids",
     "sn_cited_ids",
     "evidence_items",
+    "evidence_spans",
     "resolve_modules",
     "module_tests",
+    "llr_placement",
+    "unplaced_llrs",
     "module_components",
     "root_prefix",
     "declared_roots",
@@ -911,29 +914,50 @@ def evidence_items(cell):
     return items
 
 
-def resolve_modules(llrs, wanted):
-    """The sorted distinct `Module` paths the design rows declare that `wanted`
-    names: the path or a trailing part of it, with or without its extension,
-    compared through `norm_module` so a stem names it too.
+def evidence_spans(cell):
+    """Each token of an `Evidence` cell with its span, `[(token, start, end)]`
+    in cell order: every item and every parenthetical note, as `evidence_items`
+    reads them. The evidence generator's input, so a rewrite keeps every byte
+    it does not move.
+
+    Implements: SR-157, LLR-406
+
+    Contract:
+      Inputs:  cell: str | None — one TC row's `Evidence` cell
+      Outputs: list[tuple[str, int, int]]
+    """
+    return [
+        (m.group(0), m.start(), m.end()) for m in _EVIDENCE_TOKEN.finditer(cell or "")
+    ]
+
+
+def resolve_modules(index, wanted):
+    """The sorted distinct files the Implements index names for a design row
+    that `wanted` names: the path or a trailing part of it, with or without its
+    extension, compared through `norm_module` so a stem names it too. The index
+    is `{spine id: [file, ...]}`, read up from the code's `Implements:` tags
+    (`arch_inputs.implements_index`); a design row names no file.
 
     Implements: SR-221, LLR-263
 
     Contract:
-      Inputs:  llrs: iterable of LLR row mappings; wanted: str
-      Outputs: list[str] — every declared module `wanted` matches, sorted
+      Inputs:  index: mapping of spine id to file paths; wanted: str
+      Outputs: list[str] — every indexed file `wanted` matches, sorted
     """
     key = norm_module(wanted).strip("/")
-    declared = {m for r in llrs for m in refs(r.get("Module"))}
+    declared = {
+        f for rid, files in index.items() if rid.startswith("LLR-") for f in files
+    }
     return sorted(
-        m
-        for m in declared
-        if key and (norm_module(m) == key or norm_module(m).endswith("/" + key))
+        f
+        for f in declared
+        if key and (norm_module(f) == key or norm_module(f).endswith("/" + key))
     )
 
 
-def module_tests(llrs, tcs, module, test_root="tests"):
-    """The sorted test files the spine links to the declared module path
-    `module`: the design rows whose `Module` names it, the test cases whose
+def module_tests(index, tcs, module, test_root="tests"):
+    """The sorted test files the spine links to the file `module`: the design
+    rows whose `Implements:` tags the index finds in it, the test cases whose
     `Verifies` names one of them, and the paths under `test_root` in those
     cases' `Evidence`. Every status is read, a drafted case included: a builder
     iterating runs the case being written.
@@ -941,12 +965,14 @@ def module_tests(llrs, tcs, module, test_root="tests"):
     Implements: SR-221, LLR-263
 
     Contract:
-      Inputs:  llrs, tcs: iterables of LLR and TC row mappings; module: a path
-               exactly as a `Module` cell spells it; test_root: the declared
-               test root
+      Inputs:  index: mapping of spine id to file paths; tcs: iterable of TC row
+               mappings; module: a file path exactly as the index spells it;
+               test_root: the declared test root
       Outputs: list[str] — test file paths, sorted and distinct
     """
-    design = {r.get("LLR-ID") for r in llrs if module in refs(r.get("Module"))}
+    design = {
+        r for r, files in index.items() if r.startswith("LLR-") and module in files
+    }
     prefix = root_prefix(test_root)
     return sorted(
         {
@@ -957,6 +983,60 @@ def module_tests(llrs, tcs, module, test_root="tests"):
             if path.startswith(prefix)
         }
     )
+
+
+def llr_placement(tcs, ifs):
+    """`{LLR id: sorted CMP ids}`: where each design row sits, derived and never
+    authored. Per (test case, design row) pair, a row a case's `Verifies` names
+    is placed at the owner of each interface the same case names, where that
+    owner is a component id; an `external:` owner places nothing. A row placed
+    at several interfaces is placed at each. A row no case places is absent: it
+    is unplaced, counted, never refused (`unplaced_llrs`). The `-000` example
+    rows are not read.
+
+    Implements: SR-248, LLR-403
+
+    Contract:
+      Inputs:  tcs: iterable of TC row mappings; ifs: iterable of IF row mappings
+      Outputs: dict[str, list[str]] — each placed design row's components
+    """
+    owners = {
+        str(r.get("IF-ID") or "").strip(): seam_owner(r)
+        for r in ifs
+        if not is_example(str(r.get("IF-ID") or ""))
+    }
+    out = {}
+    for row in tcs:
+        for lid, places in _case_places(row, owners):
+            out.setdefault(lid, set()).update(places)
+    return {lid: sorted(cmps) for lid, cmps in sorted(out.items())}
+
+
+def _case_places(row, owners):
+    """`[(LLR id, {CMP ids})]`: the pairs one test case places, each design
+    row its `Verifies` names at the component owners (`owners`, `{IF id:
+    owner}`) of the interfaces it names; `[]` for an example case or one naming
+    no interface a component owns. `llr_placement`'s per-case step."""
+    if is_example(str(row.get("TC-ID") or "")):
+        return []
+    cited = refs(row.get("Verifies"))
+    places = {owners.get(i, "") for i in cited if i.startswith("IF-")}
+    places = {c for c in places if c.startswith("CMP-")}
+    return [(lid, places) for lid in cited if lid.startswith("LLR-") and places]
+
+
+def unplaced_llrs(llrs, placement):
+    """The sorted live design-row ids `placement` (`llr_placement`) places
+    nowhere: listed and counted by the views, never a finding.
+
+    Implements: SR-248, LLR-403
+
+    Contract:
+      Inputs:  llrs: iterable of LLR row mappings; placement: its mapping
+      Outputs: list[str] — the unplaced ids, sorted
+    """
+    ids = {str(r.get("LLR-ID") or "").strip() for r in llrs}
+    return sorted(i for i in ids if i and not is_example(i) and i not in placement)
 
 
 def module_components(declared):
@@ -1382,17 +1462,18 @@ SPINE_TIER_KEYS = {
         "coincident",
         "form",
     ),
+    # The design tier names no file, symbol or component (WI-1023, the
+    # review-churn plan's item 5 and revision 35): the files realizing a row
+    # are read up from the code's `Implements:` tags, and its placement is
+    # derived from the interfaces its verifying cases name.
     "LLR-ID": (
         "sr_refs",
         "hat_refs",
         "title",
-        "module",
-        "code_symbol",
         "detail",
         "rationale",
         "test_refs",
         "status",
-        "component",
         "phase",
     ),
     "TC-ID": (

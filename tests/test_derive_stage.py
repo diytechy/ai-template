@@ -904,8 +904,8 @@ def _needs_file(root, need_status, stakeholder_status):
         newline="\n",
     )
     (req / "low-level-requirements.toml").write_text(
-        '[design.LLR-001]\nsr_refs = ["SR-001"]\ntitle = "t"\nmodule = "m.py"\n'
-        'code_symbol = "f"\ndetail = "d"\nstatus = "Accepted"\n',
+        '[design.LLR-001]\nsr_refs = ["SR-001"]\ntitle = "t"\n'
+        'detail = "d"\nstatus = "Accepted"\n',
         encoding="utf-8",
         newline="\n",
     )

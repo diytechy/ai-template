@@ -200,15 +200,16 @@ Contract IF-176: `open_item_states(root) -> {OI-###: status} | None` — the
     answer and writes nothing back.
 
 Contract IF-233: `--tests-for MODULE` prints, one per line and sorted, the test
-    files the spine links to a module: the design rows whose `Module` cell
-    names it, the test cases whose `Verifies` names one of those rows, and the
-    paths under the declared test root (`stack.ini` `[paths] tests` in the docs
-    directory, default `tests`) in those cases' `Evidence`. The registries and
-    `stack.ini` are read from the directory `--docs` names, else
-    `<root>/docs`. MODULE is a declared module
-    path, a trailing part of one, or a stem. It runs no checks and exits 0 with
-    the listing, possibly empty; 1 when no design row names a module MODULE
-    matches; 2, naming the candidates, when it matches more than one.
+    files the spine links to a file: the design rows whose `Implements:` tags
+    the file carries (the Implements index of the repository holding the docs
+    directory), the test cases whose `Verifies` names one of those rows, and
+    the paths under the declared test root (`stack.ini` `[paths] tests` in the
+    docs directory, default `tests`) in those cases' `Evidence`. The registries
+    and `stack.ini` are read from the directory `--docs` names, else
+    `<root>/docs`. MODULE is an indexed file's path, a trailing part of one, or
+    a stem. It runs no checks and exits 0 with the listing, possibly empty; 1
+    when no file an `Implements:` tag names matches MODULE; 2, naming the
+    candidates, when it matches more than one.
 """
 
 import argparse
@@ -270,7 +271,6 @@ try:
         component_membership_findings,
         delegation_findings,
         knowledge_pack_advisories,
-        llr_module_ids,
         spine_orphan_findings,
         status_criterion_findings,
     )
@@ -306,6 +306,7 @@ try:
         norm_module,
         off_spine_advisories,
         paraphrase_advisories,
+        placement_line,
         provenance_advisories,
         provenance_findings,
         provenance_tokens,
@@ -327,7 +328,6 @@ except ImportError:  # pragma: no cover - in-process fallback
         component_membership_findings,
         delegation_findings,
         knowledge_pack_advisories,
-        llr_module_ids,
         spine_orphan_findings,
         status_criterion_findings,
     )
@@ -363,6 +363,7 @@ except ImportError:  # pragma: no cover - in-process fallback
         norm_module,
         off_spine_advisories,
         paraphrase_advisories,
+        placement_line,
         provenance_advisories,
         provenance_findings,
         provenance_tokens,  # noqa: F401 - re-exported: the provenance tests read it here
@@ -535,7 +536,7 @@ REQUIRED_FIELDS = {
         "VerificationMethod",
         "Status",
     ],
-    "LLR": ["LLR-ID", "SR-Refs", "Title", "Module", "CodeSymbol", "Detail", "Status"],
+    "LLR": ["LLR-ID", "SR-Refs", "Title", "Detail", "Status"],
     # `Verifies` is required CONDITIONALLY, so it lives in `schema_findings`
     # beside the other conditional rule (`_tc_verifies_required`, SR-197).
     "TC": [
@@ -957,7 +958,10 @@ def _spine_ids(docs):
     fixed for."""
     for rel, id_col in SPINE_FILES:
         # `SPINE_FILES` holds repo-root-relative paths; `docs` is <root>/docs.
-        for row in spine_carrier.load(docs.parent / rel, id_col):
+        # An id sweep reads ids, at any revision (`live_ids_at`), so it does not
+        # apply the loader's undeclared-key rule: a revision before a schema
+        # change keeps the cells it retired, and every live reader judges them.
+        for row in spine_carrier.load(docs.parent / rel, id_col, declared=False):
             match = _ANY_ID.match(str(row.get(id_col) or "").strip())
             if match:
                 yield match.group(1), int(match.group(2))
@@ -4805,13 +4809,6 @@ def acceptance_lines(scope, sn_ids, srs, llrs, tcs, sn_meta=None):
                 _cell(lr, "Status") or "?",
             )
         ]
-        meta = []
-        if _cell(lr, "Module"):
-            meta.append("Module: {}".format(_cell(lr, "Module")))
-        if _cell(lr, "Component"):
-            meta.append("Component: {}".format(_cell(lr, "Component")))
-        if meta:
-            out.append("_({})_".format(" · ".join(meta)))
         if _cell(lr, "Detail"):
             out.append(_cell(lr, "Detail"))
         for t in tcs_by_ref.get(lr["LLR-ID"], []):
@@ -5603,12 +5600,9 @@ def analyze(reg, args):
     orphans, orphan_ids = spine_orphan_findings(
         srs, llrs, tcs, ifs, sr_ids, llr_ids, reg.sn_ids, reg.sn_draft, da_ids
     )
-    module_ids = llr_module_ids(llrs)
-    budget_findings = budget_backlink_findings(reg.pbs, sr_ids | llr_ids | module_ids)
+    budget_findings = budget_backlink_findings(reg.pbs, sr_ids | llr_ids)
     module_findings = delegation_findings(reg.mods, sr_ids)
-    component_findings = component_membership_findings(
-        cmps, llrs, ifs, reg.parts, reg.assets
-    )
+    component_findings = component_membership_findings(cmps, ifs, reg.parts, reg.assets)
     knowledge_advisories = knowledge_pack_advisories(cmps, docs)
 
     # Interface seams (IF-###, process.md §8): an endpoint that is not a live
@@ -6218,6 +6212,34 @@ def _schema_note(schema, args):
     return ""
 
 
+def _print_gating(findings, args, cap=10):
+    """The gating findings `exit_code` composes, each class capped at `cap`
+    lines; the report holds the full lists. Split out of `render_console`."""
+    if args.strict:
+        failing = [
+            ("orphan", findings.orphans),
+            ("integrity", findings.integrity),
+            ("status", findings.status_findings),
+            ("placeholder", findings.placeholders),
+            ("schema", findings.schema),
+            ("budget", findings.budget_findings),
+            ("delegation", findings.module_findings),
+            ("component", findings.component_findings),
+            ("interface", findings.interface_backlink_findings),
+            ("frame", findings.frame_backlink_findings),
+            ("hat", findings.hat_dangling),
+        ]
+    elif args.strict_integrity:
+        failing = [("integrity", findings.integrity)]
+    else:
+        failing = []
+    for label, items in failing:
+        for f in items[:cap]:
+            print(f"FINDING ({label}): {f}")
+        if len(items) > cap:
+            print(f"... +{len(items) - cap} more {label} finding(s) in the report")
+
+
 def render_console(reg, findings, args, out, html_out):
     """Print the warn-only advisory lines and the one-line Traceability summary to stdout (loud but never gating)."""
     sn_ids = reg.sn_ids
@@ -6253,8 +6275,6 @@ def render_console(reg, findings, args, out, html_out):
     module_findings = findings.module_findings
     component_findings = findings.component_findings
     interface_backlink_findings = findings.interface_backlink_findings
-    frame_backlink_findings = findings.frame_backlink_findings
-    hat_dangling = findings.hat_dangling
 
     # Advisories are loud (stdout, not just the report) but never fail the run.
     # One loop over the ordered concatenation, not one loop per pipe: the pipes
@@ -6292,30 +6312,9 @@ def render_console(reg, findings, args, out, html_out):
     # gitignored, and the harness checks are "print the real output — never
     # summarize a failure away" (check.py). Mirrors exit_code()'s composition;
     # capped per class, the report holds the full lists.
-    cap = 10
-    if args.strict:
-        failing = [
-            ("orphan", orphans),
-            ("integrity", integrity),
-            ("status", status_findings),
-            ("placeholder", placeholders),
-            ("schema", schema),
-            ("budget", budget_findings),
-            ("delegation", module_findings),
-            ("component", component_findings),
-            ("interface", interface_backlink_findings),
-            ("frame", frame_backlink_findings),
-            ("hat", hat_dangling),
-        ]
-    elif args.strict_integrity:
-        failing = [("integrity", integrity)]
-    else:
-        failing = []
-    for label, items in failing:
-        for f in items[:cap]:
-            print(f"FINDING ({label}): {f}")
-        if len(items) > cap:
-            print(f"... +{len(items) - cap} more {label} finding(s) in the report")
+    _print_gating(findings, args)
+    if llrs:
+        print(placement_line(llrs, tcs, ifs))
     print(
         f"Traceability: SN={len(sn_ids)} SR={len(srs)} LLR={len(llrs)} "
         f"TC={len(tcs)} orphans={len(orphans)} integrity={len(integrity)}"
@@ -6402,26 +6401,46 @@ def _cmd_tests_for(docs, wanted):
 
     Matching file names (`test_<module>`) finds a fraction of a module's tests:
     its cases are named for the behaviour they drive, and a driven suite for the
-    script it runs. The spine already records the link, so this reads it
-    through `kitlib.spine.module_tests` and keeps no second map. Everything is
-    read from `docs`, the directory `--docs` resolves to, the declared test
-    root included (`stack.ini` `[paths] tests`, default `tests`).
+    script it runs. The code records the link in its `Implements:` tags, so this
+    reads them through the one index (`arch_inputs.implements_index`, of the
+    repository holding `docs`) and `kitlib.spine.module_tests`, and keeps no
+    second map. The registries are read from `docs`, the directory `--docs`
+    resolves to, the declared test root included (`stack.ini` `[paths] tests`,
+    default `tests`).
 
     Implements: SR-221, LLR-263
     """
-    llr_path = docs / "requirements" / "low-level-requirements.toml"
-    llrs = spine_carrier.load(llr_path, "LLR-ID", keep_examples=False)
-    matched = _spine.resolve_modules(llrs, wanted)
+    index = check_trajectory.implements_index(docs.resolve().parent)
+    matched = _spine.resolve_modules(index, wanted)
     if len(matched) != 1:
-        why = "; ".join(matched) or "no module a design row declares"
+        why = "; ".join(matched) or "no file an Implements: tag names"
         print("trace: --tests-for {!r} names {}".format(wanted, why), file=sys.stderr)
         return 2 if matched else 1
     tcs = spine_carrier.load(docs / "test" / "test-cases.toml", "TC-ID")
     cp = read_stack_ini(docs / "stack.ini")  # an unreadable profile raises
     declared = cp.get("paths", "tests", fallback="") if cp is not None else ""
     test_root = declared.strip() or "tests"
-    for path in _spine.module_tests(llrs, tcs, matched[0], test_root):
+    for path in _spine.module_tests(index, tcs, matched[0], test_root):
         print(path)
+    return 0
+
+
+def _cmd_regen_evidence(root):
+    """`--regen-evidence`: write each test case's `Evidence` cell as the test
+    files' tags generate it (`arch_tags.write_evidence`), the parts outside the
+    declared tests root and the notes kept as written, and report the ids
+    written. "Current" is the tag rule `check_trajectory` already runs: a cell
+    this rewrites is one that rule reports.
+
+    Implements: SR-157, LLR-406
+    """
+    root = Path(root)
+    written = check_trajectory.write_evidence(root, check_trajectory._tests_dir(root))
+    print(
+        "trace: evidence regenerated for {}".format(", ".join(written))
+        if written
+        else "trace: every evidence cell is current"
+    )
     return 0
 
 
@@ -6576,6 +6595,8 @@ def _writer_mode(args, docs):
         )
     if args.tests_for:
         return _cmd_tests_for(docs, args.tests_for)
+    if args.regen_evidence:
+        return _cmd_regen_evidence(args.root)
     return None
 
 
@@ -6709,8 +6730,15 @@ def main():
         "--tests-for",
         metavar="MODULE",
         default=None,
-        help="print the test files the spine links to MODULE (a module path, a "
-        "trailing part of one, or a stem) and exit; runs no checks",
+        help="print the test files the spine links to MODULE (a file an "
+        "Implements: tag names, a trailing part of its path, or a stem) and "
+        "exit; runs no checks",
+    )
+    ap.add_argument(
+        "--regen-evidence",
+        action="store_true",
+        help="write each test case's evidence cell as the test files' tags "
+        "generate it (other parts kept) and exit; runs no checks",
     )
     # --root/--docs path flags: here and in check_perf.py an explicit --docs is
     # a PATH used as-is (--root ignored); check_docs.py instead treats --docs as

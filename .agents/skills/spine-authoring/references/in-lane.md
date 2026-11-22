@@ -19,8 +19,8 @@ child returned for want of a parent, then a TC for an arm its LLR states).
   carry no acceptance status. Leave existing statuses unchanged while authoring.
 - **Author it before the build.** TC rows are authored with their LLRs before
   the build, so the build's first deliverable is the tests they call for.
-  LLR `Module` and symbols name what the build will create, and bind when the
-  set is reconciled. A TC's `Evidence` cell names a test only from the commit
+  An LLR names no file or symbol: the code the build creates points up to it
+  with an `Implements:` tag. A TC's `Evidence` cell names a test only from the commit
   that writes that test and its `Implements:` tag, because
   `scripts/check_trajectory.py --strict` refuses any difference between them,
   a `Drafted` row included. Until then a new row's cell holds a parenthetical
@@ -32,8 +32,8 @@ child returned for want of a parent, then a TC for an arm its LLR states).
   and exemption) and the TC clause that verifies each. Structural checks do
   not establish this coverage.
 - **Amend the row text against settled code.** While the code is still
-  changing, keep only the trace fields current (`Implements:`, LLR `Module`
-  and symbols, TC `Evidence`) and list the row-text changes the code implies.
+  changing, keep only the trace fields current (`Implements:` tags, TC
+  `Evidence`) and list the row-text changes the code implies.
   Write and judge them once the code stops moving: each text change made
   after a sitting owes another (`docs/process.md` §4, "sequence
   requirement-text work *into* an open window"). A Done-when edit is the

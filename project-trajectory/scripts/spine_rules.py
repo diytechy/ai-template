@@ -852,7 +852,7 @@ RUNG_TIERS = {
 # no gate and writes no file.
 
 
-def load_spine(docs):
+def load_spine(docs, declared=True):
     """Every registry row both derivations read, loaded once through the carrier.
 
     EXTRACTED FROM `compute` (WI-498 slice 1) so the STAGE derivation
@@ -863,18 +863,27 @@ def load_spine(docs):
     remember that an ABSENT registry and an EMPTY one mean opposite things at the
     two inserted rungs.
 
+    `declared=False` reads a revision's tree materialized from history
+    (`derive_stage._spine_at`) without the loader's undeclared-key rule:
+    history is not editable, and a revision before a schema change carries the
+    cells it retired (`spine_carrier.load`).
+
     Returns exactly the keyword arguments `spine_stage` takes."""
     # The three spine tiers read through the CARRIER, which resolves TOML or CSV
     # and hands back rows under today's column names — so both derivations are
     # untouched by the migration. `load_csv` stays for the off-spine registries,
     # which do not move.
     raw_srs = spine_carrier.load(
-        docs / "requirements" / "system-requirements.toml", "SR-ID"
+        docs / "requirements" / "system-requirements.toml", "SR-ID", declared=declared
     )
     raw_llrs = spine_carrier.load(
-        docs / "requirements" / "low-level-requirements.toml", "LLR-ID"
+        docs / "requirements" / "low-level-requirements.toml",
+        "LLR-ID",
+        declared=declared,
     )
-    raw_tcs = spine_carrier.load(docs / "test" / "test-cases.toml", "TC-ID")
+    raw_tcs = spine_carrier.load(
+        docs / "test" / "test-cases.toml", "TC-ID", declared=declared
+    )
     srs = [r for r in raw_srs if r.get("SR-ID") and not is_example(r["SR-ID"])]
     llrs = [r for r in raw_llrs if r.get("LLR-ID") and not is_example(r["LLR-ID"])]
     tcs = [r for r in raw_tcs if r.get("TC-ID") and not is_example(r["TC-ID"])]

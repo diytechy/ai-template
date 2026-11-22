@@ -85,8 +85,8 @@ by roster name, the perspectives a row is attributable to (an undeclared name is
 a finding; a blank means *not recorded*, never *none applied*). An LLR lists only
 what its own decomposition raised; the EFFECTIVE set derives as own + parents',
 so re-ruling one SR corrects no child cell. A domain
-hat owns the `SR`/`LLR` rows in its area (identify them by the LLR `Module`
-or its component id) and brings its own release-checklist items.
+hat owns the `SR`/`LLR` rows in its area (identify them by the component
+each row is placed in, §8) and brings its own release-checklist items.
 The SR `Aspect` tag is **not** that grouping: it is an optional, closed-vocabulary
 label for a **cross-cutting** concern no component partition can express, and a
 row that is not cross-cutting carries none. Don't wear a hat the scope doesn't
@@ -100,7 +100,7 @@ only for an independent high-risk review (§6).
 |---|---|---|
 | `SN-###` | Stakeholder Need | — |
 | `SR-###` | System specification | `SN-Refs` |
-| `LLR-###` | Design expectation | `SR-Refs` (+ Module/CodeSymbol, Detail/Rationale) |
+| `LLR-###` | Design expectation | `SR-Refs` (+ Detail/Rationale) |
 | `TC-###` | Test Case | `Verifies` (SR/LLR) |
 
 Stable, zero-padded, never reused.
@@ -131,8 +131,8 @@ Stable, zero-padded, never reused.
   the thing under specification — a script, an artifact path, the rubric a
   `Critique` row is judged against — is the *subject*, not provenance. `trace.py`
   gates under `--strict` on a work-item id or a process-doc citation and warns on
-  the rest; pointer columns (`Module`, `CodeSymbol`, `TestRefs`, `Evidence`, a
-  need's `source`) are out of scope by design.
+  the rest; pointer columns (`TestRefs`, `Evidence`, a need's `source`) are
+  out of scope by design.
 - **One requirement, one `shall`** — exactly one obligation, one testable
   behavior, never a compound "and/or". The full quality standard and the statement
   pattern that carries it are stated once, just below the bullets.
@@ -155,8 +155,9 @@ Stable, zero-padded, never reused.
   observes it — and a concrete filename lives in `AcceptanceCriteria` as
   rewritable current-carrier evidence ("read off the current carrier, as the
   current set: …") or at the LLR tier. Why a file exists is answered at its
-  binding homes — the shipped-file inventory, the LLR `Module` cell, the
-  interface registry — never by minting artifact-establishing requirements. An
+  binding homes — the shipped-file inventory, an `Implements:` tag in the
+  file, the interface registry — never by minting artifact-establishing
+  requirements. An
   *altitude* rule: `trace.py` warns (never gates) on an artifact token in either
   cell without that recorded per-row waiver — `recorded waiver: <reason>`, in
   `Rationale` at SR and `why` at SN (
@@ -426,8 +427,8 @@ blocks on what) is the thing most easily misread from registry rows. So the Soft
 Engineer hat authors **`docs/runtime-flows.md`** ("Runtime flows") **with
 the LLRs, before the DevStg-Tests review**: one Mermaid `sequenceDiagram` per key
 user-visible scenario, and always one for any concurrent / asynchronous /
-non-blocking behavior. Participants are the planned modules (the LLR `Module`
-column); each diagram cites the SR/LLR ids it renders. `scripts/check_flows.py`
+non-blocking behavior. Participants are the planned components or files;
+each diagram cites the SR/LLR ids it renders. `scripts/check_flows.py`
 (DevStg-Tests/DevStg-Impl) fails when the doc is missing, has no diagrams, a diagram cites no
 SR/LLR id, or a cited id doesn't exist. The operator's DevStg-Tests review starts from these
 diagrams — verify the flow there, then spot-check the rows. Update a flow in the
@@ -1384,7 +1385,10 @@ in a `#` header at its top. The same header names the file's ONE component on
 a line reading exactly `Component: CMP-###` (a module's docstring; a `#`,
 `REM` or opening `<!-- -->` line elsewhere): from DevStg-Arch every source file
 and listed header file (`[arch-map] headers`) carries one, and a file without
-belongs to no component, so an import touching it is reported unclassified. `gen_arch_map.py --contracts-doc` harvests them
+belongs to no component, so an import touching it is reported unclassified.
+An LLR names no file, symbol or component: code points up with `Implements:`,
+and an LLR is placed at the owner of each IF its verifying TCs name (none:
+unplaced, counted, never refused). `gen_arch_map.py --contracts-doc` harvests them
 into a committed `interface-reference.md`, freshness-gated like the CLI
 reference; a declared seam with no body is listed there as unstated. The row
 is the cross-validated link: it declares the seam and stops. **Mint
@@ -1459,7 +1463,7 @@ already covers" list are in
 `PB-###`).** Quantitative budgets live **separate from the spine** (like `IF-###`,
 §8) so `SN→SR→LLR` stays functional-focused and an **Integration/Coordination**
 hat (§1) can (re)allocate them without churning the breakdown. **Separation is not
-disconnection:** every row **back-links** the SR/LLR/Module it bounds (its
+disconnection:** every row **back-links** the SR/LLR it bounds (its
 `Refs`), and `trace.py` flags a row whose `Refs` name an unknown id or whose `PB-`
 id is malformed. Columns: `PB-ID, Metric, Refs, Budget, Unit, Tolerance,
 Direction (lower-better | higher-better), Tier, Gate (fail | warn), Owner, Notes`.
@@ -1493,9 +1497,9 @@ coordination cost a single module never pays.
 1. **One module, one repo** — the default; the whole `SN→SR→LLR→TC` spine, one
    gate run, one release.
 2. **Several modules, one repo** — distinct sub-systems that still **build and
-   release as one**. No new machinery: partition the same spine by the columns that
-   already exist (the LLR **`Module`** column and its component id,
-   §1), give each module its own **domain hat**, add **integration TCs** for the
+   release as one**. No new machinery: partition the same spine by the
+   component each LLR is placed in (§1, §8), give each module its own
+   **domain hat**, add **integration TCs** for the
    seams, and record shared internal contracts as `IF-###` (§8). The **repo-level
    gate stays the source of truth** — `trace.py --strict` requires 0 orphans
    across the whole repo, seams included; the kit ships **no** `--module`/`--area`

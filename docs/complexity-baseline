@@ -18,7 +18,6 @@ project-trajectory/scripts/agent_route.py	load_registry	24	65
 project-trajectory/scripts/agent_session.py	summarize_session_line	29	24
 project-trajectory/scripts/arch_interfaces.py	if_tc_allow_hygiene_findings	27	54
 project-trajectory/scripts/arch_interfaces.py	interface_findings	16	43
-project-trajectory/scripts/arch_tags.py	codesymbol_crosscheck_findings	29	43
 project-trajectory/scripts/assumption_rules.py	_classify	16	24	2026-10-03, WI-723 (3b872471): joint-delivery classification adds sibling-reference validation and class precedence to the sole classification parse (crossing to 16); WI-729 (17c54c2f) adds shared-need validation at the same score, so a declared sibling alone cannot establish joint delivery.
 project-trajectory/scripts/baseline_snapshot.py	_authorised_registries	19	20	arrived with WI-571 (the scoped snapshot copy) and was never stamped; ABSORBED FROM TRUNK, not introduced here: measured over the untouched tree at the WI-572 integration base 4d0b972d, where `check_complexity` already FAILED on this row, so the census this branch re-stamped was stale before the branch existed. WI-572 does not touch this function; the stamp records the debt so the loosening is a reviewed act rather than a side effect of regenerating. Repair is owed on trunk.
 project-trajectory/scripts/baseline_snapshot.py	unanchored_findings	21	39
@@ -30,9 +29,8 @@ project-trajectory/scripts/bootstrap.py	strip_markers	28	36
 project-trajectory/scripts/bootstrap.py	sync_agent_skills	49	41
 project-trajectory/scripts/check.py	main	39	231	RE-STAMPED DOWN 40 -> 39 (D11, 2026-11-17): the retired stage-value alias resolution and the `--stage-cleared` warning leave `main`.
 project-trajectory/scripts/check.py	staged_divergence	32	84
-project-trajectory/scripts/check_doc_refs.py	main	22	93	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): 20 -> 22 with WI-656 (07d552a0): the unbound-symbol count joins the untraced tally and its summary clause, one conditional in the format arguments. Repair is owed on trunk: the tail belongs in a helper.
+project-trajectory/scripts/check_doc_refs.py	main	19	87	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): 20 -> 22 with WI-656 (07d552a0): the unbound-symbol count joins the untraced tally and its summary clause, one conditional in the format arguments. Repair is owed on trunk: the tail belongs in a helper.
 project-trajectory/scripts/check_doc_refs.py	registry_findings	18	26
-project-trajectory/scripts/check_doc_refs.py	symbol_findings	35	51
 project-trajectory/scripts/check_docs.py	_needs_operator_block	21	19
 project-trajectory/scripts/check_docs.py	check_links	39	34
 project-trajectory/scripts/check_docs.py	find_stale	22	21
@@ -50,7 +48,6 @@ project-trajectory/scripts/check_privacy.py	scan_diff_text	43	39
 project-trajectory/scripts/check_stubs.py	find_stubs	17	19
 project-trajectory/scripts/check_trajectory.py	cell_integrity_errors	24	23
 project-trajectory/scripts/check_trajectory.py	completion_reconciliation_findings	18	45
-project-trajectory/scripts/check_trajectory.py	knowledge_pack_findings	18	28
 project-trajectory/scripts/check_trajectory.py	load_wis	16	35	sloc column re-measured 34 -> 35 at dc3c9e68 (informational; the ratchet compares cognitive, which 8fa0f0f3 pushed to 17 and dc3c9e68 repaired back to 16)
 project-trajectory/scripts/check_trajectory.py	main	45	157
 project-trajectory/scripts/check_trajectory.py	queue_conflict_pairs	18	38	RE-STAMPED DOWN 21 -> 18 (WI-657): landed with WI-656 (07d552a0) and was never recorded; it replaces the WI-583 re-key reason.
@@ -59,7 +56,7 @@ project-trajectory/scripts/check_trajectory.py	status_forward_only_findings	16	2
 project-trajectory/scripts/check_trajectory.py	validate	20	29
 project-trajectory/scripts/check_vendored.py	main	17	61
 project-trajectory/scripts/coherence.py	_sr_orphan_findings	16	23
-project-trajectory/scripts/coherence.py	component_membership_findings	25	23
+project-trajectory/scripts/coherence.py	component_membership_findings	25	22
 project-trajectory/scripts/coherence.py	knowledge_pack_advisories	19	25
 project-trajectory/scripts/derive_stage.py	_changed_rows	22	25
 project-trajectory/scripts/derive_stage.py	_phase_groups	27	26	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): 20 -> 27 with WI-631 (8d25242f): a test case naming assumptions joins the phase of every requirement citing one (SR-197), a second placement loop nested inside the existing one. Repair is owed on trunk: one placement function per reference kind.
@@ -78,14 +75,13 @@ project-trajectory/scripts/gen_arch_map.py	build_map	18	36
 project-trajectory/scripts/gen_arch_map.py	first_comment_summary	18	14
 project-trajectory/scripts/gen_arch_map.py	internal_imports	39	25
 project-trajectory/scripts/gen_arch_map.py	main	40	209
-project-trajectory/scripts/gen_arch_map.py	module_bindings	21	17
 project-trajectory/scripts/gen_arch_map.py	scan_module	19	44
 project-trajectory/scripts/gen_cases.py	all_pairs	35	35
 project-trajectory/scripts/gen_cases.py	main	23	67
 project-trajectory/scripts/gen_cases.py	parse_spec	25	33
-project-trajectory/scripts/gen_components.py	_add_members	17	19
+project-trajectory/scripts/gen_components.py	_add_members	17	18
 project-trajectory/scripts/gen_okf.py	_doc_title_and_summary	31	37
-project-trajectory/scripts/gen_okf.py	emit	72	243
+project-trajectory/scripts/gen_okf.py	emit	67	239
 project-trajectory/scripts/gen_okf.py	main	25	65
 project-trajectory/scripts/gen_open_items.py	_none_declaration_findings	16	30	ABSORBED FROM TRUNK, not introduced here: measured over the untouched tree at the WI-572 integration base 4d0b972d, where `check_complexity` already FAILED on this row, so the census this branch re-stamped was stale before the branch existed. WI-572 does not touch this function; the stamp records the debt so the loosening is a reviewed act rather than a side effect of regenerating. Repair is owed on trunk.
 project-trajectory/scripts/gen_open_items.py	deferral_findings	22	56
@@ -133,7 +129,7 @@ project-trajectory/scripts/trace.py	_cell_diff_lines	18	26	ABSORBED FROM TRUNK, 
 project-trajectory/scripts/trace.py	_csv_ids	16	14
 project-trajectory/scripts/trace.py	_offspine_row_diff	16	20
 project-trajectory/scripts/trace.py	_retired_cell_findings	17	26
-project-trajectory/scripts/trace.py	acceptance_lines	74	102
+project-trajectory/scripts/trace.py	acceptance_lines	68	95
 project-trajectory/scripts/trace.py	build_forest	17	44	RE-STAMPED DOWN 19 -> 17 (WI-657): WI-631 (8d25242f) moved the verifying-nothing bucket out to `_unheld_tc_groups`; never recorded.
 project-trajectory/scripts/trace.py	frame_findings	20	23
 project-trajectory/scripts/trace.py	hat_findings	21	44
@@ -143,7 +139,7 @@ project-trajectory/scripts/trace.py	interface_findings	24	48
 project-trajectory/scripts/trace.py	main	20	205	RE-STAMPED DOWN 23 -> 20 (WI-657): WI-633 (6ee918f5) routed two approval-scope branches to `_approval_body`; never recorded.
 project-trajectory/scripts/trace.py	mermaid_graph	31	45
 project-trajectory/scripts/trace.py	reaccept_model	34	119
-project-trajectory/scripts/trace.py	render_console	34	138
+project-trajectory/scripts/trace.py	render_console	27	109
 project-trajectory/scripts/trace.py	render_report	65	369	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): 65 -> 66 with WI-637 (1be5ca08): a hat finding is counted with no roster (`hat_names or hat_dangling`), so a strict failure never stands without its summary line.
 project-trajectory/scripts/trace.py	schema_findings	29	28	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): 25 -> 29 with WI-631 (8d25242f): a test case's Verifies is required unless it evidences assumptions instead (LLR-229), a nested conditional arm. Repair is owed on trunk.
 project-trajectory/scripts/trace.py	triangle_findings	16	28

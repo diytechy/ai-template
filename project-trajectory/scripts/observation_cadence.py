@@ -18,7 +18,7 @@ import re
 import tomllib
 from pathlib import Path
 
-import spine_carrier
+import arch_inputs
 import assumption_rules
 from kitlib.spine import is_example, norm_module, refs
 
@@ -103,27 +103,13 @@ class Cadence:
             self.history[since] = len(ids), changed
         return self.history[since]
 
-    def _component_paths(self, component, revision):
-        paths = []
-        for rel, column, field in (
-            ("docs/requirements/low-level-requirements.toml", "LLR-ID", "Module"),
-        ):
-            for carrier in spine_carrier.carriers(rel):
-                proc = self.git(self.root, "show", "{}:{}".format(revision, carrier))
-                if proc.returncode:
-                    continue
-                rows = spine_carrier.rows_seq_from_text(
-                    proc.stdout.decode("utf-8", "replace"), column, Path(carrier).suffix
-                )
-                if rows is None:
-                    raise ValueError("component trigger registry does not parse")
-                paths += [
-                    norm_module(p)
-                    for r in rows
-                    if component in refs(r.get("Component"))
-                    for p in refs(r.get(field))
-                ]
-        return paths
+    def _component_paths(self, component):
+        """The files whose `Component:` header declares `component`, as the
+        component census reads the checked-out tree (`arch_inputs.
+        component_headers`, the membership rule): a design row names no file
+        or component since WI-1023, so membership is the files' own word."""
+        declared, _findings = arch_inputs.component_headers(Path(self.root))
+        return [norm_module(p) for p, cid in declared.items() if cid == component]
 
     def eligible(self, row, since, checkpoint):
         """The floor gates triggers; absence and expiry are the caller's backstops.
@@ -149,9 +135,7 @@ class Cadence:
                 for pattern in refs(value)
             )
         if kind == "component" and re.fullmatch(r"CMP-\d+", value):
-            paths = self._component_paths(value, since) + self._component_paths(
-                value, self.revision
-            )
+            paths = self._component_paths(value)
             return any(
                 norm_module(p) == module
                 or norm_module(p).startswith(module.rstrip("/") + "/")
