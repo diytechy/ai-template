@@ -51,13 +51,14 @@ adjudication sittings by Gemini Neon through `agy` (operator, 2026-11-21;
 | WI-1016 | A repository can switch off the implementation layer | After F | Re-critiqued once F lands; reverses SR-186, so its amendment is drafted for the operator |
 | WI-1018 | Row text a lane leaves stale is filed, and the first set is brought up to the code | After F-8 | F-8's text migration takes B1, B7 and B9 and likely more; this row then fixes what is left |
 | WI-1045 | `acceptance_record.py`'s landing rules move to a CMP-008 module (F-1's table, §3.5 R2) | After F-3 (WI-1023) | Critiqued (Sol and Hydrogen, all findings applied): the order settled after F-3, the cover held to F-2's rule, IF-308's callers named |
-| WI-1046 | SR-243 names the author, critic and REVIEW-A roles, not "Sol or Terra" | Any time (WI-1044 merged) | Filed 2026-11-21 from WI-1044's build; critiqued: Sol and Hydrogen both APPROVE, spec unchanged; amends SR-243 (Accepted, drifts) |
-| WI-1040 to WI-1042 | WI-1036's findings: the last-act date and the test-first order read from the act ledger, an unanchored risk said so | WI-1040 and 1041 beside F (building); WI-1042 after F-2 | Critiqued (Sol and Hydrogen, all findings applied). WI-1041 amends LLR-239; WI-1042 amends LLR-257, gains a Trust section and settles its pre-ledger rule, and needs WI-1022 (IF-220's consumers cell) |
+| WI-1040 | The re-acceptance brief's last-act date read from the act ledger | Beside F | Built on `maint/wi-1040`; merging trunk into the branch (WI-1041's conflict in `baseline_snapshot.py`) before its review |
+| WI-1042 | The test-first order read from the act ledger | After F-2 | Critiqued (Sol and Hydrogen, all findings applied); amends LLR-257, gains a Trust section and settles its pre-ledger rule; needs WI-1022 (IF-220's consumers cell). Its cross-move reading belongs in WI-1040's shared `_ledger_commits` walk, which fixes the brief's heading and the accepted-risk reader too |
 | WI-1039 | The smoke tier back under its CPU budget | Beside F-1 | Filed 2026-11-21 (§3.4, the suite during F); critiqued by Sol alone, findings applied (`d1c56e986`); not built |
 | WI-1031 to WI-1035 | The rest of phase 3 | Filed, not drilled | Owe a scope critique when they come up (§3.3 N2); WI-1035 carries §3.4 S4's answer |
 
 Done in wave A: WI-1013, WI-1014 and WI-1017; in wave B: WI-1019; beside
-F-1: WI-1036 and WI-1037; beside F-2: WI-1044 and WI-1043 (§10).
+F-1: WI-1036 and WI-1037; beside F-2: WI-1044, WI-1043, WI-1041 and
+WI-1046 (§10).
 Closed by §3.3:
 WI-1015 restructured into F's rows (N1), WI-1020 cancelled (N5).
 
@@ -809,3 +810,23 @@ Append one line per step taken: the item, what happened, the commit.
   `b3363670a`: `3714 passed, 3 skipped` in 121 s, CPU 647.1 s. Hydrogen's
   branch reviews ran in under a minute each. WI-1040 and WI-1041 building
   beside F-2.
+- 2026-11-21: WI-1046 critiqued (Sol and Hydrogen both APPROVE, spec
+  unchanged), `660805e62`. WI-1041 built (`maint/wi-1041`): a risk no act
+  names reads unanchored, `_risk_first_written` deleted, LLR-239 amended.
+  Review round 1, with SR-202's "a recorded accepted risk is read as
+  covered" put to both by name: Sol and Hydrogen APPROVE (Hydrogen: within
+  SR-202, "recorded" read as recorded by an act; no assumption here records
+  a risk, so nothing reads differently in this repository). Merged
+  `8b50e28c1` (RESYNC kept WI-1043's entry and this one), regen
+  `7048e6a6f`; smoke `3714 passed, 3 skipped` in 210 s, CPU 704.7 s.
+  WI-1046 built: SR-243's two cells name the roles in TC-385's words; review
+  round 1: Sol and Hydrogen APPROVE. Merged `e29eb9d30`, regen `2b15d64e5`;
+  smoke `3714 passed, 3 skipped` in 162 s, CPU 662.0 s. Acts owed to
+  adjudication since this resume: TC-385, LLR-239, SR-243. Noted, not filed:
+  the advisory and the release gate say "has reopened" for every unproven
+  risk, which reads oddly for one no act ever accepted (WI-1041's builder).
+  WI-1040 built; its branch is merging trunk to resolve WI-1041's conflict
+  in `baseline_snapshot.py` before its review. Its builder found that the
+  ledger walk it now shares with the accepted-risk reader follows the
+  ledger's current path only; WI-1042, which must read across the
+  2026-11-16 move anyway, takes that fix.
