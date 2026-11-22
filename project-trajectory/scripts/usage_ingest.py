@@ -16,6 +16,8 @@ text, and a role no gate reads (`COORDINATOR`, `SUBAGENT`).
 
 Stdlib only, Python 3.11+, Windows/POSIX. A coordinator-layer command.
 
+Component: CMP-008
+
 Contracts: IF-305, IF-306, IF-307 — the interface seams this module declares
 (process.md §8; rows of record in docs/requirements/interfaces.toml).
 

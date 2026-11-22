@@ -75,6 +75,8 @@ every rung without `--strict`, so a finding is reported and never refuses a
 commit: the order is evidence a reviewer weighs, and promoting it to a gate is a
 project's own ruling. `--strict` makes that ruling for one run.
 
+Component: CMP-007
+
 Contracts: IF-198 — the interface seam this module declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
 

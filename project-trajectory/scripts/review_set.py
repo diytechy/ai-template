@@ -17,6 +17,8 @@ checkout. `record-checks` has already refused a worktree that differs from the i
 so there the two agree; at the render and the draw a working-tree edit can only
 change the derived list, and the record's digest then refuses it.
 
+Component: CMP-008
+
 Contracts: IF-309 — the seam this module declares (process.md §8; row of record
 in docs/requirements/interfaces.toml).
 

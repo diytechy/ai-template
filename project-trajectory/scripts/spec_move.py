@@ -53,6 +53,8 @@ Usage (from the repo root):
     python scripts/spec_move.py --root . SRC DEST
     python scripts/spec_move.py --root . --archive docs/specs/WI-123.md \\
         [--date 2026-08-01]
+
+Component: CMP-008
 """
 
 from __future__ import annotations

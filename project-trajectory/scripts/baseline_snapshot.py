@@ -82,6 +82,8 @@ replaced wholesale at each signing and never migrated in place, and why the
 first seed happens AFTER the rename (step 6) and the UNANCHORED rule is armed
 only after that (step 7).
 
+Component: CMP-006
+
 Contracts: IF-123, IF-124, IF-125, IF-126, IF-217, IF-220 — the seams this module
 declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 

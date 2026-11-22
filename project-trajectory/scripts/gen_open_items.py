@@ -81,6 +81,8 @@ is told.
 Stdlib only, cross-platform, deterministic (sorted inputs, no clocks) so the
 gated compare is byte-stable.
 
+Component: CMP-009
+
 Contracts: IF-074 — the interface seam this module declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
 

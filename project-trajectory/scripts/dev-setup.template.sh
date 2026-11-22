@@ -32,6 +32,8 @@
 #               the opt-down for a contributor who wants just their slice.
 #               DEFAULT (no --profile): every declared role. Roles: see ROLES below.
 #
+# Component: CMP-009
+#
 # Windows contributors: use scripts/dev-setup.ps1.
 # Contracts: IF-292, IF-293 — the interface seams this script declares (process.md §8;
 # rows of record in docs/requirements/interfaces.toml).

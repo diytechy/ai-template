@@ -12,6 +12,8 @@ derivation record). It keeps one rule of its own, spec interface citations.
 Trajectory lifecycle, phase, staleness, and CLI composition stay in
 ``check_trajectory``.
 
+Component: CMP-006
+
 Contracts: IF-263 — the interface seam this file declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
 
@@ -52,6 +54,7 @@ from arch_inputs import (
     _split_refs,
     _stack_ini_get,
     arch_inventory,
+    component_headers,
     load_cmps,
     load_ifs,
     load_seams,
@@ -96,7 +99,6 @@ from arch_seams import (
     _declared_seam_pairs,
     _norm_endpoints,
     _parse_kernel_allow,
-    cross_component_advisories,
     cross_component_findings,
     kernel_allow_parse_findings,
     read_kernel_modules,
@@ -236,6 +238,7 @@ __all__ = (
     "_owner_files",
     "_file_owner_declarations",
     "arch_inventory",
+    "component_headers",
     "interface_findings",
     "_owner_exact_findings",
     "_declaration_sites",
@@ -271,7 +274,6 @@ __all__ = (
     "_SCAN_CACHE",
     "_cross_component_scan",
     "cross_component_findings",
-    "cross_component_advisories",
     "derivation_record_findings",
     "component_findings",
     "_IF_TOKEN_RE",

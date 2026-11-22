@@ -54,6 +54,8 @@ Usage:  python scripts/trunk_step.py [--root .] [--compile-log] [--regen] [--dry
         (no operation flag = both, compile first, then regen)
 Exit codes: 0 all clean, 1 any failure (the §5.5 loud-block contract).
 
+Component: CMP-008
+
 Contracts: IF-081, IF-155 — the interface seams this module declares (process.md
 §8; rows of record in docs/requirements/interfaces.toml).
 

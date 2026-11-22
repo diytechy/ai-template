@@ -41,6 +41,8 @@ seam is free prose a human reads, and the mint keys off it only through
 `parse_evidence_gap`.
 
 Implements: SR-148, LLR-159, LLR-188
+
+Component: CMP-008
 """
 
 from __future__ import annotations

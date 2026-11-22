@@ -22,6 +22,8 @@ Usage:
               under DESCRIPTION_FLOOR characters. Use in CI / a gate.
     default   (Re)write skills/INDEX.csv from the SKILL.md files.
 
+Component: CMP-009
+
 Contracts: IF-019, IF-254 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-019: this module is the sole writer of `skills/INDEX.csv`, and the

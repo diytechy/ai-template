@@ -68,6 +68,8 @@ the pre-push reviewer / sync scrub; deep secrets scanning is a named external
 category (gitleaks, trufflehog — product-layer, never rebuilt in the kit).
 Exit codes: 0 clean/skipped, 1 findings, 2 usage or environment error.
 
+Component: CMP-007
+
 Contracts: IF-005, IF-032, IF-043, IF-148, IF-298 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-005: the harness runs this CLI (`--repo`, the tracked-file sweep)

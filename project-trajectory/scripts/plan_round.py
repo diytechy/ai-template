@@ -33,6 +33,8 @@ copy-able-script convention (F5). Usage (the CLI is a documentation aid):
 
     python scripts/plan_round.py walk [--budget N]   # print the happy path
 
+Component: CMP-008
+
 Contracts: IF-058 — the interface seam this module declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
 

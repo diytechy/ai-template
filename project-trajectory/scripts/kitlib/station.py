@@ -55,6 +55,8 @@ module. The frontmatter read below parses through `kitlib.config.read_toml_text`
 the package's one home for "TOML text, or None" (WI-821) — a sibling inside the
 package, so the rule costs no import edge out of it.
 
+Component: CMP-008
+
 Contracts: IF-093 — the seam this module declares (process.md §8; row of record
 in docs/requirements/interfaces.toml).
 

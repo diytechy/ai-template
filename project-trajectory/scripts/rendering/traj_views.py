@@ -3,6 +3,8 @@
 The spine icicle, the flat work-item DAG, the tiered When roadmap, and the
 How-SW seam graph / containment drill, plus their tab panels. The facade
 re-exports, so consumers are unchanged.
+
+Component: CMP-009
 """
 
 import html

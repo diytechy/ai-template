@@ -40,7 +40,9 @@ The section is `kitlib.registry.done_when_section`'s, not a second tolerant
 pattern here: the heading has four live spellings, and a reader matching fewer
 reports the rest as absent.
 
-Contracts: IF-242, IF-286 - the seams this module declares (process.md §8; row of record
+Component: CMP-008
+
+Contracts: IF-242, IF-286, IF-326 - the seams this module declares (process.md §8; row of record
 in docs/requirements/interfaces.toml).
 
 Contract IF-242: a spec's Done-when as comparable items. `items` / `has_done_when`
@@ -95,6 +97,11 @@ Contract IF-286: a Done-when change's blessing. `digest(wi_id, claimed,
     change. Every path the reader classifies or looks up is read losslessly
     (`kitlib.git.git_paths`), so a path git would quote is judged like any
     other.
+
+Contract IF-326: the width every text digest is cut to. `_DIGEST_CHARS` is
+    the count of lowercase hex characters a sha256 digest keeps after its
+    `sha256:` prefix (16); `digest` cuts to it, and a module writing another
+    text digest that a verdict or ruling binds reads it here.
 """
 
 import hashlib

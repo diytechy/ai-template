@@ -1,4 +1,6 @@
 <!--
+Component: CMP-009
+
 Contracts: IF-029 — the interface seam this document declares (process.md §8;
 row of record in requirements/interfaces.toml).
 

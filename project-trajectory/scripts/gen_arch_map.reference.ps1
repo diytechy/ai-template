@@ -1,3 +1,4 @@
+# Component: CMP-006
 <#
 .SYNOPSIS
     PowerShell reference port of the kit's gen_arch_map.py — regenerate the code

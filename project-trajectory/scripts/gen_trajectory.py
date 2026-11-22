@@ -68,6 +68,8 @@ re-exported here, so
 `import gen_trajectory` stays the one consumer seam and the render is
 byte-identical across the split.
 
+Component: CMP-009
+
 Contracts: IF-011 — the interface seam this module declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
 

@@ -64,6 +64,8 @@ example and is never judged, so the template stays copy-ready.
 
 A kitlib module: stdlib only, importing nothing.
 
+Component: CMP-008
+
 Contracts: IF-255, IF-256 — the seams this module declares (process.md §8; rows
 of record in docs/requirements/interfaces.toml).
 

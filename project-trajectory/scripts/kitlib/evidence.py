@@ -48,6 +48,8 @@ is a fold over the spine registries too, and the spine's declared input list is
 `stage.evidence_passed` is the verdict every consumer calls. The dependency runs
 one way only (`stage` imports `evidence`), which is what keeps the package free
 of a cycle.
+
+Component: CMP-006
 """
 
 from pathlib import Path

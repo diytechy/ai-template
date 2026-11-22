@@ -32,6 +32,8 @@ as a whole directory so a partial copy ImportErrors rather than degrading. What
 stays true of this file is the narrower claim: it is one module's own TEXT core,
 imported by that one module (ADOPTING.md §6).
 
+Component: CMP-006
+
 Contracts: IF-076, IF-143 — the seams this module declares (process.md §8; rows
 of record in docs/requirements/interfaces.toml).
 

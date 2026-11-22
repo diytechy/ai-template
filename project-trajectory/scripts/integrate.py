@@ -121,6 +121,8 @@ first — mechanical bookkeeping must not stale an honest APPROVE).
 Never pushes; the trunk only ever moves inside the slot, to a branch whose
 own checks passed on this exact tree.
 
+Component: CMP-008
+
 Contracts: IF-080, IF-154, IF-173 — the interface seams this module declares
 (process.md §8; rows of record in docs/requirements/interfaces.toml).
 

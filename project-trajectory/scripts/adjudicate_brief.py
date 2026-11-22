@@ -86,6 +86,8 @@ each says something about what "routed" costs:
     under judgement: the mirror invariant proves it was copied in a reviewed
     acceptance commit, and nothing but a copy can write it.
 
+Component: CMP-008
+
 Contracts: IF-115 — the interface seam this module declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
 

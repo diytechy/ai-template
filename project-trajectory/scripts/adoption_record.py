@@ -39,6 +39,8 @@ range and the walk are the shared lane-commit walk's (`kitlib.git`'s
 git cannot list. Text then act's squash exemption is keyed to the acceptance-act
 registries, so it is not borrowed.
 
+Component: CMP-008
+
 Contracts: IF-303, IF-304 - the seams this module declares (process.md §8;
 rows of record in docs/requirements/interfaces.toml).
 

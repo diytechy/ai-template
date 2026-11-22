@@ -13,6 +13,8 @@ another hook. The reading itself is pure over JSON-shaped values; the file
 side below it (`hooks_state`, `install_hooks`, `consent_install`) reads the
 settings and writes them, moved whole out of `coordinator_guard.py` at its
 1000-line ratchet.
+
+Component: CMP-009
 """
 
 import json

@@ -47,6 +47,8 @@
 # sources live is REFUSED, not silently resolved — a mixed config is exactly
 # the state where two readers disagree about the same policy.
 #
+# Component: CMP-008
+#
 # Contracts: IF-037, IF-038 — the interface seams this file declares (process.md
 # §8; rows of record in docs/requirements/interfaces.toml).
 #

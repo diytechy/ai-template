@@ -75,6 +75,8 @@ Explicitly NOT here, by spec: worktree pools, reservations, train grouping,
 run-state files, disposition arms. If a change starts to grow this module
 toward the deleted dispatcher's shape, stop and escalate as a written case
 (process-options.md, the design-escalation clause).
+
+Component: CMP-008
 """
 
 from __future__ import annotations

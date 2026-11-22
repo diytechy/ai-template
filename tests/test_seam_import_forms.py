@@ -6,8 +6,8 @@ cross-component rule as its inventory module, or is skipped (WI-1003).
 rule used to look the whole token up by its last segment, so every dotted and
 relative token missed and the edges into a package went unchecked. One resolver,
 `gen_arch_map.resolve_import`, now answers for the rule and for the dependency
-diagram. Each case below adds one importer tagged CMP-001 to a fixture tree whose
-other modules are CMP-002, and runs the rule in process: a resolved form reports
+diagram. Each case below adds one importer declaring CMP-001 to a fixture tree
+whose other modules declare CMP-002, and runs the rule in process: a resolved form reports
 the cross-component finding naming its target; a skipped form reports nothing for
 its importer.
 
@@ -49,14 +49,23 @@ TREE = {
 }
 
 
+def _declared(text, component):
+    """`text` with `Component: <component>` closing its module docstring."""
+    close = text.index('"""', 3)
+    return text[:close] + "\n\nComponent: {}\n".format(component) + text[close:]
+
+
 def _tree(root, importer, statement):
-    """Write the fixture tree with `importer` holding `statement`, its
-    component tags and its scan profile; return the importer's module key."""
+    """Write the fixture tree with `importer` holding `statement`, each
+    non-empty module's `Component:` header (the importer CMP-001, every other
+    module CMP-002) and the scan profile; return the importer's module key."""
     files = dict(TREE)
     files[importer] = '"""Importer."""\n\n{}\n'.format(statement)
     for rel, text in files.items():
         path = root / "scripts" / rel
         path.parent.mkdir(parents=True, exist_ok=True)
+        if text:
+            text = _declared(text, "CMP-001" if rel == importer else "CMP-002")
         path.write_text(text, encoding="utf-8")
     key = "scripts/" + importer[: -len(".py")].replace("/__init__", "")
     req = root / "docs" / "requirements"
@@ -66,18 +75,6 @@ def _tree(root, importer, statement):
     )
     (req / "components.csv").write_text(
         "CMP-ID,Name\nCMP-001,A\nCMP-002,B\n", encoding="utf-8"
-    )
-    rows = "".join(
-        "LLR-{:03d},SR-001,T,scripts/{},,d,(see TC),Accepted,{}\n".format(
-            i + 1, rel, "CMP-001" if rel == importer else "CMP-002"
-        )
-        for i, rel in enumerate(sorted(files))
-        if files[rel]
-    )
-    (req / "low-level-requirements.csv").write_text(
-        "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Component\n"
-        + rows,
-        encoding="utf-8",
     )
     return key
 
@@ -175,7 +172,7 @@ def test_an_import_form_reaches_the_cross_component_rule_as_its_module(
 )
 def test_an_unknown_or_ambiguous_import_is_skipped(tmp_path, importer, statement):
     # Skipped before classification: the importer yields no edge at all, so
-    # neither tier can report one. The last case resolves (a package's
+    # the rule cannot report one. The last case resolves (a package's
     # __init__.py naming its own package) and the rule skips it as an edge
     # from the importing module to itself.
     src = _tree(tmp_path, importer, statement)

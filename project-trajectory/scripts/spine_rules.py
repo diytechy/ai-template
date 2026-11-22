@@ -74,6 +74,8 @@ duplicate from `trace.py` under the retired F5 rule now has ONE home,
 `kitlib.spine`, and is re-exported below (WI-448 slice 3) — this still never
 imports the joined-spine engine.
 
+Component: CMP-006
+
 Contracts: IF-325 — the seam this module declares (process.md §8; the row of
 record in docs/requirements/interfaces.toml).
 

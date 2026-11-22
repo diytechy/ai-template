@@ -131,12 +131,13 @@ adds `--strict`.
 **How-SW top-view right-sizing** (WI-073/FB5; process-options.md "Component
 layer"). The software-architecture diagram's *first view* must show at most
 ``TOP_VIEW_MAX`` (10) items: top-level components (a `CMP-###` with no `PartOf`
-that contains ≥1 arch-map module) plus **uncontained** modules (a module with no
-`Component`-tagged LLR). Exceeding the bound is a **finding** — WARN at the
+that contains ≥1 arch-map module) plus **uncontained** modules (a module whose
+header declares no valid component). Exceeding the bound is a **finding** — WARN at the
 plain/hook run, **ERROR under `--strict` (DevStg-Tests+)** — that drives right-sizing of
-the component designations. Membership derives from the AXES join: a `Component`
-tag on an LLR row joins its `Module` → `CMP-###`; nesting via the CMP registry's
-`PartOf` (a module counts only at its top-level root). Opt-out is the one word
+the component designations. Membership is each file's `Component: CMP-###`
+header (process.md §8; a file in the scope with an absent, doubled, malformed
+or dangling declaration is itself a finding, with the same severity); nesting
+via the CMP registry's `PartOf` (a module counts only at its top-level root). Opt-out is the one word
 `[checks] components_check = false` (the `interfaces_check` idiom); a repo with ≤10
 modules — or no arch-map inventory — passes trivially (the bound, not the
 registry, is the rule), so a small or non-adopting repo is never broken.
@@ -146,7 +147,7 @@ registry, is the rule), so a small or non-adopting repo is never broken.
 `docs/knowledge/` holds a real pack: an uncontained arch-map module is then a
 finding even below the 10-item bound, because a knowledge pack ties the *what* to
 the knowledge behind the *how*, so that web must be robust wherever packs are
-enabled. It reuses the existing `Component`-tag join (no new join) and the same
+enabled. It reuses the same header membership (no new join) and the same
 `components_check` opt-out, and is dormant — costing a non-adopter nothing —
 until a pack (any `docs/knowledge/*.md` but the `README.md` index) exists.
 
@@ -167,6 +168,8 @@ exit-code change, at any stage); vacuous on a single-phase repo with no anchors
 
 Usage:  python scripts/check_trajectory.py [--root .] [--strict] [--staged]
 Exit codes: 0 clean / vacuous / opted-out, 1 a hard error, 2 usage/environment.
+
+Component: CMP-006
 
 Contracts: IF-009, IF-056, IF-082, IF-083, IF-084, IF-177 — the interface seams
 this module declares (process.md §8; rows of record in
@@ -358,7 +361,6 @@ _classifiable_edges = _trajectory_arch._classifiable_edges
 _SCAN_CACHE = _trajectory_arch._SCAN_CACHE
 _cross_component_scan = _trajectory_arch._cross_component_scan
 cross_component_findings = _trajectory_arch.cross_component_findings
-cross_component_advisories = _trajectory_arch.cross_component_advisories
 component_findings = _trajectory_arch.component_findings
 _IF_TOKEN_RE = _trajectory_arch._IF_TOKEN_RE
 _INTERFACES_HEADING_RE = _trajectory_arch._INTERFACES_HEADING_RE
@@ -3339,12 +3341,6 @@ def main():
     # never an exit-code change (even under --strict). Runs before the WI vacuity
     # return so a repo with modules + seams but no work items is still covered;
     # vacuous under [checks] interfaces_check = false or a ≤1-module arch-map.
-    # ...and the multi-membership overlap advisory (WI-440; OI-14's third
-    # do-not-wait) shares this WARN-ONLY loop rather than the component block
-    # below: it reports the cross-component edges a multi-tagged endpoint
-    # SILENCES, which is a question about the PARTITION rather than a defect in
-    # the edge, and no partition has been ruled — so it must never join the exit
-    # code, not even under --strict, which the component block would do.
     # ...and the seam-TC-coverage allowlist HYGIENE advisory (WI-488) shares it
     # for the same reason: a stale (now-covered, or now-retired) allowlist entry
     # is never itself a defect, so it must never join the exit code either — the
@@ -3357,7 +3353,6 @@ def main():
     for w in (
         interface_findings(root)
         + unchecked_contract_rows(root)
-        + cross_component_advisories(root)
         + if_tc_allow_hygiene_findings(root)
         + codesymbol_crosscheck_findings(root)
         + loop_held_status_findings(root)

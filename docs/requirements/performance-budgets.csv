@@ -1,5 +1,7 @@
 # docs/requirements/performance-budgets.csv — the PB-### budget registry.
 #
+# Component: CMP-006
+#
 # Contracts: IF-031 — the interface seam this file declares (process.md §8;
 # row of record in docs/requirements/interfaces.toml).
 #

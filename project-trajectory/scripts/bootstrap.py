@@ -340,6 +340,8 @@ decision 8.)
 After running: open AGENTS.md and docs/status.md, fill the PROJECT BRIEF, then
 start gate DevStg-Reqs (see docs/process.md).
 
+Component: CMP-009
+
 Contracts: IF-014 — the interface seam this module declares (process.md §8;
 row of record in docs/requirements/interfaces.toml).
 

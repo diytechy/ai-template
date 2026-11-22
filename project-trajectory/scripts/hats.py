@@ -70,6 +70,8 @@ Usage (the CLI is a documentation aid; the module is library-first):
 (`--root` is the shared option and precedes the subcommand — it was written the
 other way round here until the `audit` command was added and the usage line was
 run.)
+
+Component: CMP-008
 """
 
 from __future__ import annotations

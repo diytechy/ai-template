@@ -286,8 +286,9 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
     # above the site (2026-11-19, maintenance branch). 1607 -> 1670 when
     # WI-1010 added the assumption cards (`_owing_card`, `_relied_on`,
     # `_assumption_cards`) and their docstring clauses, all above the site
-    # (2026-11-20, maintenance branch).
-    assert sites == [("gen_open_items.py", 1670)], sites
+    # (2026-11-20, maintenance branch). 1670 -> 1672 when WI-1021 gave the
+    # module docstring its `Component:` line and a blank line beside it.
+    assert sites == [("gen_open_items.py", 1672)], sites
     source = (SCRIPTS / "gen_open_items.py").read_text(encoding="utf-8").splitlines()
     # Derived from the pinned site above rather than hand-carried: two numbers
     # for one fact drifted apart the moment the line moved (the second still

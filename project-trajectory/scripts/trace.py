@@ -80,6 +80,8 @@ endpoint that resolves to no LLR Module. The report always carries the
 vouched-vs-mechanized acceptance split (process.md §4 "Vouch") and, when the SR
 registry tags Aspect, a per-aspect count.
 
+Component: CMP-006
+
 Contracts: IF-001, IF-042, IF-075, IF-089, IF-101, IF-141, IF-145, IF-146, IF-166, IF-176, IF-233
 — the interface seams this module declares (process.md §8; rows of record in
 docs/requirements/interfaces.toml).

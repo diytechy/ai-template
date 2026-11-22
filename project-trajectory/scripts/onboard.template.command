@@ -1,4 +1,6 @@
 #!/bin/bash
+# Component: CMP-009
+#
 # Stage-0 onboarder (macOS) — the first rung of the onboarding ladder
 # (process.md §7):
 #

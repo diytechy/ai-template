@@ -33,6 +33,8 @@ sessions re-stamp; it matches the extension-less house data files under `docs/`
 never be one; the escape hatch is this one reviewed central file, because a
 scattered opt-out self-replicates as new code copies it.
 
+Component: CMP-007
+
 Contracts: IF-188 — the interface seam this module declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
 

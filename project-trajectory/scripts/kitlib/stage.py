@@ -63,6 +63,8 @@ refuses a commit whose committed copy is stale. A reader that healed the file on
 disk would rewrite that history from whichever process happened to look first,
 and would do it on claimed branches and in CI where the freshness step is
 deliberately stood down.
+
+Component: CMP-006
 """
 
 import hashlib

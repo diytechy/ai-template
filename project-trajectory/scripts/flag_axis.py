@@ -37,6 +37,8 @@ sites. DOWNWARD-ONLY BY CONVENTION: re-stamp with `--restamp` after a module
 sheds a flag, and never to quiet a warning. Nothing mechanizes the direction,
 because the measure refuses nothing to enforce it with.
 
+Component: CMP-007
+
 Contracts: IF-239, IF-240 — the interface seams this module declares
 (process.md §8; rows of record in docs/requirements/interfaces.toml).
 

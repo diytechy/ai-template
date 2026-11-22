@@ -5,6 +5,8 @@ The spine/OKF/arch-map/gate readers, the one subprocess capture seam
 WI-280 split of gen_trajectory.py; the facade re-exports, so consumers are
 unchanged.
 
+Component: CMP-009
+
 Contracts: IF-052, IF-227 — the seams this module declares (process.md §8;
 rows of record in docs/requirements/interfaces.toml).
 

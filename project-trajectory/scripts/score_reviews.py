@@ -42,6 +42,8 @@ The **scoreboard** is one small decayed-tally text file
 history the escalation policy consumes. It is advisory state, never a source of
 truth.
 
+Component: CMP-008
+
 Contracts: IF-046 — the interface seam this module declares (process.md §8; row of record in docs/requirements/interfaces.toml).
 
 Contract IF-046: agent_loop imports this module for the round's scoring pass

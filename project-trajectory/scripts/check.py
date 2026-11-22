@@ -14,6 +14,8 @@ format/lint/test commands with your own (or drop the ones you don't have); keep
 the traceability/flows/doc-navigability/perf-budgets steps — they're
 stdlib-only and stack-agnostic.
 
+Component: CMP-007
+
 Contracts: IF-267
 
 Contract IF-267: --path-triggered runs only steps declaring nonempty paths,

@@ -25,6 +25,7 @@ from traj_fixtures import (
     write_arch_src,
     write_cont_src,
     CONT_CMPS,
+    CONT_COMPONENTS,
     CONT_LLRS,
     cmp_row,
     if_row,
@@ -34,6 +35,7 @@ from traj_fixtures import (
     TIER_UNION_WIS,
     _layer_with,
     containerize,
+    declare_cont,
     gen,
     html_of,
     make_repo,
@@ -512,11 +514,13 @@ def test_no_cmp_renders_flat_view_byte_identical(tmp_path):
     req = tmp_path / "docs" / "requirements"
     (req / "low-level-requirements.csv").write_text(CONT_LLRS, encoding="utf-8")
     (req / "components.toml").write_text(CONT_CMPS, encoding="utf-8")
+    declare_cont(tmp_path, CONT_COMPONENTS)
     assert gen(tmp_path).returncode == 0
     assert b'class="cmptree"' in (tmp_path / "PROJECT_STATE.html").read_bytes()
 
     (req / "low-level-requirements.csv").write_text(LLRS, encoding="utf-8")
     (req / "components.toml").unlink()
+    write_cont_src(tmp_path)  # the headers out again, with the containment
     assert gen(tmp_path).returncode == 0
     assert (tmp_path / "PROJECT_STATE.html").read_bytes() == flat
 
@@ -549,6 +553,7 @@ def test_nested_components_render_inside_their_parent(tmp_path):
         ),
         encoding="utf-8",
     )
+    declare_cont(tmp_path, {"mod_b": "CMP-003"})
     assert gen(tmp_path).returncode == 0
     sw = sw_section(tmp_path)
     # Still two top-level items (CMP-001 with CMP-003 nested inside, and CMP-002).
@@ -568,9 +573,9 @@ def test_meta_component_top_view_smoke(tmp_path):
     ct = load_script("check_trajectory")
     v = ct.component_top_view(root)
     assert v["count"] <= ct.TOP_VIEW_MAX
-    # A module is CONTAINED by the `Component` cell of an LLR whose `Module`
-    # names it, so a module that has landed ahead of its spine rows reads as
-    # uncontained. `scripts/baseline_snapshot` was exactly that for one session
+    # A module is CONTAINED by its own `Component:` header (WI-1021); before
+    # that, by the `Component` cell of an LLR whose `Module` named it, so a
+    # module that had landed ahead of its spine rows read as uncontained. `scripts/baseline_snapshot` was exactly that for one session
     # — the D-9 step-3 program was code-and-tests with registry cells off limits
     # — and it is contained again as of log 2026-08-15h, which minted LLR-173
     # (module `baseline_snapshot.py`, `Component = CMP-006`) with TC-167 and the
@@ -1091,6 +1096,15 @@ def test_how_sw_collapses_above_component_threshold(tmp_path):
     req = tmp_path / "docs" / "requirements"
     (req / "low-level-requirements.csv").write_text(FOUR_CMP_LLRS, encoding="utf-8")
     (req / "components.toml").write_text(FOUR_CMPS, encoding="utf-8")
+    declare_cont(
+        tmp_path,
+        {
+            "mod_a": "CMP-001",
+            "mod_b": "CMP-002",
+            "mod_c": "CMP-003",
+            "mod_d": "CMP-004",
+        },
+    )
     assert gen(tmp_path).returncode == 0
     sw = sw_section(tmp_path)
     assert "Top view: 4 item" in sw

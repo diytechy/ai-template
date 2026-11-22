@@ -123,6 +123,8 @@ docs/privacy-check is enabled and the effective git author email is not in the
 exempt allowlist — an unattended run under a private identity is the
 history-leak disaster case (process-options.md "Commit identity & privacy").
 
+Component: CMP-008
+
 Contracts: IF-015, IF-253 — the interface seams this module declares (process.md
 §8; rows of record in docs/requirements/interfaces.toml).
 

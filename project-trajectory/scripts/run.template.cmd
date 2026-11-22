@@ -1,4 +1,5 @@
 @echo off
+REM Component: CMP-009
 setlocal
 REM Product launcher (Windows) - double-click to run this project.
 REM It presents the capabilities declared in docs/stack.ini's [run] section

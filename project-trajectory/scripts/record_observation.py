@@ -43,6 +43,8 @@ declared stage input and lies outside the release evidence's source surface,
 so recording a sample never makes the stage's fingerprint or a release claim
 stale.
 
+Component: CMP-006
+
 Contracts: IF-215 — the seam this module declares (process.md §8; row of record
 in docs/requirements/interfaces.toml).
 

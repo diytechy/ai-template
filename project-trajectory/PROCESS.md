@@ -1380,7 +1380,11 @@ block opening `Contract IF-###:` — a form ordinary prose does not resemble,
 which is what makes hard-failing its four refusals safe: a body before the
 marker, a body for an undeclared id, a second body for one id, an HTML comment
 in a body. A registry, config or hook file carries the same marker and bodies
-in a `#` header at its top. `gen_arch_map.py --contracts-doc` harvests them
+in a `#` header at its top. The same header names the file's ONE component on
+a line reading exactly `Component: CMP-###` (a module's docstring; a `#`,
+`REM` or opening `<!-- -->` line elsewhere): from DevStg-Arch every source file
+and file owner carries one, and a file without belongs to no component, so
+an import touching it is reported unclassified. `gen_arch_map.py --contracts-doc` harvests them
 into a committed `interface-reference.md`, freshness-gated like the CLI
 reference; a declared seam with no body is listed there as unstated. The row
 is the cross-validated link: it declares the seam and stops. **Mint

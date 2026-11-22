@@ -10,6 +10,8 @@ Both shapes have one home, here, below the routes that use them: the
 coordinator's adjudication entry point today, the loop's in-lane sitting
 (WI-811) later. Pure functions over text.
 
+Component: CMP-008
+
 Contracts: IF-290, IF-322 — the seams this module declares (process.md §8; rows
 of record in docs/requirements/interfaces.toml).
 

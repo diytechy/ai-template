@@ -56,6 +56,8 @@ Small CSV loaders are duplicated from trace.py / check_trajectory.py per the kit
 independently-copyable-script convention (the F5 rule). Operator gates are read
 through the shared `spine_carrier` loader.
 
+Component: CMP-008
+
 Contracts: IF-053, IF-055, IF-071, IF-085, IF-094, IF-171, IF-172, IF-264 — the
 interface seams this module declares (process.md §8; rows of record in
 docs/requirements/interfaces.toml).

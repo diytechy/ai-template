@@ -34,6 +34,8 @@ a non-adopter pay nothing.
 Usage:  python scripts/gen_okf.py [--root .] [--check]
 Exit codes: 0 clean / vacuous / opted-out, 1 stale bundle under --check.
 
+Component: CMP-009
+
 Contracts: IF-012, IF-149 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-012: the freshness verdict `--check` returns to the harness. It

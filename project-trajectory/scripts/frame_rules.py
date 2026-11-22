@@ -32,6 +32,8 @@ Stdlib only. A plain sibling of `scripts/`, not a `kitlib` module, for the
 reason `coherence.py` records: these are the checker's rules, and the
 scaffolder has no business importing them.
 
+Component: CMP-006
+
 Contracts: IF-180 — the seam this module declares (process.md §8; row of record
 in docs/requirements/interfaces.toml).
 

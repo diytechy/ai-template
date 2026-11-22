@@ -54,6 +54,8 @@ AFTER `tests+coverage` produces the JSON (check.py's plan orders extra steps
 after the test step). Opt-in like the dup-code gate: a repo without the step and
 the floors file pays nothing.
 
+Component: CMP-007
+
 Contracts: IF-069 — the interface seam this module declares (process.md §8;
 row of record in docs/requirements/interfaces.toml).
 

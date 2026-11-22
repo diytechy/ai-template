@@ -41,6 +41,8 @@ A kitlib module, in the pattern of `evidence.py`: it imports no sibling script,
 only the package's own TOML string emitter, so the writer and the checker read
 one format.
 
+Component: CMP-006
+
 Contracts: IF-214, IF-315 — the seams this module declares (process.md §8; rows
 of record in docs/requirements/interfaces.toml).
 

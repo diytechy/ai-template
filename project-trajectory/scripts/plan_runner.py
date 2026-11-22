@@ -19,6 +19,8 @@ agent_loop re-exports `wi_plan_mode`/`PLAN_MODE_DUAL`/`run_dual_plan_round`
 
 Stdlib only, Python 3.11+, Windows/POSIX.
 
+Component: CMP-008
+
 Contracts: IF-066 — the interface seam this module declares (process.md §8; row of record in docs/requirements/interfaces.toml).
 
 Contract IF-066: agent_loop imports two names from this module and re-exports

@@ -9,7 +9,8 @@ the kit never created, and was read by no script: the generated view is the home
 that column was pointing at, so the column retires with this file.
 
   docs/requirements/components.toml              WHICH components exist (hand)
-  docs/requirements/low-level-requirements.toml  membership + the SR reach
+  each file's `Component:` header                which files each one holds
+  docs/requirements/low-level-requirements.toml  the design rows + the SR reach
   docs/requirements/system-requirements.toml     the requirement tier + hats
   docs/requirements/interfaces.toml              the seams
   -> docs/requirements/components.derived.toml   this view
@@ -48,8 +49,8 @@ indistinguishable from one with a bug):
     duplicate.
   * SEAMS ENTER THE VIEW — they are the one input that shows a component's EDGES
     rather than only its obligations. An IF row is placed by its `Component` tag
-    UNIONED with the components its two endpoints resolve into (endpoint ->
-    `LLR.Module` -> `Component`, through the same best-effort normalizer
+    UNIONED with the components its two endpoints resolve into (endpoint -> the
+    file's `Component:` header, through the same best-effort normalizer
     `trace.interface_findings` already joins on). The union is deliberate: the
     tag names the row's owning component while the endpoints span the pair, and
     a seam between two components is a boundary of BOTH. Classification is the
@@ -59,6 +60,8 @@ indistinguishable from one with a bug):
 
 Stdlib only, cross-platform, deterministic (sorted inputs, no clocks) so the
 `--check` byte-compare is stable in any clone.
+
+Component: CMP-009
 
 Contracts: IF-139, IF-140 — the interface seams this module declares
 (process.md §8; rows of record in docs/requirements/interfaces.toml).
@@ -93,7 +96,8 @@ from kitlib.spine import is_example, refs
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import spine_carrier  # noqa: E402  (path set above)
+import arch_inputs  # noqa: E402  (path set above)
+import spine_carrier  # noqa: E402
 import trace as tr  # noqa: E402
 import trace_text  # noqa: E402
 
@@ -180,7 +184,9 @@ def _blank(name):
 
 
 def _add_members(view, srs, llrs):
-    """Fold the design tier into `view` and return `{SR id: {CMP ids}}`.
+    """Fold the design tier into `view` and return `{SR id: {CMP ids}}`. The
+    design rows' `Component` cells place the rows and the requirements they
+    reach; the files are `_add_modules`'.
 
     An LLR tagged into a component nothing declares is NOT invented here as a
     section: that dangling tag is trace.py's finding to report, and a view that
@@ -195,7 +201,6 @@ def _add_members(view, srs, llrs):
                 continue
             view[cid]["llr_refs"].add(row["LLR-ID"])
             view[cid]["hat_refs"].update(hats)
-            view[cid]["modules"].update(refs(row.get("Module")))
             view[cid]["sr_refs"].update(parents)
             for pid in parents:
                 sr_components.setdefault(pid, set()).add(cid)
@@ -203,6 +208,15 @@ def _add_members(view, srs, llrs):
         for cid in comps if len(comps) > 1 else ():
             view[cid]["sr_shared_refs"].add(pid)
     return sr_components
+
+
+def _add_modules(view, declared):
+    """Fold each declared file into its component's `modules`: a file belongs
+    to the component its `Component:` header declares (`declared`, `{path: CMP
+    id}`), and a component nothing declares gets no section here either."""
+    for path, cid in declared.items():
+        if cid in view:
+            view[cid]["modules"].add(path)
 
 
 def _add_seams(view, ifs, mod_comps):
@@ -219,20 +233,25 @@ def _add_seams(view, ifs, mod_comps):
     return unplaced
 
 
-def build(cmps, srs, llrs, ifs):
+def build(cmps, srs, llrs, ifs, declared):
     """The whole view as plain data: `(per_component, unplaced)`.
 
     Separated from `render` so the derivation is testable without parsing TOML
     back out of a string.
 
-    The module -> component map the seams are placed by is
-    `kitlib.spine.module_components`, the join's one home, which the checker's
-    containment and cross-component rules read too (WI-1005). It normalizes with
-    the same `norm_module` the endpoints go through here (`trace_text` binds
-    it), so a seam and a design row meet on one key."""
+    `declared` is each file's component as its `Component:` header declares it
+    (`arch_inputs.component_headers`). The module -> component map the seams are
+    placed by is `kitlib.spine.module_components` over it, the join's one home,
+    which the checker's containment and cross-component rules read too
+    (WI-1005). It normalizes with the same `norm_module` the endpoints go
+    through here (`trace_text` binds it), so a seam and a header meet on one
+    key.
+
+    Implements: SR-070, LLR-199"""
     view = {r["CMP-ID"]: _blank((r.get("Name") or "").strip()) for r in cmps}
     sr_components = _add_members(view, srs, llrs)
-    unplaced_seams = _add_seams(view, ifs, _kitspine.module_components(llrs))
+    _add_modules(view, declared)
+    unplaced_seams = _add_seams(view, ifs, _kitspine.module_components(declared))
     unplaced_srs = sorted(r["SR-ID"] for r in srs if r["SR-ID"] not in sr_components)
     return view, {"sr_refs": unplaced_srs, "seam_refs": sorted(unplaced_seams)}
 
@@ -250,7 +269,7 @@ def render(root):
     """The whole file as text. Deterministic: every collection is sorted and
     nothing reads a clock or the environment."""
     cmps, srs, llrs, ifs = _load(root)
-    view, unplaced = build(cmps, srs, llrs, ifs)
+    view, unplaced = build(cmps, srs, llrs, ifs, arch_inputs.component_headers(root)[0])
     out = [BANNER]
     out.append(
         "\n[derived]\n"

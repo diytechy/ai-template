@@ -40,6 +40,8 @@ are the CHECKER's rules — the scaffolder has no business importing them, and
 The row's `Implements:` tag sits on `spine_orphan_findings` below, not here: the
 cross-check reads the ENCLOSING symbol of a tag, and a module-scope tag on a row
 whose CodeSymbol names nine functions resolves to nothing it can match.
+
+Component: CMP-006
 """
 
 from dataclasses import dataclass

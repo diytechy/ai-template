@@ -88,6 +88,8 @@ three stripped before parsing — frontmatter is typed data, so a `title` quotin
 a link is describing one, not making one). Anchors are only validated against
 Markdown targets the script can parse.
 
+Component: CMP-007
+
 Contracts: IF-002, IF-077 — the interface seams this module declares
 (process.md §8; rows of record in docs/requirements/interfaces.toml).
 

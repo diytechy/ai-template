@@ -36,6 +36,8 @@ Usage:
     python scripts/gen_verdict_rollup.py            # write docs/reviews/rollup/
     python scripts/gen_verdict_rollup.py --check    # exit 1 if any file is stale
     python scripts/gen_verdict_rollup.py --root .   # repository root
+
+Component: CMP-009
 """
 
 import argparse

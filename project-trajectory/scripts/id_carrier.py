@@ -34,6 +34,8 @@ module the way it composes `retire.py` and hands it a render callable; this
 module imports nothing from `trace.py`. The retirement records the landing
 judgement reads are `retire.py`'s, handed in by `trace.py` as a reader. The
 plumbing writes no worktree and no checkout, and its lock is git's own ref lock.
+
+Component: CMP-006
 """
 
 import re

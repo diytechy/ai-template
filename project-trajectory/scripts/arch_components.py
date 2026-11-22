@@ -9,6 +9,8 @@ rule from `arch_seams`, and checks each component row's derivation record
 (`derivation_record_findings`). Their inputs come from `arch_inputs`;
 ``trajectory_arch`` re-exports them for ``check_trajectory``.
 
+Component: CMP-006
+
 Contracts: IF-320 — the interface seam this file declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
 
@@ -36,9 +38,9 @@ import spine_carrier
 from arch_inputs import (
     CMP_CSV,
     CMP_ID_RE,
-    LLR_CSV,
     _norm_module,
     arch_inventory,
+    component_headers,
     load_cmps,
     read_components_check_enabled,
 )
@@ -54,8 +56,9 @@ TOP_VIEW_MAX = 10
 # --- the How-SW top-view right-sizing rule (WI-073/FB5) ------------------------
 # The software-architecture diagram's first view is bounded at TOP_VIEW_MAX
 # items = top-level components (a CMP with no PartOf that contains ≥1 arch-map
-# module) + uncontained modules. Membership derives from the AXES join: a
-# `Component` tag on an LLR joins LLR.Module → CMP-###; CMP nesting via PartOf.
+# module) + uncontained modules. Membership is each file's `Component:` header
+# (`arch_inputs.component_headers`, joined by `kitlib.spine.module_components`);
+# CMP nesting via PartOf.
 # The derivation below is the ONE home for that join — gen_trajectory imports it
 # (`ct.component_top_view`) so the render and this rule can never disagree on the
 # count. Small stable loaders duplicated per the F5 convention (no sibling import
@@ -95,7 +98,8 @@ def component_top_view(root):
       by_id        `{cmp id: cmp dict}`
       children_of  `{cmp id: sorted[child cmp ids]}` (PartOf inverted)
       roots_of     `{cmp id: set(top-level root ids)}` (PartOf resolved up)
-      module_cmps  `{norm: set(finest real CMP ids tagged on its LLRs)}`
+      module_cmps  `{norm: set(real CMP ids its header declares)}`, empty
+                   for a module with no valid declaration
       module_roots `{norm: set(top-level root ids)}` (derived, real modules only)
       top_roots    sorted `[cmp id]` top-level roots containing ≥1 module
       uncontained  sorted `[norm]` inventory modules with no membership
@@ -121,7 +125,7 @@ def component_top_view(root):
     for cid in children_of:
         children_of[cid] = sorted(children_of[cid])
 
-    raw = _kitspine.module_components(spine_carrier.load(root / LLR_CSV, "LLR-ID"))
+    raw = _kitspine.module_components(component_headers(root)[0])
     module_cmps, module_roots = {}, {}
     top_roots, uncontained = set(), []
     for n in sorted(inventory):
@@ -338,8 +342,13 @@ def component_findings(root):
     """The How-SW component-coverage finding(s) (process-options.md "Component
     layer"). Returns the finding strings ([] when opted out or clean). The caller
     prints them WARN plain and promotes them to ERROR under `--strict` (DevStg-Tests+).
-    Opt-out via `[checks] components_check = false`. Five rules, all off the arch-map ⇒
-    CMP join, and the registry's own derivation record:
+    Opt-out via `[checks] components_check = false`. Six rules, all off the files'
+    `Component:` headers, and the registry's own derivation record:
+
+    - **Every file in the scope declares its component** (WI-1021): see
+      `arch_inputs.component_headers` — a file whose header declaration is
+      absent, doubled, malformed or names no live component row is a finding,
+      and it belongs to no component.
 
     - **Top-view right-sizing** (WI-073/FB5): vacuous when the arch-map inventory
       has ≤ TOP_VIEW_MAX modules (a small or pre-arch-map repo can never exceed the
@@ -359,12 +368,10 @@ def component_findings(root):
       fires on it directly; there is no committed-vs-disk gap left to bridge.)
     - **Cross-CMP edges need a declared seam** (WI-064): see
       `cross_component_findings` — an import edge between two components with
-      no covering IF-### row. Its warn-only sibling
-      `cross_component_advisories` (WI-440) reports the edges a multi-tagged
-      endpoint silences; main() prints those, not this function, because they
-      must never reach the exit code. An edge into a declared shared-kernel
-      module (OI-48 (d), WI-494) is exempted from BOTH before either can fire
-      — see `_cross_component_scan`.
+      no covering IF-### row, and an edge touching a file with no valid
+      declaration, reported as unclassified. An edge into a declared
+      shared-kernel module (OI-48 (d), WI-494) is exempted once both ends are
+      declared — see `_cross_component_scan`.
     - **Declared-kernel allowlist hygiene** (OI-48 (d), WI-494): see
       `kernel_allow_parse_findings` — a `docs/kernel-modules-allow` line the
       grammar cannot read (missing module, missing reason, or no separator)
@@ -396,11 +403,10 @@ def component_findings(root):
         )
         out.append(
             "docs/knowledge/ holds {} pack(s) but {} arch-map module(s) are in no "
-            "CMP-### component ({}); tag them via LLR `Component` cells in {} so "
-            "the knowledge⇒component web is complete, or set docs/process.toml "
-            "[checks] components_check = false".format(
-                len(packs), len(view["uncontained"]), shown, CMP_CSV
-            )
+            "CMP-### component ({}); declare each one's component in its "
+            "`Component:` header (process.md §8) so the knowledge⇒component web "
+            "is complete, or set docs/process.toml [checks] components_check = "
+            "false".format(len(packs), len(view["uncontained"]), shown)
         )
     if len(view["inventory"]) > TOP_VIEW_MAX and view["count"] > TOP_VIEW_MAX:
         out.append(
@@ -415,6 +421,7 @@ def component_findings(root):
                 CMP_CSV,
             )
         )
+    out.extend(component_headers(root)[1])
     out.extend(cross_component_findings(root))
     out.extend(kernel_allow_parse_findings(root))
     cmp_rows = spine_carrier.load(root / CMP_CSV, "CMP-ID")

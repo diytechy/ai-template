@@ -49,6 +49,8 @@ WHAT IS DELIBERATELY NOT HERE. The BAR axis — `BAR_*` ordinals, `BAR_NAMES`,
 ruled plan deleted that axis outright, and slice 0 only extracted what SURVIVED
 the unification: hauling a dying vocabulary into the new home would have been
 work performed twice. The axis is gone repo-wide as of slice 5.
+
+Component: CMP-006
 """
 
 # --- THE LADDER (SN-029 / OI-21, ruled 2026-08-13; moved here WI-498) ----------

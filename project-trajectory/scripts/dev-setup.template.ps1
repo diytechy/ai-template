@@ -29,6 +29,8 @@
 #              opt-down for a contributor who wants just their slice. DEFAULT
 #              (no -Profile): every declared role. Roles: see $Roles below.
 #
+# Component: CMP-009
+#
 # Linux/macOS contributors: use scripts/dev-setup.sh.
 # Contracts: IF-292, IF-293 — the interface seams this script declares (process.md §8;
 # rows of record in docs/requirements/interfaces.toml).

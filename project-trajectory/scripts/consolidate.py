@@ -87,6 +87,8 @@ would mint, or `(None, reason)` — a reason and not an exception for every
 case. Every input is a typed registry cell — `Status`, `Brief`, `Digests`,
 `Supersedes`, `SR-Refs`, `SpecRef` — or a spec body read off disk; never a prior
 verdict, so the census is reproducible from the tree alone.
+
+Component: CMP-008
 """
 
 from __future__ import annotations

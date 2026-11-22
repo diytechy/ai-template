@@ -75,6 +75,8 @@ ruling that has not been made (WI-454's scope guard): a form heuristic over
 stakeholder prose must not block work on the strength of a regex. `--strict`
 exists for a repo that makes that ruling for itself.
 
+Component: CMP-007
+
 Contracts: IF-121 — the seam this module declares (process.md §8; row of record
 in docs/requirements/interfaces.toml).
 

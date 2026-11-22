@@ -36,6 +36,8 @@ reason, never an absence.
 
 The record's format is declared with the filing step's command line
 (`review_brief.py`) and the gate's (`plan_gate.py`).
+
+Component: CMP-008
 """
 
 import hashlib

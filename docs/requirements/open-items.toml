@@ -3,6 +3,8 @@
 # One table per decision the owner owes or has ruled. `-000` example rows are
 # inert, the copy-ready placeholder convention every registry here uses.
 #
+# Component: CMP-006
+#
 # Contracts: IF-073 — the interface seam this file declares (process.md §8; row
 # of record in docs/requirements/interfaces.toml).
 #

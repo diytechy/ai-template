@@ -79,6 +79,8 @@ The record's copies are left out of that report: a copy that differs from
 its live registry is an amendment awaiting its act, not an earlier
 spelling.
 
+Component: CMP-006
+
 Contracts: IF-312 — the seam this module declares (process.md §8; row of record
 in docs/requirements/interfaces.toml).
 

@@ -49,6 +49,8 @@ measured: its debt is not this change's worsening. For the flag axis
 per module: two counts, flag functions and positional boolean-literal call
 sites, against `docs/flag-axis-baseline`.
 
+Component: CMP-007
+
 Contracts: IF-187 — the interface seam this module declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
 

@@ -22,6 +22,8 @@ unchanged). The session engine (agent_loop) and the serial integrator
 agent_loop re-exports the names it historically exposed, so its public
 surface is unchanged. Stdlib only, Python 3.11+, Windows/POSIX.
 
+Component: CMP-008
+
 Contracts: IF-065, IF-189, IF-224 — the interface seams this module declares (process.md
 §8; rows of record in docs/requirements/interfaces.toml).
 

@@ -17,6 +17,8 @@ is none of the three gets the plain adapter, which changes nothing.
 Stdlib only, Python 3.11+, Windows/POSIX. A coordinator-layer module: the
 session service (`session_service`) imports it, and it imports no kit sibling.
 
+Component: CMP-008
+
 Contracts: IF-245, IF-266 — the interface seam this module declares (process.md §8;
 row of record in docs/requirements/interfaces.toml).
 

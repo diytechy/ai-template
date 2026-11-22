@@ -34,6 +34,8 @@ piece starts, which tells PowerShell's `$r = 'claude'` (a value) from
 A line it cannot read (an unclosed quote, substitution or here-string) raises
 `Unreadable`; the caller decides what that means (the guard refuses it inside
 the window: decision D-010 in docs/decisions/wi-834.toml).
+
+Component: CMP-008
 """
 
 import re

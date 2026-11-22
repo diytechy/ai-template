@@ -69,6 +69,8 @@ block before it — the `WI:` trailers the loop's own evidence readers parse.
 Pure and stdlib-only; importing no sibling script, only the process
 environment, which is the one input the marker is. Windows and POSIX.
 
+Component: CMP-008
+
 Contracts: IF-194 — the interface seam this module declares (process.md §8;
 row of record in docs/requirements/interfaces.toml).
 

@@ -63,6 +63,8 @@ true by moving the report's SHAPE down to `kitlib/station.py`, below both
 modules, rather than by softening the sentence. `dispatch.py` calls both — it
 decides which outcome a cycle reached, and the writes live here.
 
+Component: CMP-008
+
 Contracts: IF-137 — the interface seam this module declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
 

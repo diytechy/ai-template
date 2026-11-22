@@ -10,6 +10,8 @@ module.
 
 Stdlib only.
 
+Component: CMP-006
+
 Contracts: IF-196 — the interface seam this module declares
 (process.md §8; rows of record in docs/requirements/interfaces.toml).
 

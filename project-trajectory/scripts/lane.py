@@ -22,6 +22,8 @@ writes live. There is deliberately no back-channel and no state file: the
 worker subprocess, the refresh subprocess and the spec moves are the whole
 protocol (§A4.2 — "the handshake the sketch worried about does not exist").
 
+Component: CMP-008
+
 Contracts: IF-136 — the seam this module declares (process.md §8; row of
 record in docs/requirements/interfaces.toml).
 

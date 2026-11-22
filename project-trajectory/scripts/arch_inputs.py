@@ -9,6 +9,8 @@ modules beneath ``trajectory_arch`` (`arch_interfaces`, `arch_tags`,
 architecture rule sees one reading of each input, and ``trajectory_arch``
 re-exports them for ``check_trajectory``.
 
+Component: CMP-006
+
 Contracts: IF-316 — the interface seam this file declares (process.md §8; row
 of record in docs/requirements/interfaces.toml).
 
@@ -21,7 +23,9 @@ where that root is absent, the scan is files mode, or `gen_arch_map` is not
 beside this script; `_arch_scan_profile(root)` gives the `(src, mode)` it
 scans; `read_interfaces_check_enabled(root)` and
 `read_components_check_enabled(root)` read the two opt-out dials, on by
-default. The registry paths are repository-relative constants. Every reader is
+default; `component_headers(root)` gives each in-scope file's `Component:`
+declaration and the census's findings, `({}, [])` with no live component
+row. The registry paths are repository-relative constants. Every reader is
 lenient, and none writes.
 """
 
@@ -192,6 +196,94 @@ def arch_inventory(root):
         if imps:
             imports.setdefault(rel, set()).update(imps)
     return set(names), contracts, imports
+
+
+def _component_scope(root):
+    """`(scoped, other)`, each `{repository-relative path: path}`: the files
+    owing a `Component:` declaration, and the files of another type under
+    `[paths] src`. The scope is closed: every file under the declared source
+    root of a type the grammar has a carrier for, `README.md` excluded, and
+    every file owner the interface registry names (a directory owner is read
+    through its `README.md`, which is documentation). A path part that is
+    hidden or a bytecode cache is not source (`kitlib.spine.hidden_rel`).
+
+    Implements: SR-159, LLR-397"""
+    src, _mode = _arch_scan_profile(root)
+    src_dir = root / src.strip().replace("\\", "/").rstrip("/")
+    scoped, other = {}, {}
+    for path in sorted(src_dir.rglob("*")) if src_dir.is_dir() else ():
+        if path.name == "README.md" or _kitspine.hidden_rel(path.relative_to(src_dir)):
+            continue
+        if path.is_file():
+            typed = path.suffix.lower() in gen_arch_map.COMPONENT_TYPES
+            (scoped if typed else other)[_rel_to(root, path)] = path
+    if_rows = spine_carrier.load(root / IF_CSV, "IF-ID")
+    for _owner, path in gen_arch_map.owner_files(root, if_rows):
+        if path.name != "README.md":
+            scoped.setdefault(_rel_to(root, path), path)
+    return scoped, other
+
+
+def _rel_to(root, path):
+    """`path` relative to `root` in forward slashes, or whole when outside it."""
+    try:
+        return Path(path).resolve().relative_to(Path(root).resolve()).as_posix()
+    except ValueError:
+        return Path(path).as_posix()
+
+
+def component_headers(root):
+    """`(declared, findings)`: each in-scope file's component as its header
+    declares it (`{repository-relative path: CMP id}`), and one finding per
+    in-scope file whose declaration is absent, doubled, malformed or names an
+    id no live component row has, each naming the file. A file of another
+    type under `[paths] src` is outside the rule unless its header states a
+    `Contract IF-###:` body, which is then a finding naming its type. A file
+    outside the scope may carry a declaration, read by the same reader where
+    it is read; nothing here walks for it.
+
+    THE MEMBERSHIP INPUT. A file absent from `declared` belongs to no
+    component, so every rule reading membership treats it as unclassified,
+    never as internal or exempt. Vacuous, `({}, [])`, with no live component
+    row: below DevStg-Arch there is no partition to declare into.
+
+    Implements: SR-159, LLR-397
+    """
+    root = Path(root)
+    if gen_arch_map is None or not hasattr(gen_arch_map, "file_component"):
+        return {}, []
+    live = {c["id"] for c in load_cmps(spine_carrier.load(root / CMP_CSV, "CMP-ID"))}
+    if not live:
+        return {}, []
+    scoped, other = _component_scope(root)
+    declared, findings = {}, []
+    for rel, path in sorted(scoped.items()):
+        component, problem = gen_arch_map.file_component(path)
+        if problem is None and component not in live:
+            problem = "declares {}, which no live component row in {} has".format(
+                component, CMP_CSV
+            )
+        if problem is None:
+            declared[rel] = component
+        else:
+            findings.append("{}: {}".format(rel, problem))
+    for rel, path in sorted(other.items()):
+        if gen_arch_map.states_contract_body(path):
+            findings.append(
+                "{}: states a contract body, and a `{}` file has no "
+                "`Component:` carrier (the grammar covers {})".format(
+                    rel,
+                    path.suffix,
+                    ", ".join(
+                        sorted(t or "no suffix" for t in gen_arch_map.COMPONENT_TYPES)
+                    ),
+                )
+            )
+    return declared, [
+        "{} — every file in the component scope names its one component in "
+        "its header (process.md §8)".format(f)
+        for f in findings
+    ]
 
 
 def load_cmps(rows):

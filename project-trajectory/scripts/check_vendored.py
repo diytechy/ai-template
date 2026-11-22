@@ -25,6 +25,8 @@ Usage:
     python scripts/check_vendored.py [--root .] [--manifest docs/guardrails/UPSTREAM]
                                      [--strict] [--timeout 10]
 
+Component: CMP-007
+
 Contracts: IF-016, IF-036 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-016: an adopting repo runs this CLI and reads what it prints. Each

@@ -24,6 +24,8 @@
 # still classifies prose naming it when absent. Everything unmarked keeps the
 # exact guard, including every retired surface.
 #
+# Component: CMP-007
+#
 # Contracts: IF-072 — the interface seam this file declares (process.md §8; row of
 # record in docs/requirements/interfaces.toml).
 #

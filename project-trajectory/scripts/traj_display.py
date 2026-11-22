@@ -3,6 +3,8 @@
 The status splice and dashboard both display the committed stage record and
 spine totals.  Keep that small common read at one boundary; HTML-only layout,
 source inventory, and work-item rendering remain with their consumers.
+
+Component: CMP-009
 """
 
 from dataclasses import dataclass
