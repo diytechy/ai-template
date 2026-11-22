@@ -210,8 +210,9 @@ Contract IF-220: the act ledger, `ACTS` under `SNAPSHOT_DIR`. A TOML file of
     the unanchored ones and the added-entry ones for
     `trace.py --strict-integrity`; a
     snapshot act on a malformed ledger is refused before it moves any byte of
-    the record, and `risk_acceptance_act` reads no anchor through one. The
-    README beside it stays prose; nothing parses it.
+    the record, `risk_acceptance_act` reads no anchor through one, and the
+    test-first order reads what its commit carries as unread. The README
+    beside it stays prose; nothing parses it.
 """
 
 from __future__ import annotations
@@ -268,8 +269,9 @@ README = "README.md"
 # (SR-178). Each entry carries its own sequence number, so two acts naming the
 # same rows on the same day are two entries and the later one is never read as
 # the earlier. Appended by `copy_live`; read by `risk_acceptance_act`, the
-# re-acceptance brief's heading (`last_act`), the acceptance record, the
-# sitting rules and the open-items audit list. An entry
+# re-acceptance brief's heading (`last_act`), the test-first order
+# (`check_test_first`), the acceptance record, the sitting rules and the
+# open-items audit list. An entry
 # a commit adds must carry `copied` (`added_acts_findings`). It mirrors no
 # live file, so the mirror rules skip it by name
 # (`acceptance_record.SNAPSHOT_ACTS`, pinned equal by the snapshot tests).
@@ -2050,18 +2052,25 @@ def _act_names(root, sha, da_id):
     )
 
 
-def _ledger_commits(root):
-    """`(shas, shallow)`: the commits that touched the act ledger, newest first,
-    each one whose added entries `_acts_at` can judge, and whether this is a
-    shallow clone, whose window may leave out the commit a reader wants. A
-    shallow clone's boundary commits are left out: their diff reads as if they
-    added every entry. `(None, False)` when git cannot read the history. The
-    one walk both readers of an act's commit take: the accepted-risk anchor and
-    the last act.
+def _ledger_commits(root, also=(), rev="HEAD"):
+    """`(shas, shallow)`: the commits ending at `rev` that touched the act
+    ledger, newest first, each one whose added entries `_acts_at` can judge,
+    and whether this is a shallow clone, whose window may leave out the commit
+    a reader wants. A shallow clone's boundary commits are left out: their diff
+    reads as if they added every entry. `(None, False)` when git cannot read
+    the history. `also` names more of the record's files, repo-relative, whose
+    commits the walk takes too. The one walk every reader of an act's commit
+    takes: the accepted-risk anchor, the last act, and the test-first order,
+    which passes its registry copies so a change to them that added no entry
+    is seen (`check_test_first.record_acceptances`).
 
-    It follows the ledger at its current path only. Where the record moved
-    directory, the commit that moved it reads as adding every entry it held."""
-    log = _git(root, ["log", "--format=%H", "--", SNAPSHOT_DIR + "/" + ACTS])
+    It follows the record at its current path only. That is the record's cut
+    (D3: no reader of an earlier spelling): where the record moved directory,
+    the commit that moved it reads as adding every entry it held, and nothing
+    before it is read."""
+    log = _git(
+        root, ["log", "--format=%H", rev, "--", SNAPSHOT_DIR + "/" + ACTS, *also]
+    )
     if log is None:
         return None, False
     shallow = _shallow_commits(root)

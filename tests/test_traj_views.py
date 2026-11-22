@@ -125,10 +125,12 @@ def test_cycle_refuses_to_render(tmp_path):
 
 
 def test_how_sw_graph_renders_seams(tmp_path):
-    """Implements: TC-081"""
     # With a committed module map AND declared seams, the How-SW panel gains the
     # interface graph (module + file + external nodes, IF-labeled edges); the
-    # render is byte-deterministic so --check stays stable.
+    # render is byte-deterministic so --check stays stable. These are the
+    # endpoint shapes a row held before rows named components (WI-1022): the
+    # trace check now refuses them, so TC-081 cites the component and party
+    # shapes below instead (WI-1048), and this pins the renderer's older arm.
     make_repo(tmp_path)
     write_arch_src(tmp_path)
     (tmp_path / "docs" / "requirements" / "interfaces.toml").write_text(
@@ -156,6 +158,89 @@ def test_how_sw_stays_a_table_without_seams(tmp_path):
     text = html_of(tmp_path)
     assert "How (SW architecture)" in text
     assert "swarrow" not in text
+    assert '<table class="swmap">' in sw_section(tmp_path)
+
+
+def test_how_sw_graph_draws_component_and_party_nodes(tmp_path):
+    """A row names components and external parties (WI-1022), so with no
+    component holding a module the flat graph draws each seam as one edge,
+    labeled with its id, between a component node and a component or party
+    node; a second render is byte-identical.
+
+    Implements: TC-081"""
+    make_repo(tmp_path)
+    write_arch_src(tmp_path)
+    (tmp_path / "docs" / "requirements" / "interfaces.toml").write_text(
+        if_row("IF-001", "CMP-001", "CMP-002")
+        + if_row("IF-002", "CMP-001", "external:downstream adopter", "cli"),
+        encoding="utf-8",
+    )
+    assert gen(tmp_path).returncode == 0
+    sw = sw_section(tmp_path)
+    assert 'class="cmptree"' not in sw  # no component holds a module: flat
+    nodes = set(re.findall(r"<g><title>([^<]*)</title>", sw))
+    assert nodes == {
+        "CMP-001 (component)",
+        "CMP-002 (component)",
+        "external:downstream adopter (external)",
+    }
+    labels = re.findall(r'<text class="swlab"[^>]*>([^<]*)</text>', sw)
+    assert sorted(labels) == ["IF-001", "IF-002"]
+    assert sw.count('marker-end="url(#swarrow)"') == 2
+    first = html_of(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    assert html_of(tmp_path) == first
+
+
+def _drill_wires(sw):
+    """`{(from block, to block, title)}` over every How-SW drill layer."""
+    wires = set()
+    for _lid, svg in re.findall(
+        r'<div class="layer" data-layer="(sw-\d+)"[^>]*>(.*?)</div>', sw, re.S
+    ):
+        wires.update(
+            re.findall(
+                r'<path class="wire"[^>]*data-from="([^"]*)" data-to="([^"]*)"'
+                r"[^>]*><title>([^<]*)</title>",
+                svg,
+            )
+        )
+    return wires
+
+
+def test_a_component_endpoint_wires_to_its_components_block(tmp_path):
+    """A component endpoint is wired to its component's block at the layer
+    that shows that block: two parts of one component meet inside it, a part's
+    seam to another top-level component is the parent's wire at the top, and
+    a party is a block of its own beside the component it meets.
+
+    Implements: TC-081"""
+    containerize(tmp_path)
+    req = tmp_path / "docs" / "requirements"
+    (req / "components.toml").write_text(
+        CONT_CMPS
+        + cmp_row("CMP-003", "Left", part_of="CMP-001")
+        + cmp_row("CMP-004", "Right", part_of="CMP-001"),
+        encoding="utf-8",
+    )
+    declare_cont(tmp_path, {"mod_a": "CMP-003", "mod_b": "CMP-004"})
+    (req / "interfaces.toml").write_text(
+        if_row("IF-001", "CMP-003", "CMP-004")
+        + if_row("IF-002", "CMP-003", "CMP-002")
+        + if_row("IF-003", "CMP-002", "external:git", "git"),
+        encoding="utf-8",
+    )
+    assert gen(tmp_path).returncode == 0
+    sw = sw_section(tmp_path)
+    parent = _sw_layer_with(sw, 'data-node="cmp:CMP-003"')
+    assert "cmp:CMP-004" in parent and "cmp:CMP-002" not in parent
+    top = _sw_layer_with(sw, 'data-node="cmp:CMP-002"')
+    assert 'data-node="ext:external:git"' in top
+    assert _drill_wires(sw) == {
+        ("cmp:CMP-003", "cmp:CMP-004", "IF-001"),
+        ("cmp:CMP-001", "cmp:CMP-002", "IF-002"),
+        ("cmp:CMP-002", "ext:external:git", "IF-003"),
+    }
 
 
 # --- WI-455: the System-context view (the depth-0 frame, rendered) -------------

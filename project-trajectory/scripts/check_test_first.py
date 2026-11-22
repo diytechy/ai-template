@@ -10,7 +10,7 @@ requirements whose code landed before their test cases were accepted. This
 reads that order per requirement, from the one record of order that no registry
 cell can restate after the fact: the commits on trunk.
 
-TWO EVENTS, BOTH READ FROM TRUNK'S FIRST-PARENT HISTORY, OLDEST FIRST.
+TWO EVENTS, BOTH ORDERED ON TRUNK'S FIRST-PARENT LINE.
 
   * A requirement's implementation LANDS at the earliest first-parent commit
     that adds a line declaring it implements the requirement or one of its
@@ -21,42 +21,67 @@ TWO EVENTS, BOTH READ FROM TRUNK'S FIRST-PARENT HISTORY, OLDEST FIRST.
     counts. Tests and documents are not code declaring an implementation. The
     earlier of the requirement's own line and any design row's line is the
     landing. A merge lands everything it brings at the merge.
-  * A test case is ACCEPTED FOR A REQUIREMENT at the earliest commit in which
-    it reads accepted AND names the requirement or one of its design rows, the
-    design rows being those whose `SR-Refs` name the requirement at that
-    commit. Acceptance alone is not enough: a test case accepted for something
-    else and re-pointed at the requirement after its code landed would bring
-    an order it never had, and re-pointing a design row is the same move one
-    tier down. Each commit touching the test-case or design registry is parsed
-    on both sides through `acceptance_record`'s row reader and acceptance-act
-    rule, never counted: a commit that accepts one test case while
-    withdrawing another leaves the number of accepted rows unchanged, and a
-    count would see nothing happen. These acceptances are read over the whole
-    readable history, never from the declared start: SR-217 scopes only the
-    requirement's acceptance, so a test case accepted after the code landed
-    stays late even when both happened before the start.
+  * A test case is ACCEPTED FOR A REQUIREMENT at the earliest acceptance act
+    whose copy in the acceptance record holds it accepted AND naming the
+    requirement or one of its design rows, the design rows being those whose
+    `SR-Refs` name the requirement in that same copy. Acceptance alone is not
+    enough: a test case accepted for something else and re-pointed at the
+    requirement after its code landed would bring an order it never had, and
+    re-pointing a design row is the same move one tier down; a re-pointing is
+    accepted at the act that re-accepts it. A requirement's own acceptance is
+    read the same way, from the record's copy of the requirement registry.
+
+WHEN A ROW WAS ACCEPTED IS READ WHERE IT WAS RECORDED (PROCESS.md §3), never
+recomputed by replaying the registries. Acceptance happens only in an act, and
+each act appends its entry to the act ledger in its own commit, beside the
+registry copies it wrote (IF-220). So the commits that wrote the record are
+walked (`baseline_snapshot`'s ledger walk, over the ledger and the copies), and
+each one's copies are read against its parents' through `acceptance_record`'s
+row reader and acceptance-act rule, never counted: an act that accepts one test
+case while withdrawing another leaves the number of accepted rows unchanged,
+and a count would see nothing happen. An act made on a side branch reaches
+trunk at the first first-parent commit that contains it, and is ordered there,
+as a landing is; the report names the act's own commit. Test-case acceptances
+are read over the whole record, never from the declared start: SR-217 scopes
+only the requirement's acceptance, so a test case accepted after the code
+landed stays late even when both happened before the start.
 
 A requirement is judged when its own first acceptance falls after the declared
 start and its implementation has landed. Its test cases are those whose
 `Verifies` names it or one of its design rows at the tip; WHEN each became its
-accepted test case is read from history as above. Each one accepted for it
+accepted test case is read from the record as above. Each one accepted for it
 after the landing is reported, naming the requirement, the implementation
-commit and the acceptance commit. Each one that does not read accepted at the tip
-is reported by name: whatever its run says, it says it against text nobody has
+commit and the acceptance commit. Each one that does not read accepted at the
+tip, or that no act has yet accepted while it names the requirement, is
+reported by name: whatever its run says, it says it against text nobody has
 accepted. Every test case the report names carries the warning that its result
 may not reflect the intended behaviour, since that is what the order is
 evidence of. Nothing here stops a test from running. A requirement whose
 implementation has not landed is not judged yet. No cell is ever read for WHEN
 anything happened.
 
-AN ACCEPTANCE WITHOUT AN EXACT DATE. The TOML registries are the readable
-history. A row already accepted when its registry arrived under TOML from an
-older carrier, and a row moved into `Accepted` from a word outside the closed
-status vocabulary (a rename, not the act), was accepted AT OR BEFORE that
-commit. Such a date still settles the order when it falls at or before the
-landing (for a requirement's own acceptance, at or before the start); when it
-falls after, the order cannot be read, and the requirement is reported as
-unread, never passed.
+AN ACCEPTANCE WITHOUT AN EXACT DATE. The record's first commit at its current
+path is its CUT. Nothing before it is read, in whatever spelling the record had
+then (D3: no compatibility readers; formats in git history are cut cleanly),
+and each acceptance its copies carry was made AT OR BEFORE it, while its act
+ledger records an act: a first copy cannot tell an acceptance it made from
+one it found. With no ledger at the cut, an empty one or a malformed one, no
+act stands behind the copies, and what they carry is unread. In this
+repository the cut is the vocabulary move, which reached trunk at the
+declared start. A row
+moved into `Accepted` from a word outside the closed status vocabulary (a
+rename, not the act) was likewise accepted at or before its act. Such a date
+still settles the order when it falls at or before the landing (for a
+requirement's own acceptance, at or before the start); when it falls after,
+the order cannot be read, and the requirement is reported as unread, never
+passed.
+
+A CHANGE NO ACT MADE. A commit after the cut that changes the record's copies,
+flipping a row into acceptance or bringing a new accepted pair, without adding
+a ledger entry is a gap, and so is one whose ledger, or its parent's, is
+malformed. What it carries is unread: never a pass, and never dated at a later
+act. So is a row reading accepted at the tip that no act in the record
+accepted, as with no ledger or an empty one.
 
 THE DECLARED START is `[checks] test_first_since` in `docs/process.toml`: a
 commit id. A project that adopts the rule declares where its judgement begins,
@@ -64,11 +89,12 @@ so requirements accepted in history written before the rule are not judged
 against it. The shipped template declares the key empty, and an empty or
 absent key judges the whole history.
 
-UNREADABLE IS NEVER A PASS. A shallow clone, a declared start that names no
-commit or never stood on trunk's first-parent line, a declared start before the
-TOML registries, and registries still under an older carrier are each reported
-as unreadable, and nothing is judged. A rewrite that keeps the start on trunk
-is read as the history it now is.
+UNREADABLE IS NEVER A PASS. A shallow clone (whose window may leave out an
+act's commit), a declared start that names no commit or never stood on trunk's
+first-parent line, a declared start before the TOML registries, and registries
+still under an older carrier are each reported as unreadable, and nothing is
+judged. A rewrite that keeps the start on trunk is read as the history it now
+is.
 
 WARN-ONLY IN THE SHIPPED WIRING. The harness's `test-first` step runs this at
 every rung without `--strict`, so a finding is reported and never refuses a
@@ -101,6 +127,7 @@ from collections import namedtuple
 from pathlib import Path
 
 import acceptance_record
+import baseline_snapshot
 import gen_arch_map
 import spine_carrier
 from kitlib.config import process_check_text, utf8_console
@@ -121,13 +148,39 @@ TEST_CASES = (_REGISTRY["TC-ID"], "TC-ID")
 READ = (REQUIREMENTS, DESIGN_ROWS, TEST_CASES)
 
 # `late` is ((test case id, acceptance commit), ...) in trunk order; `unread` is
-# the same shape for each acceptance with no exact date whose order is unknown;
-# `unaccepted` is (test case id, ...) for each that does not read accepted.
+# ((row id, Acceptance), ...) for each acceptance with no exact date whose order
+# is unknown; `unaccepted` is (test case id, ...) for each that does not read
+# accepted, or that no act has accepted for the requirement.
 Finding = namedtuple("Finding", "requirement implementation late unread unaccepted")
 
-# A row's first acceptance: the commit, and whether it is the act itself (True)
-# or only a commit the row was accepted at or before (False).
-Acceptance = namedtuple("Acceptance", "commit exact")
+# A row's first acceptance: the record commit, and whether it is the act itself
+# (True) or only a commit the row was accepted at or before (False). `unread`
+# says why no act in the record can date it at all; `commit` is then the record
+# change that carried it, or None when the record never held it accepted.
+Acceptance = namedtuple("Acceptance", "commit exact unread", defaults=(None,))
+
+# Why an acceptance is unread (`Acceptance.unread`).
+NO_ACT = "a change to the acceptance record that no act made"
+LEDGER_UNREADABLE = "a change whose act ledger cannot be read"
+UNRECORDED = "no act on record accepted it"
+
+# What the acceptance record says. `requirements`, `tests` and `pairs` map a
+# requirement, a test case, or a (test case, requirement) pair to its first
+# `Acceptance`; `places` puts each record commit on trunk's first-parent line;
+# `cuts` and `gaps` are the record commits read as the cut and as a change no
+# act made (the completeness check's findings).
+Record = namedtuple("Record", "requirements tests pairs places cuts gaps")
+
+# The record's files the walk reads, at its current path: the act ledger and
+# the copies of the read registries, under either carrier.
+_SNAPSHOT = baseline_snapshot.SNAPSHOT_DIR
+_LEDGER = "{}/{}".format(_SNAPSHOT, baseline_snapshot.ACTS)
+_COPIES = tuple(
+    "{}/{}".format(_SNAPSHOT, c)
+    for path, _col in READ
+    for c in spine_carrier.carriers(path)
+)
+_EMPTY = {path: {} for path, _col in READ}
 
 # A flip from one of these words is the acceptance act; from any other, a rename.
 _VOCABULARY = {word.lower() for word in STATUS_VALUES}
@@ -195,8 +248,8 @@ def history_unreadable(root, start=None, rev="HEAD"):
     vocabulary, so a first acceptance read across them would date the rename
     rather than the act. That excludes registries still under the older carrier
     at `rev`, and a declared start before the TOML registries; with no start,
-    the history before the cutover is simply not read, and an acceptance it held
-    carries no exact date (`first_acceptance_commits`). The design registry is
+    the history before the cutover is simply not read, and an acceptance the
+    record's cut carries has no exact date (`record_acceptances`). The design registry is
     held to the same rule as the two judged ones: a test case reaches a
     requirement through a design row, so a design registry the TOML reader
     cannot see would drop that test case in silence rather than report it. A
@@ -247,77 +300,28 @@ def history_unreadable(root, start=None, rev="HEAD"):
     return None
 
 
-def first_acceptance_commits(root, registry, id_col, since=None, rev="HEAD"):
-    """`{row id: Acceptance}` — the commit at which each row of one spine
-    registry (its TOML carrier) first reads accepted, on the first-parent line
-    ending at `rev`, walked from `since` or from the root when None.
-
-    Walks the commits that touch the registry oldest first, reading each one's
-    rows through `acceptance_record.rows_at` and judging the move from the
-    rows before it with `acceptance_record.acceptance_acts_between`. The before
-    side of each commit is the previous touching commit's rows: nothing
-    between them on the first-parent line changed the file, so it is the same
-    text a second read would return. A row's later re-acceptances are not its
-    first.
-
-    An acceptance is EXACT when it is the act: a birth into a registry that
-    already stood under TOML or that no carrier held before, or a flip from a
-    word of the closed status vocabulary. Otherwise the row was accepted at or
-    before the commit and the date is not exact: a row already accepted at
-    `since`, one already accepted when the registry arrived from an older
-    carrier (whose history is not read), and one moved into `Accepted` from a
-    retired word, which is a rename rather than the act.
-
-    Implements: SR-217, LLR-257
-    """
-    before = acceptance_record.rows_at(root, since, registry, id_col) if since else {}
-    first = {
-        act["id"]: Acceptance(since, False)
-        for act in acceptance_record.acceptance_acts_between(registry, {}, before)
-    }
-    out = git_out(
-        root,
-        ["rev-list", "--first-parent", "--reverse", _span(since, rev), "--", registry],
-    )
-    if out is None:
-        raise HistoryUnreadable("git could not list the commits touching " + registry)
-    shas = out.split()
-    # From the root, the first commit touching the TOML carrier either creates
-    # the registry or moves it from an older one; only the move hides a date.
-    carried = not since and _carried_at(root, shas, (registry, id_col))
-    for sha in shas:
-        after = acceptance_record.rows_at(root, sha, registry, id_col)
-        _record_first(first, registry, before, after, Acceptance(sha, not carried))
-        before, carried = after, False
-    return first
-
-
-def _carried_at(root, shas, registry):
-    """True when the first of `shas` (the commits touching `registry`, a
-    (path, id column) pair, oldest first) moved it from an older carrier."""
-    return bool(shas and _held(root, shas[0] + "^", _older_carriers([registry])))
-
-
-def _record_first(first, registry, before, after, at):
-    """Record in `first` each row's first acceptance act from `before` to
-    `after`, at `at`: exact only when `at` is and the act is a birth or a flip
-    from a word of the closed status vocabulary (anything else is a rename)."""
-    for act in acceptance_record.acceptance_acts_between(registry, before, after):
-        if act["id"] not in first:
+def _record_first(first, registry, befores, after, at):
+    """Record in `first` each row's first acceptance act into `after` from
+    every one of `befores` (a merge brings nothing its branch already dated),
+    at `at`: exact only when `at` is and the act is a birth or a flip from a
+    word of the closed status vocabulary (anything else is a rename). The
+    number of acts found, recorded first or not."""
+    acts = None
+    for before in befores:
+        found = {
+            act["id"]: act
+            for act in acceptance_record.acceptance_acts_between(
+                registry, before, after
+            )
+        }
+        acts = found if acts is None else {k: v for k, v in acts.items() if k in found}
+    for rid, act in (acts or {}).items():
+        if rid not in first:
             exact = at.exact and (
                 act["act"] == "born" or act["before"].lower() in _VOCABULARY
             )
-            first[act["id"]] = Acceptance(at.commit, exact)
-
-
-def _touching(root, paths, rev):
-    """The first-parent commits ending at `rev` that touch any of `paths`,
-    oldest first."""
-    args = ["rev-list", "--first-parent", "--reverse", rev, "--", *paths]
-    out = git_out(root, args)
-    if out is None:
-        raise HistoryUnreadable("git could not list the commits touching " + paths[0])
-    return out.split()
+            first[rid] = at._replace(exact=exact)
+    return len(acts or {})
 
 
 def _associations(tests, design):
@@ -334,46 +338,130 @@ def _associations(tests, design):
     }
 
 
-def first_association_commits(root, rev="HEAD"):
-    """`{(test case id, requirement id): Acceptance}` — the commit at which each
-    test case first reads accepted AND names the requirement or one of its
-    design rows, on the first-parent line ending at `rev`, walked from the
-    root.
+def _record_at(root, rev, cache):
+    """`{registry path: rows}`: the record's copies of the read registries at
+    `rev`, through either carrier, or None when that tree holds neither the act
+    ledger nor any of those copies at the record's current path."""
+    if rev not in cache:
+        listed = git_out(
+            root, ["ls-tree", "-r", "--name-only", rev, "--", _LEDGER, *_COPIES]
+        )
+        cache[rev] = (
+            {
+                path: acceptance_record.rows_at(root, rev, _SNAPSHOT + "/" + path, col)
+                for path, col in READ
+            }
+            if (listed or "").strip()
+            else None
+        )
+    return cache[rev]
 
-    Acceptance alone does not make a test case a requirement's: re-pointing a
-    test case accepted for something else at a requirement whose code has
-    already landed, or re-pointing the design row it names, would otherwise
-    lend the requirement an order it never had. So the pair is the row: each
-    commit touching the test-case or design registry is read through
-    `acceptance_record.rows_at`, the pairs it holds are built from both
-    registries as they stand at that commit, and the move from the pairs
-    before is judged with the same acceptance-act rule as a single row's. A pair
-    arriving while its test case already reads accepted is born accepted, at
-    that commit; a test case flipping to accepted while it names the
-    requirement flips its pairs. Exactness is `first_acceptance_commits`' rule,
-    and a pair that first shows at the commit either registry moved from an
-    older carrier is dated at or before that commit.
+
+def _placed(root, sha, line, index):
+    """The position on trunk's first-parent `line` (oldest first; `index` maps
+    it) of the first commit there that contains `sha`: where a commit made on
+    a side branch reached trunk, as a landing is dated at the merge that
+    brings it. Ancestry only grows along the line, so it is a binary search."""
+    if sha in index:
+        return index[sha]
+    lo, hi = 0, len(line) - 1
+    while lo < hi:
+        mid = (lo + hi) // 2
+        if git_out(root, ["merge-base", "--is-ancestor", sha, line[mid]]) is None:
+            lo = mid + 1
+        else:
+            hi = mid
+    return lo
+
+
+def _cut_ledger_unread(root, sha):
+    """Why the cut at `sha` cannot vouch for what its copies carry, or None
+    when its act ledger records an act: with no ledger, an empty one or a
+    malformed one, no act stands behind the copies (the Trust ruling)."""
+    text = git_out(root, ["show", "{}:{}".format(sha, _LEDGER)])
+    try:
+        acts = baseline_snapshot.parse_acts(text)
+    except baseline_snapshot.ActLedgerError:
+        return LEDGER_UNREADABLE
+    return None if acts else UNRECORDED
+
+
+def _what_commit(root, sha, befores):
+    """`(kind, at)` for one record commit, `befores` being its parents' record
+    (None for a parent without one): the CUT when no parent holds the record,
+    whose copies carry acceptances made at or before it while its ledger
+    records an act, and unread acceptances when it holds no ledger, an empty
+    one or a malformed one (`_cut_ledger_unread`); an ACT when it added a
+    ledger entry, which dates what it carries exactly; otherwise a GAP, a
+    change no act made, and a malformed ledger at it or its parent reads the
+    same way, since which acts it added cannot be read."""
+    if all(b is None for b in befores):
+        return "cut", Acceptance(sha, False, _cut_ledger_unread(root, sha))
+    try:
+        added = baseline_snapshot._acts_at(root, sha)
+    except baseline_snapshot.ActLedgerError:
+        return "gap", Acceptance(sha, False, LEDGER_UNREADABLE)
+    if added:
+        return "act", Acceptance(sha, True)
+    return "gap", Acceptance(sha, False, NO_ACT)
+
+
+def _carried(first, befores, after, at):
+    """Record what one record commit carries into `first` (`requirements`,
+    `tests`, `pairs`); the number of acceptance acts it carries."""
+    sides = [b or _EMPTY for b in befores]
+    after = after or _EMPTY
+    tc, llr, sr = TEST_CASES[0], DESIGN_ROWS[0], REQUIREMENTS[0]
+    moved = _record_first(first.requirements, sr, [b[sr] for b in sides], after[sr], at)
+    moved += _record_first(first.tests, tc, [b[tc] for b in sides], after[tc], at)
+    return moved + _record_first(
+        first.pairs,
+        tc,
+        [_associations(b[tc], b[llr]) for b in sides],
+        _associations(after[tc], after[llr]),
+        at,
+    )
+
+
+def record_acceptances(root, rev="HEAD", line=None):
+    """`Record`: when each requirement, each test case and each pair of a test
+    case and a requirement it names was first accepted, as the acceptance
+    record says, at the commits ending at `rev`. `line` is trunk's first-parent
+    line, oldest first, when the caller has it.
+
+    The commits that wrote the record (`baseline_snapshot._ledger_commits`, the
+    act ledger's one walk, given the copies of the read registries too) are
+    read oldest first in trunk order, each one's copies against its parents'
+    (`_what_commit`, `_carried`). Each is placed on trunk where it arrived
+    (`_placed`). A pair is new at the act whose copy first holds the test case
+    accepted while it names the requirement, directly or through a design row
+    whose `SR-Refs` name it in that same copy, so a re-pointing is dated at
+    the act that re-accepts it. The cut dates what it carries at or before
+    itself while its ledger records an act, and nothing before it is read; a
+    cut whose ledger records none, and a gap, leave what they carry unread,
+    and a later act never re-dates a row or pair already recorded.
 
     Implements: SR-217, LLR-257
     """
-    registries = (TEST_CASES, DESIGN_ROWS)
-    touching, carried = {}, set()
-    for reg in registries:
-        shas = _touching(root, [reg[0]], rev)
-        touching[reg[0]] = set(shas)
-        if _carried_at(root, shas, reg):
-            carried.add(shas[0])
-    rows = {path: {} for path, _col in registries}
-    before, first = {}, {}
-    for sha in _touching(root, [path for path, _col in registries], rev):
-        for path, col in registries:
-            if sha in touching[path]:
-                rows[path] = acceptance_record.rows_at(root, sha, path, col)
-        after = _associations(rows[TEST_CASES[0]], rows[DESIGN_ROWS[0]])
-        at = Acceptance(sha, sha not in carried)
-        _record_first(first, TEST_CASES[0], before, after, at)
-        before = after
-    return first
+    shas, _shallow = baseline_snapshot._ledger_commits(root, also=_COPIES, rev=rev)
+    if shas is None:
+        raise HistoryUnreadable("git could not list the commits that wrote the record")
+    line = _first_parent(root, rev) if line is None else line
+    index = {sha: i for i, sha in enumerate(line)}
+    places = {sha: _placed(root, sha, line, index) for sha in shas}
+    record = Record({}, {}, {}, places, [], [])
+    cache = {}
+    # Trunk order; within one arrival, the walk's own order reversed.
+    for sha in sorted(reversed(shas), key=places.__getitem__):
+        parents = (git_out(root, ["rev-parse", sha + "^@"]) or "").split()
+        befores = [_record_at(root, p, cache) for p in parents] or [None]
+        kind, at = _what_commit(root, sha, befores)
+        moved = _carried(record, befores, _record_at(root, sha, cache), at)
+        if kind == "cut":
+            record.cuts.append(sha)
+        elif kind == "gap" and moved:
+            record.gaps.append(sha)
+    return record
 
 
 def _declared_ids(patch):
@@ -453,19 +541,48 @@ def _id_key(rid):
     return (prefix, int(number) if number.isdigit() else 0, rid)
 
 
+# What the tip holds: design rows by requirement, test cases by verified id,
+# the test cases reading accepted, the requirements reading accepted, and every
+# (test case, requirement) pair the tip's rows name.
+Tip = namedtuple("Tip", "design tests standing requirements pairs")
+
+
 def _members(root, rev):
-    """`(design rows by requirement, test cases by verified id, the test cases
-    reading accepted)` at the tip."""
-    design, tests, standing = {}, {}, set()
-    for lid, row in acceptance_record.rows_at(root, rev, *DESIGN_ROWS).items():
+    """The `Tip` at `rev`: who belongs to a requirement's chain, and who reads
+    accepted there. It says who, never when."""
+    design_rows = acceptance_record.rows_at(root, rev, *DESIGN_ROWS)
+    test_rows = acceptance_record.rows_at(root, rev, *TEST_CASES)
+    tip = Tip({}, {}, set(), set(), set(_associations(test_rows, design_rows)))
+    for lid, row in design_rows.items():
         for sr in refs(row.get("SR-Refs")):
-            design.setdefault(sr, []).append(lid)
-    for tid, row in acceptance_record.rows_at(root, rev, *TEST_CASES).items():
+            tip.design.setdefault(sr, []).append(lid)
+    for tid, row in test_rows.items():
         for vid in refs(row.get("Verifies")):
-            tests.setdefault(vid, []).append(tid)
+            tip.tests.setdefault(vid, []).append(tid)
         if is_accepted(row) or is_founded(row):
-            standing.add(tid)
-    return design, tests, standing
+            tip.standing.add(tid)
+    for sid, row in acceptance_record.rows_at(root, rev, *REQUIREMENTS).items():
+        if is_accepted(row) or is_founded(row):
+            tip.requirements.add(sid)
+    return tip
+
+
+def _dated(record, tip):
+    """`(requirements, pairs)`: each requirement's first acceptance, and each
+    first acceptance of a (test case, requirement) pair whose test case reads
+    accepted at the tip. A requirement reading accepted at the tip that no act
+    in the record accepted is unread. So is a tip pair whose test case the
+    record never held accepted at all (no ledger, or an empty one); one the
+    record holds accepted only while it named something else gets no date,
+    since no act has yet accepted it for this requirement."""
+    requirements = dict(record.requirements)
+    for sr in tip.requirements - set(requirements):
+        requirements[sr] = Acceptance(None, False, UNRECORDED)
+    pairs = {pair: at for pair, at in record.pairs.items() if pair[0] in tip.standing}
+    for pair in tip.pairs:
+        if pair[0] in tip.standing and pair[0] not in record.tests:
+            pairs.setdefault(pair, Acceptance(None, False, UNRECORDED))
+    return requirements, pairs
 
 
 def test_first_findings(root, src="src", start=None, rev="HEAD"):
@@ -480,41 +597,40 @@ def test_first_findings(root, src="src", start=None, rev="HEAD"):
     an unreadable history can never come back as an empty, passing list. A
     test case accepted at the same commit the implementation landed is not
     after it. The start scopes only which requirements are judged: test-case
-    acceptances are read over the whole readable history, so one accepted after
-    the landing is late wherever the start sits. A requirement's test cases
-    are its chain's members at the tip; a test case not reading accepted there
-    has no acceptance for it, whatever its history, and each one that does is
-    dated at its first accepted-and-associated commit (see the module
-    docstring).
+    acceptances are read over the whole record, so one accepted after the
+    landing is late wherever the start sits. A requirement's test cases are its
+    chain's members at the tip; a test case not reading accepted there has no
+    acceptance for it, whatever its history, and each one that does is dated
+    at the first act that accepted it while it named the requirement
+    (`record_acceptances`; see the module docstring).
 
     Implements: SR-217, LLR-257
     """
     reason = history_unreadable(root, start, rev)
     if reason:
         raise HistoryUnreadable(reason)
-    start = _commit(root, start) if start else None
-    order = {sha: i for i, sha in enumerate(_first_parent(root, rev))}
-    accepted = first_acceptance_commits(root, *REQUIREMENTS, since=start, rev=rev)
+    line = _first_parent(root, rev)
+    order = {sha: i for i, sha in enumerate(line)}
+    record = record_acceptances(root, rev, line)
+    order.update(record.places)
     landed = first_implementation_commits(root, src, rev)
-    design, tests, standing = _members(root, rev)
-    tc_accepted = {
-        pair: at
-        for pair, at in first_association_commits(root, rev).items()
-        if pair[0] in standing
-    }
+    tip = _members(root, rev)
+    accepted, tc_accepted = _dated(record, tip)
+    since = order[_commit(root, start)] if start else -1
     out = []
     for sr in sorted(accepted, key=_id_key):
         own = accepted[sr]
-        if own.commit == start:
+        if own.unread is None and order[own.commit] <= since:
             continue  # accepted at or before the start: not in scope
-        judged = _judged([sr, *design.get(sr, [])], landed, tests, tc_accepted, order)
+        chain = [sr, *tip.design.get(sr, [])]
+        judged = _judged(chain, landed, tip.tests, tc_accepted, order)
         if judged is None:
             continue
         landing, late, unread, unaccepted = judged
         if start and not own.exact:
-            # Accepted at or before a commit after the start: whether it
-            # entered scope at all cannot be read.
-            late, unread, unaccepted = (), ((sr, own.commit),), ()
+            # Accepted at or before a commit after the start, or on no date
+            # at all: whether it entered scope cannot be read.
+            late, unread, unaccepted = (), ((sr, own),), ()
         if late or unread or unaccepted:
             out.append(Finding(sr, landing, late, unread, unaccepted))
     return out
@@ -524,11 +640,12 @@ def _judged(chain, landed, tests, acceptances, order):
     """`(landing, late, unread, unaccepted)` for one requirement's chain — the
     requirement first, then its design rows: the earliest landing among them;
     each test case of the chain accepted for the requirement strictly after
-    it; each whose acceptance has no exact date and falls after it, whose order
-    cannot be read; and each with no acceptance for the requirement in
-    `acceptances`, keyed `(test case, requirement)`. Pairs are
-    `(test case, commit)` in trunk order. None when nothing in the chain has
-    landed, which is not judged yet."""
+    it, as `(test case, commit)`; each whose acceptance has no exact date and
+    falls after it, or has no date at all, whose order cannot be read, as
+    `(test case, Acceptance)`; and each with no acceptance for the requirement
+    in `acceptances`, keyed `(test case, requirement)`. Both lists are in
+    trunk order. None when nothing in the chain has landed, which is not
+    judged yet."""
     landings = [landed[i] for i in chain if i in landed]
     if not landings:
         return None
@@ -537,14 +654,21 @@ def _judged(chain, landed, tests, acceptances, order):
     dated = {
         t: acceptances[(t, chain[0])] for t in members if (t, chain[0]) in acceptances
     }
-    after = {(t, a) for t, a in dated.items() if order[a.commit] > order[landing]}
 
-    def ordered(exact):
-        pairs = {(tid, a.commit) for tid, a in after if a.exact is exact}
-        return tuple(sorted(pairs, key=lambda p: (order[p[1]], _id_key(p[0]))))
+    def placed(item):
+        return (order.get(item[1], len(order)), _id_key(item[0]))
 
+    late = [(t, a.commit) for t, a in dated.items() if a.exact]
+    unread = [(t, a) for t, a in dated.items() if not a.exact]
+    late = [p for p in late if order[p[1]] > order[landing]]
+    unread = [(t, a) for t, a in unread if a.unread or order[a.commit] > order[landing]]
     unaccepted = tuple(sorted(members - set(dated), key=_id_key))
-    return landing, ordered(True), ordered(False), unaccepted
+    return (
+        landing,
+        tuple(sorted(late, key=placed)),
+        tuple(sorted(unread, key=lambda p: placed((p[0], p[1].commit)))),
+        unaccepted,
+    )
 
 
 def _report(findings, since, level):
@@ -562,6 +686,15 @@ def _report(findings, since, level):
             "accepted after its implementation landed or not accepted".format(since)
         )
     return lines
+
+
+def _unread_text(rid, at):
+    """One unread acceptance, as its report line names it."""
+    if at.unread is None:
+        return "{} at or before {}".format(rid, at.commit[:10])
+    if at.commit is None:
+        return "{} ({})".format(rid, at.unread)
+    return "{} ({}, {})".format(rid, at.unread, at.commit[:10])
 
 
 def _finding_text(f):
@@ -589,11 +722,8 @@ def _finding_text(f):
         )
     if f.unread:
         parts.append(
-            "the order against {} cannot be read (accepted at or before a later "
-            "commit, with no exact date)".format(
-                ", ".join(
-                    "{} at or before {}".format(rid, sha[:10]) for rid, sha in f.unread
-                )
+            "the order against {} cannot be read, since no act dates it exactly".format(
+                ", ".join(_unread_text(rid, at) for rid, at in f.unread)
             )
         )
     return "{}; {}".format(landed, "; ".join(parts))

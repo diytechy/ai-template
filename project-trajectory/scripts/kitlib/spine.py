@@ -1051,9 +1051,9 @@ def module_components(declared):
     membership. Each path goes through `norm_module`, so the spellings a seam,
     an import and a header use meet on one key. Two files can share a key
     (`check.py` and `check.sh`), so a key keeps every component its files
-    declare, and a rule reading the map treats a key with more than one as in
-    no single component. The ids are not filtered against the component
-    registry: each caller intersects with the ids it declares.
+    declare. The ids are not filtered against the component registry; what a
+    reader does with a key holding several, or with an id no component row
+    has, is that reader's rule.
 
     Implements: SR-159, LLR-373
 

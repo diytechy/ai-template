@@ -4,12 +4,23 @@ title = "TC-428 and TC-429 verify LLR-395 once it is accepted, in place of SR-15
 workstream = "process"
 sr_refs = ["SR-157"]
 needs = ["WI-1019"]
-specref = "docs/reviews/2026-11-21-scope-critiques/WI-1019.md"
+specref = ""
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 planmode = "none"
 +++
+
+## Deliverable
+
+Cancelled on trunk (2026-11-22), superseded by WI-1048. The first automated
+adjudication sitting (WI-1047) returned LLR-395 for having no test case, and
+the parent-first rule refused this row's re-pointing of the accepted TC-428
+and TC-429 at a `Drafted` LLR: a circle. WI-1048 broke it with TC-475, a
+`Drafted` test case verifying LLR-395 over the same tests (each now tagged
+TC-475) plus the failing-declared-test clause, so LLR-395 and TC-475 are
+accepted together. Re-pointing TC-428 and TC-429 afterwards would only give
+LLR-395 three cases on the same tests.
 
 ## Context
 

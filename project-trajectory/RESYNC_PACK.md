@@ -12210,7 +12210,60 @@ PowerShell twin now points at the POSIX one's bodies), `stack.ini.template`,
 row, its header's party list), `docs/stack.ini` (`[arch-map] headers`), and
 each listed header file's `Component:` line.
 
-### Design rows lose their `module`, `code_symbol` and `component` cells; the code's tags name the files and placement is derived [since 3002931c7]
+### The test-first order reads when each row was accepted from the acceptance record [since 6915cde7d]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** `scripts/check_test_first.py` no longer replays the
+requirement, design and test-case registries along trunk's first-parent
+history to find when a requirement, or a test case for it, was first
+accepted. It reads the acceptance record: the commits that added act-ledger
+entries (`docs/archive/last_accepted/acts.toml`) and the record's copies of
+those three registries at each one. An act dates exactly what its copies
+first hold accepted, so a test case re-pointed at a requirement is accepted
+for it at the act that re-accepts it, not at the commit that changed its
+text. An act made on a side branch is ordered at the trunk commit that
+brought it. The record's first commit at its current path is its cut: what
+it carries is dated at or before it while its ledger records an act, and
+nothing earlier, in any earlier spelling of the record, is read. In a repository that ran
+`migrate_vocabulary.py`, the cut is the commit that moved the record. Three
+things read as an order that cannot be read, never a pass: a change to the
+copies that added no ledger entry, a malformed ledger on the walk (at the
+cut too, as with no ledger or an empty one there), and a row accepted at
+the tip that no act accepted (no record, or an empty ledger).
+`first_acceptance_commits` and `first_association_commits` are replaced by
+`record_acceptances`. `baseline_snapshot._ledger_commits` takes the record's
+other files to walk (`also`) and a tip (`rev`).
+
+**What to do.** Keep `[checks] test_first_since` at or after the commit that
+brought your record's cut onto trunk (for a migrated repository, the merge
+that brought the vocabulary migration, as the vocabulary entry above says).
+A requirement the cut carries reads accepted at or before it, so with a
+start that reaches back past the cut, one whose code landed before the cut
+reached trunk is reported as an order that cannot be read. Accepted rows
+with no record read the same way until a first signing records them. A script of your own that called
+`first_acceptance_commits` or `first_association_commits` calls
+`record_acceptances` instead.
+
+**Kit-owned files — overwrite:** `scripts/check_test_first.py`,
+`scripts/baseline_snapshot.py`, `scripts/acceptance_record.py`, `README.md`.
+
+### The module-to-component join's docstring states only what the join does [since 2474d7b4f]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** The docstring of `kitlib.spine.module_components` no longer
+says every caller intersects the map with its declared component ids, or that
+every rule reads a key holding several components as in no single one: the
+connectivity warns do neither. It says the ids are not filtered and leaves
+each reader's rule to the reader. Only the docstring moved: the map, and
+every check that reads it, is unchanged.
+
+**What to do.** Nothing is forced.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/spine.py`.
+
+### Design rows lose their `module`, `code_symbol` and `component` cells; the code's tags name the files and placement is derived [since 73aa095ce]
 
 *(Anchored at the preceding commit: the change lands in the commits after it.
 Variant F's third entry; apply it after the interface-owner entry above.)*

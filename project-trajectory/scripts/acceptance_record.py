@@ -814,7 +814,7 @@ def rows_at(root, rev, rel_path, id_col):
     """`{id: row}` of one spine registry at commit `rev`, or `{}` when the
     registry is absent there under either carrier — `_spine_rows_at`, the row
     reader behind every two-tree scan in this module, offered for a walk along
-    history (`check_test_first.first_acceptance_commits`).
+    history (`check_test_first.record_acceptances`, over the record's copies).
 
     Public so a history reader parses a row the way the acceptance-act refusal
     does, through the same carrier resolution and the same `-000` filter,

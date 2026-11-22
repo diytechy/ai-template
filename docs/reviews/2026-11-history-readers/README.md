@@ -94,8 +94,8 @@ Paths are under `project-trajectory/scripts/`.
 | `check_privacy.py:730` | `log -p <rev_range>` | a | Scans a range the caller names. |
 | `check_test_first.py:147` | `rev-list --first-parent <rev>` | a | Trunk's first-parent line, to check the declared start stands on it. |
 | `check_test_first.py:178` | `rev-list --first-parent <start>..<rev> -- <older carriers>` | a | Whether the walk would cross registries under an older carrier. |
-| `check_test_first.py:278` | `rev-list --first-parent <since>..<rev> -- <registry>` | c | Borderline. `first_acceptance_commits`. See (c) 3. |
-| `check_test_first.py:314` | `rev-list --first-parent <rev> -- <test-case and design registries>` | c | Borderline. `_touching`, read by `first_association_commits`. See (c) 3. |
+| `check_test_first.py:278` | `rev-list --first-parent <since>..<rev> -- <registry>` | c | Borderline. `first_acceptance_commits`. See (c) 3. Resolved by WI-1042. |
+| `check_test_first.py:314` | `rev-list --first-parent <rev> -- <test-case and design registries>` | c | Borderline. `_touching`, read by `first_association_commits`. See (c) 3. Resolved by WI-1042. |
 | `check_test_first.py:424` | `log --first-parent -m -p -G<Implements marker> <rev>` | a | Borderline. Where each `Implements:` declaration first appears on trunk, from the line's patches. |
 | `check_trajectory.py:1858` | `log --format=<WI trailers> HEAD` | b | `WI:` trailers, each written by its commit, set beside the registry for an advisory that flips nothing. |
 | `check_trajectory.py:2187` | `blame --line-porcelain -- <registry>` | a | Last-edit time per row, for the backlog staleness warning. |
@@ -212,6 +212,18 @@ decides.
   module's "at or before" reading is one shape for it). And whether every
   flip to Accepted since then carries a ledger entry is for that row to
   establish before the ledger is trusted.
+- **Resolved by WI-1042** (2026-11-22): both calls are removed.
+  `check_test_first.record_acceptances` reads the record: the commits that
+  wrote the act ledger or the record's registry copies, through
+  `baseline_snapshot._ledger_commits`, each one's copies against its
+  parents'. An act's commit dates what its copies first hold accepted. The
+  record's first commit at its current path is its cut: what it carries is
+  at or before it while its ledger records an act (unread with none, an
+  empty or a malformed one), and the record's earlier spelling is never
+  read (D3;
+  the coordinator's ruling of 2026-11-22). Since the cut, every change to
+  the copies that carries a flip or a new pair adds a ledger entry. LLR-257's
+  text says so.
 
 ## Borderline calls
 
