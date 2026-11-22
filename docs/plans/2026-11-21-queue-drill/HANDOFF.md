@@ -80,8 +80,8 @@ A new coordinator session starts with these steps, in this order.
      `D:/rt1048` (and `D:/rt1023` when F-3 is done); the harness blocks
      the coordinator from removing them, and every link inside them
      points within the folder;
-   - the push, as before. (OI-79's delete is done: origin holds only the
-     tag `wi508-record-2026-08-30` at `fa3c99c4`, checked 2026-11-22.)
+   - the push, as before. (OI-79 is closed: the operator confirmed its
+     delete done, and its row carries a `follow_up` cell, 2026-11-22.)
 
 Scratch tools from this session (in its scratchpad, which may be cleared):
 `build_review.py` (the review briefs, with `--part code|docs`,
@@ -122,10 +122,11 @@ adjudication sittings by Gemini Neon through `agy` (operator, 2026-11-21;
   TC-250, TC-468 to 471), and WI-1048's (LLR-373, TC-081, the six rows it
   made ready, TC-474 and TC-475). WI-1047's verdict judged most of them,
   but no act was taken.
-- The operator still owes, outside this drill: the push. OI-79's remote-ref
-  delete is already done (`git ls-remote origin`, 2026-11-22: no
-  `wi508-architectural-remap-HELD-for-owner-verdict` branch; the tag
-  `wi508-record-2026-08-30` at `fa3c99c4` is there).
+- The operator still owes, outside this drill: the push. OI-79 is closed
+  (operator, 2026-11-22): its remote-ref delete is done (`git ls-remote
+  origin`: no `wi508-architectural-remap-HELD-for-owner-verdict` branch; the
+  tag `wi508-record-2026-08-30` at `fa3c99c4` is there), and its row's
+  `follow_up` cell records it.
 
 ## 2. The queue
 
@@ -1049,3 +1050,8 @@ Append one line per step taken: the item, what happened, the commit.
   the API usage limit with its build uncommitted; resumed, told to merge
   trunk before its close-out. §0 written as the resume point.
   `73aa095ce`; smoke on it `3717 passed, 3 skipped` in 107 s, CPU 638.2 s.
+- 2026-11-22: resumed. The operator confirmed OI-79 complete; its row gains a
+  `follow_up` cell citing the delete and the tag (`gen_open_items
+  --ruled-cover`: 0 findings, as before, now without leaning on WI-1006's
+  text). F-3's builder had finished: build `19749ec70`, trunk merged
+  `8e7d43c6f`, close-out `bcbc00bd6`, tree clean.
