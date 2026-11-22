@@ -2,7 +2,7 @@
 id = "WI-1047"
 title = "adjudicate: the chains waiting after F-2, 29 amendments and 19 first acceptances, in one combined sitting"
 workstream = "process"
-specref = "docs/plans/2026-11-21-queue-drill/HANDOFF.md"
+specref = ""
 sr_refs = ["SR-070", "SR-157", "SR-159", "SR-168", "SR-169", "SR-178", "SR-202", "SR-208", "SR-212", "SR-215", "SR-225", "SR-233", "SR-243"]
 needs = []
 buildtier = "medium"
@@ -11,6 +11,17 @@ brief = "combined"
 adjudicates = ["amendment:CMP-006", "amendment:IF-312", "amendment:LLR-041", "amendment:LLR-042", "amendment:LLR-067", "amendment:LLR-080", "amendment:LLR-199", "amendment:LLR-239", "amendment:LLR-244", "amendment:LLR-283", "amendment:LLR-293", "amendment:LLR-311", "amendment:LLR-373", "amendment:SR-233", "amendment:SR-243", "amendment:TC-044", "amendment:TC-049", "amendment:TC-067", "amendment:TC-080", "amendment:TC-195", "amendment:TC-293", "amendment:TC-332", "amendment:TC-385", "amendment:TC-409", "amendment:TC-410", "amendment:TC-428", "amendment:TC-429", "amendment:TC-435", "amendment:TC-436", "first-acceptance:LLR-393", "first-acceptance:LLR-394", "first-acceptance:LLR-395", "first-acceptance:LLR-396", "first-acceptance:LLR-397", "first-acceptance:LLR-398", "first-acceptance:TC-455", "first-acceptance:TC-456", "first-acceptance:TC-457", "first-acceptance:TC-458", "first-acceptance:TC-459", "first-acceptance:TC-460", "first-acceptance:TC-461", "first-acceptance:TC-462", "first-acceptance:TC-463", "first-acceptance:TC-464", "first-acceptance:TC-465", "first-acceptance:TC-466", "first-acceptance:TC-467"]
 priority = 2
 +++
+
+## Deliverable
+
+Cancelled on trunk (2026-11-22), superseded by WI-1049. The sitting ran and
+its verdict is recorded (`42df09628`, `902d218e9`), but the act it derived
+was refused (SR-207: LLR-080 and LLR-373 drifted and were not blessed), so
+nothing was accepted and the Done-when's act could not be met. WI-1048
+answered every MEANING and RETURN finding (Dispositions below), and WI-1049,
+a second combined sitting, judges everything still owed, this row's 20
+blessed rows again among them, so that one verdict yields one act. This
+row's verdict stays the record of what was judged here.
 
 ## Context
 
