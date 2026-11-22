@@ -1,7 +1,7 @@
 """Parse/sources for the project-state dashboard — registries, docs, git.
 
 The spine/OKF/arch-map/gate readers, the one subprocess capture seam
-(_run_captured/_asof/_git), and the guarded `schedule` import's ONE home.
+(_run_captured/_asof), and the guarded `schedule` import's ONE home.
 WI-280 split of gen_trajectory.py; the facade re-exports, so consumers are
 unchanged.
 
@@ -356,11 +356,11 @@ def _run_captured(argv):
     `stdin=DEVNULL` so a git that would prompt on a TTY takes its default
     instead of hanging an unattended run. WI-304 extracted exactly this block in
     `agent_dispatch` as `_run_captured` rather than sanctioning it; the census
-    charged the two sites left here (`_asof`, `_git`) to WI-346 as
-    `subprocess-capture`.
+    charged the two sites then left here to WI-346 as `subprocess-capture`;
+    `_asof` is the one that remains.
 
     Deliberately does NOT catch: `OSError` (no git binary at all) propagates,
-    and both callers catch it to degrade to empty. That is the off-git
+    and its caller, `_asof`, catches it to degrade to empty. That is the off-git
     best-effort contract — a non-repo pays nothing, but the helper does not
     silently swallow a failure a future caller might need to see."""
     return subprocess.run(
@@ -411,18 +411,6 @@ def _asof(root):
     return (
         "state as of commit {}".format(stamp) if proc.returncode == 0 and stamp else ""
     )
-
-
-def _git(root, *args):
-    """`(returncode, stdout)` for a READ-ONLY git command, `(1, "")` on any
-    failure — the `_asof` idiom (gen_trajectory shells git via stdlib rather than
-    importing the dispatcher, which would drag the whole engine into a renderer).
-    Every pending source degrades to empty off-git, so a non-repo pays nothing."""
-    try:
-        proc = _run_captured(["git", "-C", str(root), *args])
-    except OSError:
-        return 1, ""
-    return proc.returncode, proc.stdout
 
 
 def sw_modules(root):

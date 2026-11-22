@@ -88,7 +88,7 @@ Paths are under `project-trajectory/scripts/`.
 | `agent_loop.py:2093` | `diff --name-only <impl_range>` | a | The reviewed range's paths, for the anti-gaming tripwires. |
 | `baseline_snapshot.py:609` | `log -1 -- <snapshot copy>` | b | `stamp`: the commit that last wrote a registry's snapshot copy, which only an act writes; advisory. |
 | `baseline_snapshot.py:683` | `log -1 -G<status line> -- <snapshotted registries>` | c | `acceptance_stamp` dates the last acceptance by the last diff touching a status line. See (c) 1. Resolved by WI-1040. |
-| `baseline_snapshot.py:2111` | `log -- docs/requirements/assumptions.toml` | c | Borderline. `_risk_first_written` binds a risk no act names to the first commit holding its current value. See (c) 2. |
+| `baseline_snapshot.py:2111` | `log -- docs/requirements/assumptions.toml` | c | Borderline. `_risk_first_written` binds a risk no act names to the first commit holding its current value. See (c) 2. Resolved by WI-1041. |
 | `baseline_snapshot.py:2155` | `log -- docs/archive/last_accepted/acts.toml` | b | `risk_acceptance_act` walks the act ledger's history for each act's commit and reads the copy recorded there; the ledger's header says git holds each act's commit. |
 | `check_docs.py:673` | `log --name-only` | a | Last-change time per path, for the `--stale` doc warning. |
 | `check_privacy.py:730` | `log -p <rev_range>` | a | Scans a range the caller names. |
@@ -182,6 +182,10 @@ Paths are under `project-trajectory/scripts/`.
 - **Borderline:** in the case it covers no record exists by construction, so
   the change is to stop deriving an anchor, not to read one. LLR-239
   (Accepted) states this fallback, so a row against it amends LLR-239.
+- **Resolved by WI-1041** (2026-11-21): with no act naming the assumption,
+  `risk_acceptance_act` reports the risk unanchored, naming the assumption
+  and the act it owes, and walks no history. `_risk_first_written` is
+  deleted, and LLR-239's text says so.
 
 ### (c) 3. `check_test_first.py:278` and `:314`
 
