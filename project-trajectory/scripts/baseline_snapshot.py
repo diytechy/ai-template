@@ -162,11 +162,12 @@ Contract IF-217: the accepted risk's anchor, read from history.
     `risk_acceptance_act(root, da_id)` returns `(commit, reason)`: the latest
     commit whose acceptance act names the assumption — an act ledger entry that
     commit added listing it accepted or re-accepted (IF-220) — while the
-    record's copy of the row there carries a non-empty `accepted_risk`; where no act names the row at
-    all, the first commit at which its live `accepted_risk` took its current
-    value. `(None, reason)` when no anchor can be read: history too shallow
+    record's copy of the row there carries a non-empty `accepted_risk`.
+    `(None, reason)` when no anchor can be read: history too shallow
     (the repository is a shallow clone and the window holds no such act), acts
-    naming the row with no risk recorded, a value in no commit yet, or no git.
+    naming the row with no risk recorded, no act naming the row at all (the
+    risk is unanchored: the reason names the assumption and the act it owes,
+    and no history of the live registry is walked), or no git.
     `risk_acceptance_view(root, da_id)` adds what the pure rule
     (`assumption_rules.accepted_risk_state`) compares, as a dict: `act`,
     `reason`, and at that commit the `assumption` row, the requirement rows
@@ -2101,36 +2102,6 @@ def _act_names(root, sha, da_id):
     )
 
 
-def _risk_first_written(root, da_id):
-    """The fallback anchor: the first commit at which the live row's
-    `accepted_risk` took its current value, walking back until it differs."""
-    live = {
-        str(r.get("DA-ID") or "").strip(): r
-        for r in spine_carrier.load(Path(root) / ASSUMPTIONS_REL, "DA-ID")
-    }.get(da_id) or {}
-    current = (live.get("AcceptedRisk") or "").strip()
-    log = _git(
-        root, ["log", "--format=%H", "--", *spine_carrier.carriers(ASSUMPTIONS_REL)]
-    )
-    anchor = None
-    for sha in (log or "").split():
-        row = check_trajectory._spine_rows_at(
-            root, sha + ":", ASSUMPTIONS_REL, "DA-ID"
-        ).get(da_id)
-        if row is None or (row.get("AcceptedRisk") or "").strip() != current:
-            break
-        anchor = sha
-    if anchor is None:
-        return None, (
-            "{}'s accepted risk is in no commit yet; commit it, or accept it in "
-            "an acceptance act".format(da_id)
-        )
-    return anchor, (
-        "no acceptance act names {}, so its risk is bound to {}, the first commit "
-        "at which it took its current value".format(da_id, anchor[:12])
-    )
-
-
 def risk_acceptance_act(root, da_id):
     """`(commit, reason)`: the act an assumption's accepted risk is bound to.
 
@@ -2141,14 +2112,15 @@ def risk_acceptance_act(root, da_id):
     anchor even when no byte of the row changes, and each act is its own entry,
     so the latest act moves it even when an earlier one the same day named the
     same rows in the same words. The README beside the ledger is prose and is
-    never read. Only where no act names the row at all does the anchor fall
-    back to the first commit at which its live `accepted_risk` took its current
-    value (`_risk_first_written`).
+    never read.
 
     `(None, reason)` when no anchor can be read, each a reason the caller
     states: a shallow clone whose window holds no such act, since the act may
     lie beyond it; acts naming the row but none recording a risk, since
-    accepting one is an act of its own; an act ledger on the walk that is
+    accepting one is an act of its own; no act naming the row at all, since
+    then nobody accepted the risk and there is nothing to anchor it to (the
+    risk is unanchored, and no history of the live registry is walked for a
+    commit to stand in for the act); an act ledger on the walk that is
     malformed (`acts_problems`), since which acts it holds would be a guess;
     or no git at all. Time is never read.
 
@@ -2190,7 +2162,10 @@ def risk_acceptance_act(root, da_id):
             "the acceptance acts naming {} recorded no accepted risk; accepting "
             "one is re-accepting the row in an act".format(da_id)
         )
-    return _risk_first_written(root, da_id)
+    return None, (
+        "no acceptance act names {0}, so its accepted risk is unanchored; accept "
+        "it in an acceptance act that names {0}".format(da_id)
+    )
 
 
 def _needs_at(root, sha):
