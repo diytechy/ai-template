@@ -111,8 +111,8 @@ adjudication sittings by Gemini Neon through `agy` (operator, 2026-11-21;
   (`abb00a88d`) and WI-1048 (`0f670626a`, regen `22a9a9369`); WI-1038
   cancelled, superseded by WI-1048. Open drill worktree: F-3's (§0). Suites:
   after wave A on `361270a84`, `8264 passed, 31 skipped`; after wave B on
-  `224ff2c68`, `8264 passed, 31 skipped`; smoke after WI-1042 on
-  `b78624a23`, `3717 passed, 3 skipped`. The next unfiltered suite runs
+  `224ff2c68`, `8264 passed, 31 skipped`; smoke after WI-1048 on
+  `73aa095ce`, `3717 passed, 3 skipped`. The next unfiltered suite runs
   after F-3 (§3.4).
 - Acts owed, all to automated adjudication (§3.3 N4; §0 step 2): every
   chain `docs/ratify/CURRENT.md` lists under "Waiting for automated
@@ -1045,3 +1045,4 @@ Append one line per step taken: the item, what happened, the commit.
   cancelled in the same merge. Regen `22a9a9369`. F-3's builder stopped on
   the API usage limit with its build uncommitted; resumed, told to merge
   trunk before its close-out. §0 written as the resume point.
+  `73aa095ce`; smoke on it `3717 passed, 3 skipped` in 107 s, CPU 638.2 s.
