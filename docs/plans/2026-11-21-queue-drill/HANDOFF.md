@@ -51,14 +51,13 @@ adjudication sittings by Gemini Neon through `agy` (operator, 2026-11-21;
 | WI-1016 | A repository can switch off the implementation layer | After F | Re-critiqued once F lands; reverses SR-186, so its amendment is drafted for the operator |
 | WI-1018 | Row text a lane leaves stale is filed, and the first set is brought up to the code | After F-8 | F-8's text migration takes B1, B7 and B9 and likely more; this row then fixes what is left |
 | WI-1045 | `acceptance_record.py`'s landing rules move to a CMP-008 module (F-1's table, §3.5 R2) | After F-3 (WI-1023) | Critiqued (Sol and Hydrogen, all findings applied): the order settled after F-3, the cover held to F-2's rule, IF-308's callers named |
-| WI-1040 | The re-acceptance brief's last-act date read from the act ledger | Beside F | Built on `maint/wi-1040`; merging trunk into the branch (WI-1041's conflict in `baseline_snapshot.py`) before its review |
-| WI-1042 | The test-first order read from the act ledger | After F-2 | Critiqued (Sol and Hydrogen, all findings applied); amends LLR-257, gains a Trust section and settles its pre-ledger rule; needs WI-1022 (IF-220's consumers cell). Its cross-move reading belongs in WI-1040's shared `_ledger_commits` walk, which fixes the brief's heading and the accepted-risk reader too |
+| WI-1042 | The test-first order read from the act ledger | After F-2 | Critiqued (Sol and Hydrogen, all findings applied); amends LLR-257, gains a Trust section and settles its pre-ledger rule; needs WI-1022 (IF-220's consumers cell). Its spec now puts the cross-move reading in WI-1040's shared `_ledger_commits` walk, fixing the brief's heading and the accepted-risk reader too |
 | WI-1039 | The smoke tier back under its CPU budget | Beside F-1 | Filed 2026-11-21 (§3.4, the suite during F); critiqued by Sol alone, findings applied (`d1c56e986`); not built |
 | WI-1031 to WI-1035 | The rest of phase 3 | Filed, not drilled | Owe a scope critique when they come up (§3.3 N2); WI-1035 carries §3.4 S4's answer |
 
 Done in wave A: WI-1013, WI-1014 and WI-1017; in wave B: WI-1019; beside
-F-1: WI-1036 and WI-1037; beside F-2: WI-1044, WI-1043, WI-1041 and
-WI-1046 (§10).
+F-1: WI-1036 and WI-1037; beside F-2: WI-1044, WI-1043, WI-1041, WI-1046
+and WI-1040 (§10).
 Closed by §3.3:
 WI-1015 restructured into F's rows (N1), WI-1020 cancelled (N5).
 
@@ -829,4 +828,18 @@ Append one line per step taken: the item, what happened, the commit.
   in `baseline_snapshot.py` before its review. Its builder found that the
   ledger walk it now shares with the accepted-risk reader follows the
   ledger's current path only; WI-1042, which must read across the
-  2026-11-16 move anyway, takes that fix.
+  2026-11-16 move anyway, takes that fix. `80cf46475`.
+- 2026-11-22: WI-1040's branch merged trunk (`8539c3124`): its shared
+  `_ledger_commits` walk keeps WI-1041's no-fallback end. Review round 1
+  over `7048e6a6f..d6ccdb587`: Hydrogen APPROVE; Sol one MINOR, confirmed
+  by execution and adopted (an undecodable ledger raised through
+  `last_act`, against the branch's D-001); fixed `5dc1c9174` inside
+  `last_act` only. Round 2 narrow: Sol APPROVE. Merged `2a57861ec`, regen
+  `aab4808c3`; smoke `3714 passed, 3 skipped` in 130 s, CPU 652.6 s. On this
+  repository the heading moved from naming a build commit that accepted
+  nothing to the ledger's seq 185. WI-1042's spec amended: the cross-move
+  reading lands in `_ledger_commits`, with a Done-when for all three
+  readers. Left for the operator: `D:/rt1040`, a builder's scratch folder
+  (logs and pytest temp, every link inside it), which the harness would not
+  let the coordinator delete. Every branch beside F-2 has landed; F-2 is in
+  its builder's full-suite run.

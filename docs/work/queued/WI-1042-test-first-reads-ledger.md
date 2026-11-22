@@ -53,7 +53,13 @@ the same order SR-217 asks for, still from the committed history.
 - **The ledger's earlier path.** The ledger moved from
   `docs/archive/last_approved/` to `docs/archive/last_accepted/` on
   2026-11-16; an entry's commit is read across that move, so no earlier
-  entry is dated at the move commit.
+  entry is dated at the move commit. WI-1040 made one walk over the
+  ledger's commits, `baseline_snapshot._ledger_commits`, shared by the
+  brief's heading (`last_act`) and the accepted-risk reader
+  (`risk_acceptance_act`). It reads the current path only, so today it
+  dates every earlier entry at the move. The cross-move reading lands in
+  that walk, which fixes all three readers in one place (WI-1040's
+  finding, 2026-11-22).
 
 SR-217 and LLR-257 (both Accepted) state the replay, so this row amends
 LLR-257's text, which drifts for automated adjudication.
@@ -97,6 +103,9 @@ owed under PROCESS.md §3 "When a guard is owed".
       quoted; any gap is filed, not patched over.
 - [ ] Both readings come from the ledger and the snapshot copies under the
       rules above; no first-parent replay of the registries remains.
+- [ ] The cross-move reading is in `_ledger_commits`; a test shows an entry
+      added before the move dated at its own commit by the test-first
+      reading, `last_act` and `risk_acceptance_act`.
 - [ ] Each state in the Trust ruling has a test, and one test that fails on
       today's code shows a ledger-read date.
 - [ ] The check's verdicts on this repository are unchanged, or each change
