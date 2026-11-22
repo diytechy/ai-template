@@ -68,8 +68,15 @@ that a second sitting over everything still owed can accept it in one act.
       evidence tests assert exactly that (text only; it drifts).
 - [ ] LLR-393, LLR-394, TC-455 and TC-456 name no implementation carrier in
       their requirement text.
+- [ ] TC-455's expected cell states its own observable pass condition for
+      the rung-to-tier mapping and the holding behaviour, rather than
+      deferring to LLR-393's detail (the verdict's second TC-455 finding).
 - [ ] Each of LLR-398's five clauses above is verified by a test case citing
       an existing test.
-- [ ] A `Drafted` test case verifies LLR-395.
+- [ ] A `Drafted` test case verifies LLR-395, including its clause the
+      verdict found uncovered: a validly declared test that still fails
+      leaves its case clean under the undeclared-case rule; it cites the
+      tests that show it.
 - [ ] `trace.py --strict` and `check_trajectory --strict` are clean; the
-      Deliverable lists every row changed and what a second sitting owes.
+      Deliverable lists every row changed, what a second sitting owes, and
+      whether WI-1038 is still needed or is superseded, with the reason.
