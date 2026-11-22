@@ -1446,25 +1446,28 @@ def test_the_reference_lists_a_file_owner_beside_the_modules(tmp_path):
     assert "IF-960" in block and "Declared, not stated" in block
 
 
-def test_owner_files_names_the_files_and_readmes_the_registry_owns(tmp_path):
-    (tmp_path / "docs").mkdir()
-    (tmp_path / "docs" / "stack.ini").write_text("# x\n", encoding="utf-8")
-    (tmp_path / "docs" / "work").mkdir()
+def test_header_files_are_the_source_roots_other_files_and_the_declared_list(tmp_path):
+    """The contract scan's non-Python surface: each other-than-`.py` file of a
+    grammar type under the source root, labelled as a module is, then each
+    file `[arch-map] headers` lists, by its repository path; a listed path
+    that is not a file is left out, and a file is listed once."""
+    (tmp_path / "docs" / "work").mkdir(parents=True)
+    (tmp_path / "docs" / "stack.ini").write_text(
+        "[paths]\nsrc = src\n[arch-map]\nheaders = docs/stack.ini "
+        "docs/work/README.md docs/bare src/run.sh\n",
+        encoding="utf-8",
+    )
     (tmp_path / "docs" / "work" / "README.md").write_text("# w\n", encoding="utf-8")
     (tmp_path / "docs" / "bare").mkdir()
     (tmp_path / "src").mkdir()
     (tmp_path / "src" / "m.py").write_text("x = 1\n", encoding="utf-8")
-    rows = [
-        {"IF-ID": "IF-001", "Owner": "docs/stack.ini"},
-        {"IF-ID": "IF-002", "Owner": "docs/work/"},  # a dir with a README
-        {"IF-ID": "IF-003", "Owner": "docs/bare"},  # a dir without one: skipped
-        {"IF-ID": "IF-004", "Owner": "src/m"},  # a module: the AST walk's
-        {"IF-ID": "IF-005", "Owner": "external:git"},  # nothing to scan
-        {"IF-ID": "IF-006", "Owner": "docs/stack.ini"},  # deduplicated
-    ]
-    assert gen_arch_map.owner_files(tmp_path, rows) == [
+    (tmp_path / "src" / "run.sh").write_text("# r\n", encoding="utf-8")
+    (tmp_path / "src" / "README.md").write_text("# docs\n", encoding="utf-8")
+    (tmp_path / "src" / "data.json").write_text("{}\n", encoding="utf-8")
+    assert gen_arch_map.header_files(tmp_path, [tmp_path / "src"]) == [
         ("docs/stack.ini", tmp_path / "docs" / "stack.ini"),
-        ("docs/work/", tmp_path / "docs" / "work" / "README.md"),
+        ("docs/work/README.md", tmp_path / "docs" / "work" / "README.md"),
+        ("src/run.sh", tmp_path / "src" / "run.sh"),
     ]
 
 

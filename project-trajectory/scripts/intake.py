@@ -89,25 +89,25 @@ dedup.
 
 Component: CMP-008
 
-Contracts: IF-090, IF-229, IF-243, IF-244 — the interface seams this module
-declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-229, IF-243, IF-244 — the interface seams this module declares
+(process.md §8; rows of record in docs/requirements/interfaces.toml).
 
-Contract IF-090: the trunk-side intake mint, by importer.
-    `intake_after_merge(root, before, after, outcomes, branch, label="")` is integrate's
-    post-merge arm: it mints one landed merge's forced rows — the operator rows
-    for held acts, the amendment adjudications, the FIRST-ACCEPTANCE adjudications over the `Drafted` rows the
-    lane handed over on rungs the dial releases (operator ruling 2026-09-01: a lane
-    authors, an adjudicator accepts), the close dispositions, the drafts a
-    close names and one adjudication per row whose lane changed its own
-    Done-when since claim — as ONE bookkeeping commit inside the slot the caller holds,
-    returning them with a refusal slot. `mint_gap_rows(root, lines)` is the
-    dispatcher's empty-frontier arm over a census, and
-    `context_block(root, wi_row)` renders the registry joins a worker prompt
-    embeds — advisory: agent_loop imports it lazily and reads a failure as no
-    join. `adjudication_action` and `flip_verified` are CLI-driven only.
-    ALL-OR-NOTHING: any refusal mints nothing and restores trunk while the
-    merge stands, and deterministic titles make the CLI recovery re-run
-    idempotent by exact-title dedup.
+The trunk-side intake mint, by importer.
+`intake_after_merge(root, before, after, outcomes, branch, label="")` is integrate's
+post-merge arm: it mints one landed merge's forced rows — the operator rows
+for held acts, the amendment adjudications, the FIRST-ACCEPTANCE adjudications over the `Drafted` rows the
+lane handed over on rungs the dial releases (operator ruling 2026-09-01: a lane
+authors, an adjudicator accepts), the close dispositions, the drafts a
+close names and one adjudication per row whose lane changed its own
+Done-when since claim — as ONE bookkeeping commit inside the slot the caller holds,
+returning them with a refusal slot. `mint_gap_rows(root, lines)` is the
+dispatcher's empty-frontier arm over a census, and
+`context_block(root, wi_row)` renders the registry joins a worker prompt
+embeds — advisory: agent_loop imports it lazily and reads a failure as no
+join. `adjudication_action` and `flip_verified` are CLI-driven only.
+ALL-OR-NOTHING: any refusal mints nothing and restores trunk while the
+merge stands, and deterministic titles make the CLI recovery re-run
+idempotent by exact-title dedup.
 
 Contract IF-229: the release checkpoint, as a command.
     `intake.py [--root <dir>] rejudge --checkpoint release [--rev <commit>]`
@@ -584,7 +584,7 @@ def _context_block(root, wi_row, rows):
             "Knowledge packs the touched components declare (read before building)",
             _pack_lines(root, llrs),
         ),
-        ("Interface seams via the touched modules", _seam_lines(root, llrs)),
+        ("Interface seams of the touched components", _seam_lines(root, llrs)),
         (
             "Review records of precedent rows",
             _review_lines(root, preds | {r["WI-ID"] for r in cancelled}),
@@ -655,11 +655,7 @@ def _pack_lines(root, llrs):
 
 
 def _seam_lines(root, llrs):
-    stems = {
-        Path(r.get("Module") or "").stem
-        for r in llrs
-        if (r.get("Module") or "").strip()
-    }
+    comps = {r.get("Component") for r in llrs} - {"", None}
     return [
         "- {} {} {} {}: {}".format(
             i.get("IF-ID"),
@@ -669,11 +665,7 @@ def _seam_lines(root, llrs):
             "{} {}".format(i.get("Channel"), _clip(i.get("Data"), 110)),
         )
         for i in spine_carrier.load(root / "docs/requirements/interfaces.toml", "IF-ID")
-        if Path(i.get("Owner") or "").name in stems
-        or any(
-            Path(c).name in stems
-            for c in (i.get("Requestors") or i.get("Consumers") or "").split(";")
-        )
+        if comps & {_spine.seam_owner(i), *_spine.seam_far_side(i)[1]}
     ]
 
 

@@ -451,6 +451,15 @@ def write_ifs(root, body):
     )
 
 
+def _two_components(root):
+    """mod_a declares CMP-001 and mod_b CMP-002, both live rows: the rows
+    name components, so connectivity is judged per component."""
+    write_cmps(root, TWO_CMPS)
+    declare_components(
+        root, [("scripts/mod_a", "CMP-001"), ("scripts/mod_b", "CMP-002")]
+    )
+
+
 def test_interface_coverage_warns(tmp_path):
     """Implements: TC-080"""
     # Multi-module arch-map with NO interfaces.csv -> "connectivity undeclared"
@@ -480,28 +489,30 @@ def test_single_module_inventory_is_vacuous(tmp_path):
 
 def test_uncovered_direction_warns(tmp_path):
     """Implements: TC-080"""
-    # One Provides seam a->b: a has no Consumes, b has no Provides -> both
-    # missing-direction warns fire (exit 0).
+    # One row CMP-001 -> CMP-002: CMP-001 has no Consumes, CMP-002 no Provides
+    # -> both missing-direction warns fire, each naming its component (exit 0).
     write_arch(tmp_path, ARCH_2MOD)
+    _two_components(tmp_path)
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"call",SR-001,v1,Stable,Active,,\n',
+        'IF-001,Provides,CMP-001,CMP-002,"call",SR-001,v1,Stable,Active,,\n',
     )
     proc = run_traj(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "declares no Consumes seam" in proc.stderr  # mod_a
-    assert "declares no Provides seam" in proc.stderr  # mod_b
+    assert "component 'CMP-001' declares no Consumes seam" in proc.stderr
+    assert "component 'CMP-002' declares no Provides seam" in proc.stderr
 
 
 def test_source_sink_marker_suppresses_direction_warn(tmp_path):
     """Implements: TC-080"""
-    # mod_a marked source (consumes nothing), mod_b marked sink (provides nothing)
-    # -> both missing-direction warns suppressed by the honesty valve.
+    # CMP-001 marked source (consumes nothing); CMP-002's only far side is a
+    # party marked sink -> both missing-direction warns suppressed.
     write_arch(tmp_path, ARCH_2MOD)
+    _two_components(tmp_path)
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"call",SR-001,v1,Stable,Active,,source\n'
-        'IF-002,Consumes,scripts/mod_b,docs/stack.ini,"reads",SR-001,v1,Stable,Active,,sink\n',
+        'IF-001,Provides,CMP-001,CMP-002,"call",SR-001,v1,Stable,Active,,source\n'
+        'IF-002,Consumes,CMP-002,external:git,"reads",SR-001,v1,Stable,Active,,sink\n',
     )
     proc = run_traj(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -527,10 +538,11 @@ def test_seam_tc_citation_warn(tmp_path):
     # in the shipped pre-commit hook, where a hundred warn lines is a check
     # nobody reads).
     write_arch(tmp_path, ARCH_2MOD)
+    _two_components(tmp_path)
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,accepted,Active,,\n'
-        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,draft,Active,,\n',
+        'IF-001,Provides,CMP-001,CMP-002,"a to b",SR-001,v1,accepted,Active,,\n'
+        'IF-002,Provides,CMP-002,CMP-001,"b to a",SR-001,v1,draft,Active,,\n',
     )
     (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
@@ -552,45 +564,40 @@ def test_seam_tc_citation_warn(tmp_path):
 
 def test_contracts_docstring_citation_warns(tmp_path):
     """Implements: TC-080"""
-    # A module's `Contracts (interfaces):` arch-map line names IF-003 (absent from
-    # the registry) -> forward warn; and once the convention is in use, a registry
-    # IF declared by no module warns in reverse.
+    # A module's `Contracts:` line names IF-003 (absent from the registry) ->
+    # forward warn. No reverse check holds a row to a declaration site: where
+    # a body sits, and that one exists, is the definition gate's.
     arch = ARCH_2MOD.replace("_A._\n", "_A._\nContracts (interfaces): IF-003\n")
     write_arch(tmp_path, arch)
+    _two_components(tmp_path)
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,accepted,Active,,\n'
-        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,draft,Active,,\n',
+        'IF-001,Provides,CMP-001,CMP-002,"a to b",SR-001,v1,accepted,Active,,\n'
+        'IF-002,Provides,CMP-002,CMP-001,"b to a",SR-001,v1,draft,Active,,\n',
     )
     proc = run_traj(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "declares Contracts: IF-003 but no such IF-### row" in proc.stderr
-    # OWNER-EXACT since OI-67 slice 2: IF-001 is owned by mod_a, whose marker
-    # names IF-003 only, so the warn names the OWNER — not "no script".
-    assert (
-        "IF IF-001 is owned by 'scripts/mod_a', but that module's Contracts: "
-        "line does not declare it" in proc.stderr
-    )
+    assert "is owned by" not in proc.stderr
 
 
-def test_a_seam_declared_on_the_wrong_module_is_named(tmp_path):
-    # The id-global hole the OI-66 build round named: IF-001 declared on mod_a
-    # while the registry owns it to mod_b used to PASS. The owner is the one
-    # declaration site, so the mismatch is named; the id-global fallback stays
-    # only for an owner the tree cannot resolve.
+def test_a_body_in_a_file_of_another_component_is_named(tmp_path):
+    # The id-global hole the OI-66 build round named, in component terms: IF-001
+    # is owned by CMP-002 and stated in mod_a, a CMP-001 file, so the body's
+    # file belongs to the wrong component and the gate names it.
     arch = ARCH_2MOD.replace("_A._\n", "_A._\nContracts (interfaces): IF-001\n")
     write_arch(tmp_path, arch)
+    _two_components(tmp_path)
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,accepted,Active,,\n',
+        'IF-001,Provides,CMP-002,CMP-001,"b to a",SR-001,v1,accepted,Active,,\n',
     )
     proc = run_traj(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert (
-        "IF IF-001 is owned by 'scripts/mod_b', but that module's Contracts: "
-        "line does not declare it" in proc.stderr
+        "IF IF-001 is owned by CMP-002, but its body sits in 'scripts/mod_a.py', "
+        "whose header declares CMP-001" in proc.stderr
     )
-    assert "no source declares it" not in proc.stderr
 
 
 def test_interface_warns_never_fail_strict(tmp_path):
@@ -724,50 +731,50 @@ SEEDED_IF_TC_ALLOW = (
     # (the README floor reading needs under the file's own carrier), and
     # IF-126, whose seam gained TC-271's (the open-items view naming each
     # registry's own copy) — 118 -> 116, seed-count lowered in the same commit.
-    "IF-001 IF-002 IF-003 IF-004 IF-005 IF-006 IF-008 IF-009 IF-010 IF-011 "
-    "IF-012 IF-013 IF-014 IF-015 IF-016 IF-017 IF-018 IF-019 IF-020 IF-021 "
-    "IF-022 IF-023 IF-024 IF-025 IF-026 IF-028 IF-029 IF-030 IF-031 IF-032 "
-    "IF-033 IF-034 IF-035 IF-036 IF-037 IF-038 IF-039 IF-040 IF-041 IF-042 "
-    "IF-043 IF-044 IF-045 IF-046 IF-047 IF-048 IF-049 IF-050 IF-051 IF-052 "
-    "IF-053 IF-054 IF-055 IF-056 IF-057 IF-058 IF-059 IF-060 IF-061 IF-064 "
-    "IF-065 IF-066 IF-068 IF-069 IF-070 IF-071 IF-072 IF-073 IF-074 "
-    "IF-076 IF-077 IF-078 IF-079 IF-080 IF-081 IF-082 IF-083 IF-084 IF-085 "
-    "IF-086 IF-087 IF-088 IF-089 IF-092 IF-097 IF-098 IF-099 IF-100 IF-102 "
-    "IF-103 IF-104 IF-105 IF-106 IF-107 IF-108 IF-109 IF-110 IF-111 "
-    "IF-113 IF-114 IF-115 IF-117 IF-118 IF-119 IF-120 IF-121 IF-122 "
-    "IF-125 IF-130 IF-131 IF-132 IF-133 IF-134 IF-135 IF-136 IF-137"
+    # PRUNED 2026-11-21 (WI-1022): the seventeen whose rows retired as `call`
+    # seams inside one component — 116 -> 99, seed-count lowered with them.
+    "IF-001 IF-002 IF-003 IF-004 IF-005 IF-006 IF-008 IF-009 IF-010 IF-011 IF-012 "
+    "IF-013 IF-014 IF-015 IF-016 IF-017 IF-018 IF-019 IF-020 IF-021 IF-022 IF-023 "
+    "IF-024 IF-025 IF-026 IF-028 IF-029 IF-030 IF-031 IF-032 IF-033 IF-034 IF-035 "
+    "IF-036 IF-037 IF-038 IF-039 IF-040 IF-041 IF-042 IF-043 IF-045 IF-046 IF-047 "
+    "IF-048 IF-049 IF-050 IF-051 IF-054 IF-056 IF-057 IF-059 IF-060 IF-068 IF-069 "
+    "IF-070 IF-071 IF-072 IF-073 IF-074 IF-077 IF-078 IF-079 IF-080 IF-081 IF-082 "
+    "IF-083 IF-084 IF-085 IF-086 IF-088 IF-089 IF-092 IF-098 IF-102 IF-103 IF-104 "
+    "IF-105 IF-106 IF-107 IF-108 IF-109 IF-110 IF-111 IF-114 IF-115 IF-117 IF-118 "
+    "IF-119 IF-120 IF-121 IF-122 IF-125 IF-130 IF-131 IF-132 IF-133 IF-134 IF-135"
 ).split()
 
 
-def test_a_multi_valued_endpoint_cell_declares_every_pair_in_it(tmp_path):
-    """2026-08-21 review, M-14: `trace.py` splits an endpoint cell on `;` and
-    this reader did not, so the registry's two readers disagreed about seven
-    rows — every combination named in a `;`-joined cell is a declared pair, or
-    a real seam reads as undeclared to half the machinery."""
-    write_ifs(
-        tmp_path,
-        'IF-001,Provides,scripts/mod_a,"scripts/mod_b; scripts/mod_c","a to b and c",'
-        "SR-001,v1,accepted,Active,,\n",
+def test_the_cover_is_each_call_rows_requestor_and_owner_pairs(tmp_path):
+    """A `;`-joined requestor cell is several requestors, each paired with the
+    owner; a row on another channel pairs nothing."""
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True)
+    (req / "interfaces.toml").write_text(
+        '[interface.IF-001]\nowner = "CMP-002"\n'
+        'requestors = ["CMP-001", "CMP-003", "external:git"]\nchannel = "call"\n\n'
+        '[interface.IF-002]\nowner = "CMP-004"\nrequestors = ["CMP-001"]\n'
+        'channel = "cli"\n',
+        encoding="utf-8",
     )
-    pairs = check_trajectory._declared_seam_pairs(tmp_path)
-    assert ("scripts/mod_a", "scripts/mod_b") in pairs
-    assert ("scripts/mod_a", "scripts/mod_c") in pairs
-    assert ("scripts/mod_c", "scripts/mod_a") in pairs  # stored both ways
-    # And nothing carries the unsplit cell as if it were one module name.
-    assert not [p for p in pairs if any(";" in e for e in p)], sorted(pairs)
+    assert check_trajectory._call_cover(tmp_path) == {
+        ("CMP-001", "CMP-002"),
+        ("CMP-003", "CMP-002"),
+        ("external:git", "CMP-002"),
+    }
 
 
 def test_this_repos_seam_tc_allowlist_is_exactly_its_seeded_set():
     entries, seed = check_trajectory.parse_if_tc_allow(
         (ROOT / "docs" / "if-tc-coverage-allow").read_text(encoding="utf-8")
     )
-    assert seed == 116, "the declared seed-count moved without this pin moving"
-    assert len(SEEDED_IF_TC_ALLOW) == 116
-    assert [i for i, _ in entries[:116]] == SEEDED_IF_TC_ALLOW
+    assert seed == 99, "the declared seed-count moved without this pin moving"
+    assert len(SEEDED_IF_TC_ALLOW) == 99
+    assert [i for i, _ in entries[:99]] == SEEDED_IF_TC_ALLOW
     # And every entry past the seed carries its reason, or it suppresses
     # nothing — the reader drops it, so this is a statement about the FILE
     # being honest rather than about the reader being lenient.
-    assert all(reason for _id, reason in entries[116:]), entries[116:]
+    assert all(reason for _id, reason in entries[99:]), entries[99:]
 
 
 def test_a_bare_addition_past_the_seed_suppresses_nothing(tmp_path):
@@ -860,6 +867,8 @@ def _gate_repo(
     mod_a_doc,
     mod_b_doc='"""B.\n\nContracts: IF-002\n\nContract IF-002: b states it."""\n',
 ):
+    """mod_a (CMP-001) and mod_b (CMP-002); IF-001 owned by CMP-001, IF-002
+    by CMP-002, each cited by a TC so the seam-TC promotion stays quiet."""
     write_arch(tmp_path, ARCH_2MOD)
     (tmp_path / "scripts" / "mod_a.py").write_text(
         mod_a_doc + "\n\ndef run():\n    return None\n", encoding="utf-8"
@@ -867,10 +876,11 @@ def _gate_repo(
     (tmp_path / "scripts" / "mod_b.py").write_text(
         mod_b_doc + "\n\ndef go():\n    return None\n", encoding="utf-8"
     )
+    _two_components(tmp_path)
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,accepted,Active,,\n'
-        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,accepted,Active,,\n',
+        'IF-001,Provides,CMP-001,CMP-002,"a to b",SR-001,v1,accepted,Active,,\n'
+        'IF-002,Provides,CMP-002,CMP-001,"b to a",SR-001,v1,accepted,Active,,\n',
     )
     (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
@@ -886,12 +896,12 @@ def test_a_declared_seam_with_no_body_warns_plain_and_fails_strict(tmp_path):
     proc = run_traj(root)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert (
-        "WARN - IF IF-001 is declared by its owner 'scripts/mod_a' but states no "
+        "WARN - IF IF-001 is declared by 'scripts/mod_a.py' but states no "
         "`Contract IF-001:` body there" in proc.stderr
     )
     proc = run_traj(root, "--strict")
     assert proc.returncode == 1, proc.stdout + proc.stderr
-    assert "ERROR - IF IF-001 is declared by its owner 'scripts/mod_a'" in proc.stderr
+    assert "ERROR - IF IF-001 is declared by 'scripts/mod_a.py'" in proc.stderr
     assert "IF-002" not in [ln for ln in proc.stderr.splitlines() if "ERROR" in ln][0]
 
 
@@ -905,72 +915,73 @@ def test_a_stated_seam_is_silent_under_the_gate(tmp_path):
     assert "neither declares nor states" not in proc.stderr
 
 
-def test_an_owner_that_never_declares_is_the_reverse_checks_warn_not_the_gates(
-    tmp_path,
-):
-    # The ruled rule is "a DECLARED seam with no body". An owner that declares
-    # nothing is the owner-exact reverse check's warn (the migration list, not a
-    # defect in a stated definition) — the dodge that leaves is on record in
-    # the gate's docstring and is the operator's to promote.
+def test_a_row_no_file_states_is_valid_and_not_warned(tmp_path):
+    # Zero bodies is the pre-build state: the row's `data` cell is the
+    # contract's home until code states it, so neither the gate nor a
+    # reverse check reports it.
     root = _gate_repo(tmp_path, '"""A, silent."""\n')
     proc = run_traj(root, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert (
-        "WARN - IF IF-001 is owned by 'scripts/mod_a', but that module's "
-        "Contracts: line does not declare it" in proc.stderr
-    )
+    assert "IF IF-001" not in proc.stderr
     assert check_trajectory.contract_body_findings(root) == []
 
 
 def test_an_external_owned_seam_is_stated_by_its_far_side(tmp_path):
     # An external party's header is not ours to write: OUR READING of its
-    # surface is stated by the kit module on the row's far side, and a module
-    # that is not the far side may not state it.
+    # surface is stated in a file of a component on the row's far side, by at
+    # most one file, and a file of another component may not state it.
     root = _gate_repo(
         tmp_path, '"""A.\n\nContracts: IF-001\n\nContract IF-001: a."""\n'
     )
     write_ifs(
         root,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,accepted,Active,,\n'
-        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,accepted,Active,,\n'
-        'IF-003,Provides,external:git,scripts/mod_b,"refs",SR-001,v1,accepted,Active,,\n',
+        'IF-001,Provides,CMP-001,CMP-002,"a to b",SR-001,v1,accepted,Active,,\n'
+        'IF-002,Provides,CMP-002,CMP-001,"b to a",SR-001,v1,accepted,Active,,\n'
+        'IF-003,Provides,external:git,CMP-002,"refs",SR-001,v1,accepted,Active,,\n',
     )
     (root / "docs" / "test" / "test-cases.csv").write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
         "TC-001,SR-001;IF-001;IF-002;IF-003,Integration,seam,Full,,ok,Yes,tests/x.py,Accepted\n",
         encoding="utf-8",
     )
-    proc = run_traj(root, "--strict")
-    assert proc.returncode == 1, proc.stdout + proc.stderr
-    assert (
-        "ERROR - IF IF-003 is owned by 'external:git' and no far-side kit module "
-        "states it" in proc.stderr
-    )
-    # The far side declares it: stated, and silent.
+    proc = run_traj(root, "--strict")  # no body yet: valid
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    # The far side states it: silent.
     (root / "scripts" / "mod_b.py").write_text(
-        '"""B.\n\nContracts: IF-002, IF-003\n\nContract IF-002: b.\n'
+        '"""B.\n\nComponent: CMP-002\n\nContracts: IF-002, IF-003\n\n'
+        "Contract IF-002: b.\n"
         'Contract IF-003: our reading of git."""\n\ndef go():\n    return None\n',
         encoding="utf-8",
     )
     proc = run_traj(root, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    # A module that is NOT the far side stating it is a stray declaration.
+    # A file of a component NOT on the far side states it too: two bodies.
     (root / "scripts" / "mod_a.py").write_text(
-        '"""A.\n\nContracts: IF-001, IF-003\n\nContract IF-001: a.\n'
+        '"""A.\n\nComponent: CMP-001\n\nContracts: IF-001, IF-003\n\n'
+        "Contract IF-001: a.\n"
         'Contract IF-003: not mine to state."""\n\ndef run():\n    return None\n',
         encoding="utf-8",
     )
     proc = run_traj(root, "--strict")
     assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "ERROR - IF IF-003 is stated by 2 files" in proc.stderr
+    # ...and alone, it sits in a component the row does not list.
+    (root / "scripts" / "mod_b.py").write_text(
+        '"""B.\n\nComponent: CMP-002\n\nContracts: IF-002\n\n'
+        'Contract IF-002: b."""\n\ndef go():\n    return None\n',
+        encoding="utf-8",
+    )
+    proc = run_traj(root, "--strict")
+    assert proc.returncode == 1, proc.stdout + proc.stderr
     assert (
-        "ERROR - 'scripts/mod_a' declares IF IF-003, an external-owned seam whose "
-        "far side it is not" in proc.stderr
+        "ERROR - IF IF-003 is owned by 'external:git'; its body sits in "
+        "'scripts/mod_a.py', whose header declares CMP-001" in proc.stderr
     )
 
 
-def test_a_stray_declaration_on_the_wrong_module_is_a_finding(tmp_path):
-    # The owner is the ONE declaration site; a second copy on another module
-    # is a second definition waiting to disagree.
+def test_a_second_body_in_another_file_is_a_finding(tmp_path):
+    # At most one file states a contract; a second copy is a second definition
+    # waiting to disagree.
     root = _gate_repo(
         tmp_path,
         '"""A.\n\nContracts: IF-001, IF-002\n\nContract IF-001: a.\nContract IF-002: a copy."""\n',
@@ -978,16 +989,9 @@ def test_a_stray_declaration_on_the_wrong_module_is_a_finding(tmp_path):
     proc = run_traj(root, "--strict")
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert (
-        "ERROR - 'scripts/mod_a' declares IF IF-002, which the registry owns to "
-        "'scripts/mod_b'" in proc.stderr
+        "ERROR - IF IF-002 is stated by 2 files (scripts/mod_a.py, scripts/mod_b.py)"
+        in proc.stderr
     )
-
-
-# The FOURTH shape (adversarial review 2026-08-29, F1): a header the contract
-# GRAMMAR refuses. It used to be caught for the whole scan and answered with
-# "no declaration surface", so ONE malformed body anywhere in the tree — an
-# empty `Contract IF-###:` opener, a body before its marker, a duplicate, a
-# body carrying an HTML comment — silently disarmed the gate for EVERY row.
 
 
 def test_a_refused_header_is_a_finding_and_does_not_disarm_the_other_sources(
@@ -1012,15 +1016,91 @@ def test_a_refused_header_is_a_finding_and_does_not_disarm_the_other_sources(
         for f in findings
     ), findings
     assert any(
-        "IF IF-002 is declared by its owner 'scripts/mod_b' but states no "
+        "IF IF-002 is declared by 'scripts/mod_b.py' but states no "
         "`Contract IF-002:` body there" in f
         for f in findings
     ), findings
-    # ...and the refused source is NOT entered as "declares nothing": that
-    # would hand its rows to the owner-exact reverse check's warn instead.
+    # ...and the refused source is NOT entered as "declares nothing".
     sites, refused = check_trajectory._declaration_sites(root)
-    assert "scripts/mod_a" not in sites, sites
+    assert "scripts/mod_a.py" not in sites, sites
     assert [rel for rel, _msg in refused] == ["scripts/mod_a"], refused
+
+
+def test_a_python_file_listed_outside_the_source_root_is_read_as_a_module(tmp_path):
+    # Review round 1: a Python file `[arch-map] headers` lists outside the
+    # source root was read through the comment-header reader, which finds no
+    # contract in a docstring, so its body escaped the uniqueness and header
+    # rules. It is read through the module reader.
+    root = _gate_repo(
+        tmp_path, '"""A.\n\nContracts: IF-001\n\nContract IF-001: a states it."""\n'
+    )
+    (root / "tools").mkdir()
+    (root / "tools" / "helper.py").write_text(
+        '"""Helper.\n\nComponent: CMP-002\n\nContracts: IF-001\n\n'
+        'Contract IF-001: a second copy."""\n',
+        encoding="utf-8",
+    )
+    (root / "docs" / "stack.ini").write_text(
+        "[paths]\nsrc = scripts\n[arch-map]\nheaders = tools/helper.py\n",
+        encoding="utf-8",
+    )
+    findings = check_trajectory.contract_body_findings(root)
+    assert any(
+        "IF IF-001 is stated by 2 files (scripts/mod_a.py, tools/helper.py)" in f
+        for f in findings
+    ), findings
+
+
+def test_a_body_with_no_marker_is_refused_not_skipped(tmp_path):
+    # Review round 1: a file with a `Contract IF-###:` body and no `Contracts:`
+    # marker was skipped before its bodies were read, a module and a header
+    # file alike, so a second body there escaped uniqueness. The body is read
+    # and the missing marker refused, naming the source.
+    root = _gate_repo(
+        tmp_path, '"""A.\n\nContracts: IF-001\n\nContract IF-001: a states it."""\n'
+    )
+    (root / "scripts" / "mod_c.py").write_text(
+        '"""C.\n\nComponent: CMP-002\n\nContract IF-001: a body with no marker."""\n'
+        "\n\ndef go():\n    return None\n",
+        encoding="utf-8",
+    )
+    (root / "docs" / "conf.toml").write_text(
+        "# Component: CMP-002\n#\n# Contract IF-002: no marker here either.\n",
+        encoding="utf-8",
+    )
+    (root / "docs" / "stack.ini").write_text(
+        "[paths]\nsrc = scripts\n[arch-map]\nheaders = docs/conf.toml\n",
+        encoding="utf-8",
+    )
+    findings = check_trajectory.contract_body_findings(root)
+    for source in ("'scripts/mod_c'", "'docs/conf.toml'"):
+        refused = [f for f in findings if f.startswith(source)]
+        assert len(refused) == 1, (source, findings)
+        assert "no `Contracts:` marker" in refused[0], refused
+
+
+def test_an_unparseable_listed_python_header_is_unreadable_not_a_crash(tmp_path):
+    # Review round 2: a listed Python header reaches `ast.parse` through the
+    # grammar-findings walk, which caught nothing, so one file that will not
+    # parse aborted `interface_findings`. It is the reference's "could not
+    # read" entry, as a module under the source root is.
+    root = _gate_repo(
+        tmp_path, '"""A.\n\nContracts: IF-001\n\nContract IF-001: a states it."""\n'
+    )
+    (root / "tools").mkdir()
+    (root / "tools" / "broken.py").write_text(
+        '"""Broken.\n\nComponent: CMP-002\n"""\n\ndef (:\n', encoding="utf-8"
+    )
+    (root / "docs" / "stack.ini").write_text(
+        "[paths]\nsrc = scripts\n[arch-map]\nheaders = tools/broken.py\n",
+        encoding="utf-8",
+    )
+    findings = check_trajectory.interface_findings(root)
+    assert not any("tools/broken.py" in f for f in findings), findings
+    gen_arch_map = load_script("gen_arch_map")
+    headers = gen_arch_map.header_files(root, [root / "scripts"])
+    reference = gen_arch_map.build_contract_reference([root / "scripts"], headers)
+    assert "- `tools/broken.py` — SyntaxError" in reference, reference
 
 
 def test_a_refused_header_reds_the_cli_under_strict(tmp_path):
@@ -1076,7 +1156,7 @@ def test_an_unreadable_source_is_still_not_a_finding(tmp_path):
     assert check_trajectory.contract_body_findings(root) == []
     sites, refused = check_trajectory._declaration_sites(root)
     assert refused == []
-    assert "scripts/broken" not in sites
+    assert "scripts/broken.py" not in sites and "scripts/mod_a.py" in sites
 
 
 def test_the_gate_shares_the_interfaces_check_opt_out_and_the_files_mode_vacuity(
@@ -1102,8 +1182,8 @@ def test_the_rows_the_gate_did_not_judge_are_counted_in_one_warn_line(tmp_path):
     )
     write_ifs(
         root,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,accepted,Active,,\n'
-        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,accepted,Active,,\n'
+        'IF-001,Provides,CMP-001,CMP-002,"a to b",SR-001,v1,accepted,Active,,\n'
+        'IF-002,Provides,CMP-002,CMP-001,"b to a",SR-001,v1,accepted,Active,,\n'
         'IF-003,Provides,external:git,external:ci,"refs",SR-001,v1,accepted,Active,,\n',
     )
     (root / "docs" / "test" / "test-cases.csv").write_text(
@@ -1113,7 +1193,7 @@ def test_the_rows_the_gate_did_not_judge_are_counted_in_one_warn_line(tmp_path):
     )
     assert check_trajectory.unchecked_contract_rows(root) == [
         "contract bodies not checked for 1 IF row(s): external-owned, and no "
-        "in-tree module on the far side states them"
+        "component on the far side to state them"
     ]
     assert check_trajectory.contract_body_findings(root) == []
     proc = run_traj(root, "--strict")
@@ -1826,32 +1906,38 @@ def _write_tc_citing(tmp_path, if_id):
     )
 
 
+def _write_call_row(tmp_path, owner, requestor):
+    """One `call` row, owned by `owner`, naming `requestor` among its requestors."""
+    (tmp_path / "docs" / "requirements" / "interfaces.toml").write_text(
+        '[interface.IF-001]\nowner = "{}"\nrequestors = ["{}"]\n'
+        'channel = "call"\nstatus = "Drafted"\n'.format(owner, requestor),
+        encoding="utf-8",
+    )
+
+
 def test_cross_cmp_import_with_declared_seam_is_silent(tmp_path):
     """Implements: TC-067"""
+    # A `call` row owned by the imported file's component (CMP-002) naming the
+    # importer's (CMP-001) among its requestors covers the a -> b import.
     _cross_cmp_repo(tmp_path)
-    write_ifs(
-        tmp_path,
-        'IF-001,Consumes,scripts/mod_a,scripts/mod_b,"call",SR-001,v1,Stable,Active,,\n',
-    )
+    _write_call_row(tmp_path, "CMP-002", "CMP-001")
     _write_tc_citing(tmp_path, "IF-001")
     proc = run_traj(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "cross-component import" not in proc.stderr
 
 
-def test_cross_cmp_seam_covers_either_direction(tmp_path):
+def test_cross_cmp_seam_covers_only_its_own_direction(tmp_path):
     """Implements: TC-067"""
-    # The seam row authored from mod_b's side (b -> a) still covers the a -> b
-    # import edge — a seam is one declared relationship, not a directed pair.
+    # The row authored the other way round (CMP-001 owns it, CMP-002 calls)
+    # declares that b calls a, not that a calls b: the a -> b import stays
+    # uncovered (WI-1015's first loophole, closed).
     _cross_cmp_repo(tmp_path)
-    write_ifs(
-        tmp_path,
-        'IF-001,Provides,scripts/mod_b,scripts/mod_a,"call",SR-001,v1,Stable,Active,,\n',
-    )
+    _write_call_row(tmp_path, "CMP-001", "CMP-002")
     _write_tc_citing(tmp_path, "IF-001")
     proc = run_traj(tmp_path, "--strict")
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "cross-component import" not in proc.stderr
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "has no declared IF-### seam" in proc.stderr
 
 
 def test_intra_cmp_import_is_silent(tmp_path):

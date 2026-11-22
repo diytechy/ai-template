@@ -118,6 +118,13 @@ mode = symbols
 # files mode only — whitespace-separated comment tokens whose first line is a
 # file's summary, when yours isn't one of the defaults (# // --):
 # comment-prefixes = # // --
+# The files OUTSIDE [paths] src whose top-of-file comment header declares a
+# `Component:` and may state `Contract IF-###:` bodies (registries, config
+# files, hooks, a directory's README), whitespace-separated, repository-
+# relative. With [paths] src they are the one scan surface the contract gate
+# and the component census read (process.md §8); nothing else outside the
+# source root is read. Absent: none.
+# headers = docs/stack.ini docs/process.toml
 
 # A [step:<name>] may add `paths =` repo-relative, case-sensitive fnmatch
 # globs, comma/whitespace separated; `*` also spans `/`. Rung OR matching

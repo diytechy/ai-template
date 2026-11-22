@@ -408,8 +408,9 @@ def test_the_derived_stage_is_identical_with_the_gate_on_and_off(scaffold):
 
 
 # --- TC-239: the interface-form requirement, both arms (SR-212) ------------------
-# THE ARCH ARM: an interface-form requirement is reached through the modules
-# its design rows name by each boundary interface owned there. SR-001 is
+# THE ARCH ARM: an interface-form requirement is reached through the files its
+# design rows name by each boundary interface whose contract body one of them
+# states. SR-001 is
 # reached by a coincident interface, SR-002 by one bridged by an assumption it
 # cites; SR-003 only by one bridged by another assumption; SR-004 by none;
 # SR-005 by one valid and one invalid interface. SR-006 and SR-007 are of the
@@ -439,14 +440,22 @@ def _design(lid, module, sid):
 
 
 ARCH_LLRS = (
-    _design("LLR-001", "scripts/alpha.py", "SR-001")
-    + _design("LLR-002", "scripts/beta.py", "SR-002")
-    + _design("LLR-003", "scripts/gamma.py", "SR-003")
-    + _design("LLR-004", "scripts/epsilon.py", "SR-004")
-    + _design("LLR-005", "scripts/delta.py", "SR-005")
-    + _design("LLR-006", "scripts/zeta.py", "SR-006")
-    + _design("LLR-007", "scripts/eta.py", "SR-007")
+    _design("LLR-001", "src/alpha.py", "SR-001")
+    + _design("LLR-002", "src/beta.py", "SR-002")
+    + _design("LLR-003", "src/gamma.py", "SR-003")
+    + _design("LLR-004", "src/epsilon.py", "SR-004")
+    + _design("LLR-005", "src/delta.py", "SR-005")
+    + _design("LLR-006", "src/zeta.py", "SR-006")
+    + _design("LLR-007", "src/eta.py", "SR-007")
 )
+
+
+def _stating(*ids):
+    """A source module stating each of `ids`' contract bodies: an interface
+    reaches the requirements of the design rows naming the file that states
+    its body."""
+    bodies = "".join("Contract {}: the outcome line.\n".format(i) for i in ids)
+    return '"""A module.\n\nContracts: {}\n\n{}"""\n'.format(", ".join(ids), bodies)
 
 
 def _interface(iid, owner, *, bridged=(), coincident=None):
@@ -470,14 +479,14 @@ def _interface(iid, owner, *, bridged=(), coincident=None):
 
 
 ARCH_IFS = (
-    _interface("IF-001", "scripts/alpha", coincident="The line shown is the outcome.")
-    + _interface("IF-002", "scripts/beta", bridged=["DA-001"])
-    + _interface("IF-003", "scripts/gamma", bridged=["DA-009"])
-    + _interface("IF-004", "scripts/delta", bridged=["DA-001"])
-    + _interface("IF-005", "scripts/delta", bridged=["DA-009"])
+    _interface("IF-001", "CMP-001", coincident="The line shown is the outcome.")
+    + _interface("IF-002", "CMP-001", bridged=["DA-001"])
+    + _interface("IF-003", "CMP-001", bridged=["DA-009"])
+    + _interface("IF-004", "CMP-001", bridged=["DA-001"])
+    + _interface("IF-005", "CMP-001", bridged=["DA-009"])
     # An internal seam realizes no crossing and reaches nothing.
-    + '\n[interface.IF-006]\nowner = "scripts/epsilon"\nconsumers = '
-    '["scripts/alpha"]\nchannel = "call"\ndata = "x"\nversion = "v1"\n'
+    + '\n[interface.IF-006]\nowner = "CMP-001"\nrequestors = '
+    '["CMP-001"]\nchannel = "call"\ndata = "x"\nversion = "v1"\n'
     'status = "Accepted"\n'
 )
 
@@ -488,6 +497,11 @@ ARCH = {
     LLR_REL: ARCH_LLRS,
     IF_REL: ARCH_IFS,
     DA_REL: _assumption("DA-001") + _assumption("DA-009"),
+    "src/alpha.py": _stating("IF-001"),
+    "src/beta.py": _stating("IF-002"),
+    "src/gamma.py": _stating("IF-003"),
+    "src/delta.py": _stating("IF-004", "IF-005"),
+    "src/epsilon.py": _stating("IF-006"),
 }
 
 ARCH_FAILURES = {

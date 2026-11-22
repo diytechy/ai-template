@@ -74,25 +74,22 @@ policy picks, nothing auto-optimizes.
 
 Component: CMP-008
 
-Contracts: IF-044 — the interface seam this module declares (process.md §8; row
-of record in docs/requirements/interfaces.toml).
-
-Contract IF-044: model routing as a PURE selection library the coordinator calls.
-    `load_registry` reads the declared pair-row model registry and
-    `load_enabled` / `load_enabled_entries` the enable-list (one that exists
-    but cannot be read raises `EnabledUnreadable`); `resolve_enabled` turns
-    those tokens into enabled entries (`ROUTE` or `ROUTE@ACCOUNT`), and
-    `entry_route` / `account_of` name the row and the account an entry
-    selects; `parse_env` turns a row's `Env` cell into the environment a
-    launch merges over its own; `select` returns the chosen entry TOGETHER
-    WITH ITS REASON as data;
-    `escalate` and `failure_action` return the declared next move; `cool` and
-    `available` carry the cooldown. Nothing here launches a session, writes a
-    file or touches git — the coordinator owns every launch, which is what
-    makes each choice auditable and testable without a model. An ABSENT
-    enable-list is the off switch: managed routing does not engage and the
-    caller keeps its single declared agent command, so a fresh scaffold can
-    never suffer a silent model swap.
+Model routing as a PURE selection library the coordinator calls.
+`load_registry` reads the declared pair-row model registry and
+`load_enabled` / `load_enabled_entries` the enable-list (one that exists
+but cannot be read raises `EnabledUnreadable`); `resolve_enabled` turns
+those tokens into enabled entries (`ROUTE` or `ROUTE@ACCOUNT`), and
+`entry_route` / `account_of` name the row and the account an entry
+selects; `parse_env` turns a row's `Env` cell into the environment a
+launch merges over its own; `select` returns the chosen entry TOGETHER
+WITH ITS REASON as data;
+`escalate` and `failure_action` return the declared next move; `cool` and
+`available` carry the cooldown. Nothing here launches a session, writes a
+file or touches git — the coordinator owns every launch, which is what
+makes each choice auditable and testable without a model. An ABSENT
+enable-list is the off switch: managed routing does not engage and the
+caller keeps its single declared agent command, so a fresh scaffold can
+never suffer a silent model swap.
 """
 
 import argparse

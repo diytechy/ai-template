@@ -567,14 +567,17 @@ SW_PAD = 16
 
 
 def _sw_node(raw, module_norm):
-    """Classify an IF endpoint string into (kind, node-key, display). A module is
+    """Classify an IF endpoint string into (kind, node-key, display). A
+    `CMP-###` id is a component, the form a row's endpoints take; a module is
     an arch-map inventory member (matched via the normalized name); a file is a
     path-shaped counterpart (a shared-contract hub like docs/stack.ini); anything
     else (downstream adopter / git / agent CLI) is an external actor."""
+    s = (raw or "").strip()
+    if re.fullmatch(r"CMP-\d+", s):
+        return "component", "cmp:" + s, s
     norm = ct._norm_module(raw)
     if norm in module_norm:
         return "module", "mod:" + norm, module_norm[norm]
-    s = (raw or "").strip()
     if ("/" in s or re.search(r"\.\w{1,5}$", s)) and " " not in s:
         return "file", "file:" + s, s
     return "external", "ext:" + s, s
@@ -697,33 +700,50 @@ def _subtree_modules(cid, direct, children_of):
     return out
 
 
+def _placeable(kind, key):
+    """The key `block_of` takes for a module (`mod:` stripped) or a component
+    node (its whole `cmp:` key); None for a file or party hub."""
+    return {"module": key[4:], "component": key}.get(kind)
+
+
+def _holding(cids, norm, direct, children_of):
+    """The blocks (`cmp:` keys) of the components among `cids` whose subtree
+    holds `norm`: a module, or a component's own `cmp:` key."""
+    own = {c: direct.get(c, []) + ["cmp:" + c] for c in direct}
+    return {"cmp:" + c for c in cids if norm in _subtree_modules(c, own, children_of)}
+
+
 def _wire_blocks(producer, consumer, block_of, in_scope, allow_boundary, externals):
     """The `(producer blocks, consumer blocks)` one seam endpoint PAIR wires at
     this layer, or None when it wires nothing — lifted out of `_layer_edges`
     when the consumers side became a list. Records any file/external hub it
-    reaches in `externals`."""
+    reaches in `externals`. A component endpoint wires like a module, through
+    `block_of` on its whole `cmp:` key, wherever that names a block here."""
     (pk, pkey, pd), (nk, nkey, nd) = producer, consumer
-    pn = pkey.split(":", 1)[1] if pk == "module" else None
-    nn = nkey.split(":", 1)[1] if nk == "module" else None
-    if pk == "module" and nk == "module":  # internal / cross seam
-        if pn not in in_scope or nn not in in_scope:
+    pn, nn = _placeable(pk, pkey), _placeable(nk, nkey)
+
+    def scoped(n):
+        return n in in_scope or (n.startswith("cmp:") and bool(block_of(n)))
+
+    if pn and nn:  # internal / cross seam
+        if not scoped(pn) or not scoped(nn):
             return None
         return block_of(pn), block_of(nn)
     # Boundary seam to a file / external hub: exactly one endpoint is the
     # module, the other is the hub. Keep the producer -> consumer orientation
     # (module producer wires OUT to the hub; module consumer takes the hub's
     # OUT into its IN).
-    if pk == "module":
+    if pn:
         mnorm, (ekey, edisp, ekind) = pn, (nkey, nd, nk)
-    elif nk == "module":
+    elif nn:
         mnorm, (ekey, edisp, ekind) = nn, (pkey, pd, pk)
     else:
         return None  # hub to hub: no module block to wire
-    if mnorm not in in_scope or not allow_boundary(mnorm):
+    if not scoped(mnorm) or not allow_boundary(mnorm):
         return None
     externals[ekey] = (edisp, ekind)
     mkeys = block_of(mnorm)
-    return (mkeys, {ekey}) if pk == "module" else ({ekey}, mkeys)
+    return (mkeys, {ekey}) if pn else ({ekey}, mkeys)
 
 
 def _layer_edges(ifs, inv, block_of, in_scope, allow_boundary):
@@ -888,7 +908,7 @@ def sw_containment(root, mods):
         def block_of(norm):
             if norm in dmods:
                 return {"mod:" + norm}
-            return {"cmp:" + c for c in child_cmps if norm in subtree_modules(c)}
+            return _holding(child_cmps, norm, direct, children_of)
 
         edges, externals = layer_edges(block_of, sub, lambda n: True)
         blocks = [cmp_block(c, emit_cmp_layer(c)) for c in child_cmps]
@@ -904,7 +924,8 @@ def sw_containment(root, mods):
         roots = module_roots.get(norm) or set()
         if roots:
             return {"cmp:" + r for r in roots}
-        return {"mod:" + norm} if norm in inv else set()
+        held = _holding(view["top_roots"], norm, direct, children_of)
+        return held or ({"mod:" + norm} if norm in inv else set())
 
     root_id = new_id()
     root_edges, root_ext = layer_edges(

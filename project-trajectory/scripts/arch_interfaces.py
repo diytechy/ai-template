@@ -11,18 +11,16 @@ hygiene and parse rules). Their inputs come from `arch_inputs`;
 
 Component: CMP-006
 
-Contracts: IF-317 — the interface seam this file declares (process.md §8; row
-of record in docs/requirements/interfaces.toml).
-
-Contract IF-317: the interface-registry rule surface ``trajectory_arch``
-re-exports. Each rule takes a repository root and returns finding strings,
-`[]` when `[checks] interfaces_check = false` or its input is vacuous:
-`interface_findings`, `contract_body_findings`, `unchecked_contract_rows`,
+The rule surface ``trajectory_arch`` re-exports: each rule takes a repository
+root and returns finding strings, `[]` when `[checks] interfaces_check =
+false` or its input is vacuous: `interface_findings`,
+`contract_body_findings`, `unchecked_contract_rows`,
 `if_tc_coverage_findings`, `if_tc_allow_hygiene_findings` and
 `if_tc_allow_parse_findings`. `parse_if_tc_allow(text)` gives the
 allowlist's entries and its declared seed count, and `read_if_tc_allow(root)`
-the ids it exempts with their reasons. The caller decides each finding's
-severity, and the module performs no writes.
+the ids it exempts with their reasons. `contract_homes(root)` gives the one
+file stating each interface's body, for the interface-form gate's reach. The
+caller decides each finding's severity, and the module performs no writes.
 """
 
 import ast
@@ -42,11 +40,14 @@ from arch_inputs import (
     TC_CSV,
     _arch_scan_profile,
     _norm_module,
+    _rel_to,
     arch_inventory,
+    component_headers,
     load_ifs,
     load_seams,
     read_interfaces_check_enabled,
 )
+from kitlib import spine as _kitspine
 
 try:
     import gen_arch_map
@@ -95,41 +96,55 @@ def _contracts_grammar_findings(root):
         found.extend(
             gen_arch_map.contracts_grammar_findings(path.name, tree, text.splitlines())
         )
-    # The file owners — registries, config, hooks — read through the same
-    # grammar (OI-67 slice 2), so a lossy marker in a header is named too.
+    # The header files — non-Python scripts, registries, config, hooks — read
+    # through the same grammar (OI-67 slice 2), so a lossy marker is named too.
+    # One that will not read or parse is the reference's "could not read"
+    # entry (`gen_arch_map.scan_contracts`), as a module above is.
     if hasattr(gen_arch_map, "file_grammar_findings"):
-        for owner, path in _owner_files(root):
-            found.extend(gen_arch_map.file_grammar_findings(owner, path))
+        for label, path in _header_files(root):
+            try:
+                found.extend(gen_arch_map.file_grammar_findings(label, path))
+            except (OSError, UnicodeDecodeError, SyntaxError):
+                continue
     return found
 
 
-def _owner_files(root):
-    """`gen_arch_map.owner_files` over the live registry; `[]` when the
-    generator is absent or predates the file-owner scan."""
-    if gen_arch_map is None or not hasattr(gen_arch_map, "owner_files"):
+def _header_files(root):
+    """`gen_arch_map.header_files` over the declared surface: the non-Python
+    files under the source root and the files `[arch-map] headers` lists; `[]`
+    when the generator is absent or predates the declared surface."""
+    if gen_arch_map is None or not hasattr(gen_arch_map, "header_files"):
         return []
-    return gen_arch_map.owner_files(root, spine_carrier.load(root / IF_CSV, "IF-ID"))
+    src, _mode = _arch_scan_profile(root)
+    return gen_arch_map.header_files(
+        root, [root / src.strip().replace("\\", "/").rstrip("/")]
+    )
 
 
-def _file_owner_declarations(root, out):
-    """`{owner: {IF ids}}` declared by the file owners' headers; a header the
-    grammar refuses is reported into `out` and read as declaring nothing."""
+def _header_declarations(root, out):
+    """`{label: {IF ids}}` declared by the header files; a header the grammar
+    refuses is reported into `out` and read as declaring nothing."""
     declared = {}
-    for owner, path in _owner_files(root):
+    for label, path in _header_files(root):
         try:
             ids, _bodies = gen_arch_map.file_contracts(path)
         except gen_arch_map.ContractsGrammarError as exc:
-            out.append("{}: {}".format(owner, exc))
+            out.append("{}: {}".format(label, exc))
             continue
+        except (OSError, UnicodeDecodeError, SyntaxError):
+            continue  # the reference's own "could not read" list
         if ids:
-            declared[owner] = set(ids)
+            declared[label] = set(ids)
     return declared
 
 
 def interface_findings(root):
     """Architecture-connectivity coverage warns (S5/WI-056; process.md §8), all
     warn-first — the caller prints them and they never change the exit code, at
-    any gate. Returns the warn strings ([] when opted out or vacuous).
+    any gate. Returns the warn strings ([] when opted out or vacuous). A row
+    names components, so connectivity is judged per component
+    (`_component_connectivity`); the uncited-seam count, the marker grammar
+    and a `Contracts:` id naming no row are reported beside it.
 
     Ruled opt-out, default-on: fires even with an empty/absent `interfaces.csv`
     (a multi-module arch-map with no declared seams reads "connectivity
@@ -152,51 +167,7 @@ def interface_findings(root):
             "[checks] interfaces_check = false".format(len(inventory), IF_CSV)
         ]
 
-    inv_norm = {_norm_module(m): m for m in inventory}
-    inv_norm.pop("", None)
-    endpoints, provides, consumes = set(), set(), set()
-    sources, sinks = set(), set()
-    for r in ifs:
-        producer = _norm_module(r["owner"])
-        consumer_ns = {_norm_module(c) for c in r["far"]} & set(inv_norm)
-        endpoints.update(consumer_ns)
-        if producer in inv_norm:
-            endpoints.add(producer)
-        # The honesty valve: a `source`/`sink` FIRST word in Notes marks the
-        # row's own side a deliberate source (consumes nothing) / sink (provides
-        # nothing), so it doesn't breed a boilerplate opposite-facing row. Since
-        # WI-455 the marked side is named by the ROLE rather than by a column:
-        # `source` marks the OWNER, `sink` marks the CONSUMERS — which is what
-        # the two words meant when both were read off `ThisProject`.
-        marker = r["notes"].split()
-        first = marker[0].rstrip(":;,.") if marker else ""
-        if first == "source":
-            sources.add(producer)
-        elif first == "sink":
-            sinks.update(_norm_module(c) for c in r["far"])
-        # Producer -> consumer credit, read off the resolved sides.
-        if producer in inv_norm:
-            provides.add(producer)
-        consumes.update(consumer_ns)
-
-    for n in sorted(inv_norm):
-        module = inv_norm[n]
-        if n not in endpoints:
-            out.append(
-                "connectivity undeclared: module {!r} is in the arch-map but no "
-                "IF-### row names it".format(module)
-            )
-            continue
-        if n not in consumes and n not in sources:
-            out.append(
-                "module {!r} declares no Consumes seam (mark it `source` in its "
-                "IF row Notes if it deliberately consumes nothing)".format(module)
-            )
-        if n not in provides and n not in sinks:
-            out.append(
-                "module {!r} declares no Provides seam (mark it `sink` in its IF "
-                "row Notes if it deliberately provides nothing)".format(module)
-            )
+    out.extend(_component_connectivity(root, inventory, ifs))
 
     # Seam-TC citation: each declared IF id should be cited by >=1 TC (the rung-2
     # seam-TC rule, and process.md §8's "every interface is backed by an SR and a
@@ -248,11 +219,11 @@ def interface_findings(root):
     # an upgrading repo it is the migration list.
     out.extend(_contracts_grammar_findings(root))
 
-    # Docstring citation: a `Contracts: IF-###` a script declares (harvested into
-    # the arch-map) must exist in the registry; and, once the convention is in
-    # use, a registry IF whose OWNER declares no matching citation warns too.
+    # Docstring citation: a `Contracts: IF-###` a script or header declares must
+    # exist in the registry. Where a row's body sits, and that there is one, is
+    # the definition gate's (`contract_body_findings`).
     registry_ids = {r["id"] for r in ifs}
-    file_declared = _file_owner_declarations(root, out)
+    file_declared = _header_declarations(root, out)
     for module, ids in sorted(declared_contracts.items()):
         for iid in sorted(ids - registry_ids):
             out.append(
@@ -265,96 +236,103 @@ def interface_findings(root):
                 "{!r} header declares Contracts: {} but no such IF-### row "
                 "exists".format(owner, iid)
             )
-    if declared_contracts or file_declared:  # reverse direction, once opted in
-        out.extend(
-            _owner_exact_findings(
-                ifs,
-                inv_norm,
-                declared_contracts,
-                file_declared,
-                dict(_owner_files(root)),
-            )
-        )
     return out
 
 
-def _owner_exact_findings(
-    ifs, inv_norm, declared_contracts, file_declared, file_owners
-):
-    """OWNER-EXACT (OI-67 slice 2): the row's owner is the source that must
-    declare it — a module's `Contracts:` line, or a file's header. An id
-    declared on some OTHER module used to pass; that is the id-global hole the
-    build round named, closed here. Every module in the INVENTORY is judged,
-    not only the declaring ones — an owner that declares nothing at all is the
-    plainest miss. An `external:` owner has nothing to scan; a directory with
-    no README or an owner the tree cannot resolve falls back to the id-global
-    read rather than warning about a header nobody could write."""
+def _component_connectivity(root, inventory, ifs):
+    """The connectivity warns over components: each component holding an
+    inventory module by its header that no row names, that owns no row (no
+    Provides) or that is on no row's far side (no Consumes). The `source` and
+    `sink` valves (a FIRST word in Notes) mark the owner and the far side
+    deliberate, so neither breeds a boilerplate opposite-facing row.
+
+    Implements: SR-159, LLR-042
+    """
+    members = _component_members(root, inventory)
+    named, provides, consumes = _seam_roles(ifs)
     out = []
-    by_module = {_norm_module(m): ids for m, ids in declared_contracts.items()}
-    all_declared = set().union(*declared_contracts.values(), *file_declared.values())
-    for r in ifs:
-        owner, iid = r["owner"], r["id"]
-        if not owner or owner.startswith("external:"):
-            continue
-        norm = _norm_module(owner)
-        if norm in inv_norm:
-            if iid not in by_module.get(norm, set()):
-                out.append(
-                    "IF {} is owned by {!r}, but that module's Contracts: line "
-                    "does not declare it — the owner is the one declaration "
-                    "site".format(iid, owner)
-                )
-        elif owner in file_owners:
-            if iid not in file_declared.get(owner, set()):
-                out.append(
-                    "IF {} is owned by {!r}, but that file's header declares "
-                    "no Contracts: line naming it — the owner is the one "
-                    "declaration site".format(iid, owner)
-                )
-        elif iid not in all_declared:
+    for cid in sorted(members):
+        if cid not in named:
             out.append(
-                "IF {} is in the registry but no source declares it via a "
-                "Contracts: line".format(iid)
+                "connectivity undeclared: component {!r} holds {} inventory "
+                "module(s) and no IF-### row names it".format(cid, members[cid])
+            )
+            continue
+        if cid not in consumes:
+            out.append(
+                "component {!r} declares no Consumes seam (mark it `source` in its "
+                "IF row Notes if it deliberately consumes nothing)".format(cid)
+            )
+        if cid not in provides:
+            out.append(
+                "component {!r} declares no Provides seam (mark it `sink` in its IF "
+                "row Notes if it deliberately provides nothing)".format(cid)
             )
     return out
+
+
+def _component_members(root, inventory):
+    """`{CMP id: number of inventory modules}` by the modules' headers."""
+    declared = component_headers(root)[0]
+    mod_cmps = _kitspine.module_components(
+        {path: cid for path, cid in declared.items() if path.endswith(".py")}
+    )
+    members = {}
+    for module in inventory:
+        for cid in mod_cmps.get(_norm_module(module), ()):
+            members[cid] = members.get(cid, 0) + 1
+    return members
+
+
+def _seam_roles(ifs):
+    """`(named, provides, consumes)` endpoint sets over the rows: every
+    endpoint a row names; each owner, and each far side marked `sink`; each
+    far side, and each owner marked `source`."""
+    named, provides, consumes = set(), set(), set()
+    for r in ifs:
+        named.update([r["owner"]] + r["far"])
+        provides.add(r["owner"])
+        consumes.update(r["far"])
+        marker = r["notes"].split()
+        first = marker[0].rstrip(":;,.") if marker else ""
+        valve = {"source": (consumes, [r["owner"]]), "sink": (provides, r["far"])}
+        if first in valve:
+            valve[first][0].update(valve[first][1])
+    return named, provides, consumes
 
 
 # --- the armed definition gate (OI-67 slice 6) --------------------------------
 
 
 def _declaration_sites(root):
-    """`({key: (source_as_written, ids, bodies)}, problems)` — every source in
-    the tree that declares a seam, read through the one harvester the
+    """`({path: (label, ids, bodies, component)}, problems)` — every file on
+    the scan surface that declares a seam, read through the one harvester the
     interface reference uses (`gen_arch_map.scan_contracts`): the modules under
-    the declared scan root, keyed by normalized module path (`scripts/check`),
-    and the file owners the registry names, keyed by the owner as the registry
-    spells it (`docs/stack.ini`, `hooks/pre-commit`). `problems` is
-    `[(source, message)]` for every header the contract GRAMMAR refused, so a
-    refusal is reported rather than read as "declares nothing" — and, above
-    all, rather than DISARMING the gate: the refusal used to be caught for the
-    whole scan and answered with `(None, [])`, so one malformed body anywhere
-    in the tree silenced every other row's verdict too (adversarial review
-    2026-08-29, F1). A refused source is absent from `sites` rather than
-    entered as declaring nothing, which would hand its rows to the reverse
-    check's warn instead of this gate's finding. A source the scan could not
-    READ is deliberately NOT in `problems`: that is the reference's own "could
-    not read" list and `arch_inventory`'s skip. `(None, problems)` when there
-    is no surface to read — files-mode, an absent scan root, no generator
-    beside this script — the `arch_inventory` posture (`_no_surface_reason`)."""
+    the declared scan root and the header files (`_header_files`), each keyed
+    by its repository path, with the component its `Component:` header declares
+    (`component_headers`; None for a file with no valid declaration).
+    `problems` is `[(label, message)]` for every header the contract GRAMMAR
+    refused, so a refusal is reported rather than read as "declares nothing"
+    and never DISARMS the gate (adversarial review 2026-08-29, F1); a refused
+    source is absent from the sites. A source the scan could not READ is the
+    reference's own "could not read" list, not a problem here. `(None,
+    problems)` when there is no surface to read — files-mode, an absent scan
+    root, no generator beside this script (`_no_surface_reason`)."""
     if _no_surface_reason(root):
         return None, []
     src, _mode = _arch_scan_profile(root)
     src_dir = root / src.strip().replace("\\", "/").rstrip("/")
-    owner_files = _owner_files(root)
+    headers = dict(_header_files(root))
     refused = []
     records, _unreadable = gen_arch_map.scan_contracts(
-        [src_dir], owner_files, grammar_errors=refused
+        [src_dir], sorted(headers.items()), grammar_errors=refused
     )
-    file_names = {owner for owner, _path in owner_files}
+    declared = component_headers(root)[0]
     sites = {}
-    for rel, _summary, ids, bodies in records:
-        key = rel if rel in file_names else _norm_module(rel)
-        sites[key] = (rel, set(ids), set(bodies))
+    for label, _summary, ids, bodies in records:
+        path = headers.get(label) or src_dir.parent / (label + ".py")
+        rel = _rel_to(root, path)
+        sites[rel] = (label, set(ids), set(bodies), declared.get(rel))
     return sites, refused
 
 
@@ -377,14 +355,14 @@ def unchecked_contract_rows(root):
     (`contract_body_findings`) passed without judging, and why; `[]` when it
     judged them all or the gate is opted out. Every row, where there is no
     surface to read; otherwise each `external:`-owned row whose far side names
-    no in-tree module to state it. Warn-only: it changes no verdict, it only
-    stops a vacuous pass reading as a checked one."""
+    no component a body's file could declare. Warn-only: it changes no
+    verdict, it only stops a vacuous pass reading as a checked one."""
     if not read_interfaces_check_enabled(root):
         return []
     rows = load_seams(root)
     why = _no_surface_reason(root)
     if why is None:
-        why = "external-owned, and no in-tree module on the far side states them"
+        why = "external-owned, and no component on the far side to state them"
         rows = [
             r
             for r in rows
@@ -397,42 +375,33 @@ def unchecked_contract_rows(root):
 
 
 def contract_body_findings(root):
-    """THE ARMED DEFINITION GATE (OI-67 slice 6). Every interface row must be
-    STATED — declared on its owner's `Contracts:` marker and given a
-    `Contract IF-###:` body there — because under the one-owner shape the body
-    is the definition's only home: a row with no body is an interface with no
-    definition. Returns finding strings; the caller prints them WARN plain and
-    promotes them to ERROR under `--strict`, the `if_tc_coverage_findings`
-    idiom, sharing its `[checks] interfaces_check` opt-out.
+    """THE ARMED DEFINITION GATE: one body per interface, in a file of the
+    right component (variant F, revision 35). Returns finding strings; the
+    caller prints them WARN plain and promotes them to ERROR under `--strict`,
+    the `if_tc_coverage_findings` idiom, sharing its `[checks]
+    interfaces_check` opt-out.
 
-    ONE RULE, FOUR SHAPES. (1) The owner declares the id and states no body —
-    "declared, not stated", the reference's own debt line, now a finding.
-    (2) An `external:`-owned row is declared and stated by the kit module on
-    its FAR SIDE — the consumer that reads the external surface, or the
-    requestor that drives it — because the external party's header is not
-    ours to write and that module is the one in-tree home of OUR READING of
-    the surface; where the far side names several kit modules any one of them
-    may state it. (3) A stray declaration — a source declaring an id the
-    registry owns to a different in-tree source — because the owner is the
-    ONE declaration site and a second copy is a second definition waiting to
-    disagree; a far-side module stating an external-owned row is not stray.
-    (4) A source whose header the contract GRAMMAR refuses — an empty
-    `Contract IF-###:` opener, a body before its marker, a duplicate body, a
-    body carrying an HTML comment — because nobody can read what it states:
-    its declared rows count as unstated, and the refusal is named once per
-    source rather than once per row it takes down with it.
+    THE SURFACE is the shipped scripts under `[paths] src` and the files
+    `docs/stack.ini` `[arch-map] headers` lists (configuration files, registry
+    headers); nothing else is read, so a body quoted in a review record, a
+    plan, the approval snapshot or an example document is never a second one.
 
-    WHAT STAYS A WARN, on record: an owner that declares NOTHING is the
-    owner-exact reverse check's finding (`_owner_exact_findings`, warn-only),
-    not this gate's — the ruled rule is "a DECLARED seam with no body", and
-    promoting the undeclared case would fail every fixture and adopter row
-    whose owner has not yet been headed at all, which is the migration list
-    rather than a defect in a stated definition. The dodge that leaves —
-    never declare, never owe a body — is visible in that warn and in the
-    reference's summary line, and is the owner's to promote. Vacuous where
-    there is no surface (files-mode, an absent scan root), the
-    `arch_inventory` posture; an unreadable source is the reference's own
-    list, not a finding here."""
+    FOUR SHAPES. (1) Uniqueness: at most one file states each `Contract
+    IF-###:` body. Zero is valid — the row's `data` cell is the contract's home
+    until code states it — and two or more is one finding naming every file.
+    (2) Where a body exists, its file's `Component:` header names the row's
+    owner; for an `external:`-owned row it names a component the row lists
+    among its consumers or requestors, since the external party's header is not
+    ours to write and that file holds OUR READING of the surface. (3) A file
+    whose `Contracts:` marker declares an id it states no body for. (4) A
+    source whose header the contract GRAMMAR refuses: its declared rows count
+    as unstated, the refusal named once per source.
+
+    Vacuous where there is no surface (files-mode, an absent scan root); an
+    unreadable source is the reference's own list, not a finding here.
+
+    Implements: SR-159, LLR-398
+    """
     if not read_interfaces_check_enabled(root):
         return []
     sites, refused = _declaration_sites(root)
@@ -440,86 +409,87 @@ def contract_body_findings(root):
         return []
     out = [
         "{!r} declares seams but its header is refused by the contract "
-        "grammar: {} — its declared rows count as unstated".format(rel, msg)
-        for rel, msg in refused
+        "grammar: {} — its declared rows count as unstated".format(label, msg)
+        for label, msg in refused
     ]
-    ifs = load_seams(root)
-    file_names = {owner for owner, _path in _owner_files(root)}
-
-    def site_key(owner):
-        return owner if owner in file_names else _norm_module(owner)
-
-    owner_key = {}
-    for r in ifs:
-        if r["owner"] and not r["owner"].startswith("external:"):
-            owner_key.setdefault(r["id"], site_key(r["owner"]))
-    external_far = {}
-    for r in ifs:
-        iid, owner = r["id"], r["owner"]
-        if not owner:
-            continue  # trace.py's required-cell finding
-        if owner.startswith("external:"):
-            far = [site_key(e) for e in r["far"] if not e.startswith("external:")]
-            external_far[iid] = set(far)
-            out.extend(_external_body_findings(sites, iid, owner, far))
-            continue
-        site = sites.get(site_key(owner))
-        if site is None:
-            continue  # declares nothing, or unresolvable: the reverse check's warn
-        rel, ids, bodies = site
-        if iid in ids and iid not in bodies:
+    stating = {}
+    for rel, (_label, ids, bodies, _cid) in sorted(sites.items()):
+        for iid in sorted(ids - bodies):
             out.append(
-                "IF {} is declared by its owner {!r} but states no `Contract {}:` "
-                "body there — an interface with no definition".format(iid, rel, iid)
+                "IF {} is declared by {!r} but states no `Contract {}:` body "
+                "there — a declaration with no definition".format(iid, rel, iid)
             )
-    out.extend(_stray_declaration_findings(sites, owner_key, external_far))
+        for iid in bodies:
+            stating.setdefault(iid, []).append(rel)
+    out.extend(_uniqueness_findings(stating))
+    rows = {r["id"]: r for r in load_seams(root)}
+    for iid, rels in sorted(stating.items()):
+        if len(rels) == 1 and iid in rows:
+            out.extend(_external_body_findings(rows[iid], rels[0], sites[rels[0]][3]))
     return out
 
 
-def _external_body_findings(sites, iid, owner, far):
-    """The external arm of `contract_body_findings`: `far` is the row's far
-    side as site keys (kit modules only); silent when none faces it or one
-    states the body, a finding otherwise."""
-    if not far or any(k in sites and iid in sites[k][2] for k in far):
-        return []
-    declared = [sites[k][0] for k in far if k in sites and iid in sites[k][1]]
-    if declared:
-        return [
-            "IF {} is owned by {!r}; its far side {!r} declares it but states no "
-            "`Contract {}:` body — our reading of an external surface is stated "
-            "by the kit module that faces it".format(iid, owner, declared[0], iid)
-        ]
+def _uniqueness_findings(stating):
+    """The uniqueness arm of `contract_body_findings`: `stating` is `{IF id:
+    [repository paths stating its body]}`; one finding per id two or more
+    files state.
+
+    Implements: SR-159, LLR-398
+    """
     return [
-        "IF {} is owned by {!r} and no far-side kit module states it — our "
-        "reading of an external surface lives in the header of the module that "
-        "faces it ({})".format(iid, owner, ", ".join(sorted(far)) or "none named")
+        "IF {} is stated by {} files ({}) — at most one file states an "
+        "interface's `Contract {}:` body; a second copy is a second definition "
+        "waiting to disagree".format(iid, len(rels), ", ".join(rels), iid)
+        for iid, rels in sorted(stating.items())
+        if len(rels) > 1
     ]
 
 
-def _stray_declaration_findings(sites, owner_key, external_far):
-    """The stray arm of `contract_body_findings`: a source declaring an id the
-    registry owns to a different in-tree source, or an external-owned id whose
-    far side it is not."""
-    out = []
-    for key, (rel, ids, _bodies) in sorted(sites.items()):
-        for iid in sorted(ids):
-            if iid in external_far:
-                if key not in external_far[iid]:
-                    out.append(
-                        "{!r} declares IF {}, an external-owned seam whose far side "
-                        "it is not — our reading of an external surface is stated "
-                        "by the module that faces it".format(rel, iid)
-                    )
-                continue
-            home = owner_key.get(iid)
-            if home is None or home == key or home not in sites:
-                continue  # unowned (trace's finding), the owner, or unresolvable
-            out.append(
-                "{!r} declares IF {}, which the registry owns to {!r} — the owner is "
-                "the one declaration site; a second copy is a second "
-                "definition".format(rel, iid, sites[home][0])
+def _external_body_findings(row, rel, component):
+    """The header arm of `contract_body_findings` for one row and the one file
+    `rel` stating its body, whose header declares `component` (None for no
+    valid declaration): a local owner must be that component; an
+    `external:`-owned row's component must be on its far side.
+
+    Implements: SR-159, LLR-398
+    """
+    owner, iid = row["owner"], row["id"]
+    shown = component or "no component"
+    if not owner.startswith("external:"):
+        if component == owner:
+            return []
+        return [
+            "IF {} is owned by {}, but its body sits in {!r}, whose header "
+            "declares {} — the body's file belongs to the owner".format(
+                iid, owner, rel, shown
             )
-    return out
+        ]
+    if component in {e for e in row["far"] if not e.startswith("external:")}:
+        return []
+    return [
+        "IF {} is owned by {!r}; its body sits in {!r}, whose header declares {}, "
+        "which the row lists among neither its consumers nor its requestors — "
+        "our reading of an external surface is stated by a file of a component "
+        "that faces it".format(iid, owner, rel, shown)
+    ]
+
+
+def contract_homes(root):
+    """`{IF id: repository path}`: the one file stating each interface's body,
+    for every id exactly one file on the surface states; None with no surface
+    (`files` mode, an absent scan root). The interface-form gate reaches a
+    requirement through it (`assumption_rules.if_reached_srs`).
+
+    Implements: SR-212, LLR-244
+    """
+    sites, _refused = _declaration_sites(root)
+    if sites is None:
+        return None
+    stating = {}
+    for rel, (_label, _ids, bodies, _cid) in sites.items():
+        for iid in bodies:
+            stating.setdefault(iid, []).append(rel)
+    return {iid: rels[0] for iid, rels in stating.items() if len(rels) == 1}
 
 
 # --- seam-TC coverage promotion + its migration allowlist (OI-43 ruled (a),

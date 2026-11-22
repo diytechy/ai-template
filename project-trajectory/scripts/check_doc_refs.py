@@ -76,8 +76,8 @@ registries' Evidence-class cells (tier 3). Stdlib only.
 
 Component: CMP-007
 
-Contracts: IF-008, IF-087 — the interface seams this module declares
-(process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-008 — the interface seam this module declares (process.md §8;
+row of record in docs/requirements/interfaces.toml).
 
 Contract IF-008: LLR-038's obligation delivered as a CLI here. Prints the
     dangling findings it can defend, the untraced count it cannot, and the
@@ -86,14 +86,15 @@ Contract IF-008: LLR-038's obligation delivered as a CLI here. Prints the
     which gates on DANGLING alone — an untraced path is counted and reported and
     never gates. A tier with no scannable input skips cleanly rather than
     failing, so a non-Python stack and a scaffold with no registries both pass.
-Contract IF-087: the scanned-surface pair, offered so a sibling doc lint agrees
-    with this one instead of declaring its own. `doc_files(root)` is the root
-    `*.md` plus `docs/**/*.md` walk with the generated-tree prefixes skipped —
-    their freshness is their generator's `--check`, not a doc lint's.
-    `authored_lines(doc)` yields `(lineno, line)` for the HAND-AUTHORED lines
-    only, dropping everything inside a BEGIN GENERATED / END GENERATED marker
-    block, because a generated block's tokens are not prose and must not be
-    judged as if they were.
+
+The scanned-surface pair, offered so a sibling doc lint agrees
+with this one instead of declaring its own. `doc_files(root)` is the root
+`*.md` plus `docs/**/*.md` walk with the generated-tree prefixes skipped —
+their freshness is their generator's `--check`, not a doc lint's.
+`authored_lines(doc)` yields `(lineno, line)` for the HAND-AUTHORED lines
+only, dropping everything inside a BEGIN GENERATED / END GENERATED marker
+block, because a generated block's tokens are not prose and must not be
+judged as if they were.
 """
 
 import argparse

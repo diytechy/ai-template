@@ -72,6 +72,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import arch_interfaces  # noqa: E402
 import assumption_rules as rules  # noqa: E402
 import record_observation  # noqa: E402
 import trace  # noqa: E402
@@ -118,7 +119,9 @@ def step_findings(root, step, reg):
     if step == "crossing-allocation":
         return rules.crossing_gate_findings(reg.srs, reg.das, reg.bifs)
     if step == "interface-allocation":
-        return rules.interface_form_gate_findings(reg.srs, reg.ifs, reg.llrs)
+        return rules.interface_form_gate_findings(
+            reg.srs, reg.ifs, reg.llrs, arch_interfaces.contract_homes(Path(root))
+        )
     return _evidence_findings(root, reg)
 
 

@@ -236,11 +236,11 @@ def test_knowledge_ref_mixed_cell_checks_only_the_pack(scaffold):
 
 def write_if(root, component):
     (root / "docs" / "requirements" / "interfaces.toml").write_text(
-        # The OI-67 shape: the owner is the providing THING (`src/demo`, which
-        # LLR-001's Module names, so the seam reaches the spine through it),
-        # never the requirement id the pre-OI-67 row carried.
+        # The revision 35 shape: the owner is a component id, the far side a
+        # declared party; the `component` cell under test is the retired one.
+        "# External party: downstream\n\n"
         "[interface.IF-001]\n"
-        'owner = "src/demo"\n'
+        'owner = "CMP-001"\n'
         'consumers = ["external:downstream"]\n'
         'channel = "call"\n'
         'version = "v1"\n'
@@ -261,13 +261,15 @@ def test_if_component_tag_must_resolve(scaffold):
     assert "IF IF-001 Component tag references unknown CMP-404" in report_of(scaffold)
 
 
-def test_if_component_tag_resolving_passes(scaffold):
+def test_an_if_component_tag_is_a_retired_cell_even_when_it_resolves(scaffold):
+    """An interface's place in the component view is derived from its
+    endpoints (WI-1022), so the cell itself is the finding, resolving or not."""
     make_minimal_project(scaffold)
     write_cmps(scaffold, row("CMP-001"))
     write_if(scaffold, "CMP-001")
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "component-findings=0" in proc.stdout
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "carries the retired `component` cell (set on IF-001)" in report_of(scaffold)
 
 
 # --- the module -> component join, one home (WI-429, WI-1005) ----------------

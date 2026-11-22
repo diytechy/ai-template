@@ -16,9 +16,8 @@ project-trajectory/scripts/agent_route.py	_rows_from_csv	17	34
 project-trajectory/scripts/agent_route.py	escalate	16	72
 project-trajectory/scripts/agent_route.py	load_registry	24	65
 project-trajectory/scripts/agent_session.py	summarize_session_line	29	24
-project-trajectory/scripts/arch_interfaces.py	contract_body_findings	22	40
 project-trajectory/scripts/arch_interfaces.py	if_tc_allow_hygiene_findings	27	54
-project-trajectory/scripts/arch_interfaces.py	interface_findings	37	89
+project-trajectory/scripts/arch_interfaces.py	interface_findings	16	43
 project-trajectory/scripts/arch_tags.py	codesymbol_crosscheck_findings	29	43
 project-trajectory/scripts/assumption_rules.py	_classify	16	24	2026-10-03, WI-723 (3b872471): joint-delivery classification adds sibling-reference validation and class precedence to the sole classification parse (crossing to 16); WI-729 (17c54c2f) adds shared-need validation at the same score, so a declared sibling alone cannot establish joint delivery.
 project-trajectory/scripts/baseline_snapshot.py	_authorised_registries	19	20	arrived with WI-571 (the scoped snapshot copy) and was never stamped; ABSORBED FROM TRUNK, not introduced here: measured over the untouched tree at the WI-572 integration base 4d0b972d, where `check_complexity` already FAILED on this row, so the census this branch re-stamped was stale before the branch existed. WI-572 does not touch this function; the stamp records the debt so the loosening is a reviewed act rather than a side effect of regenerating. Repair is owed on trunk.
@@ -70,7 +69,7 @@ project-trajectory/scripts/dispatch.py	_admission	18	29
 project-trajectory/scripts/dispatch.py	_advance	18	28	RE-STAMPED DOWN 20 -> 18 (WI-657): landed with the redesign-baseline repair sitting (22b21b06, 2026-09-06) and was never recorded; it replaces the absorbed 16 -> 20 reason, which described the WI-552 close.
 project-trajectory/scripts/dispatch.py	_poll	21	34	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): 20 -> 21 with the redesign-baseline repair sitting (22b21b06, 2026-09-06): the `preserved` verb a code-restart drain reports. Repair is owed on trunk.
 project-trajectory/scripts/dispatch.py	run	21	48	RE-STAMPED DOWNWARD 25 -> 21 (SLOC 52 -> 43) 2026-09-04: the tick's pause arm moved OUT of `run` — under §5.6 a pause forbids the CLAIM and nothing else, so the banner-and-return block at the top of the loop became one read handed to `_admit` (`_paused_exit` owns the run's end). Recorded down in the same commit, per this file's rule. Reason in docs/log.d/2026-09-04-finished-lane-round-and-pause-resume.md
-project-trajectory/scripts/gen_arch_map.py	_contract_bodies	32	55
+project-trajectory/scripts/gen_arch_map.py	_contract_bodies	22	38
 project-trajectory/scripts/gen_arch_map.py	_seam_edges	18	15
 project-trajectory/scripts/gen_arch_map.py	build_contract_reference	24	53
 project-trajectory/scripts/gen_arch_map.py	build_dependency_diagram	17	40
@@ -80,7 +79,6 @@ project-trajectory/scripts/gen_arch_map.py	first_comment_summary	18	14
 project-trajectory/scripts/gen_arch_map.py	internal_imports	39	25
 project-trajectory/scripts/gen_arch_map.py	main	40	209
 project-trajectory/scripts/gen_arch_map.py	module_bindings	21	17
-project-trajectory/scripts/gen_arch_map.py	scan_contracts	19	35
 project-trajectory/scripts/gen_arch_map.py	scan_module	19	44
 project-trajectory/scripts/gen_cases.py	all_pairs	35	35
 project-trajectory/scripts/gen_cases.py	main	23	67
@@ -123,7 +121,7 @@ project-trajectory/scripts/rendering/traj_graph.py	_seg_hits_rect	19	21	RE-KEYED
 project-trajectory/scripts/rendering/traj_render.py	_drill_layer_svg	28	140	RE-KEYED 2026-09-27 (WI-657): the module moved unchanged under rendering/ at cde260dd and the row stayed at its old path; the same score, not a bump.
 project-trajectory/scripts/rendering/traj_views.py	_layer_edges	26	26	RE-KEYED 2026-09-27 (WI-657): the module moved unchanged under rendering/ at cde260dd and the row stayed at its old path; the same score, not a bump.
 project-trajectory/scripts/rendering/traj_views.py	arch_icicle	53	153	RE-KEYED 2026-09-27 (WI-657): the module moved unchanged under rendering/ at cde260dd and the row stayed at its old path; the same score, not a bump.
-project-trajectory/scripts/rendering/traj_views.py	sw_containment	23	190	RE-KEYED 2026-09-27 (WI-657): the module moved unchanged under rendering/ at cde260dd and the row stayed at its old path; the same score, not a bump.
+project-trajectory/scripts/rendering/traj_views.py	sw_containment	20	191	RE-KEYED 2026-09-27 (WI-657): the module moved unchanged under rendering/ at cde260dd and the row stayed at its old path; the same score, not a bump.
 project-trajectory/scripts/rendering/traj_views.py	when_view	22	74	RE-KEYED 2026-09-27 (WI-657): the module moved unchanged under rendering/ at cde260dd and the row stayed at its old path; the same score, not a bump.
 project-trajectory/scripts/schedule.py	hard_path_lengths	20	32
 project-trajectory/scripts/schedule.py	kind_of	16	17
@@ -140,9 +138,8 @@ project-trajectory/scripts/trace.py	build_forest	17	44	RE-STAMPED DOWN 19 -> 17 
 project-trajectory/scripts/trace.py	frame_findings	20	23
 project-trajectory/scripts/trace.py	hat_findings	21	44
 project-trajectory/scripts/trace.py	if_carriage_advisories	25	48
-project-trajectory/scripts/trace.py	if_endpoint_class_advisories	34	42
 project-trajectory/scripts/trace.py	integrity_findings	17	17
-project-trajectory/scripts/trace.py	interface_findings	30	58
+project-trajectory/scripts/trace.py	interface_findings	24	48
 project-trajectory/scripts/trace.py	main	20	205	RE-STAMPED DOWN 23 -> 20 (WI-657): WI-633 (6ee918f5) routed two approval-scope branches to `_approval_body`; never recorded.
 project-trajectory/scripts/trace.py	mermaid_graph	31	45
 project-trajectory/scripts/trace.py	reaccept_model	34	119

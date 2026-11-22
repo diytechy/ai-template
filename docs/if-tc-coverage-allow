@@ -18,8 +18,8 @@
 # GRAMMAR: one `IF-###` id per non-blank, non-comment line, optionally followed
 # by ` — <reason>`. A line whose first token does not parse as an IF-### id
 # declares nothing and is dropped (fail-soft in the loud direction — the
-# `docs/provenance-allow` rule). The 116 seeded entries below carry no per-line
-# reason because they share ONE reason, stated once here rather than 116 times:
+# `docs/provenance-allow` rule). The 99 seeded entries below carry no per-line
+# reason because they share ONE reason, stated once here rather than 99 times:
 # they are the SEEDED baseline, not a judgment call made row by row. A reason
 # stamped on a FUTURE addition should say what it says for every other ratchet
 # in this repo — why the seam is legitimately still untested and what would
@@ -29,10 +29,14 @@
 # review, W-4): the key below names how many of the entries are the seeded
 # baseline. Everything past it is an ADDITION — it must carry its own
 # ` — <reason>` or it suppresses nothing, and `if_tc_allow_hygiene_findings`
-# reports the growth either way. The exact 116-id set is also pinned in
+# reports the growth either way. The exact 99-id set is also pinned in
 # tests/test_trajectory_arch.py, so a silent swap inside the baseline is a
 # failing test rather than a diff nobody reads.
-# seed-count: 116
+# seed-count: 99
+#
+# PRUNED 2026-11-21 (WI-1022): seventeen seed entries whose interface rows
+# retired as `call` seams inside one component (116 -> 99), and the addition
+# IF-173, which retired with them.
 #
 # THE SEEDING MEASUREMENT (basis for the count below): 120 of 130 live IF
 # seams cited by no TC, reproduced with:
@@ -98,7 +102,6 @@ IF-040
 IF-041
 IF-042
 IF-043
-IF-044
 IF-045
 IF-046
 IF-047
@@ -106,19 +109,11 @@ IF-048
 IF-049
 IF-050
 IF-051
-IF-052
-IF-053
 IF-054
-IF-055
 IF-056
 IF-057
-IF-058
 IF-059
 IF-060
-IF-061
-IF-064
-IF-065
-IF-066
 IF-068
 IF-069
 IF-070
@@ -126,7 +121,6 @@ IF-071
 IF-072
 IF-073
 IF-074
-IF-076
 IF-077
 IF-078
 IF-079
@@ -137,14 +131,10 @@ IF-083
 IF-084
 IF-085
 IF-086
-IF-087
 IF-088
 IF-089
 IF-092
-IF-097
 IF-098
-IF-099
-IF-100
 IF-102
 IF-103
 IF-104
@@ -155,7 +145,6 @@ IF-108
 IF-109
 IF-110
 IF-111
-IF-113
 IF-114
 IF-115
 IF-117
@@ -171,8 +160,6 @@ IF-132
 IF-133
 IF-134
 IF-135
-IF-136
-IF-137
 
 # --- ADDITIONS PAST THE SEED (OI-67 slice 4, the split, 2026-08-29) ---------
 # Each row below was minted by splitting a two-way or bundled row into one row
@@ -211,7 +198,6 @@ IF-169 — split from IF-020 (the PreToolUse verdict payload on stdout); covered
 IF-170 — split from IF-020 (the gate's decision log under out/); covered when a TC cites the log line format or the banner's count of it
 IF-171 — minted for a kind no row stated (schedule.py's own subcommand argv); covered when a TC cites the scheduler CLI's invocation arm
 IF-172 — minted for a kind no row stated (the frontier and simulation listings the scheduler prints); covered when a TC cites the printed frontier
-IF-173 — minted for a kind no row stated (integrate's in-process call surface, the reverse of IF-055); covered when a TC cites the dispatcher's or the handback's use of it
 # --- INHERITED, closed by a reasoned entry at the same sitting: -------------
 IF-144 — the reporting protocol stated once (check.py's exit-code row); no single TC cites it because the property is measured across every checker's own tests, and a TC for the protocol census has not been minted; closes when one is
 IF-179 — declared 2026-09-05 for the rollup generator's off-trunk refusal reading the trunk name through agent_common (7ea3cce7, LLR-208's exclusive-writer clause enforced); driven by tests/test_verdict_record.py::test_a_work_branch_cannot_write_the_rollup_but_the_trunk_step_can, which TC-206 cites since WI-595 — the seam row itself is not yet named there. Burn-down: name IF-179 in TC-206's Evidence at the LLR-208/TC-206 amendment adjudication (WI-599 closed before the row existed; the next amendment lane names it).

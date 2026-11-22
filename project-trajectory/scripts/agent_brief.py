@@ -8,10 +8,7 @@ those briefs render live here together.
 
 Component: CMP-008
 
-Contracts: IF-260 — the interface seam this file declares (process.md §8; row
-of record in docs/requirements/interfaces.toml).
-
-Contract IF-260: ``agent_loop`` imports the brief constructors, prompt-routing
+``agent_loop`` imports the brief constructors, prompt-routing
 helpers, and assignment evidence readers from this module and re-exports their
 historical names. Inputs are repository paths, registry rows, routing values,
 and prompt templates; outputs are prompt text or the small derived facts used

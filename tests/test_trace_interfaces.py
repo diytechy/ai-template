@@ -17,9 +17,12 @@ completeness rule.
 Implements: TC-244
 """
 
+import re
+
 import pytest
 
-from conftest import KIT, SCRIPTS, make_minimal_project, record_ids, run_py
+from conftest import KIT, SCRIPTS, record_ids, run_py
+from conftest import make_minimal_project as _make_minimal_project
 
 
 # --- WI-056: the IF-### interface-seam tier (process.md §8) ---------------------
@@ -73,13 +76,14 @@ def _ifs_toml(body):
         # writes TOML directly.
         out.append('channel = "call"')
         consumers = [
-            c.strip() for c in (r.get("Counterpart") or "").split(";") if c.strip()
+            _endpoint(c) for c in (r.get("Counterpart") or "").split(";") if c.strip()
         ]
         out.append(
             "consumers = [{}]".format(
                 ", ".join('"{}"'.format(c.replace('"', '\\"')) for c in consumers)
             )
         )
+        r["ThisProject"] = _owner_cell(r.get("ThisProject"))
         for col, key in keys:
             value = (r.get(col) or "").strip()
             if value:
@@ -88,9 +92,63 @@ def _ifs_toml(body):
     return "\n".join(out) + "\n"
 
 
+# The parties the fixtures' rows name, declared the way the registry header
+# declares them (revision 35): one `# External party:` line each.
+PARTY_HEADER = (
+    "# External party: git\n"
+    "# External party: downstream adopter\n"
+    "# External party: agent CLI\n\n"
+)
+
+LIVE_COMPONENT = """
+[component.CMP-001]
+name = "Demo"
+category = "software"
+status = "Drafted"
+"""
+
+
+def make_minimal_project(root):
+    """The conftest project with one live component row, CMP-001: every
+    interface endpoint here names it or a declared party (revision 35)."""
+    _make_minimal_project(root)
+    _live_component(root)
+    record_ids(root)
+
+
+def _live_component(scaffold):
+    """The scaffold's component registry with one live row, CMP-001: an
+    endpoint names a live component (revision 35), so a row has one to name."""
+    cmps = scaffold / "docs" / "requirements" / "components.toml"
+    text = cmps.read_text(encoding="utf-8") if cmps.exists() else ""
+    if "[component.CMP-001]" not in text:
+        cmps.write_text(text + LIVE_COMPONENT, encoding="utf-8")
+
+
+def _endpoint(value):
+    """A fixture body's endpoint in the form an interface row takes since
+    revision 35. The bodies keep the spelling they were written in: a path
+    names the module's component, CMP-001 in this scaffold, and a bare actor
+    name is that `external:` party. An `external:` party, a component id and
+    an id the test is ABOUT pass through as written."""
+    v = value.strip()
+    if v.startswith("external:") or re.match(r"^[A-Z]+-\d+$", v):
+        return v
+    if "/" in v:
+        return "CMP-001"
+    return "external:" + v
+
+
+def _owner_cell(cell):
+    """A fixture body's owner cell with each `;`-separated endpoint in its
+    revision 35 form (`_endpoint`), empty staying empty."""
+    return ";".join(_endpoint(v) for v in (cell or "").split(";") if v.strip())
+
+
 def _write_ifs(scaffold, body):
+    _live_component(scaffold)
     (scaffold / "docs" / "requirements" / "interfaces.toml").write_text(
-        _ifs_toml(body), encoding="utf-8"
+        PARTY_HEADER + _ifs_toml(body), encoding="utf-8"
     )
     record_ids(scaffold)
 
@@ -141,28 +199,6 @@ def test_if_tier_integrity(scaffold):
     assert "malformed" in _report(scaffold)
 
 
-def test_if_endpoint_advisory_is_warn_only(scaffold):
-    # A module-shaped owner that no design row's `Module` names and whose header
-    # declares no `Implements:` line traces to no requirement — warn-only since
-    # OI-67, because a file-owned or external-owned seam legitimately reaches no
-    # design row and the class that does is a debt list, not a gate.
-    make_minimal_project(scaffold)
-    _write_ifs(
-        scaffold, 'IF-001,Provides,src/nowhere,git,"x",SR-001,v1,Stable,Active,,\n'
-    )
-    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "this seam traces to no requirement" in proc.stdout
-    assert "endpoint advisories" in _report(scaffold).lower()
-    # The other half: the SAME body owned by the module LLR-001 names is silent,
-    # so the advisory is the reachability judgement and not a rule that fires on
-    # every row.
-    _write_ifs(scaffold, 'IF-001,Provides,src/demo,git,"x",SR-001,v1,Stable,Active,,\n')
-    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "traces to no requirement" not in proc.stdout
-
-
 def test_a_row_with_no_in_tree_endpoint_is_a_strict_finding(scaffold):
     # Adversarial review 2026-08-29, F2. An `external:` owner is exempt from
     # the reachability advisory (an external party has no design row) — and
@@ -173,8 +209,9 @@ def test_a_row_with_no_in_tree_endpoint_is_a_strict_finding(scaffold):
     # none). A crossing between two external parties is `external.toml`'s row,
     # not this tier's.
     make_minimal_project(scaffold)
+    _live_component(scaffold)
     req = scaffold / "docs" / "requirements"
-    all_external = (
+    all_external = PARTY_HEADER + (
         "[interface.IF-001]\n"
         'owner = "external:git"\n'
         'consumers = ["external:downstream adopter"]\n'
@@ -193,7 +230,7 @@ def test_a_row_with_no_in_tree_endpoint_is_a_strict_finding(scaffold):
     # is external".
     (req / "interfaces.toml").write_text(
         all_external.replace(
-            'consumers = ["external:downstream adopter"]', 'consumers = ["src/demo"]'
+            'consumers = ["external:downstream adopter"]', 'consumers = ["CMP-001"]'
         ),
         encoding="utf-8",
     )
@@ -237,7 +274,7 @@ def test_clean_if_row_trips_none_of_the_new_rules(scaffold):
         "ceiling 160",
         "has empty required field",
         "closed vocabulary",
-        "resolves to no module, file or directory",
+        "is not a component id",
         "carries the retired",
     ):
         assert noise not in out, noise
@@ -254,8 +291,8 @@ def test_a_retired_cell_is_a_strict_finding(scaffold):
     # per-row copy of one column's finding says the same thing N times.
     make_minimal_project(scaffold)
     (scaffold / "docs" / "requirements" / "interfaces.toml").write_text(
-        "[interface.IF-001]\n"
-        'owner = "src/demo"\n'
+        PARTY_HEADER + "[interface.IF-001]\n"
+        'owner = "CMP-001"\n'
         'consumers = ["external:git"]\n'
         'channel = "call"\n'
         'contract = "the definition, in the wrong home"\n'
@@ -273,8 +310,8 @@ def test_a_retired_cell_is_a_strict_finding(scaffold):
     assert "legacy `contract` cell" not in proc.stdout
     # Delete them and the row is clean: the finding is the cell, not the row.
     (scaffold / "docs" / "requirements" / "interfaces.toml").write_text(
-        "[interface.IF-001]\n"
-        'owner = "src/demo"\n'
+        PARTY_HEADER + "[interface.IF-001]\n"
+        'owner = "CMP-001"\n'
         'consumers = ["external:git"]\n'
         'channel = "call"\n'
         'version = "v1"\n'
@@ -298,9 +335,10 @@ def test_a_retired_column_in_a_legacy_csv_header_is_a_strict_finding(scaffold):
     req = scaffold / "docs" / "requirements"
     (req / "interfaces.toml").unlink()  # the CSV is the ONLY home, not a second
     (req / "interfaces.csv").write_text(
+        "# External party: git\n"
         "IF-ID,Owner,Consumers,Channel,Data,Contract,Version,Status\n"
-        "IF-001,src/demo,external:git,call,the ref state,,v1,Drafted\n"
-        "IF-002,src/demo,external:git,call,the commit range,,v1,Drafted\n",
+        "IF-001,CMP-001,external:git,call,the ref state,,v1,Drafted\n"
+        "IF-002,CMP-001,external:git,call,the commit range,,v1,Drafted\n",
         encoding="utf-8",
     )
     record_ids(scaffold)
@@ -313,9 +351,10 @@ def test_a_retired_column_in_a_legacy_csv_header_is_a_strict_finding(scaffold):
     assert report.count("carries the retired") == 1, report
     # Drop the column and the registry is clean — the finding is the column.
     (req / "interfaces.csv").write_text(
+        "# External party: git\n"
         "IF-ID,Owner,Consumers,Channel,Data,Version,Status\n"
-        "IF-001,src/demo,external:git,call,the ref state,v1,Drafted\n"
-        "IF-002,src/demo,external:git,call,the commit range,v1,Drafted\n",
+        "IF-001,CMP-001,external:git,call,the ref state,v1,Drafted\n"
+        "IF-002,CMP-001,external:git,call,the commit range,v1,Drafted\n",
         encoding="utf-8",
     )
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
@@ -337,9 +376,9 @@ def test_an_empty_retired_cell_and_a_nested_sub_table_are_refused_by_the_carrier
     # carrier fork — so `--strict` fails either way.
     make_minimal_project(scaffold)
     ifs = scaffold / "docs" / "requirements" / "interfaces.toml"
-    clean = (
+    clean = PARTY_HEADER + (
         "[interface.IF-001]\n"
-        'owner = "src/demo"\n'
+        'owner = "CMP-001"\n'
         'consumers = ["external:git"]\n'
         'channel = "call"\n'
         'data = "the ref state"\n'
@@ -372,8 +411,8 @@ def test_channel_refuses_an_unknown_value_as_a_warn(scaffold):
     # vocabulary does not contain.
     make_minimal_project(scaffold)
     (scaffold / "docs" / "requirements" / "interfaces.toml").write_text(
-        "[interface.IF-001]\n"
-        'owner = "src/demo"\n'
+        PARTY_HEADER + "[interface.IF-001]\n"
+        'owner = "CMP-001"\n'
         'consumers = ["external:git"]\n'
         'channel = "analog"\n'
         'data = "reads the ref state"\n'
@@ -476,8 +515,8 @@ def test_missing_required_if_field_is_a_warn(scaffold):
     """Implements: TC-189"""
     make_minimal_project(scaffold)
     (scaffold / "docs" / "requirements" / "interfaces.toml").write_text(
-        "[interface.IF-001]\n"
-        'owner = "src/demo"\n'
+        PARTY_HEADER + "[interface.IF-001]\n"
+        'owner = "CMP-001"\n'
         'consumers = ["external:git"]\n'
         'data = "reads the ref state"\n'
         'version = "v1"\n'
@@ -552,47 +591,16 @@ def test_data_over_the_length_ceiling_warns(scaffold):
     assert "ceiling 160" not in out
 
 
-def test_untagged_endpoint_advisory_classifies_instead_of_staying_silent(scaffold):
-    """The coverage fix the part-A data pack demands.
-
-    45 of 113 live rows have an endpoint carrying no component tag, which makes
-    `cross_component_findings` VACUOUS for them — and the containment rule that
-    was assumed to cover them CANNOT, because it ranges over arch-map modules
-    while these endpoints are data files, directories and external actors. Both
-    checks passed and neither was saying anything. This advisory does not
-    make them findings; it makes them VISIBLE, and it names individually only
-    the endpoints that resolve to nothing, which are the only actionable ones."""
-    make_minimal_project(scaffold)
-    out = _warn_run(
-        scaffold,
-        'IF-001,Provides,src/demo,docs/status.md,"writes",SR-001,v1,Stable,Active,,\n'
-        'IF-002,Provides,src/demo,external:downstream adopter,"cli",'
-        "SR-001,v1,Stable,Active,,\n"
-        'IF-003,Provides,src/demo,docs/gone/nowhere.md,"x",SR-001,v1,Stable,Active,,\n',
-    )
-    assert "IF endpoint coverage:" in out
-    assert "1 resolve to a file or directory in the tree" in out
-    assert "1 are marked `external:`" in out
-    assert "1 resolve to nothing" in out
-    # Only the unresolved one is named individually.
-    assert "IF IF-003 Consumers='docs/gone/nowhere.md' resolves to no module" in out
-    assert "IF IF-001 Consumers" not in out
-    assert "IF IF-002 Consumers" not in out
-
-
 def test_semicolon_joined_endpoint_is_several_endpoints(scaffold):
-    # A `;`-joined cell names SEVERAL endpoints; reading it as one reported a
-    # real three-module seam (IF-097) as a dangling path. IF-097 KEPT this shape
-    # at the 2026-08-15 rework rather than splitting into three rows: the three
-    # consumers share ONE contract, and three rows would be three copies of it.
+    # A far side is a LIST, and each entry is judged on its own: one entry
+    # outside the two forms is one finding naming it, never the whole cell.
     make_minimal_project(scaffold)
-    out = _warn_run(
-        scaffold,
-        'IF-001,Provides,src/demo,"docs/status.md;docs/log.md","x",'
-        "SR-001,v1,Stable,Active,,\n",
+    out = _toml_finding_run(
+        scaffold, _if_row(consumers='["CMP-001", "external:git", "docs/log.md"]')
     )
-    assert "2 resolve to a file or directory in the tree" in out
-    assert "resolve to nothing" in out and "0 resolve to nothing" in out
+    assert "IF IF-001 Consumers='docs/log.md' is not a component id" in out
+    assert "Consumers='CMP-001'" not in out
+    assert "Consumers='external:git'" not in out
 
 
 # --- 2026-08-15 interface rework, step 2: endpoint validation ------------------
@@ -603,44 +611,38 @@ def test_semicolon_joined_endpoint_is_several_endpoints(scaffold):
 # from one.
 
 
-def test_actor_shaped_endpoint_without_the_marker_is_now_named(scaffold):
+def test_an_endpoint_outside_both_forms_is_a_strict_finding(scaffold):
+    # An actor's name without the `external:` prefix is neither a component nor
+    # a party: one finding naming the cell, at the strict tier.
     make_minimal_project(scaffold)
-    out = _warn_run(
-        scaffold,
-        'IF-001,Provides,src/demo,agent CLI,"x",SR-001,v1,Stable,Active,,\n',
-    )
-    assert "IF IF-001 Consumers='agent CLI' resolves to no module" in out
-    assert "mark it `external:<actor>`" in out
-    assert "0 are marked `external:`" in out
+    out = _toml_finding_run(scaffold, _if_row(consumers='["agent CLI"]'))
+    assert "IF IF-001 Consumers='agent CLI' is not a component id" in out
 
 
-def test_the_external_marker_silences_it_and_is_counted(scaffold):
+def test_a_declared_party_passes_and_an_undeclared_one_is_named(scaffold):
     make_minimal_project(scaffold)
-    out = _warn_run(
-        scaffold,
-        'IF-001,Provides,src/demo,external:agent CLI,"x",SR-001,v1,Stable,Active,,\n',
+    out = _toml_warn_run(scaffold, _if_row(consumers='["external:agent CLI"]'))
+    assert "Consumers=" not in out
+    out = _toml_finding_run(scaffold, _if_row(consumers='["external:somebody"]'))
+    assert (
+        "IF IF-001 Consumers='external:somebody' names a party the registry "
+        "header does not declare" in out
     )
-    assert "resolves to no module" not in out
-    assert "1 are marked `external:`" in out
 
 
-def test_a_bare_external_marker_names_nobody_and_still_warns(scaffold):
-    # The one way the marker could be worse than the guess it replaced: a cell
-    # that claims externality without saying what is on the far side.
+def test_a_bare_external_marker_names_nobody_and_is_a_finding(scaffold):
+    # A cell that claims externality without saying what is on the far side.
     make_minimal_project(scaffold)
-    out = _warn_run(
-        scaffold, 'IF-001,Provides,src/demo,external:,"x",SR-001,v1,Stable,Active,,\n'
-    )
-    assert "IF IF-001 Consumers='external:' resolves to no module" in out
+    out = _toml_finding_run(scaffold, _if_row(consumers='["external:"]'))
+    assert "IF IF-001 Consumers='external:' names no party" in out
 
 
 def test_the_owner_endpoint_is_validated_too_not_just_consumers(scaffold):
     make_minimal_project(scaffold)
-    out = _warn_run(
-        scaffold,
-        'IF-001,Provides,src/gone,docs/status.md,"x",SR-001,v1,Stable,Active,,\n',
-    )
-    assert "IF IF-001 Owner='src/gone' resolves to no module" in out
+    out = _toml_finding_run(scaffold, _if_row(owner='"src/gone"'))
+    assert "IF IF-001 Owner='src/gone' is not a component id" in out
+    out = _toml_finding_run(scaffold, _if_row(owner='"CMP-099"'))
+    assert "IF IF-001 Owner='CMP-099' names no live component row" in out
 
 
 # --- OI-67 ruled (a): the Owner cell is the providing THING, plus carriage -----
@@ -654,7 +656,7 @@ def test_the_owner_endpoint_is_validated_too_not_just_consumers(scaffold):
 
 def _if_row(**kw):
     base = {
-        "owner": "src/demo",
+        "owner": "CMP-001",
         "consumers": '["external:git"]',
         "channel": "call",
         "data": "reads the ref state",
@@ -669,8 +671,9 @@ def _if_row(**kw):
 
 
 def _toml_write(scaffold, text):
+    _live_component(scaffold)
     (scaffold / "docs" / "requirements" / "interfaces.toml").write_text(
-        text, encoding="utf-8"
+        PARTY_HEADER + text, encoding="utf-8"
     )
     record_ids(scaffold)
 
@@ -703,34 +706,39 @@ def test_an_owner_that_names_a_requirement_or_design_row_is_a_finding(scaffold):
     for oid in ('"SR-001"', '"LLR-001"'):
         out = _toml_finding_run(scaffold, _if_row(owner=oid))
         assert "names a requirement or design id" in out, oid
-        assert "the owner is the providing THING" in out, oid
+        assert "an endpoint is a component" in out, oid
 
 
-def test_an_owner_that_is_a_path_is_the_clean_shape(scaffold):
-    # The other half, and the one that keeps the rule from firing on everything:
-    # a module path, a file path and a marked external party are the three
-    # legitimate spellings, and none of them reports.
+def test_an_owner_that_is_a_component_or_a_declared_party_is_the_clean_shape(
+    scaffold,
+):
+    # The other half, and the one that keeps the rule from firing on
+    # everything: a live component id and a declared `external:` party are the
+    # two legitimate spellings, and neither reports. A path, the spelling
+    # before revision 35, is a finding.
     make_minimal_project(scaffold)
     for owner, extra in (
-        ("src/demo", {}),
-        ("docs/status.md", {}),
-        # An `external:` owner needs a kit module on its FAR SIDE to be a seam
+        ("CMP-001", {}),
+        # An `external:` owner needs a component on its FAR SIDE to be a seam
         # of this system at all — the default `consumers` cell is itself
         # `external:git`, which is
         # `test_a_row_with_no_in_tree_endpoint_is_a_strict_finding`'s subject
         # and not this test's. The owner spelling is what is under test here.
-        ("external:git", {"consumers": '["src/demo"]'}),
+        ("external:git", {"consumers": '["CMP-001"]'}),
     ):
         out = _toml_warn_run(scaffold, _if_row(owner='"%s"' % owner, **extra))
         assert "Owner=" not in out, owner
         assert "no in-tree endpoint" not in out, owner
+    for path in ("src/demo", "docs/status.md"):
+        out = _toml_finding_run(scaffold, _if_row(owner='"%s"' % path))
+        assert "Owner='%s' is not a component id" % path in out, path
 
 
 def test_an_owner_naming_several_endpoints_is_a_finding(scaffold):
     # One row has ONE owner: a `;`-joined cell is a bundle wearing one row's
     # clothes, and the ruling splits it or declares a carrier on `carried_by`.
     make_minimal_project(scaffold)
-    out = _toml_finding_run(scaffold, _if_row(owner='"src/demo;src/helper"'))
+    out = _toml_finding_run(scaffold, _if_row(owner='"CMP-001;CMP-002"'))
     assert "names 2 endpoints" in out
     assert "one row has ONE owner" in out
 
@@ -746,11 +754,11 @@ def test_the_far_side_names_the_direction_and_both_or_neither_is_a_warn(scaffold
     neither = _if_row().replace(consumers_line, "")
     out = _toml_warn_run(scaffold, neither)
     assert "IF IF-001 names neither Requestors and Consumers" in out
-    both = _if_row(requestors='["src/helper"]')
+    both = _if_row(requestors='["CMP-001"]')
     out = _toml_warn_run(scaffold, both)
     assert "IF IF-001 names both Requestors and Consumers" in out
     # ...and a requestors-only row is the clean shape, exactly as consumers-only is.
-    only = _if_row(requestors='["src/helper"]').replace(consumers_line, "")
+    only = _if_row(requestors='["CMP-001"]').replace(consumers_line, "")
     assert "Requestors and Consumers" not in _toml_warn_run(scaffold, only)
 
 
@@ -759,7 +767,7 @@ def test_a_missing_owner_is_the_required_field_rule_not_a_second_one(scaffold):
     # field Owner", and saying it twice teaches the reader there are two rules.
     make_minimal_project(scaffold)
     text = _if_row()
-    out = _toml_warn_run(scaffold, text.replace('owner = "src/demo"\n', ""))
+    out = _toml_warn_run(scaffold, text.replace('owner = "CMP-001"\n', ""))
     assert "IF IF-001 has empty required field Owner" in out
     assert "Owner=" not in out
 
@@ -805,41 +813,6 @@ def test_carriage_deeper_than_the_bound_warns_and_two_is_clean(scaffold):
     assert "the bound is provisional" in out
 
 
-def test_a_declared_absence_is_not_a_dangling_endpoint(scaffold):
-    """`docs/declared-absences` gets its third reader.
-
-    An endpoint naming a path the repo has DECLARED it does not carry is neither
-    rot nor external — the layer is opt-in and switched off, and the row is
-    honest about what the module would read if it were on. This repo's worked
-    case is `docs/requirements/assets.csv`: the off-spine asset registry, absent
-    because a meta-repo ships no binary assets, with the reason already written
-    down one directory up. Naming it would have been the checker demanding the
-    repo delete a true statement.
-
-    RE-POINTED 2026-08-20 (the batch review's MINOR-19): the example was
-    `performance-budgets.csv` until WI-481 seeded that registry and deleted its
-    declared-absence line, which left this docstring teaching a worked case that
-    had become live. The scenario below uses a synthetic path, so only the
-    example named in words moved."""
-    make_minimal_project(scaffold)
-    body = (
-        'IF-001,Provides,src/demo,docs/off/budgets.csv,"x",SR-001,v1,Stable,Active,,\n'
-    )
-    out = _warn_run(scaffold, body)
-    assert "IF IF-001 Consumers='docs/off/budgets.csv' resolves to no module" in out
-    (scaffold / "docs" / "declared-absences").write_text(
-        "# declared\ndocs/off/budgets.csv — the perf layer is not enabled\n",
-        encoding="utf-8",
-    )
-    out = _warn_run(scaffold, body)
-    assert "resolves to no module" not in out
-    # A line with no reason declares nothing — the file requires one.
-    (scaffold / "docs" / "declared-absences").write_text(
-        "docs/off/budgets.csv\n", encoding="utf-8"
-    )
-    assert "resolves to no module" in _warn_run(scaffold, body)
-
-
 def test_the_retired_direction_column_closes_no_vocabulary_here(scaffold):
     # Step 1 closed `Direction`'s vocabulary — the one IF column process.md §8
     # stated and nothing checked. WI-455 then retired the column itself (OI-60
@@ -874,9 +847,7 @@ def test_legacy_interfaces_csv_still_reads_through_the_carrier(scaffold):
     make_minimal_project(scaffold)
     req = scaffold / "docs" / "requirements"
     (req / "interfaces.toml").unlink()  # the CSV is the ONLY home, not a second
-    legacy = (
-        "IF-ID,Direction,ThisProject,Counterpart,Version,Stability,Status,Component\n"
-    )
+    legacy = "IF-ID,Direction,ThisProject,Counterpart,Version,Stability,Status\n"
     # The RETIRED columns are gone from the header, and that is the rule rather
     # than tidiness: since the presence fix (2026-08-29) a retired column is a
     # strict finding wherever it is DECLARED, and a CSV header declares it on
@@ -885,8 +856,12 @@ def test_legacy_interfaces_csv_still_reads_through_the_carrier(scaffold):
     # but never banned (`Direction`, `ThisProject`, `Counterpart`, `Stability`)
     # are simply carried, a pre-WI-056 file with no Notes column still reads,
     # and nothing crashes.
+    _live_component(scaffold)
     (req / "interfaces.csv").write_text(
-        legacy + "IF-001,Provides,src/demo,git,v1,Stable,Active,\n",
+        PARTY_HEADER.rstrip("\n")
+        + "\n"
+        + legacy
+        + "IF-001,Provides,CMP-001,external:git,v1,Stable,Active\n",
         encoding="utf-8",
     )
     record_ids(scaffold)
@@ -1035,7 +1010,7 @@ def _bridge_if(iid, **cells):
     written as TOML verbatim: a list or a quoted string."""
     lines = [
         "[interface.{}]".format(iid),
-        'owner = "src/demo"',
+        'owner = "CMP-001"',
         'consumers = ["external:git"]',
         'channel = "call"',
         'data = "reads the ref state"',
@@ -1081,7 +1056,10 @@ def _bridge_run(root, *blocks, assumptions=BRIDGE_ASSUMPTION):
     `assumptions` as the assumptions registry (None: no registry at all).
     Written every run, because the module's cases share one scaffold."""
     req = root / "docs" / "requirements"
-    (req / "interfaces.toml").write_text("\n".join(blocks), encoding="utf-8")
+    _live_component(root)
+    (req / "interfaces.toml").write_text(
+        PARTY_HEADER + "\n".join(blocks), encoding="utf-8"
+    )
     if assumptions is None:
         (req / "assumptions.toml").unlink(missing_ok=True)
     else:

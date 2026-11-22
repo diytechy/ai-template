@@ -14,10 +14,7 @@ Trajectory lifecycle, phase, staleness, and CLI composition stay in
 
 Component: CMP-006
 
-Contracts: IF-263 — the interface seam this file declares (process.md §8; row
-of record in docs/requirements/interfaces.toml).
-
-Contract IF-263: ``check_trajectory`` imports and re-exports this module's
+``check_trajectory`` imports and re-exports this module's
 architecture rule surface, which this module composes from `arch_inputs`,
 `arch_interfaces`, `arch_tags`, `arch_seams` and `arch_components` and its own
 spec-boundary rule. Inputs are a repository root, the spine/config files
@@ -67,13 +64,13 @@ from arch_interfaces import (
     _contracts_grammar_findings,
     _declaration_sites,
     _external_body_findings,
-    _file_owner_declarations,
+    _header_declarations,
+    _header_files,
     _no_surface_reason,
-    _owner_exact_findings,
-    _owner_files,
     _parse_if_tc_allow_full,
-    _stray_declaration_findings,
+    _uniqueness_findings,
     contract_body_findings,
+    contract_homes,
     if_tc_allow_growth,
     if_tc_allow_hygiene_findings,
     if_tc_allow_parse_findings,
@@ -96,8 +93,7 @@ from arch_seams import (
     _SCAN_CACHE,
     _classifiable_edges,
     _cross_component_scan,
-    _declared_seam_pairs,
-    _norm_endpoints,
+    _call_cover,
     _parse_kernel_allow,
     cross_component_findings,
     kernel_allow_parse_findings,
@@ -235,18 +231,18 @@ __all__ = (
     "load_ifs",
     "load_seams",
     "_contracts_grammar_findings",
-    "_owner_files",
-    "_file_owner_declarations",
+    "_header_files",
+    "_header_declarations",
     "arch_inventory",
     "component_headers",
     "interface_findings",
-    "_owner_exact_findings",
     "_declaration_sites",
     "_no_surface_reason",
     "unchecked_contract_rows",
     "contract_body_findings",
     "_external_body_findings",
-    "_stray_declaration_findings",
+    "_uniqueness_findings",
+    "contract_homes",
     "_parse_if_tc_allow_full",
     "parse_if_tc_allow",
     "read_if_tc_allow",
@@ -265,8 +261,7 @@ __all__ = (
     "knowledge_packs",
     "_stack_ini_get",
     "_arch_scan_profile",
-    "_declared_seam_pairs",
-    "_norm_endpoints",
+    "_call_cover",
     "_parse_kernel_allow",
     "read_kernel_modules",
     "kernel_allow_parse_findings",

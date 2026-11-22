@@ -58,8 +58,8 @@ through the shared `spine_carrier` loader.
 
 Component: CMP-008
 
-Contracts: IF-053, IF-055, IF-071, IF-085, IF-094, IF-171, IF-172, IF-264 — the
-interface seams this module declares (process.md §8; rows of record in
+Contracts: IF-071, IF-085, IF-094, IF-171, IF-172, IF-264 — the interface
+seams this module declares (process.md §8; rows of record in
 docs/requirements/interfaces.toml).
 
 Contract IF-264: `_load(root)` reads the work registry and the IF-073 operator
@@ -70,23 +70,26 @@ Contract IF-264: `_load(root)` reads the work registry and the IF-073 operator
     row held by an unmet open-item edge as `blocked`, its record's
     `open_items` naming each item that holds it. Neither registry is mutated.
     The open item carries no pointer to the row; the row cites the item.
-Contract IF-053: SR-148's obligation delivered here as a pure library its
-    siblings import. `load_wis(rows)` (over `load_registry_rows`, or `_load`
-    for the whole read at once) turns the spec-folder work registry into
-    uniform rows — the census reads them that way; `frontier` and `kind_of`
-    give the dispatcher its ready set and each row's declared kind; and
-    `SAFETY_CLASSES` is the vocabulary the intake mint validates a drafted
-    row's kind against before it writes one. Nothing here mutates the registry,
-    spawns a worker or touches git, so every caller can derive the same answer
-    at any time without racing another.
-Contract IF-055: the claim-side derivation. `frontier` over the loaded rows
-    returns the dependency-ready set in the deterministic order, and readiness
-    already excludes a WI that is blocked, deferred, draft, cancelled, reserved,
-    or whose declared kind is missing, unknown or contradicted by its structural
-    evidence — an unclassified WI fails closed and is never on the frontier,
-    without stopping disjoint classified work. The library derives and stops:
-    the claim commit and the branch cut belong to the caller, because this side
-    writes nothing.
+
+SR-148's obligation delivered here as a pure library its
+siblings import. `load_wis(rows)` (over `load_registry_rows`, or `_load`
+for the whole read at once) turns the spec-folder work registry into
+uniform rows — the census reads them that way; `frontier` and `kind_of`
+give the dispatcher its ready set and each row's declared kind; and
+`SAFETY_CLASSES` is the vocabulary the intake mint validates a drafted
+row's kind against before it writes one. Nothing here mutates the registry,
+spawns a worker or touches git, so every caller can derive the same answer
+at any time without racing another.
+
+The claim-side derivation. `frontier` over the loaded rows
+returns the dependency-ready set in the deterministic order, and readiness
+already excludes a WI that is blocked, deferred, draft, cancelled, reserved,
+or whose declared kind is missing, unknown or contradicted by its structural
+evidence — an unclassified WI fails closed and is never on the frontier,
+without stopping disjoint classified work. The library derives and stops:
+the claim commit and the branch cut belong to the caller, because this side
+writes nothing.
+
 Contract IF-071: the frontier read a generated surface projects. The same
     loaders and `frontier`/`evaluate` give a renderer the ordering an integrator
     acts on, so the ranking is derived ONCE here and never recomputed in a

@@ -176,9 +176,11 @@ Contract IF-231: the assumption gate's rules, read by the gate's check step
     (SR-205), with `reach` from `reach_gaps(das, srs, needs, stks, exts, bifs,
     surs) -> {assumption id: [reasons]}`, the reach check's own derivation;
     `crossing_gate_findings(srs, das, bifs)` and
-    `interface_form_gate_findings(srs, ifs, llrs)` (SR-212's Boundary and Arch
-    arms), over `if_reached_srs(ifs, llrs) -> {interface id: [requirement
-    ids]}` and `module_srs(llrs) -> {module: [requirement ids]}`; and
+    `interface_form_gate_findings(srs, ifs, llrs, homes)` (SR-212's Boundary
+    and Arch arms), over `if_reached_srs(ifs, llrs, homes) -> {interface id:
+    [requirement ids]}`, `homes` mapping each interface id to the one file
+    stating its body, and `module_srs(llrs) -> {module: [requirement ids]}`;
+    and
     `release_gate_findings(das, srs, risks)` (SR-206), with `risks` mapping
     each assumption id to its `accepted_risk_state` pair. A `-000` row is never
     judged. `held_until_agreed(lines, stks, what)` returns reach-caused
@@ -1781,20 +1783,46 @@ def module_srs(llrs):
     return out
 
 
-def if_reached_srs(ifs, llrs):
+def if_reached_srs(ifs, llrs, homes):
     """`{interface id: [requirement ids]}` for each BOUNDARY interface (a
-    from- or to-external tie-back): the requirements its owner's module
-    realizes, through the design rows naming that module. Derived here and
-    never recorded on the interface, so the relation has one home.
+    from- or to-external tie-back): the requirements the file stating its
+    body realizes, through the design rows naming that file. `homes` is `{IF
+    id: file path}` (`arch_interfaces.contract_homes`); a row with no body yet
+    reaches none. `homes` is None where no source is scanned (`files` mode):
+    each row then reaches the requirements of the design rows placed in its
+    owner component. Derived here and never recorded on the interface, so the
+    relation has one home.
 
     Implements: SR-212, LLR-244
     """
+    if homes is None:
+        by_cmp = component_srs(llrs)
+        return {
+            iid: by_cmp.get(_cell(row, "Owner"), [])
+            for iid, row in _real(ifs, "IF-ID")
+            if _crossings(row)
+        }
     by_module = module_srs(llrs)
     return {
-        iid: by_module.get(norm_module(_cell(row, "Owner")), [])
+        iid: by_module.get(norm_module(homes.get(iid, "")), [])
         for iid, row in _real(ifs, "IF-ID")
         if _crossings(row)
     }
+
+
+def component_srs(llrs):
+    """`{component: [requirement ids]}`: each design row's `Component` entries
+    mapped to the requirements its `SR-Refs` names, in row order and once
+    each; `if_reached_srs`' reach where no source is scanned.
+
+    Implements: SR-212, LLR-244
+    """
+    out = {}
+    for _lid, row in _real(llrs, "LLR-ID"):
+        for cid in refs(row.get("Component")):
+            listed = out.setdefault(cid, [])
+            listed += [s for s in refs(row.get("SR-Refs")) if s not in listed]
+    return out
 
 
 def _interface_form(srs):
@@ -1802,9 +1830,10 @@ def _interface_form(srs):
     return [(s, r) for s, r in _real(srs, "SR-ID") if _cell(r, "Form") == "interface"]
 
 
-def interface_form_gate_findings(srs, ifs, llrs):
+def interface_form_gate_findings(srs, ifs, llrs, homes):
     """SR-212's Arch arm, as findings: each interface-form requirement judged
-    against EVERY boundary interface reaching it (`if_reached_srs`).
+    against EVERY boundary interface reaching it (`if_reached_srs`, through
+    `homes`, the file stating each row's body).
 
     One reached by none fails, naming it and stating that no boundary
     interface reaches it; nothing is invented to reach it. Each reaching
@@ -1817,7 +1846,7 @@ def interface_form_gate_findings(srs, ifs, llrs):
     """
     rows = dict(_real(ifs, "IF-ID"))
     reaching = {}
-    for iid, sids in if_reached_srs(ifs, llrs).items():
+    for iid, sids in if_reached_srs(ifs, llrs, homes).items():
         for sid in sids:
             reaching.setdefault(sid, []).append(iid)
     out = []
@@ -1825,7 +1854,7 @@ def interface_form_gate_findings(srs, ifs, llrs):
         if sid not in reaching:
             out.append(
                 "SR {} is of interface form, but no boundary interface reaches it "
-                "through the modules its design rows name".format(sid)
+                "through the files its design rows name".format(sid)
             )
             continue
         cited = set(refs(row.get("DA-Refs")))

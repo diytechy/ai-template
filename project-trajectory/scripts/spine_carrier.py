@@ -51,7 +51,7 @@ Every caller does its own reading, so a script keeps deciding its own I/O.
 
 Component: CMP-006
 
-Contracts: IF-102, IF-104, IF-105, IF-106, IF-107, IF-108, IF-109, IF-110, IF-111, IF-112, IF-114, IF-118, IF-265, IF-119, IF-120, IF-122, IF-128, IF-133, IF-142, IF-178, IF-311 — the seams this module declares (process.md §8; rows of record
+Contracts: IF-102, IF-104, IF-105, IF-106, IF-107, IF-108, IF-109, IF-110, IF-111, IF-112, IF-114, IF-118, IF-265, IF-119, IF-120, IF-122, IF-133, IF-142, IF-178, IF-311 — the seams this module declares (process.md §8; rows of record
 in docs/requirements/interfaces.toml).
 
 Contracts: IF-270 — the registry column vocabulary used by the case generator.
@@ -186,13 +186,13 @@ Contract IF-122: check_need_form scans the need tier through load_needs(path),
     yielding zero scannable need cells is VACUOUS, and an absent registry is
     the pre-scaffold clean skip.
 
-Contract IF-128: baseline_snapshot resolves and reads every snapshotted
-    registry through resolve(), carriers(), stem(), load(), load_needs(),
-    CARRIERS and NEED_CARRIERS, so a snapshot root reuses each live resolver
-    verbatim, carrier fallback included, and a snapshot taken under one carrier
-    and read under another joins on the carrier-STRIPPED stem. Two refusals
-    ride this seam: resolve() raises on a stem present under both carriers,
-    load() on a file that exists and will not parse.
+`baseline_snapshot` resolves and reads every snapshotted
+registry through resolve(), carriers(), stem(), load(), load_needs(),
+CARRIERS and NEED_CARRIERS, so a snapshot root reuses each live resolver
+verbatim, carrier fallback included, and a snapshot taken under one carrier
+and read under another joins on the carrier-STRIPPED stem. Two refusals
+ride this seam: resolve() raises on a stem present under both carriers,
+load() on a file that exists and will not parse.
 
 Contract IF-133: the hats audit worksheet reads the stakeholder-need tier
     through load_needs(), resolve(), NEED_CARRIERS, stem() and folded(), so

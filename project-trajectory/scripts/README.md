@@ -1,4 +1,6 @@
 <!--
+Component: CMP-006
+
 Contracts: IF-025, IF-026 — the interface seams this directory declares
 (process.md §8; rows of record in the adopting repo's interfaces registry).
 

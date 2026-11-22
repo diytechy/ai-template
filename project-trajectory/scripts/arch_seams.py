@@ -2,9 +2,11 @@
 """The cross-component seam check: an import between components needs a declared interface row.
 
 `cross_component_findings` reports each internal import edge that is not
-inside one component and that no interface row covers, and each edge touching
-a file with no valid `Component:` declaration, as unclassified. An edge into a
-module declared in `docs/kernel-modules-allow` is not a seam. The edges come
+inside one component and that no `call` row covers, and each edge touching a
+file with no valid `Component:` declaration, as unclassified. An import from a
+file of component X into a file of component Y is covered only by a `call`
+row owned by Y that names X among its requestors. An edge into a module
+declared in `docs/kernel-modules-allow` is not a seam. The edges come
 from `arch_inputs.arch_inventory` and resolve through
 `gen_arch_map.resolve_import`; membership is the files' headers
 (`arch_inputs.component_headers`) through `kitlib.spine.module_components`.
@@ -14,11 +16,8 @@ One scan per root per run, held in `_SCAN_CACHE`. ``trajectory_arch`` re-exports
 
 Component: CMP-006
 
-Contracts: IF-319 — the interface seam this file declares (process.md §8; row
-of record in docs/requirements/interfaces.toml).
-
-Contract IF-319: the seam rule surface ``trajectory_arch`` re-exports and
-`arch_components` composes. `cross_component_findings(root)` returns finding
+The seam rule surface ``trajectory_arch`` re-exports and `arch_components`
+composes: `cross_component_findings(root)` returns finding
 strings from one cached scan per root, and leaves the `[checks]
 components_check` dial to its caller.
 `read_kernel_modules(root)` gives the declared kernel as `{module key:
@@ -48,7 +47,6 @@ from arch_inputs import (
     arch_inventory,
     component_headers,
     load_cmps,
-    load_seams,
 )
 
 try:
@@ -71,50 +69,28 @@ KERNEL_ALLOW = "docs/kernel-modules-allow"
 KERNEL_ALLOW_SEP = _kitconfig.DECLARED_SEP  # the one declared-file separator
 
 
-def _declared_seam_pairs(root):
-    """The IF registry's endpoint pairs, normalized and stored BOTH ways — a
-    seam is one declared relationship, whichever side authored the row.
+def _call_cover(root):
+    """The `(requestor, owner)` component pairs the `call` rows declare: the
+    cover of the cross-component rule (variant F, WI-1015's first loophole).
 
-    A MULTI-ENDPOINT SIDE IS SEVERAL ENDPOINTS, and every combination is a
-    declared pair. `trace.py` has split on `;` since IF-097 (the comment there
-    names it); this reader did not, so the two readers of the same cells
-    disagreed — 14 of 249 pairs carried an unsplit, non-existent module name as
-    an endpoint after WI-469 took the population from one row to seven
-    (2026-08-21 review, M-14). Latent, but the failure it sets up is expensive
-    in the wrong direction: a real cross-component import whose seam row plainly
-    names both modules is reported as having no declared seam, and the cheapest
-    fix available to that author is to duplicate or delete a correct row.
+    Only a `call` row covers an import, and only in its own direction: the
+    imported file's component owns the call and the importer's is among its
+    requestors. A row on another channel, a reversed row, or a row that merely
+    names both components in some cell covers nothing, because none of them
+    declares that the importer calls into the owner. Each endpoint is a
+    component id or an `external:` party; a party pairs with nothing an import
+    can reach.
 
-    PAIRS ARE TAKEN ACROSS THE ROW'S WHOLE ENDPOINT SET since WI-455, not across
-    two named cells. On a row whose consumers are a measured READER SET over one
-    medium (`IF-029`, `IF-035`, `IF-037`, `IF-047`, `IF-072`) that is what keeps
-    the reader-to-reader pairs the two-cell shape used to produce, now stated as
-    what they always were: one declared relationship among all of the seam's
-    endpoints."""
+    Implements: SR-159, LLR-067
+    """
     covered = set()
-    for r in load_seams(root):
-        ends = _norm_endpoints([r["owner"]] + r["far"])
-        for a in ends:
-            for b in ends:
-                if a != b:
-                    covered.add((a, b))
-                    covered.add((b, a))
+    for row in spine_carrier.load(root / IF_CSV, "IF-ID"):
+        if (row.get("Channel") or "").strip() != "call":
+            continue
+        owner = _kitspine.seam_owner(row)
+        for requestor in _kitspine.seam_requestors(row):
+            covered.add((requestor, owner))
     return covered
-
-
-def _norm_endpoints(endpoints):
-    """The normalized module keys of an endpoint list, empties dropped — so a
-    blank side contributes no pair, exactly as before. Each entry may itself be
-    a `;`-joined cell (`kitlib.spine.seam_endpoints` splits those): an endpoint
-    may legitimately contain a space (`external:downstream adopter`) or a
-    comma, so `;` stays the only separator."""
-    out = []
-    for endpoint in endpoints:
-        for part in _kitspine.seam_endpoints(endpoint):
-            normalized = _norm_module(part)
-            if normalized:
-                out.append(normalized)
-    return out
 
 
 def _parse_kernel_allow(root):
@@ -278,8 +254,8 @@ def _cross_component_scan(root):
     UNCLASSIFIED before the declared seams and the kernel are read — never
     treated as internal, covered or exempt.
 
-    Then an edge whose module pair a declared IF-### row covers is silent, and
-    so is an edge whose DESTINATION is a declared shared-kernel module
+    Then an edge whose component pair a `call` row covers (`_call_cover`) is
+    silent, and so is an edge whose DESTINATION is a declared shared-kernel module
     (`read_kernel_modules`, OI-48 ruled (d), WI-494): consumed across
     components by design, it is not a seam. One-directional by construction —
     the exemption keys on `dst_n`, never `src_n`, so an edge OUT of a kernel
@@ -315,16 +291,19 @@ def _cross_component_scan(root):
             )
             continue
         if covered is None:
-            covered = _declared_seam_pairs(root)
+            covered = _call_cover(root)
             kernel = read_kernel_modules(root)
-        if (src_n, dst_n) in covered or dst_n in kernel:
-            continue
         if len(src_cmps) == 1 and src_cmps == dst_cmps:
+            continue
+        pairs = {(a, b) for a in src_cmps for b in dst_cmps}
+        if pairs <= covered or dst_n in kernel:
             continue
         findings.append(
             "cross-component import {} has no declared IF-### seam — declare "
-            "the interface row in {} or the component in the header, or set "
-            "docs/process.toml [checks] components_check = false".format(edge, IF_CSV)
+            "a `call` row in {} owned by the imported file's component naming "
+            "the importer's among its requestors, or the component in the "
+            "header, or set docs/process.toml [checks] components_check = "
+            "false".format(edge, IF_CSV)
         )
     _SCAN_CACHE[str(root)] = findings
     return findings
@@ -337,7 +316,9 @@ def cross_component_findings(root):
     declared IF-### row — an undeclared cross-component coupling is a finding,
     mechanized from the same committed artifacts the other component rules
     read — and an edge touching a module whose header declares no valid
-    component is reported as unclassified. The CALLER gates the opt-out
+    component is reported as unclassified. Only a `call` row owned by the
+    imported file's component naming the importer's among its requestors
+    covers an edge (`_call_cover`). The CALLER gates the opt-out
     (`component_findings` shares `[checks] components_check`) and the
     WARN-plain / ERROR-under-`--strict` promotion. See `_cross_component_scan`
     for the classification and `_classifiable_edges` for the vacuity guards.

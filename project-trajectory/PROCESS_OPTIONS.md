@@ -2506,23 +2506,22 @@ module→file, module→external-actor) exactly as it serves a cross-project one
 `interfaces.toml`, two uses.
 
 **The model — one row per seam: an owner, its far side, a typed statement.**
-`Owner` = the providing thing — a module path, a **file path** (giving
-module→file→module dataflow, so a shared file like `docs/stack.ini` is a hub
-node many modules read), or an **`external:` actor** (`downstream adopter`,
-`git`, `agent CLI`) — never a requirement id; `Requestors` or `Consumers`
+`Owner` = the providing thing — a **component id** (`CMP-###`, the producing
+component: a shared file's owner is the component that writes it or whose
+header it declares) or an **`external:` party** from the list the registry
+header declares (`downstream adopter`, `git`, `agent CLI`) — never a
+requirement id and never a file; `Requestors` or `Consumers`
 (exactly one, a **list**) = the far side, and the key IS the direction:
 requestors put information into the owner's surface, consumers take what it
 emits; `Channel` = what crosses, closed; `Data` = the optional alphabet or
-schema pointer; the definition itself lives in the owner's header (PROCESS.md
+schema pointer; the definition itself lives in one file of the owner's component (PROCESS.md
 §8). There is no direction column and no requirement column: what a `Consumes`
 row used to declare — this cross-component edge is intended, and this row
-discharges it — is read off the endpoint pair, and the requirement a seam
-answers to is reached through the owner. `trace.py` integrity-checks the tier
-(id shape; an id-shaped or multi-endpoint owner fails under `--strict`; a row
-naming both far sides or neither warns; a module-shaped owner that no design
-row's `Module` names and whose header declares no `Implements:` warns; every
-endpoint is resolved against the tree, warn-first) — WI-056 closed the
-SR-002-era gap where trace never read the IF tier.
+discharges it — is read off the row's endpoints. `trace.py` integrity-checks
+the tier (id shape; an endpoint that is not a live component id or a declared
+party, or a multi-endpoint owner, fails under `--strict`; a row naming both
+far sides or neither warns) — WI-056 closed the SR-002-era gap where trace
+never read the IF tier.
 
 **Opt-out, default-on (ruled).** By default a contract IF must define how the
 architecture connects, so the **coverage warn runs even when `interfaces.toml` is
@@ -2533,7 +2532,8 @@ stays a bare module list — the organized graph is *earned* by declaring seams.
 nothing to declare silences it with `[checks] interfaces_check = false` (the
 `trajectory_check`/`okf_export` idiom — the key ships `true`); a single-module
 inventory is vacuous. The warns, **warn-first FOREVER** (never an exit-code
-change, at any gate): every arch-map module is a declared IF endpoint; a
+change, at any gate): every component holding an arch-map module is a
+declared IF endpoint; a
 `Contracts: IF-###` docstring line (harvested into the arch-map like
 `Implements:`) matches the registry.
 
@@ -2565,20 +2565,20 @@ discharges.
 **The honesty valve.** A pure **source** (produces output, consumes nothing) or
 **sink** (consumes, produces nothing) would otherwise breed a boilerplate
 opposite-facing row. Mark it instead: make the `Notes` cell of one of that
-module's IF rows **begin** with the word `source` or `sink`, and the missing-seam
+component's IF rows **begin** with the word `source` or `sink`, and the missing-seam
 warn is suppressed for that side — `source` marks the row's `Owner`, `sink`
 its far side.
 
 **The graph.** When real seams exist, `gen_trajectory.py`'s How-SW panel renders
-them as a directed graph (module / file / external-actor nodes, IF-labeled edges
+them as a directed graph (component and external-party nodes, IF-labeled edges
 drawn the way the information runs — into the owner on a requestors row — reusing
-the WI-DAG layouter) above the symbol table, and `gen_arch_map.py` merges
-module↔module seams into the dependency diagram as distinctly-styled dotted edges.
+the WI-DAG layouter) above the symbol table; `gen_arch_map.py`'s dependency
+diagram draws imports only, since no row names a module.
 
 **Risk — the maintenance surface.** A fully-declared repo is ~30–35 hand-authored
 IF rows. The prose that used to rot in a `Contract` cell (a renamed flag the row
-misses) now lives in the owner's header, where a rename moves the two together
-and the reverse check names a declared seam with no body; what stays on the row
+misses) now lives in one file of the owner's component, where a rename moves the
+two together and the definition gate names a declared seam with no body; what stays on the row
 is a link list plus a short `Data` cell whose named symbols and paths are checked
 against the tree. Declare seams because the connectivity view earns its keep, not
 for completeness — and lean on the source/sink valve so a pure sink doesn't cost
@@ -2666,13 +2666,13 @@ When findings need to outlive the session that produced them, use the
 durable component-to-pack association, not a second copy of the findings.
 
 **Structure is derived, never restated.** Membership lives on the **primitive**
-rows: LLR / IF / ASSET / PART each carry a `Component` cell (`;`-joined CMP ids
+rows: LLR / ASSET / PART each carry a `Component` cell (`;`-joined CMP ids
 — tag at the *finest* enclosing CMP; coarser membership derives through
-`PartOf`). A source file or file owner declares its one component in its own
+`PartOf`). A source file or listed header file declares its one component in its own
 header instead (`Component: CMP-###`, PROCESS.md §8), and the software rules
-and views read only that. From those tags everything else is a **view**: an interface with both
-endpoints inside a CMP is *internal*; with one endpoint inside it is the CMP's
-*boundary* — "the component **is** its interface set" as a derived
+and views read only that; an interface names components as its endpoints. From those everything else is a **view**: an interface is
+*internal* to the lowest CMP enclosing every endpoint and on the *boundary* of
+each other CMP it names — "the component **is** its interface set" as a derived
 characterization, never an authored list. A CMP row therefore has **no**
 `Realises`/`Interfaces`/`Assets` columns, and a one-member CMP with no internal
 IFs is legal.
@@ -2680,7 +2680,8 @@ IFs is legal.
 **What the kit checks** (`trace.py`, when real CMP rows exist): `CMP-` id
 integrity; `PartOf`/`SupersededBy` resolve to real CMP ids; and every primitive
 `Component` tag resolves to a real CMP row (the membership join — checked on
-all four registries `trace.py` reads: LLR/IF/PART/ASSET).
+the registries `trace.py` reads: LLR/PART/ASSET; an interface endpoint is held
+to a live CMP id by the IF tier's own rule).
 
 **The partition carries its derivation record** (SR-165). The record of how
 the partition was chosen lives in the registry, not in session prose. One row
@@ -2704,7 +2705,9 @@ human act is for review and the acceptance route.
 enforceability rule, mechanized for software). `check_trajectory.py` joins the
 committed arch-map's `Imports (internal):` lines with the files' header
 membership and `interfaces.toml`: an import edge not inside one component
-with no IF row covering the module pair (either endpoint direction) is a
+that no `call` row covers — one the imported file's component owns naming the
+importer's among its requestors; a row on another channel or owned the other
+way round covers nothing — is a
 finding — **WARN** at the plain/hook run, **ERROR under `--strict` (DevStg-Tests+)**
 — sharing the `[checks] components_check` opt-out, as does each file in the
 scope whose header declaration is absent, doubled, malformed or dangling.

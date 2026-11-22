@@ -107,7 +107,6 @@ class Cadence:
         paths = []
         for rel, column, field in (
             ("docs/requirements/low-level-requirements.toml", "LLR-ID", "Module"),
-            ("docs/requirements/interfaces.toml", "IF-ID", "Owner"),
         ):
             for carrier in spine_carrier.carriers(rel):
                 proc = self.git(self.root, "show", "{}:{}".format(revision, carrier))

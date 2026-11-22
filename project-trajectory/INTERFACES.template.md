@@ -31,8 +31,8 @@ namespace, parallel to SN/SR/LLR/TC).
 | Column | Meaning |
 |---|---|
 | `IF-ID` | Stable id for this interface. |
-| `Owner` | **Required.** The providing *thing*, in the one spelling `Consumers` uses: a module path (`scripts/check`), a file or directory path (`docs/stack.ini`, `docs/work/`), or an `external:` party. **Never a requirement or design id** — the requirement the seam answers to is reached *through* the owner (the design rows whose `Module` names it, or the `Implements:` line in its header) and is not stated on the row. An id-shaped owner is a finding; a module-shaped owner that reaches no requirement is a warning. A generated file is owned by the module that writes it; a hand-edited file is owned as itself and declares in its own header. |
-| `Requestors` / `Consumers` | **The far side names the direction — exactly one of the two is set**, a **list** either way. `Requestors` put information *into* the surface the owner defines (they call the function, invoke the CLI, set the env var, write the file); `Consumers` take what the owner emits (they read the file, the exit code, the stdout). The owner defines the surface in both cases; the key says which way the information runs, so one row is one direction by construction — a call is one row, a CLI's arguments and its exit code are two. Both or neither is a finding. Name the sides you have MEASURED, and the open-ended ones as a class (`external:downstream adopter`). Every endpoint cell is checked against the tree, warn-first; prefix a deliberately-outside-the-tree endpoint with `external:`. |
+| `Owner` | **Required.** The providing *thing*, in the one spelling `Consumers` uses: a component id (`CMP-###`, a live row of `components.toml`) or an `external:` party on the list the registry header declares (`# External party: <name>`, one line each). **Never a requirement id, and never a file**: the owner is the producing component — the writer's for a generated file, the one a hand-edited file's header declares, the one producing what lands in a directory medium. Any other owner is a `trace.py --strict` finding. |
+| `Requestors` / `Consumers` | **The far side names the direction — exactly one of the two is set**, a **list** either way. `Requestors` put information *into* the surface the owner defines (they call the function, invoke the CLI, set the env var, write the file); `Consumers` take what the owner emits (they read the file, the exit code, the stdout). The owner defines the surface in both cases; the key says which way the information runs, so one row is one direction by construction — a call is one row, a CLI's arguments and its exit code are two. Both or neither is a finding. Each entry takes the owner's forms, a component id or a declared `external:` party (an open-ended class is a party too: `external:downstream adopter`); anything else is a `trace.py --strict` finding. A `call` row owned by component Y naming X among its requestors is what covers an import from a file of X into a file of Y. |
 | `Channel` | **Required, closed**: what crosses, typed — `cli` (an invocation surface: argv), `exit-code` (a finite code alphabet), `stdout` (emitted text: findings, a report), `file` (a file or directory medium with a schema), `call` (an in-process API), `env` (an environment variable or launcher slot), `git` (repository state), `bytes` (opaque content). A dial read from a config file is `file`; a source tree walked by AST is `file`. |
 | `Data` | Optional. The finite alphabet when there is one (`0 pass · 1 fail · 2 usage`, `off | ask | deny`) or a one-clause schema pointer. ≤160 characters; no work-item id, no decision citation, no rationale connective; a named symbol or path must resolve (warn-first). The row's typed summary — **not the definition**, which lives beside the code in the owner's `Contract IF-###:` body and is harvested into the interface reference. |
 | `Rationale` | **Why the seam is drawn here.** Empty is allowed; the argument, never the citation. |
@@ -40,32 +40,33 @@ namespace, parallel to SN/SR/LLR/TC).
 | `CarriedBy` | Optional. **Interface composition** — a constituent naming the bundle that carries it (`IF-###`). A constituent is still one owner and one channel; the bundle is the unit a consumer pins. The carriage graph must resolve and be acyclic; depth past 2 warns. Empty means "not a constituent", which is most rows. |
 | `Version` | Contract version the other side codes against (e.g. `v1`, a semver, a schema hash). |
 | `Status` | **Closed**, and the row's **one** maturity field: `Drafted` · `Accepted` — the spine's own words, shared with `external.toml`. `Founded` is **not applicable** to this tier: it means settled *and demonstrated*, while an acceptance says only that the seam is agreed. Flipping a cell to `Accepted` is an operator act in a reviewed commit. |
-| `interface_from_external` / `interface_to_external` | The directional tie-back to a `B-##` crossing in `external.toml`, present **only** when this row REALIZES one — `from` for an IN crossing, `to` for an OUT one, both for in/out. A row with neither is an internal seam; that absence IS the statement. A row whose owner and far side are *all* `external:` parties has no in-tree endpoint — no module whose header can hold our reading of the surface — and `trace.py --strict` refuses it. |
-| `bridged_by` / `coincident` | Optional, read only on a row with a tie-back above. `bridged_by` names the assumptions (`DA-###`, `assumptions.toml`) carrying this seam's reading to a stakeholder's outcome; `coincident` says why its reading IS the outcome. A boundary row with neither is one `trace.py` advisory; a `bridged_by` entry no assumption row declares is a `--strict` finding. Neither is checked until `assumptions.toml` holds its first real row. No requirement id goes here: the requirement a seam answers is reached through its `Owner`. |
-| `Component` | Optional `CMP-###` membership tag for the component layer; empty when unused. |
+| `interface_from_external` / `interface_to_external` | The directional tie-back to a `B-##` crossing in `external.toml`, present **only** when this row REALIZES one — `from` for an IN crossing, `to` for an OUT one, both for in/out. A row with neither is an internal seam; that absence IS the statement. A row whose owner and far side are *all* `external:` parties has no in-tree endpoint — no component whose file can hold our reading of the surface — and `trace.py --strict` refuses it. |
+| `bridged_by` / `coincident` | Optional, read only on a row with a tie-back above. `bridged_by` names the assumptions (`DA-###`, `assumptions.toml`) carrying this seam's reading to a stakeholder's outcome; `coincident` says why its reading IS the outcome. A boundary row with neither is one `trace.py` advisory; a `bridged_by` entry no assumption row declares is a `--strict` finding. Neither is checked until `assumptions.toml` holds its first real row. No requirement id goes here: an interface lists no requirement it carries. |
 | `Notes` | Free-form; argument, never citation. The `source`/`sink` honesty valve lives here — `source` marks the row's `Owner`, `sink` its far side, silencing the missing-seam coverage warn for that side (see the registry's `-000` row). |
 
 ## Rules (keep links from rotting)
 
-- **One definition, one home.** The owner's header holds the authoritative
-  definition (`Contracts:` marker + `Contract IF-###:` bodies); the far side
-  links it by `IF-ID` and never re-states it. If both repos describe the shape,
-  they will diverge — link instead. **The gate is armed:** a row whose owner
-  declares it but states no body is a `check_trajectory --strict` finding, and
-  so is a source whose header the contract grammar refuses; a source declaring
-  a row another in-tree source owns is one too. An owner that declares nothing
-  only warns (the migration list, visible in the reference's summary line). An
-  `external:`-owned row is stated by the
-  kit module on its far side — our reading of a surface we do not own. The
-  retired cells (`Contract`, `Provider`, `Req-Refs`, `Signal`, `SignalNote`)
+- **One definition, one home.** One file of the owner's component holds the
+  authoritative definition (`Contracts:` marker + `Contract IF-###:` bodies);
+  the far side links it by `IF-ID` and never re-states it. If both repos
+  describe the shape, they will diverge — link instead. **The gate is armed,
+  and it is uniqueness:** at most one file on the scan surface (your
+  `[paths] src` plus the files `docs/stack.ini` `[arch-map] headers` lists)
+  states each body, and that file's `Component:` header names the owner — for
+  an `external:`-owned row, a component on its far side, our reading of a
+  surface we do not own. Two bodies, a body in another component's file, a
+  declaration with no body and a header the contract grammar refuses are
+  `check_trajectory --strict` findings; a row no file states yet is valid, its
+  `Data` cell the contract until code states it. The
+  retired cells (`Contract`, `Provider`, `Req-Refs`, `Signal`, `SignalNote`,
+  `Component`)
   are `trace.py --strict` findings wherever they still appear. A CSV registry
   may carry the same `#` header; every kit reader strips it.
 - **Every interface is backed by a TC.** A seam this repo owns needs a contract
   test that asserts the published shape; a seam an `external:` owner serves
   needs a test (or recorded fixture/mock pinned to `Version`) proving we read or
-  request it correctly. No interface ships untested. The requirement a seam
-  answers to is reached through its owner — a design row naming the module, or
-  the module's `Implements:` line — not stated on the row.
+  request it correctly. No interface ships untested. No requirement id is
+  stated on the row.
 - **`IF-` ids are repo-local — never reuse an id across repos.** Each repo owns
   its own `IF-###` space, so `IF-007` in two repos are *different* interfaces
   that merely share a string (MULTI_REPO.md §3.3 — they would collide the

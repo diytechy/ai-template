@@ -72,7 +72,6 @@ Contracts (interfaces): IF-015, IF-253
 
 ### `scripts/agent_route`
 _Model routing for the unattended coordinator — the enable-list + availability_
-Contracts (interfaces): IF-044
 
 | Option | Help |
 |---|---|
@@ -165,7 +164,7 @@ Contracts (interfaces): IF-069
 
 ### `scripts/check_doc_refs`
 _Doc reference validation — prose that names dead files or symbols (Thread 49)._
-Contracts (interfaces): IF-008, IF-087
+Contracts (interfaces): IF-008
 
 | Option | Help |
 |---|---|
@@ -505,7 +504,7 @@ _hats.py — the HATS ROSTER reader: which declared expert perspectives apply to
 
 ### `scripts/intake`
 _intake.py — the unified trunk-side intake mint (WI-388; docs/concurrency-v2.md §A5.2)._
-Contracts (interfaces): IF-090, IF-229, IF-243, IF-244
+Contracts (interfaces): IF-229, IF-243, IF-244
 
 | Option | Help |
 |---|---|
@@ -526,7 +525,7 @@ Contracts (interfaces): IF-090, IF-229, IF-243, IF-244
 
 ### `scripts/integrate`
 _integrate.py — the local integrator: the station protocol and its merge slot._
-Contracts (interfaces): IF-080, IF-154, IF-173
+Contracts (interfaces): IF-080, IF-154
 
 | Option | Help |
 |---|---|
@@ -608,7 +607,6 @@ Contracts (interfaces): IF-295
 
 ### `scripts/plan_round`
 _The dual-plan round state machine: a pure, side-effect-free library the_
-Contracts (interfaces): IF-058
 
 | Option | Help |
 |---|---|
@@ -704,7 +702,7 @@ Contracts (interfaces): IF-048, IF-157, IF-158
 
 ### `scripts/schedule`
 _Derive the dependency-ready WI frontier and its deterministic schedule._
-Contracts (interfaces): IF-053, IF-055, IF-071, IF-085, IF-094, IF-171, IF-172, IF-264
+Contracts (interfaces): IF-071, IF-085, IF-094, IF-171, IF-172, IF-264
 
 | Option | Help |
 |---|---|
@@ -716,7 +714,7 @@ Contracts (interfaces): IF-053, IF-055, IF-071, IF-085, IF-094, IF-171, IF-172, 
 
 ### `scripts/score_reviews`
 _The substance scorer — score a review verdict block by how USEFUL it is, not_
-Contracts (interfaces): IF-046
+Contracts (interfaces): IF-046, IF-047, IF-160
 
 | Option | Help |
 |---|---|

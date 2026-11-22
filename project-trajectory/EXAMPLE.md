@@ -398,29 +398,31 @@ status = "Accepted"
 
 The boundary between the two is a **contract**, so it is an `IF-###` (process.md
 §8) — which applies *within* a repo just as across repos, the endpoints naming
-**modules** rather than repos. One row is one owner, its far side and a typed
+**components** rather than repos. One row is one owner, its far side and a typed
 statement of what crosses — the write and the read are not two rows, because
 the owner defines the surface and the far-side key says which way the
 information runs:
 
 ```toml
 [interface.IF-001]
-owner = "src/export"
-consumers = ["src/delivery"]
+owner = "CMP-001"
+consumers = ["CMP-002"]
 channel = "file"
 data = "the export file: RFC-4180 CSV at the configured path, header row first"
 version = "v1"
 status = "Accepted"
 ```
 
-`owner` is the providing **thing** — the module the information plugs into, in
-the one spelling the far side uses — never a requirement id: the requirement the
-seam answers to is reached through the owner (the design rows whose `module`
-names it, or the `Implements:` line in its header). The definition itself lives
-**beside the code**, in the owner's header; the row declares the seam and stops:
+`owner` is the providing **thing** — the component the information plugs into
+(`CMP-001`, export; `CMP-002` is delivery, each named by its files' `Component:`
+headers), in the one spelling the far side uses — never a requirement id and
+never a file. The definition itself lives **beside the code**, in the header of
+one file of the owner's component; the row declares the seam and stops:
 
 ```python
 """Export — writes the completed export file.
+
+Component: CMP-001
 
 Contracts: IF-001 — the interface seam this module declares (process.md §8).
 
@@ -516,7 +518,7 @@ In the `delivery` repo's own `interfaces.toml`:
 ```toml
 [interface.IF-010]
 owner = "external:export repo"
-consumers = ["src/delivery"]
+consumers = ["CMP-001"]
 channel = "file"
 data = "RFC-4180 CSV at the agreed path, header row first — stated once, in the export repo"
 version = "v2"
@@ -524,13 +526,15 @@ status = "Accepted"
 
 [interface.IF-011]
 owner = "external:object-store"
-requestors = ["src/delivery"]
+requestors = ["CMP-001"]
 channel = "call"
 data = "S3 PutObject of the purchased store; the vendor datasheet is the definition of record"
 version = "vendor-2024"
 status = "Accepted"
 ```
 
+(`CMP-001` is `delivery`'s one component, which `src/delivery` declares in its
+`Component:` header; both parties sit on the header's `# External party:` list.)
 `IF-010`'s definition is owned by a repo that **builds** the surface (`export` — its
 `IF-001` above, stated in that repo's `src/export` header); `IF-011` is a **purchased
 part no repo builds**, so what `delivery` states in its own `src/delivery` header is

@@ -74,13 +74,13 @@ status = "Accepted"
 """
 
 IFS = """[interface.IF-001]
-owner = "scripts/alpha"
-consumers = ["scripts/beta"]
+owner = "CMP-001"
+consumers = ["CMP-002"]
 channel = "call"
 
 [interface.IF-002]
-owner = "scripts/alpha"
-consumers = ["scripts/alpha"]
+owner = "CMP-001"
+consumers = ["CMP-001"]
 channel = "call"
 
 [interface.IF-003]
@@ -203,12 +203,11 @@ def test_seams_enter_the_view_split_internal_from_boundary(repo):
     assert view["CMP-002"]["seam_boundary_refs"] == ["IF-001"]
 
 
-def test_an_untagged_seam_is_placed_by_its_ENDPOINTS(repo):
+def test_a_seam_is_placed_by_the_components_its_endpoints_name(repo):
     """Implements: TC-195"""
-    # None of the three IF rows carries a `Component` cell; two of them are
-    # placed anyway, through the same endpoint -> LLR.Module normalizer
-    # trace.interface_findings already joins on. Excluding untagged rows would
-    # have dropped most of a real repo's seams on a technicality.
+    # No row carries a placement cell (it left the schema): a row is placed
+    # from its endpoint cells, which name components, so both rows naming
+    # CMP-001 appear in it.
     view = _view(repo)["component_view"]
     placed = set(view["CMP-001"]["seam_internal_refs"]) | set(
         view["CMP-001"]["seam_boundary_refs"]
@@ -216,38 +215,29 @@ def test_an_untagged_seam_is_placed_by_its_ENDPOINTS(repo):
     assert placed == {"IF-001", "IF-002"}
 
 
-def test_seam_placement_reads_membership_from_the_one_join(repo, monkeypatch):
-    """The generator holds no join of its own (WI-1005): `build` asks
-    `kitlib.spine.module_components` for the module -> component map, once,
-    over the declarations it was handed, and places seams by whatever that
-    answers. Stubbed to answer nothing, the two seams placed by their
-    endpoints alone fall to `[unplaced]`, so the answer is read, not merely
-    requested.
+def test_seam_placement_reads_the_endpoint_cells_and_no_join(repo, monkeypatch):
+    """The generator holds no membership join of its own (WI-1005), and since
+    a row names components (WI-1022) a seam is placed from its endpoint cells
+    alone: stubbing `kitlib.spine.module_components` to answer nothing moves
+    no seam, and the one row naming no component is still the only one
+    unplaced.
 
     Implements: TC-435"""
     gen = load_script(GEN)
     assert not hasattr(gen, "module_components"), "the generator's copy is deleted"
-    asked = []
-
-    def nothing(declared):
-        asked.append(sorted(declared))
-        return {}
-
-    monkeypatch.setattr(gen._kitspine, "module_components", nothing)
+    monkeypatch.setattr(gen._kitspine, "module_components", lambda declared: {})
     declared = gen.arch_inputs.component_headers(repo)[0]
-    _, unplaced = gen.build(*gen._load(repo), declared)
-    assert asked == [
-        ["project-trajectory/scripts/alpha.py", "project-trajectory/scripts/beta.py"]
-    ]
-    assert unplaced["seam_refs"] == ["IF-001", "IF-002", "IF-003"]
+    view, unplaced = gen.build(*gen._load(repo), declared)
+    assert unplaced["seam_refs"] == ["IF-003"]
+    assert view["CMP-001"]["seam_internal_refs"] == {"IF-002"}
 
 
 def test_the_modules_and_the_seams_follow_the_headers(repo):
     """A file's component is its header, not the design row naming it: moving
-    alpha's header to CMP-002 moves alpha into CMP-002's modules and makes the
-    seam between alpha and beta internal to CMP-002, while the design row
-    tagged CMP-001 still places LLR-001 there. A file no design row names
-    is listed by its header alone.
+    alpha's header to CMP-002 moves alpha into CMP-002's modules, while the
+    design row tagged CMP-001 still places LLR-001 there and the seams stay
+    where their endpoint cells put them. A file no design row names is listed
+    by its header alone.
 
     Implements: TC-460"""
     _declare(repo, "alpha", "CMP-002")
@@ -259,14 +249,15 @@ def test_the_modules_and_the_seams_follow_the_headers(repo):
         "project-trajectory/scripts/beta.py",
         "project-trajectory/scripts/gamma.py",
     ]
-    assert view["CMP-002"]["seam_internal_refs"] == ["IF-001", "IF-002"]
+    assert view["CMP-001"]["seam_internal_refs"] == ["IF-002"]
+    assert view["CMP-002"]["seam_internal_refs"] == []
     assert view["CMP-001"]["llr_refs"] == ["LLR-001"]
 
 
 def test_an_unplaceable_seam_is_REPORTED_not_silently_excluded(repo):
     """Implements: TC-195"""
-    # IF-003 is external at both ends: no tag, no resolvable module. It cannot
-    # be placed — and it is named, because a seam that vanishes reads exactly
+    # IF-003 is external at both ends: it names no component. It cannot be
+    # placed — and it is named, because a seam that vanishes reads exactly
     # like a seam the generator failed on.
     doc = _view(repo)
     assert doc["unplaced"]["seam_refs"] == ["IF-003"]

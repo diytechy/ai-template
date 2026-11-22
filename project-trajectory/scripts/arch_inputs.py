@@ -199,29 +199,25 @@ def arch_inventory(root):
 
 
 def _component_scope(root):
-    """`(scoped, other)`, each `{repository-relative path: path}`: the files
-    owing a `Component:` declaration, and the files of another type under
-    `[paths] src`. The scope is closed: every file under the declared source
-    root of a type the grammar has a carrier for, `README.md` excluded, and
-    every file owner the interface registry names (a directory owner is read
-    through its `README.md`, which is documentation). A path part that is
-    hidden or a bytecode cache is not source (`kitlib.spine.hidden_rel`).
+    """`(scoped, other, missing)`: the files owing a `Component:` declaration
+    and the files of another type under `[paths] src`, each `{repository-
+    relative path: path}`, and the declared header paths that are not files.
+    The scope is closed: every file under the declared source root of a type
+    the grammar has a carrier for, `README.md` excluded, and every file
+    `docs/stack.ini` `[arch-map] headers` lists (`kitlib.config.declared_headers`),
+    the one scan surface the contract scan reads too. A path part that is
+    hidden or a bytecode cache is not source.
 
     Implements: SR-159, LLR-397"""
     src, _mode = _arch_scan_profile(root)
     src_dir = root / src.strip().replace("\\", "/").rstrip("/")
-    scoped, other = {}, {}
-    for path in sorted(src_dir.rglob("*")) if src_dir.is_dir() else ():
-        if path.name == "README.md" or _kitspine.hidden_rel(path.relative_to(src_dir)):
-            continue
-        if path.is_file():
-            typed = path.suffix.lower() in gen_arch_map.COMPONENT_TYPES
-            (scoped if typed else other)[_rel_to(root, path)] = path
-    if_rows = spine_carrier.load(root / IF_CSV, "IF-ID")
-    for _owner, path in gen_arch_map.owner_files(root, if_rows):
-        if path.name != "README.md":
-            scoped.setdefault(_rel_to(root, path), path)
-    return scoped, other
+    scoped_paths, other_paths = gen_arch_map.source_files(src_dir)
+    scoped = {_rel_to(root, p): p for p in scoped_paths}
+    other = {_rel_to(root, p): p for p in other_paths}
+    found, missing = _kitconfig.declared_headers(root)
+    for _rel, path in found:
+        scoped.setdefault(_rel_to(root, path), path)
+    return scoped, other, missing
 
 
 def _rel_to(root, path):
@@ -236,7 +232,8 @@ def component_headers(root):
     """`(declared, findings)`: each in-scope file's component as its header
     declares it (`{repository-relative path: CMP id}`), and one finding per
     in-scope file whose declaration is absent, doubled, malformed or names an
-    id no live component row has, each naming the file. A file of another
+    id no live component row has, and one per declared header path that is
+    not a file, each naming the file. A file of another
     type under `[paths] src` is outside the rule unless its header states a
     `Contract IF-###:` body, which is then a finding naming its type. A file
     outside the scope may carry a declaration, read by the same reader where
@@ -255,8 +252,14 @@ def component_headers(root):
     live = {c["id"] for c in load_cmps(spine_carrier.load(root / CMP_CSV, "CMP-ID"))}
     if not live:
         return {}, []
-    scoped, other = _component_scope(root)
-    declared, findings = {}, []
+    scoped, other, missing = _component_scope(root)
+    declared = {}
+    findings = [
+        "{}: is listed in {} [arch-map] headers and is not a file".format(
+            rel, _kitconfig.STACK_INI
+        )
+        for rel in missing
+    ]
     for rel, path in sorted(scoped.items()):
         component, problem = gen_arch_map.file_component(path)
         if problem is None and component not in live:

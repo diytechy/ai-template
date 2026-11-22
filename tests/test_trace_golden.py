@@ -95,14 +95,15 @@ notes = "demo component"
 # `data` is the typed statement `contract` used to hold in prose; `provider`,
 # `req_refs` and `signal` left the row. The consumer is a cross-repo endpoint, so
 # it carries the external marker rather than reading as a dangling path.
-RICH_IFS = """[interface.IF-001]
-owner = "src/demo"
+RICH_IFS = """# External party: acme/widget
+
+[interface.IF-001]
+owner = "CMP-001"
 consumers = ["external:acme/widget"]
 channel = "call"
 data = "two numbers in, their sum out"
 version = "1"
 status = "Accepted"
-component = "CMP-001"
 notes = "demo seam"
 """
 

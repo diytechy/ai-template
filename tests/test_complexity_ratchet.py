@@ -162,14 +162,10 @@ BASELINE = {
     # VERBATIM from trajectory_arch.py to arch_interfaces.py; complexity stays 20.
     # Earlier RE-KEYED, NOT RE-STAMPED, 2026-09-29, WI-545: the function moved
     # VERBATIM from check_trajectory.py to trajectory_arch.py; complexity stays 20.
-    (
-        "arch_interfaces.py",
-        "interface_findings",
-    ): 20,  # RE-STAMPED DOWN -2 (22 -> 20) 2026-08-23, WI-455: the endpoint
-    # orientation left this function. `load_ifs` now resolves each row into
-    # provider + consumers once, so the producer/consumer credit is two set
-    # updates instead of a direction flip plus two membership branches.
-    # Recorded DOWN in the same commit, per this file's rule.
+    # ENTRY DELETED (20 -> under the limit) 2026-11-21, WI-1022: the
+    # per-module connectivity warns left `interface_findings` for
+    # `_component_connectivity` (rows name components), and the owner-exact
+    # reverse check retired; recorded in the same commit, per this file's rule.
     # Earlier -1 2026-08-13: WI-443 — the seam-TC loop became a comprehension plus one summary line when it re-keyed onto Stability
     # WI-352 reviewed bump 21 -> 22, +1: the completion reconciler is
     # deliberately split across TWO tiers (spec evidence gates, trailer evidence
@@ -244,7 +240,7 @@ BASELINE = {
     (
         "gen_arch_map.py",
         "_contract_bodies",
-    ): 14,  # RE-KEYED 2026-08-29, WI-529 (OI-67 slice 2): the walk moved, unchanged, from `module_contract_bodies` into `_contract_bodies` so a file header (`file_contracts`) and a module docstring read ONE body grammar; `module_contract_bodies` is now a two-line wrapper over it. Earlier +2 2026-08-29 the adversarial round: a body is ordered against the marker that declares ITS id (a per-id map, not the first marker in the file), and a marker line now ends a body so a declaration written below one is never swallowed into its prose. Both are branches in the walk itself. Reviewed bump.
+    ): 11,  # RE-STAMPED DOWN -3 (14 -> 11) 2026-11-22, WI-1022 review round 1: the four refusals at a body opener (the new one, a body in a file with no marker, among them) moved into `_refuse_opener`. Earlier: RE-KEYED 2026-08-29, WI-529 (OI-67 slice 2): the walk moved, unchanged, from `module_contract_bodies` into `_contract_bodies` so a file header (`file_contracts`) and a module docstring read ONE body grammar; `module_contract_bodies` is now a two-line wrapper over it. Earlier +2 2026-08-29 the adversarial round: a body is ordered against the marker that declares ITS id (a per-id map, not the first marker in the file), and a marker line now ends a body so a declaration written below one is never swallowed into its prose. Both are branches in the walk itself. Reviewed bump.
     ("gen_arch_map.py", "build_contract_reference"): 12,
     (
         "gen_arch_map.py",
@@ -260,10 +256,9 @@ BASELINE = {
     # VERBATIM from trajectory_arch.py to arch_interfaces.py; complexity stays 11.
     # Earlier RE-KEYED, NOT RE-STAMPED, 2026-09-29, WI-545: the function moved
     # VERBATIM from check_trajectory.py to trajectory_arch.py; complexity stays 11.
-    (
-        "arch_interfaces.py",
-        "contract_body_findings",
-    ): 11,  # NEW 2026-08-29 WI-533 (OI-67 slice 6): the armed definition gate — the opt-out, the vacuity, the per-row split between an external-owned row (its own helper) and an in-tree owner (declared-not-stated), and the stray arm (its own helper). Two arms were extracted to land at 11 rather than the 18 the first cut measured. Reviewed entry, reason in docs/log.d/2026-08-29-wi533-arm-the-gate.md.
+    # ENTRY DELETED (11 -> under the limit) 2026-11-21, WI-1022: the gate became
+    # uniqueness, its header arm `_external_body_findings` and its count
+    # `_uniqueness_findings` each a helper; recorded in the same commit.
     # ENTRY DELETED (11 -> under the limit) 2026-08-29, WI-533 follow-up
     # (cross-family review F7): the retired-cell arm that put `trace.py`'s
     # `interface_findings` on this census left it. The rule was per-ROW and

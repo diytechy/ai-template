@@ -32,14 +32,9 @@
 # Component: CMP-009
 #
 # Linux/macOS contributors: use scripts/dev-setup.sh.
-# Contracts: IF-292, IF-293 — the interface seams this script declares (process.md §8;
-# rows of record in docs/requirements/interfaces.toml).
-#
-# Contract IF-292: a bare run invokes this script as -ForRun from the repository
-#     root once before its menu, handing it as -Python the interpreter it
-#     resolved for the menu (omitted when it resolved none).
-# Contract IF-293: exit 0 says that handed interpreter satisfies the runtime
-#     floor; nonzero leaves the menu unopened after setup guidance.
+# The interface seams this script answers (IF-292, the bare run's -ForRun call
+# with -Python, and IF-293, its exit code) are stated once, in the header of
+# its POSIX twin, dev-setup.sh (process.md §8).
 param(
     [switch]$Check,
     [switch]$Baseline,

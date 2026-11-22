@@ -11,10 +11,7 @@ accepted automated case no test declares. Their inputs come from
 
 Component: CMP-006
 
-Contracts: IF-318 — the interface seam this file declares (process.md §8; row
-of record in docs/requirements/interfaces.toml).
-
-Contract IF-318: the tag rule surface ``trajectory_arch`` re-exports.
+The tag rule surface ``trajectory_arch`` re-exports.
 `codesymbol_crosscheck_findings(root)` returns one finding string per
 `Implements:` tag site that its row's `CodeSymbol` and `Module` cells do not
 contain, `[]` in files mode, with no source root or with no design rows to

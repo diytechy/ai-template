@@ -845,7 +845,7 @@ Count distinct WI IDs first added to `docs/archive/work/complete`, `cancelled`
 or `partial` after the commit adding its latest observation record; mint and
 bookkeeping commits do not count. Read policy, records and inputs at the
 checkpoint revision. `Trigger` is `files:<semicolon-separated globs>` (changed
-repository paths), `component:CMP-###` (modules/owners tagged by LLR/IF rows),
+repository paths), `component:CMP-###` (modules tagged by LLR rows),
 `release`, or `stage-gate` (that explicit checkpoint). Without a trigger, retain
 the input-digest change rule under the floor. First judgement and expiry also
 apply to cases without inputs. `Tier` still selects harness cost; it does not
@@ -1336,12 +1336,11 @@ When this project provides or consumes a surface — shared with another repo, o
 between its **own modules** — record each seam once in
 `requirements/interfaces.toml` as an `IF-###` (see `INTERFACES.template.md`).
 **One row is one owner, its far side, and a typed statement of the
-information.** `Owner` is the providing THING — what the information plugs
-into — in the one spelling the far side uses: a module path, a file or
-directory path, or `external:<party>`; **never a requirement or design id**.
-The requirement a seam answers to is REACHED through the owner (the design rows
-whose `Module` names it, or the `Implements:` line in its header), not stated
-on the row. The far side names the DIRECTION, and exactly one is set:
+information.** `Owner` is the providing THING — the component the information
+plugs into — in the one spelling the far side uses: a component id (`CMP-###`)
+or `external:<party>`, the party on the list the registry header declares;
+**never a requirement id, and never a file**. The far side names the
+DIRECTION, and exactly one is set:
 `Requestors` put information *into* the surface the owner defines (they call
 the function, invoke the CLI, set the env var, write the file); `Consumers`
 take what the owner emits (they read the file, the exit code, the stdout). A
@@ -1350,8 +1349,8 @@ reads one file and writes another is two. `Channel` is closed — `cli` ·
 `exit-code` · `stdout` · `file` · `call` · `env` · `git` · `bytes` — and
 `Data` is the optional short alphabet or schema pointer (≤160 characters; no
 work-item id, no decision citation, no rationale connective; a named symbol or
-path must resolve). A generated file is owned by the module that writes it; a
-hand-edited file is owned as itself and declares in its own header. A seam may
+path must resolve). The owner is the producing component: the writer's for a
+generated file, the one a hand-edited file's header declares. A seam may
 name the bundle that carries it (`CarriedBy` — a constituent is still one
 owner and one channel), and a low-level seam may say the parent's tests cover
 it (`VerifiedBy`: a `TC-###` or an `LLR-###`, warn-first that it resolves;
@@ -1372,8 +1371,9 @@ architecture graph").
 
 **The definition lives beside the code, and only there.** What the owner
 promises — the flags, the schema, the guarantees — is stated once, in the
-owner's own header: a module declares the seams it owns on one `Contracts:
-IF-###, ...` marker line (it must OPEN its line and parse as an id list; a
+header of one file of the owner's component: a module declares the seams it
+states on one `Contracts: IF-###, ...` marker line (it must OPEN its line and
+parse as an id list; a
 marker-shaped line that will not parse, or one carrying ids mid-line, is
 REPORTED rather than silently declaring nothing) and states each contract as a
 block opening `Contract IF-###:` — a form ordinary prose does not resemble,
@@ -1383,8 +1383,8 @@ in a body. A registry, config or hook file carries the same marker and bodies
 in a `#` header at its top. The same header names the file's ONE component on
 a line reading exactly `Component: CMP-###` (a module's docstring; a `#`,
 `REM` or opening `<!-- -->` line elsewhere): from DevStg-Arch every source file
-and file owner carries one, and a file without belongs to no component, so
-an import touching it is reported unclassified. `gen_arch_map.py --contracts-doc` harvests them
+and listed header file (`[arch-map] headers`) carries one, and a file without
+belongs to no component, so an import touching it is reported unclassified. `gen_arch_map.py --contracts-doc` harvests them
 into a committed `interface-reference.md`, freshness-gated like the CLI
 reference; a declared seam with no body is listed there as unstated. The row
 is the cross-validated link: it declares the seam and stops. **Mint
@@ -1392,11 +1392,12 @@ header-first.** A work item that creates a module mints its seam rows and the
 module's stub header — marker and bodies — BEFORE any code, so a worker
 building against it reads the same home the finished module will have;
 "declared, not stated" is the signal that a definition is not written yet —
-and a finding under `--strict`: a row with no stated body, a source whose
-header the grammar refuses, a source declaring another owner's row, or a
-retired cell (`Contract`, `Provider`, `Req-Refs`, `Signal`, `SignalNote`) still
-on a row; an owner that declares nothing only warns.
-An `external:`-owned row is stated by the kit module on its far side.
+and a finding under `--strict`: a declaration with no body, a header the
+grammar refuses, a body two files state, a body whose file's header names
+another component than the owner (for an `external:` owner, one off the row's
+far side), or a retired cell (`Contract`, `Provider`, `Req-Refs`, `Signal`,
+`SignalNote`, `Component`) still on a row. A row no file states yet is valid:
+its `Data` cell is the contract until code states it.
 
 **Reason cells take the argument, never the citation.** `Rationale` is why the
 seam is drawn here; `Notes` is free prose; neither carries a work-item id,

@@ -40,9 +40,11 @@
 #
 # Contract IF-292: a bare run invokes this script as --for-run from the repository
 #     root once before its menu, handing it as --python the interpreter it
-#     resolved for the menu (omitted when it resolved none).
+#     resolved for the menu (omitted when it resolved none); the PowerShell
+#     twin, dev-setup.ps1, takes the same call as -ForRun and -Python.
 # Contract IF-293: exit 0 says that handed interpreter satisfies the runtime
-#     floor; nonzero leaves the menu unopened after setup guidance.
+#     floor; nonzero leaves the menu unopened after setup guidance. Both twins
+#     answer alike.
 set -eu
 
 # =================== EDIT FOR YOUR STACK / ROLES ===========================
