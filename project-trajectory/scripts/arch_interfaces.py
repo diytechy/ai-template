@@ -98,9 +98,14 @@ def _contracts_grammar_findings(root):
         )
     # The header files — non-Python scripts, registries, config, hooks — read
     # through the same grammar (OI-67 slice 2), so a lossy marker is named too.
+    # One that will not read or parse is the reference's "could not read"
+    # entry (`gen_arch_map.scan_contracts`), as a module above is.
     if hasattr(gen_arch_map, "file_grammar_findings"):
         for label, path in _header_files(root):
-            found.extend(gen_arch_map.file_grammar_findings(label, path))
+            try:
+                found.extend(gen_arch_map.file_grammar_findings(label, path))
+            except (OSError, UnicodeDecodeError, SyntaxError):
+                continue
     return found
 
 

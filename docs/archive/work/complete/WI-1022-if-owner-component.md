@@ -213,6 +213,8 @@ Read and left: LLR-153, LLR-187, LLR-373, LLR-374.
   <!-- fig: cmd="python project-trajectory/scripts/run_menu.py smoke" rev="d8ac920b8" -->
 - Review round 1 (Sol's four MINORs): `tests/test_trajectory_arch.py`'s two new cases (a listed Python file outside the source root read as a module; a body with no `Contracts:` marker refused, not skipped) `2 failed in 7.51s` on `b2c4c2725`, `2 passed in 0.25s` with the fix; no markerless body exists in this repo; the modules importing `gen_arch_map` or `arch_interfaces` with `test_import_layers` and `test_dogfood_sync` `675 passed, 1 skipped in 165.89s (0:02:45)`; `trace.py --strict` `orphans=0 integrity=0`, `interface-findings=0`; `check_trajectory.py --strict` clean (`1042 work item(s), 910 done (87%), 35 cancelled, graph acyclic`); smoke `1 failed, 3716 passed, 3 skipped, 18 warnings in 80.39s (0:01:20)`, the one failure trunk's; `gen_arch_map.py` SLOC 1654 -> 1671 a reviewed bump, `_contract_bodies` re-stamped down (C901 14 -> 11, cognitive 32 -> 22).
   <!-- fig: cmd="python -m pytest -q -n 8 <each module listed>; python project-trajectory/scripts/run_menu.py smoke" rev="the worktree ahead of the review-round-1 commit, on b2c4c2725" -->
+- Review round 2 (Sol's two MINORs): `tests/test_trajectory_arch.py`'s new case (an unparseable listed Python header is the reference's `SyntaxError` "could not read" entry, not an `interface_findings` crash) `1 failed, 171 deselected in 0.57s` on `edcd89c3f`, `1 passed, 171 deselected in 0.18s` with the fix; the modules importing `gen_arch_map` or `arch_interfaces` with `test_import_layers` and `test_dogfood_sync` `676 passed, 1 skipped in 167.39s (0:02:47)`; `trace.py --strict` `orphans=0 integrity=0`, `interface-findings=0`, LLR-398's `file_contracts` code-symbol warning gone; smoke `1 failed, 3716 passed, 3 skipped, 18 warnings in 84.83s (0:01:24)`, the one failure trunk's.
+  <!-- fig: cmd="python -m pytest -q -n 8 <each module listed>; python project-trajectory/scripts/run_menu.py smoke" rev="the worktree ahead of the review-round-2 commit, on edcd89c3f" -->
 - **Trunk's red, not this row's:** `tests/test_stage_ladder.py::
   test_this_repo_is_clean_at_the_ERROR_severity`, `check_vocab --strict`
   flagging the retired tag "G2" at lines 46 and 100 of
@@ -223,7 +225,7 @@ Read and left: LLR-153, LLR-187, LLR-373, LLR-374.
 **Byte deltas.** `PROCESS.md` 101,950 -> 101,959 (+9, watched);
 `PROCESS_OPTIONS.md` 202,304 -> 202,446 (+142, watched); the byte-budget
 skill 4,631 -> 4,623 (cap 5,000; its two watched rows re-stamped, three
-copies); `RESYNC_PACK.md` 737,613 -> 741,646 (unbudgeted); `EXAMPLE.md`
+copies); `RESYNC_PACK.md` 737,613 -> 741,775 (unbudgeted); `EXAMPLE.md`
 33,086 -> 33,241 (unbudgeted).
 
 **Deviations from the plan.**

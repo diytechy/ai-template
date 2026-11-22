@@ -1079,6 +1079,30 @@ def test_a_body_with_no_marker_is_refused_not_skipped(tmp_path):
         assert "no `Contracts:` marker" in refused[0], refused
 
 
+def test_an_unparseable_listed_python_header_is_unreadable_not_a_crash(tmp_path):
+    # Review round 2: a listed Python header reaches `ast.parse` through the
+    # grammar-findings walk, which caught nothing, so one file that will not
+    # parse aborted `interface_findings`. It is the reference's "could not
+    # read" entry, as a module under the source root is.
+    root = _gate_repo(
+        tmp_path, '"""A.\n\nContracts: IF-001\n\nContract IF-001: a states it."""\n'
+    )
+    (root / "tools").mkdir()
+    (root / "tools" / "broken.py").write_text(
+        '"""Broken.\n\nComponent: CMP-002\n"""\n\ndef (:\n', encoding="utf-8"
+    )
+    (root / "docs" / "stack.ini").write_text(
+        "[paths]\nsrc = scripts\n[arch-map]\nheaders = tools/broken.py\n",
+        encoding="utf-8",
+    )
+    findings = check_trajectory.interface_findings(root)
+    assert not any("tools/broken.py" in f for f in findings), findings
+    gen_arch_map = load_script("gen_arch_map")
+    headers = gen_arch_map.header_files(root, [root / "scripts"])
+    reference = gen_arch_map.build_contract_reference([root / "scripts"], headers)
+    assert "- `tools/broken.py` — SyntaxError" in reference, reference
+
+
 def test_a_refused_header_reds_the_cli_under_strict(tmp_path):
     # End-to-end through the real `main()` wiring, at the WARN-plain /
     # ERROR-under-`--strict` severity the gate's other three shapes ride.
