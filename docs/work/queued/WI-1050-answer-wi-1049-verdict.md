@@ -1,13 +1,14 @@
 +++
 id = "WI-1050"
-title = "WI-1049's verdict answered: LLR-244 and LLR-257 re-amended without code names, TC-457, TC-468 and TC-475 made ready"
+title = "WI-1049's verdict answered: LLR-257 re-amended without code names, TC-457, TC-468 and TC-475 made ready"
 workstream = "process"
-sr_refs = ["SR-157", "SR-159", "SR-212", "SR-217"]
-needs = []
+sr_refs = ["SR-157", "SR-159", "SR-217"]
+needs = ["WI-1023"]
 specref = "docs/reviews/wi-1049-adjudicate-second-sitting/001-ADJUDICATE-d5cb626.md"
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 2
+planmode = "none"
 +++
 
 ## Context
@@ -25,10 +26,27 @@ revert the two unblessed amendments to their accepted text, take WI-1049's
 act, and re-land both amendments through this row, with the returned rows
 answered, for a third sitting. So, in the commit that files this row,
 LLR-244's and LLR-257's `detail` went back to the text the accepted copy
-records. The amended text this row re-lands is at `468c91fd9`
+records. The amended text is at `468c91fd9`
 (`git show 468c91fd9:docs/requirements/low-level-requirements.toml`): F-2's
-(WI-1022) for LLR-244 and WI-1042's for LLR-257. Until this row merges, both
-rows describe the code as it was before those items.
+(WI-1022) for LLR-244 and WI-1042's for LLR-257. Until they are re-landed,
+both rows describe the code as it was before those items.
+
+**LLR-244 moved to F-3 (WI-1023), 2026-11-22.** F-3 amends LLR-244 again on
+top of F-2's text, so its review round 1 took the finding (its F5): F-3
+rewrites LLR-244's `detail` with F-2's and its own behaviour and no code
+names, and the coordinator takes that text at F-3's merge. This row keeps
+LLR-257 and the three returned test cases. It lands after F-3 (`needs`),
+so that the third sitting judges both rows together, and its repairs land
+together in one branch, since one sitting judges them in one act.
+
+**TC-475's choice, settled at the scope critique (2026-11-22).** Both
+critics chose, and the coordinator adopted, the narrower of the verdict's
+two ways: TC-475 keeps only the failing-test case (a validly declared test
+that still fails leaves its case clean), and TC-428 and TC-429, both
+`Accepted`, add LLR-395 to their `Verifies`, keeping their tests and their
+homes. WI-1038's parent-first refusal no longer stands, since WI-1049's act
+accepted LLR-395. The `Verifies` change is a routed traced change on
+accepted rows, owed to the third sitting.
 
 The findings, quoted from the verdict:
 
@@ -60,10 +78,6 @@ The findings, quoted from the verdict:
 
 ## Done-when
 
-- [ ] LLR-244's `detail` states the contract-body reachability and the
-      files-mode fallback that `468c91fd9` states, naming no function,
-      parameter or file (`homes` and the call signature gone). Text only;
-      its status stays `Accepted`.
 - [ ] LLR-257's `detail` states the acceptance-record reading, the
       re-pointing date, the cut rule and the gap rule that `468c91fd9`
       states, without `record_acceptances`, `baseline_snapshot` or a bare
@@ -75,9 +89,9 @@ The findings, quoted from the verdict:
       as absent without raising, and TC-457's Method, Expected and Evidence
       name the case.
 - [ ] TC-468's Method names no function, module or symbol.
-- [ ] The tests behind TC-428, TC-429 and TC-475 have one home each: the
-      scope critique picks between narrowing TC-475 to the failing-test
-      case and pointing TC-428 and TC-429 at LLR-395, or retiring TC-428
-      and TC-429 for TC-475, and the row does that.
+- [ ] The tests behind TC-428, TC-429 and TC-475 have one home each:
+      TC-475's Method, Expected and Evidence name only the failing-test
+      case, its other tests are no longer tagged to it, and TC-428 and
+      TC-429 add LLR-395 to their `Verifies`, no other cell changing.
 - [ ] No row text this branch writes names a code file, function or symbol.
       The Deliverable lists every act owed for adjudication.

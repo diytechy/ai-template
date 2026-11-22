@@ -8,6 +8,7 @@ specref = "docs/archive/work/complete/WI-1048-answer-wi-1047-verdict.md"
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 4
+planmode = "none"
 +++
 
 ## Context

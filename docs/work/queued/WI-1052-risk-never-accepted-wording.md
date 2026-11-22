@@ -8,6 +8,7 @@ specref = "docs/archive/work/complete/WI-1041-unanchored-risk-said.md"
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 4
+planmode = "none"
 +++
 
 ## Context
@@ -25,11 +26,16 @@ reader something that never happened.
 
 ## Done-when
 
-- [ ] The advisory and the release gate say a risk no acceptance act names
-      has never been accepted (and how to accept it), and keep "reopened"
-      for a risk an act accepted, each from the reading `accepted_risk_state`
-      already returns.
-- [ ] Tests pin both wordings at both sites.
+- [ ] The advisory and the release gate word an unproven risk by what the
+      reading `accepted_risk_state` already returns, in three cases: a risk
+      an act accepted and a later change or failed sample undid reads
+      "reopened" and "accepted again"; a risk no act in the readable
+      acceptance record names reads as never accepted, with how to accept
+      it; and a risk whose acceptance history cannot be read (an unreadable
+      ledger, history the clone lacks) keeps the reading's own reason and
+      claims neither. The promise is bounded to the record and registries as
+      the kit writes them.
+- [ ] Tests pin each of the three wordings at both sites.
 - [ ] Any row whose accepted text words this message (LLR-239 first) is
       checked against the new wording; an amendment it needs is text only
       and listed as owed to adjudication.

@@ -8,6 +8,7 @@ specref = "docs/plans/2026-11-21-queue-drill/HANDOFF.md"
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
+planmode = "none"
 +++
 
 ## Context
@@ -33,6 +34,11 @@ reads:
   takes `OUTCOME: ACCEPT rows=N` or `OUTCOME: RETURN rows=N`, and the
   verdict grammar knows no APPROVE. Both sittings had to tell the
   adjudicator in a preface to read ACCEPT there.
+
+The two stay one row on purpose: both are adjudication prompt templates
+whose words disagree with what the code reads, both are found by the same
+kind of test (a filled template read against the code), and both
+regenerate the one prompt catalog.
 
 ## Done-when
 
