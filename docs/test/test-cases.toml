@@ -3925,9 +3925,9 @@ phase = 6
 [test.TC-385]
 verifies = ["SR-243"]
 level = "Unit"
-method = "Read the coordinator-cycle guidance and all synchronized role copies for the required coordinator-call invocation, blackout refusal, outcome meanings, spool behaviour, and retirement of direct Sol and Terra launch recipes."
+method = "Read the coordinator-cycle guidance and all synchronized role copies for the required coordinator-call invocation, blackout refusal, outcome meanings, spool behaviour, and retirement of direct author, critic and REVIEW-A launch recipes."
 tier = "Smoke"
-expected = "The cycle guidance names the coordinator-call route as the only Sol or Terra launch path, states their blackout refusal and result meanings, states that shared-checkout calls spool, and contains no retired wrapper or direct resume launch."
+expected = "The cycle guidance names the coordinator-call route as the only launch path for author, critic and REVIEW-A calls, states their blackout refusal and result meanings, states that shared-checkout calls spool, and contains no retired wrapper or direct resume launch."
 automated = "Yes"
 evidence = "tests/test_prompts.py::test_the_cycle_says_sol_and_terra_calls_are_refused_in_the_blackout_window; tests/test_prompts.py::test_no_recipe_launches_sol_or_terra_outside_the_entry_point"
 status = "Accepted"

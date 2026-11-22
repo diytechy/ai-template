@@ -564,19 +564,21 @@ _EFFORT = re.compile(r"\b(?:low|medium|high|xhigh)\b")
 
 def test_the_cycle_names_each_role_never_the_model_that_fills_it():
     # Pins WI-1037's Done-when on the coordinator-cycle skill, its recipes and
-    # the coordinator tools' README: they name the role (the builder, the
-    # author, the critic, the code reviewers, the adjudicator), and a model
-    # only where an observation is labelled "observed with <model>"; no model
-    # id appears; the Roles table states no model or effort and points at the
-    # route setting. Checked in all three copies; test_skills_sync keeps them
+    # the coordinator tools' README, and WI-1044's on the author's prompt
+    # template: they name the role (the builder, the author, the critic, the
+    # code reviewers, the adjudicator), and a model only where an observation
+    # is labelled "observed with <model>"; no model id appears; the Roles
+    # table states no model or effort and points at the route setting.
+    # Checked in all three copies; test_skills_sync keeps them
     # byte-identical. Adequacy witness: the text before WI-1037 ("Dispatch
     # Terra once", the Roles table's "Codex 6.1 Sol (`gpt-6.1-sol`, medium)")
-    # fails every clause.
+    # fails every clause, and the template before WI-1044 ("GPT Terra,
+    # gpt-5.6-terra", "a Claude Opus builder") fails the first two.
     paths = [
         copy / name
         for copy in CYCLE_COPIES
         for name in ("SKILL.md", "references/recipes.md")
-    ] + [ROOT / "scripts" / "coordinator" / "README.md"]
+    ] + [ROOT / "scripts" / "coordinator" / "README.md", TERRA_TEMPLATE]
     found = []
     for path in paths:
         flat = " ".join(path.read_text(encoding="utf-8").split())
@@ -715,8 +717,8 @@ def test_the_terra_brief_has_an_intent_form_before_build_round_1():
         "At the intent turn (the change list below reads `none`), before build "
         "round 1, no code, tests or docs are built yet",
         "There is no builder's change list and no code diff to read",
-        "At a checkpoint turn, a Claude Opus builder has built the code, tests "
-        "and docs in this lane",
+        "At a checkpoint turn, the builder has built the code, tests and docs "
+        "in this lane",
         "an LLR's `code_symbol` names the symbols the build will create",
         "they bind at the checkpoint's reconcile",
         "At a checkpoint, a test-case row's evidence names test functions that exist",
