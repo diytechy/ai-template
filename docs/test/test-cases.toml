@@ -2730,9 +2730,9 @@ phase = 6
 [test.TC-250]
 verifies = ["SR-217", "LLR-257", "IF-198", "IF-199"]
 level = "Integration"
-method = "Driven on real git repositories, in a module registered as slow. A requirement whose test cases were all accepted before the first commit adding an Implements line for it produces nothing. Implementation landing is found both through a line naming the requirement and through a line naming one of its design rows, and the earlier of the two is the landing. A requirement with two test cases accepted after that landing is reported naming the requirement, the implementation commit and both acceptance commits. A commit that accepts one test case while withdrawing another still records the acceptance. A test case accepted for another requirement and re-pointed at this one after its implementation landed is reported, dated at the re-pointing commit, and so is one reached through a design row re-pointed at this requirement after the landing. A test case that does not read accepted is reported by name for a requirement whose implementation has landed, and not for one whose implementation has not; the report line names each late or unaccepted test case with the warning that its result may not reflect the intended behaviour, and --strict refuses it. A requirement with no implementation produces nothing. A declared start after a requirement's acceptance excludes it; no declared start judges the whole history. A test case added already Accepted counts at its birth. A shallow clone, a start commit that does not exist, and a start not on first-parent history are each reported unreadable, never passing, and so are a design registry still under an older carrier and a start before the design registry moved to TOML; a test case that reached the requirement through a design row before that move is dated at or before the move, and one reached through a design row re-pointed after it is dated exactly. Order is read only from commits, never from a cell. The step lists as warn-only in the harness plan."
+method = "Driven on real git repositories, in a module registered as slow. A requirement whose test cases were all accepted before the first commit adding an Implements line for it produces nothing. Implementation landing is found both through a line naming the requirement and through a line naming one of its design rows, and the earlier of the two is the landing. A requirement with two test cases accepted after that landing is reported naming the requirement, the implementation commit and both acceptance commits. A commit that accepts one test case while withdrawing another still records the acceptance. A test case accepted for another requirement and re-pointed at this one after its implementation landed is reported, dated at the act that re-accepts it, and so is one reached through a design row re-pointed at this requirement after the landing. A test case that does not read accepted is reported by name for a requirement whose implementation has landed, and not for one whose implementation has not; the report line names each late or unaccepted test case with the warning that its result may not reflect the intended behaviour, and --strict refuses it. A requirement with no implementation produces nothing. A declared start after a requirement's acceptance excludes it; no declared start judges the whole history. A test case added already Accepted counts at its birth. A shallow clone, a start commit that does not exist, and a start not on first-parent history are each reported unreadable, never passing, and so are a design registry still under an older carrier and a start before the design registry moved to TOML; the record's copies read under either carrier, so that move dates nothing, and a design row re-pointed after it is dated exactly at its act. Order is read only from commits, never from a cell. The step lists as warn-only in the harness plan."
 tier = "Full"
-expected = "Satisfies SR-217's acceptance: implementation landing and each test case's acceptance for the requirement read from history, a re-pointed test case dated at the re-pointing; each test case accepted after the implementation reported naming both commits; each test case not accepted named; each named test case warned as one whose result may not reflect the intended behaviour; a declared start scopes it; unreadable history never passes; order never read from a cell."
+expected = "Satisfies SR-217's acceptance: implementation landing and each test case's acceptance for the requirement read from history, a re-pointed test case dated at the act that re-accepts it; each test case accepted after the implementation reported naming both commits; each test case not accepted named; each named test case warned as one whose result may not reflect the intended behaviour; a declared start scopes it; unreadable history never passes; order never read from a cell."
 automated = "Yes"
 evidence = "tests/test_check_test_first.py"
 status = "Accepted"
@@ -4601,5 +4601,49 @@ tier = "Smoke"
 expected = "The first component is named as named by no row, the second as declaring no Consumes seam, and no warn names a module."
 automated = "Yes"
 evidence = "tests/test_if_owner_component.py::test_connectivity_warns_name_components_not_modules"
+status = "Drafted"
+phase = 6
+
+[test.TC-468]
+verifies = ["SR-217", "LLR-257"]
+level = "Integration"
+method = "Driven on real git repositories whose acts are taken with copy_live. A test case re-pointed at a requirement in a text commit before the requirement's code lands, and re-accepted by an act after it, is reported late at the act. An act made on a side branch before the code landed on trunk, merged after it, is placed at the merge and reported late, naming the act's own commit."
+tier = "Full"
+expected = "Each acceptance is dated at the commit that added its act's ledger entry: the re-pointing at the re-accepting act, not its text commit; the side-branch act ordered where it reached trunk."
+automated = "Yes"
+evidence = "tests/test_check_test_first.py::test_a_re_pointing_committed_before_its_act_is_dated_at_the_act;tests/test_check_test_first.py::test_an_act_on_a_side_branch_is_ordered_where_it_reached_trunk"
+status = "Drafted"
+phase = 6
+
+[test.TC-469]
+verifies = ["SR-217", "LLR-257"]
+level = "Integration"
+method = "A record held in an earlier spelling (its directory last_approved, the ledger keys approved/reattested, the status Approved) with an act accepting a test case after its requirement's code landed, moved into the current spelling on a side branch and merged, then a later act. The move is read as the record's cut, placed at the merge; the acceptances it carries are dated at or before it, and a declared start at the merge puts their requirements out of scope."
+tier = "Full"
+expected = "Nothing before the cut is read: the test case accepted after the landing in the earlier spelling is reported unread at or before the cut, never late at its earlier act and never dated at the later act; a requirement landing after the merge is settled by the cut's date."
+automated = "Yes"
+evidence = "tests/test_check_test_first.py::test_the_record_before_its_cut_is_never_read"
+status = "Drafted"
+phase = 6
+
+[test.TC-470]
+verifies = ["SR-217", "LLR-257"]
+level = "Integration"
+method = "A requirement and its test case read Accepted in the registries with no act on record, once with no record at all and once with a record holding only an empty act ledger, and the requirement's code landed."
+tier = "Full"
+expected = "The test case's order, and with a declared start the requirement's own, is reported unread, never as a pass; the run exits 0, and 1 under --strict."
+automated = "Yes"
+evidence = "tests/test_check_test_first.py::test_acceptances_no_act_records_are_unread_never_passing"
+status = "Drafted"
+phase = 6
+
+[test.TC-471]
+verifies = ["SR-217", "LLR-257"]
+level = "Integration"
+method = "A commit rewrites the record's test-case copy, flipping a test case into acceptance, and adds no ledger entry; a later act copies the registry again. Separately, an act whose committed ledger numbers its entry like the one before it."
+tier = "Full"
+expected = "The gap and the malformed act are each read as a change no act dated: what they carry is reported unread at their commit, never as a pass and never dated at the later act, and each is listed among the record's gaps."
+automated = "Yes"
+evidence = "tests/test_check_test_first.py::test_a_record_change_with_no_act_is_unread_never_dated_later;tests/test_check_test_first.py::test_an_act_whose_ledger_is_malformed_is_unread"
 status = "Drafted"
 phase = 6

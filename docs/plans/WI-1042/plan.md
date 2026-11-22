@@ -88,9 +88,11 @@ DELTA: within
 
 | Plan-WI | Title | Covers | Interfaces | Predecessors |
 |---|---|---|---|---|
-| P1 | Tests first, committed with P2: the Trust-state tests and the TC-250 cases moved onto acts. Run on this head's code first: the text-then-act test must fail there with the text commit's date | D3; D4; SR-217; TC-250 | IF-198; IF-220 | |
-| P2 | `record_acceptances` and the judging over it; the replay removed; `_ledger_commits` takes `also` and `rev`; LLR-257 and TC-250 amended, TC-468 to TC-471 drafted, IF-220's consumers; ids bumped; views regenerated | D2; D3; D5; D6; SR-217; TC-250 | IF-220; IF-198 | P1 |
+| P1 | Tests first, committed with P2: the Trust-state tests and the TC-250 cases moved onto acts. Run on this head's code first: the text-then-act test must fail there with the text commit's date | D3; D4; SR-217; TC-250; TC-468; TC-469; TC-470; TC-471 | IF-198; IF-220 | |
+| P2 | `record_acceptances` and the judging over it; the replay removed; `_ledger_commits` takes `also` and `rev`; LLR-257 and TC-250 amended, TC-468 to TC-471 drafted, IF-220's consumers; ids bumped; views regenerated | D2; D3; D5; D6; SR-217; TC-250; TC-468; TC-469; TC-470; TC-471 | IF-220; IF-198 | P1 |
 | P3 | Close: the Deliverable with the completeness result, the verdict on this repository, the byte deltas and the acts owed; the audit note's site 3 marked resolved by this row; the log fragment; the spec moved to `docs/archive/work/complete/` | D1; D7 | no interface: records only | P2 |
+
+The plan commit could not cite TC-468 to TC-471, which the registry did not yet hold; the build commit names them in rows P1 and P2, where the plan's prose already placed them.
 
 ## Tests and checks
 
