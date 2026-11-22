@@ -8,11 +8,86 @@ reading before starting.
 **Where the drill stands.** Waves A and B are merged, and WI-1036 and
 WI-1037 beside F-1. Variant F is filed (WI-1021 to WI-1030), critiqued, and
 its cut approved (§3.4). F-1 (WI-1021) is merged, its one-component table
-ruled by the operator (§3.5). F-2 (WI-1022) is merged, and WI-1040,
-WI-1041, WI-1043, WI-1044 and WI-1046 beside it. The adjudication sitting
-(WI-1047, §3.7) ran: its verdict is recorded, but its act is refused over
-two amendments it would not bless, so WI-1048 answers the verdict and a
-second sitting follows. Building: F-3 (WI-1023), WI-1042 and WI-1048.
+ruled by the operator (§3.5). F-2 (WI-1022) is merged, and WI-1040 to
+WI-1044, WI-1046 and WI-1048 beside it; WI-1038 is cancelled, superseded.
+The first adjudication sitting (WI-1047, §3.7) recorded its verdict, but its
+act was refused; WI-1048 answered the verdict, so the second sitting can
+run. F-3 (WI-1023) is mid-build. **Start at §0.**
+
+## 0. Resume here (2026-11-22)
+
+A new coordinator session starts with these steps, in this order.
+
+1. **F-3 (WI-1023)** is mid-build on `maint/wi-1023` in
+   `D:/ai-template-wt-wi1023`. Its plan is committed (`16e5dce34`), and its
+   build was uncommitted (about 106 files) when the session that launched
+   it ended. Run `git -C D:/ai-template-wt-wi1023 status` and `git log
+   3002931c7..` first. If a builder is no longer running, launch a fresh one
+   on the same worktree with §5's rules and these specifics:
+   - Re-orient from the plan and the uncommitted diff, and continue.
+   - Ranges: SR-248, LLR-403 to 412, TC-480 to 495, IF-327 to 330.
+   - Take no act. Stop at a green tip and ask for the operator's batch-act
+     ruling ("trace cells removed, requirement text unchanged", §3.3 N4).
+   - After the build commit and before the close-out, `git merge
+     refactor_again`. Keep trunk's text and status cells and the removal
+     of `module`, `code_symbol` and `component`; strip those cells from
+     any row trunk added; keep every RESYNC entry; take the higher
+     watermark per space; take trunk's generated views and regenerate.
+   - D3 holds: no reader of an earlier spelling (§9).
+   Then review (§4 step 4; Sol in two halves if the brief is over about
+   300 KB), merge, and run the unfiltered suite (§3.4: after F-3). Ask the
+   operator for the batch-act ruling, and record it before the act.
+2. **The second adjudication sitting.** It can run now, before F-3 merges;
+   take its act before F-3's batch act. File a new combined adjudication
+   row (WI-1049) scoped to every row `docs/ratify/CURRENT.md` lists under
+   "Waiting for automated adjudication" at that moment. Each drifted
+   `Accepted` row is an `amendment:` token; each `Drafted` SR, LLR or TC is
+   a `first-acceptance:` token; amended IF-312 and CMP-006 are amendments.
+   WI-1047's 20 blessed rows are judged again, so that one verdict yields
+   one act. Then close WI-1047, citing WI-1049. Run it exactly as §3.7 and
+   WI-1047's record say:
+   - Compose with `scripts/coordinator/compose_lane.py WI-1049 combined
+     "<tokens>" "<SRs>" <verdict> <brief>`, with the verdict path
+     `docs/reviews/wi-1049-<slug>/001-ADJUDICATE-<sha7 of HEAD>.md`.
+   - Reserve and bind with `coordinator_adjudicate.reserve_verdict` and
+     `bind_requested(v, "combined", prompt)`.
+   - Prefix the bundle with the plan-mode preface from WI-1047's run: no
+     writes, return the verdict file whole, ACCEPT not APPROVE, one
+     session.
+   - Run `agy -p ... --model gemini-4-neon-high --mode plan
+     --print-timeout 2680s` from the scratchpad (WI-1047 took 494 s).
+   - Write the reply verbatim to the verdict path; `verdict_refusal` must
+     pass. Commit it with the trailer `WI: WI-1049`, then
+     `adjudicate_brief.record_outcome(root, v, "combined", None, True,
+     "WI-1049")`.
+   - Take the act `adjudicate_act.compose_act` derives, with this repo's
+     path `project-trajectory/scripts/intake.py --root .`; the template
+     says `scripts/intake.py`. If its snapshot refuses, stop, commit
+     nothing, and answer the verdict as WI-1048 did.
+3. **Then F's order** (§2): WI-1024 and WI-1027 after F-3; WI-1045 after
+   F-3; WI-1039 only on a quiet box.
+4. **Kit leftovers to file** (each found this session, none filed yet):
+   - the act template names `scripts/intake.py`, the adopter's path;
+   - the first-acceptance template says "`APPROVE`" where its grammar
+     reads ACCEPT;
+   - the advisory and the release gate say "has reopened" for a risk no
+     act ever accepted (WI-1041's builder);
+   - whether a files-mode adopter's listed header files should be scanned
+     (WI-1048's Deliverable);
+   - the flat How-SW graph's legend omits its component nodes.
+5. **For the operator:**
+   - delete the builders' scratch folders `D:/rt1040`, `D:/rt1042` and
+     `D:/rt1048` (and `D:/rt1023` when F-3 is done); the harness blocks
+     the coordinator from removing them, and every link inside them
+     points within the folder;
+   - the OI-79 remote-ref delete and the push, as before.
+
+Scratch tools from this session (in its scratchpad, which may be cleared):
+`build_review.py` (the review briefs, with `--part code|docs`,
+`--replace path=summary`, `--round N --findings`), `if_summary.py` (a
+registry's change row by row), `mkbundle.py` (critique bundles) and
+`write_records.py` (critique records). They are small enough to rebuild
+from §4 and §6 if lost.
 
 **The job:** take each drillable work item through scope critique, build,
 review and merge into `refactor_again`, running items in parallel worktrees
@@ -32,17 +107,20 @@ adjudication sittings by Gemini Neon through `agy` (operator, 2026-11-21;
   (`a0ca15d3f`) and WI-1037 (`b62079378`); F-1, WI-1021 (`147fed185`, regen
   `ed671a026`); beside F-2, WI-1044 (`e17c677f9`), WI-1043 (`7371f0cf6`),
   WI-1041 (`8b50e28c1`), WI-1046 (`e29eb9d30`) and WI-1040 (`2a57861ec`);
-  F-2, WI-1022 (`b2b0d9476`, regen `24656b1de`). No drill worktree is
-  open. Suites: after wave A on `361270a84`, `8264 passed, 31 skipped`;
-  after wave B on `224ff2c68`, `8264 passed, 31 skipped`; smoke after F-2
-  on `24656b1de`, `3717 passed, 3 skipped`. The next unfiltered suite runs
+  F-2, WI-1022 (`b2b0d9476`, regen `24656b1de`); after F-2, WI-1042
+  (`abb00a88d`) and WI-1048 (`0f670626a`, regen `22a9a9369`); WI-1038
+  cancelled, superseded by WI-1048. Open drill worktree: F-3's (§0). Suites:
+  after wave A on `361270a84`, `8264 passed, 31 skipped`; after wave B on
+  `224ff2c68`, `8264 passed, 31 skipped`; smoke after WI-1042 on
+  `b78624a23`, `3717 passed, 3 skipped`. The next unfiltered suite runs
   after F-3 (§3.4).
-- Acts owed, all to automated adjudication (§3.3 N4; the sitting, §3.7):
-  every chain `docs/ratify/CURRENT.md` lists under "Waiting for automated
-  adjudication": wave A's three chains (§3.1 Q5), LLR-395's first
-  acceptance, F-1's and F-2's amendments and new rows, and TC-385, LLR-239
-  and SR-243 from the rows beside F-2. WI-1038 then re-points TC-428 and
-  TC-429, which drift.
+- Acts owed, all to automated adjudication (§3.3 N4; §0 step 2): every
+  chain `docs/ratify/CURRENT.md` lists under "Waiting for automated
+  adjudication". That covers wave A's chains, F-1's and F-2's amendments
+  and new rows, the rows beside F-2 (TC-385, LLR-239, SR-243, LLR-257,
+  TC-250, TC-468 to 471), and WI-1048's (LLR-373, TC-081, the six rows it
+  made ready, TC-474 and TC-475). WI-1047's verdict judged most of them,
+  but no act was taken.
 - The operator still owes, outside this drill: the OI-79 remote-ref delete
   and the push.
 
@@ -50,20 +128,18 @@ adjudication sittings by Gemini Neon through `agy` (operator, 2026-11-21;
 
 | Item | What | Wave | Notes |
 |---|---|---|---|
-| WI-1038 | TC-428 and TC-429 verify LLR-395 once accepted | After LLR-395's acceptance | Filed from WI-1019's build; the first sitting returned LLR-395 for having no TC, a circle WI-1048 breaks with a new Drafted TC; WI-1048's Deliverable says whether this row is still needed |
-| WI-1047 | The adjudication sitting (§3.7) | Ran 2026-11-22 | Verdict recorded (`42df09628`): 20 amendments re-acceptable, LLR-080 and LLR-373 not blessed; 13 ACCEPT, 6 RETURN. Act refused (the two unblessed rows drift in the registry it copies); nothing taken. Stays open for the second sitting |
-| WI-1048 | WI-1047's verdict answered | Building on `maint/wi-1048` | LLR-373 and TC-081 corrected; the six returned rows made ready; critiqued (Sol and Hydrogen, all findings applied). Then a second combined sitting over everything owed, for one act |
-| WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6, §3.4) | F, after the N6 stop | Filed and critiqued (round 1, Sol and Argon, all findings applied, `a57782d59`). Order by `needs`: 1021; 1022; 1023; then 1024 and 1027 (either order); 1025; then 1026, 1028 and 1030; then 1029. Built side by side where `needs` allows, landing one at a time (plan revision 37). F-1 merged (`147fed185`), F-2 merged (`b2b0d9476`) |
+| WI-1047 | The first adjudication sitting (§3.7) | Ran 2026-11-22 | Verdict recorded (`42df09628`); act refused over LLR-080 and LLR-373; Dispositions in its spec. Close it citing the second sitting's row (§0 step 2) |
+| WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6, §3.4) | F, after the N6 stop | Filed and critiqued (round 1, Sol and Argon, all findings applied, `a57782d59`). Order by `needs`: 1021; 1022; 1023; then 1024 and 1027 (either order); 1025; then 1026, 1028 and 1030; then 1029. Built side by side where `needs` allows, landing one at a time (plan revision 37). F-1 merged (`147fed185`), F-2 merged (`b2b0d9476`); F-3 mid-build (§0) |
 | WI-1016 | A repository can switch off the implementation layer | After F | Re-critiqued once F lands; reverses SR-186, so its amendment is drafted for the operator |
 | WI-1018 | Row text a lane leaves stale is filed, and the first set is brought up to the code | After F-8 | F-8's text migration takes B1, B7 and B9 and likely more; this row then fixes what is left |
 | WI-1045 | `acceptance_record.py`'s landing rules move to a CMP-008 module (F-1's table, §3.5 R2) | After F-3 (WI-1023) | Critiqued (Sol and Hydrogen, all findings applied): the order settled after F-3, the cover held to F-2's rule, IF-308's callers named |
-| WI-1042 | The test-first order read from the act ledger | Building on `maint/wi-1042` | Critiqued (Sol and Hydrogen, all findings applied); amends LLR-257, gains a Trust section. Its builder stopped: the spec's cross-move reading broke the operator's D3; ruled option 2 (the 2026-11-16 vocabulary move is the record's cut, read at or before its trunk commit under LLR-257), the spec amended on the branch |
 | WI-1039 | The smoke tier back under its CPU budget | Beside F-1 | Filed 2026-11-21 (§3.4, the suite during F); critiqued by Sol alone, findings applied (`d1c56e986`); not built |
 | WI-1031 to WI-1035 | The rest of phase 3 | Filed, not drilled | Owe a scope critique when they come up (§3.3 N2); WI-1035 carries §3.4 S4's answer |
 
 Done in wave A: WI-1013, WI-1014 and WI-1017; in wave B: WI-1019; beside
 F-1: WI-1036 and WI-1037; beside F-2: WI-1044, WI-1043, WI-1041, WI-1046
-and WI-1040 (§10).
+and WI-1040; after F-2: WI-1042 and WI-1048 (§10). Cancelled: WI-1038,
+superseded by WI-1048's TC-475.
 Closed by §3.3:
 WI-1015 restructured into F's rows (N1), WI-1020 cancelled (N5).
 
@@ -665,6 +741,12 @@ one SR.
 | WI-1019 | 395 | 457–458 | none |
 | WI-1021 (F-1) | 396–400 | 457–464 | 326–328 |
 | WI-1036, WI-1037 | none | none | none |
+| WI-1022 (F-2) | 398–405 (used 398) | 462–475 (used 462–467) | 327–340 (none) |
+| WI-1042 | 399–402 (none) | 468–473 (used 468–471) | none |
+| WI-1048 | none | 474–479 (used 474–475) | none |
+| WI-1023 (F-3), open | 403–412, and SR-248 | 480–495 | 327–330 |
+
+Marks on trunk at `22a9a9369`: SR 247, LLR 398, TC 475, IF 326, WI 1048.
 
 WI-1019 used LLR-395 only; its TC range went unused and passes to WI-1021,
 which used LLR-396 and LLR-397, TC-457 to TC-461 and IF-326; the rest of its
@@ -704,6 +786,12 @@ stops and asks.
   acceptance it carries reads as at or before the move's trunk commit
   (LLR-257). Check D3 before adopting any finding that reads history
   across that move: WI-1042's critique did, and its builder had to stop.
+- **A keep-both join of a registry conflict can drop lines.** When two
+  sides append rows that end alike (`status = "Drafted"`, `phase = 6`), git
+  folds those lines into the shared tail after the conflict, so joining
+  ours, then theirs, then the tail leaves the first block's last row short.
+  Run `trace.py --strict` before committing such a merge, and diff each
+  side's rows against the merged file.
 - This hand-off's question labels (G1 to G3) spell retired stage tags. Cite
   them in a spec or any other live file as "§3.6, its second question", never
   as `G2`: `check_vocab --strict` refuses the tag, the commit hook runs it
@@ -942,3 +1030,18 @@ Append one line per step taken: the item, what happened, the commit.
   under the D3 ruling. Kit leftovers noted for filing: the act template
   names `scripts/intake.py` (the adopter's path); the first-acceptance
   template says "`APPROVE`" where its grammar reads ACCEPT.
+- 2026-11-22: WI-1042 merged `abb00a88d` (review: Hydrogen APPROVE, Sol two
+  MINORs fixed, round 2 both APPROVE; the watermark took TC 471), regen
+  `b78624a23`; smoke `3717 passed, 3 skipped`. WI-1048 built: LLR-373's title,
+  Detail and rationale and TC-081 follow the code, LLR-393, LLR-394, TC-455
+  and TC-456 name no carrier, and TC-474 and TC-475 cover LLR-398 and
+  LLR-395. Its review was briefed to judge each row as the next sitting
+  will: Hydrogen APPROVE, Sol one MINOR (a docstring), fixed `9ae7df40c`;
+  round 2 both APPROVE. Merged `0f670626a`: `test-cases.toml` kept both
+  sides' new rows. The conflict had factored TC-471's last two lines (status,
+  phase) into the shared tail, so a keep-both join dropped them; trace
+  `--strict` caught it (integrity 2) and they were restored to trunk's
+  bytes. Check every keep-both registry join this way (§9). WI-1038
+  cancelled in the same merge. Regen `22a9a9369`. F-3's builder stopped on
+  the API usage limit with its build uncommitted; resumed, told to merge
+  trunk before its close-out. §0 written as the resume point.
