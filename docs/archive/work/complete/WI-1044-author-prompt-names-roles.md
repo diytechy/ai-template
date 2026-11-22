@@ -117,6 +117,15 @@ act.
   criteria. Filed on trunk as WI-1046, which needs this row for TC-385's
   wording.
 
+**Review** (the coordinator, 2026-11-21; queue-drill HANDOFF §4 step 4).
+Round 1 over `1b22c9355..2cb001733`, the generated views and this spec's
+copies withheld from the diff and the spec at the tip given whole: OpenAI
+Sol (`gpt-6.1-sol`, low, via `codex exec`) read the whole diff, and Gemini
+Hydrogen (`gemini-4-hydrogen-low`, via the Antigravity CLI) read the prose
+and registry part by file reference. Sol: `VERDICT: APPROVE findings=0`.
+Hydrogen: `VERDICT: APPROVE findings=0`. No findings, so no fix and no
+further round.
+
 ## Context
 
 Filed on trunk on 2026-11-21 from WI-1037's close-out, which found three

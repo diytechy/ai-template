@@ -38,3 +38,6 @@ commit hooks on. The record is in the row's Deliverable
   chain in `docs/ratify/CURRENT.md`).
 - **Found, not changed:** SR-243 still names "Sol or Terra" in its
   requirement and acceptance; filed on trunk as WI-1046.
+- **Review:** round 1, OpenAI Sol (low) over the whole diff and Gemini
+  Hydrogen (low, the Antigravity CLI) over the prose and registry part:
+  both `VERDICT: APPROVE findings=0`.
