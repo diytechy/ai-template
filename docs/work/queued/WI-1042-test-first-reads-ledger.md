@@ -29,37 +29,42 @@ snapshot copy at that commit holds the accepted rows, test cases' `verifies`
 cells included. Acceptance happens only in an act, so reading the acts gives
 the same order SR-217 asks for, still from the committed history.
 
-**Settled by the scope critique (2026-11-21).**
+**Settled by the scope critique (2026-11-21), and the cut by the
+coordinator's ruling, 2026-11-22, on the builder's stop: D3 stands; option 2
+with LLR-257's at-or-before reading.**
 
-- **Before the ledger.** An acceptance before the ledger's first entry
-  (seq 1, 2026-09-27) has no entry. It is read from seq 1's snapshot copy as
-  at or before seq 1's commit, under the module's existing at-or-before rule
-  (LLR-257): it settles the order when it falls at or before the landing,
-  and for a requirement's own acceptance at or before the declared start;
-  otherwise the requirement is reported unread, never as a pass. This
-  repository's start (`[checks] test_first_since`, 2026-11-19) is after
-  seq 1, so here the rule reaches only test-case pairs.
+- **The cut (D3).** The vocabulary move `2bee2b551` (2026-11-16) is the
+  record's cut. Entries, copies and keys before it are in an earlier
+  spelling (the record's directory `docs/archive/last_approved/`, the
+  ledger's keys `approved`/`reattested`, the copies' status `Approved`) and
+  are never read: no compatibility readers in the core tooling, and formats
+  in git history are cut cleanly (the operator's D3, 2026-11-11; test-tiers
+  HANDOFF §5, and §9.9, which declined this reader for this check). Every
+  acceptance the move carries, pre-ledger ones included, is read as at or
+  before the commit that brought the move onto trunk's first-parent line.
+  That is LLR-257's existing rule for a row moved into Accepted from a word
+  outside the status vocabulary: it settles the order when it falls at or
+  before the landing, and for a requirement's own acceptance at or before
+  the declared start; otherwise the requirement is reported unread, never
+  as a pass. The declared start `[checks] test_first_since` is that commit
+  (`f6dd5b87a`, per §9.9's precedent), so those requirements fall out of
+  scope here. An act made on a side branch is ordered by the first trunk
+  commit that contains it, as a landing is. WI-1040's finding that
+  `baseline_snapshot._ledger_commits` reads the ledger's current path only
+  is this cut working as intended, not a defect: the walk keeps reading the
+  current path only.
 - **Pairs.** A pair reads accepted at the first act whose snapshot copy
   holds the test case accepted while it names the requirement, directly or
   through a design row whose `sr_refs` name the requirement in that same
   copy. A re-pointing is so dated at the act that re-accepted it, as the
   acceptance-act rule dates it today.
-- **Completeness.** Before the ledger is trusted, every commit since seq 1
-  that changes a snapshot copy is checked to add a ledger entry: flips to
-  Accepted, and re-acceptances that carry a direct or design-row
-  re-pointing. A snapshot change with no entry is a gap: it is filed, and
-  the check reads the rows it touched as unread, never as a pass and never
-  dated at a later act.
-- **The ledger's earlier path.** The ledger moved from
-  `docs/archive/last_approved/` to `docs/archive/last_accepted/` on
-  2026-11-16; an entry's commit is read across that move, so no earlier
-  entry is dated at the move commit. WI-1040 made one walk over the
-  ledger's commits, `baseline_snapshot._ledger_commits`, shared by the
-  brief's heading (`last_act`) and the accepted-risk reader
-  (`risk_acceptance_act`). It reads the current path only, so today it
-  dates every earlier entry at the move. The cross-move reading lands in
-  that walk, which fixes all three readers in one place (WI-1040's
-  finding, 2026-11-22).
+- **Completeness.** Before the ledger is trusted, every commit since the cut
+  that changes a snapshot copy is checked to add a ledger entry, read in the
+  current spelling only: flips to Accepted, and re-acceptances that carry a
+  direct or design-row re-pointing. The move commit is the cut, not a gap.
+  A snapshot change with no entry is a gap: it is filed, and the check reads
+  the rows it touched as unread, never as a pass and never dated at a later
+  act.
 
 SR-217 and LLR-257 (both Accepted) state the replay, so this row amends
 LLR-257's text, which drifts for automated adjudication.
@@ -86,7 +91,8 @@ owed under PROCESS.md §3 "When a guard is owed".
 - **The ruling, for each state a supported route produces:**
   - an entry and its adding commit both readable: the act's commit dates
     the rows it names;
-  - an acceptance before seq 1: at or before seq 1's commit, as above;
+  - an acceptance before the cut: at or before the cut's trunk commit, as
+    above;
   - no ledger, or an empty one, while a registry holds accepted rows: those
     acceptances cannot be dated, so each requirement whose order turns on
     them is reported unread, never as a pass;
@@ -100,12 +106,15 @@ owed under PROCESS.md §3 "When a guard is owed".
 ## Done-when
 
 - [ ] The completeness check above is run on this repository and its result
-      quoted; any gap is filed, not patched over.
+      quoted; any gap is filed, not patched over. Measured before any reader
+      change: read in the current spelling from seq 1, one change carries
+      flips or new pairs with no entry, the move commit `2bee2b551`, which is
+      the cut; since the cut, none.
 - [ ] Both readings come from the ledger and the snapshot copies under the
       rules above; no first-parent replay of the registries remains.
-- [ ] The cross-move reading is in `_ledger_commits`; a test shows an entry
-      added before the move dated at its own commit by the test-first
-      reading, `last_act` and `risk_acceptance_act`.
+- [ ] The record before the cut is never read; a test shows an acceptance
+      the cut carries dated at or before the cut's trunk commit, never at a
+      later act and never read from the earlier spelling.
 - [ ] Each state in the Trust ruling has a test, and one test that fails on
       today's code shows a ledger-read date.
 - [ ] The check's verdicts on this repository are unchanged, or each change
