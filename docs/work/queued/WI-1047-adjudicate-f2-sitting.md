@@ -58,3 +58,27 @@ from the authors' and builders' (OpenAI, Anthropic).
       with its finding, and its follow-up is filed or named.
 - [ ] `docs/ratify/CURRENT.md` regenerates with no chain left that this
       sitting judged and accepted.
+
+## Dispositions
+
+The sitting ran on 2026-11-22: Gemini Neon (`gemini-4-neon-high`), 494 s,
+one session. Its verdict (`42df09628`, recorded `902d218e9`):
+
+- **Amendments:** 19 `MEANING+BLESS` (LLR-041, -042, -067, -199, -239, -244,
+  -283, -311; SR-233, SR-243; TC-044, -067, -080, -195, -293, -332, -385,
+  -435, -436), 1 `CLARITY` (LLR-293), 2 `MEANING` not blessed (LLR-080,
+  LLR-373). TC-049, TC-409, TC-410, TC-428 and TC-429 changed only their
+  traced `verifies` cell and owe no act; IF-312 and CMP-006 were not shown.
+- **First acceptances:** 13 `ACCEPT` (LLR-396, -397, -398; TC-457 to TC-462,
+  TC-464 to TC-467), 6 `RETURN` (LLR-393, LLR-394, LLR-395, TC-455, TC-456,
+  TC-463).
+
+**The act is refused.** `compose_act` derived it (re-accept the 20, then
+flip the 13), and its first snapshot, run exactly as derived, refused:
+LLR-080 and LLR-373 drift in the design registry the act copies and no act
+names them. Following the act brief, nothing was committed.
+
+**Follow-up:** WI-1048 answers every MEANING and RETURN finding, with each
+finding quoted in its Context. A second combined sitting then judges
+everything still owed, so that one verdict yields one act; this verdict
+stays the record of what was judged here.
