@@ -17,7 +17,7 @@ Built on the maintenance branch `maint/wi-1023`, cut from `refactor_again` at
 `3002931c7`, with the commit hooks on, and merged with trunk at `73aa095ce`
 before the close. The specref (the review-churn plan's item 5) is cleared at
 close, as a terminal row's is. The plan,
-[plan.md](../../../../plans/WI-1023/plan.md), enumerates every reader of the three
+[plan.md](../../../plans/WI-1023/plan.md), enumerates every reader of the three
 cells from the code and says what each reads instead.
 
 - `16e5dce34`: the plan.
