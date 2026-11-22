@@ -13,14 +13,14 @@ _Baseline: `docs/requirements/external.toml` copied 2026-11-16 (675f5b7a4)._
 _Baseline: `docs/requirements/components.toml` copied 2026-11-20 (0e67ffffb)._
 _Baseline: `docs/requirements/assumptions.toml` copied 2026-11-20 (46d518b56)._
 
-_Acceptance provenance: the last commit to move a `Status` cell in a snapshotted registry is 458724024 (2026-11-21) — the record's maturity cells have not moved since._
+_Acceptance provenance: the last commit to move a `Status` cell in a snapshotted registry is d8ac920b8 (2026-11-22) — the record's maturity cells have not moved since._
 
 ## Off-spine census
 
 _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into acceptance or arrives accepted, `--accepts` names it or `--reaccepts` names one of its rows; a re-SEED still blesses the whole tree. What it would absorb:_
 
-- `docs/requirements/interfaces.toml` — 238 changed, 2 added, 30 removed since the snapshot; ruling(s): WI-1014, WI-1021.
-- `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-1021.
+- `docs/requirements/interfaces.toml` — 238 changed, 2 added, 30 removed since the snapshot; ruling(s): WI-1014, WI-1021, WI-1022.
+- `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-1021, WI-1022.
 
 
 _No chain on a rung the operator-acceptance dial holds owes an act; every chain in this brief waits for automated adjudication._
