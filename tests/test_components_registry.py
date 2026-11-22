@@ -280,10 +280,10 @@ def test_module_components_keys_each_declared_file_by_its_module():
     `Component:` declarations (WI-1021; its input was the design rows' tags
     until then). Each path lands on its `norm_module` key in any of its
     spellings, so a seam, an import and a header meet on one key. Two files
-    sharing a key (`check.py`, `check.sh`) keep both components, for the rules
-    to refuse reading the key as one component. A value that cannot name a
-    component makes no membership, and a well-formed id naming no component
-    row is kept: each caller intersects with the ids it declares.
+    sharing a key (`check.py`, `check.sh`) keep both components. A value that
+    cannot name a component makes no membership, and a well-formed id naming
+    no component row is kept: the join does not filter against the component
+    registry.
 
     Implements: TC-435"""
     from kitlib import spine

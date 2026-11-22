@@ -37,6 +37,10 @@ commit hooks on. The record is in the row's Deliverable
   follow-up: the 15 registry-reading and whole-tree modules,
   `540 passed, 1 skipped, 18 warnings in 187.15s (0:03:07)`; smoke,
   `3717 passed, 3 skipped, 18 warnings in 128.86s (0:02:08)`.
+  Review round 1 (Sol's MINOR: `module_components`' docstring drops its
+  caller-policy claims, with a RESYNC entry): the 16 modules a docstring
+  there can reach, `417 passed, 1 skipped, 18 warnings in 130.27s (0:02:10)`;
+  `trace.py --strict` `orphans=0 integrity=0`.
   <!-- fig: derived="the totals are those the Deliverable's Tests list declares, each with its command and revision" -->
 - **Byte deltas:** no budgeted or watched file was touched.
   `low-level-requirements.toml` +866, `test-cases.toml` +7,786.

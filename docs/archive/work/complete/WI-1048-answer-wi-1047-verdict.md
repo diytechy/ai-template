@@ -225,12 +225,29 @@ mutation of the code it pins, reverted before any commit:
   <!-- fig: cmd="python project-trajectory/scripts/run_menu.py smoke" rev="3fa852a18 (with the follow-up's tree, before its commit)" -->
   `trace.py --root . --strict`: `orphans=0 integrity=0`;
   `check_trajectory.py --strict`: clean.
+- Review round 1 (Hydrogen APPROVE; Sol's one MINOR, adopted):
+  `kitlib.spine.module_components`' docstring drops its two caller-policy
+  claims ("each caller intersects", "a rule reading the map treats a key
+  with more than one as in no single component"), which the connectivity
+  warns break, as does TC-435's evidence test docstring; a RESYNC_PACK.md
+  entry anchored `[since 2474d7b4f]`; no behaviour change. The modules a
+  docstring there can reach, `test_import_layers`, `test_dogfood_sync`,
+  `test_components_registry`, `test_check_doc_refs`, `test_resync_pack`,
+  `test_check_resync`, `test_module_size_ratchet`, `test_gen_arch_map`,
+  `test_component_headers`, `test_gen_components`,
+  `test_if_owner_component`, `test_policy_one_home`, `test_rule_sync`,
+  `test_seam_resolution`, `test_seam_import_forms`, `test_evidence_join`:
+  `417 passed, 1 skipped, 18 warnings in 130.27s (0:02:10)`;
+  `trace.py --root . --strict`: `orphans=0 integrity=0`.
+  <!-- fig: cmd="python -m pytest -q -p no:cacheprovider -n 12 --basetemp D:/rt1048/t <the 16 modules listed>" rev="7096efadd (with the round's tree, before its commit)" -->
 
 **Byte deltas** (none budgeted or watched):
 `docs/requirements/low-level-requirements.toml` 630,605 -> 631,471 (+866;
 +586 at the build commit);
 `docs/test/test-cases.toml` 681,090 -> 688,876 (+7,786; +7,547 at the build
-commit).
+commit); at review round 1, `project-trajectory/RESYNC_PACK.md`
+745,116 -> 745,812 (+696) and `scripts/kitlib/spine.py` 74,218 -> 74,189
+(-29).
 
 **What the second sitting owes.** From this branch:
 
