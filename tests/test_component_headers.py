@@ -69,7 +69,6 @@ CARRIERS = [
     ("run.sh", "#!/bin/sh\n# Component: CMP-002\n#\n# Runs.\necho hi\n"),
     ("run.command", "#!/bin/sh\n# Component: CMP-002\nexec ./run.sh\n"),
     ("run.ps1", "# Component: CMP-002\n# Runs.\nWrite-Host hi\n"),
-    ("help.ps1", "<#\n.SYNOPSIS\n    Help.\nComponent: CMP-002\n#>\nWrite-Host\n"),
     ("conf.toml", "# A table.\n# Component: CMP-002\n[a]\nb = 1\n"),
     ("conf.ini", "# Component: CMP-002\n[a]\nb = 1\n"),
     ("rows.csv", "# Component: CMP-002\nA,B\n1,2\n"),
@@ -134,13 +133,17 @@ OUTSIDE = [
     ("below.sh", "#!/bin/sh\necho hi\n# Component: CMP-001\n"),
     ("body.md", "<!-- A header. -->\n\nComponent: CMP-001\n"),
     ("prose.toml", "# The Component: CMP-001 line, mid-line.\n"),
+    ("help.ps1", "<#\n.SYNOPSIS\n    Help.\nComponent: CMP-001\n#>\nWrite-Host\n"),
+    ("colon.cmd", "@echo off\r\n:: Component: CMP-001\r\nsetlocal\r\n"),
 ]
 
 
 def test_a_declaration_outside_the_carrier_declares_nothing(tmp_path):
     """A comment below a module's docstring, a later string, a line below the
-    top-of-file comment block, Markdown outside the opening comment and a
-    declaration mid-line are not the header, so the file is absent.
+    top-of-file comment block, Markdown outside the opening comment, a
+    declaration mid-line, a PowerShell help block and a batch file's `::`
+    line are not the header's declaring carrier, so the file is absent: the
+    grammar names a `#` line for PowerShell and a `REM` line for batch.
 
     Implements: TC-457"""
     for name, text in OUTSIDE:

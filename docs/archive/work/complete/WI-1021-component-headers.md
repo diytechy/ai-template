@@ -15,9 +15,9 @@ planmode = "single"
 
 Built on the maintenance branch `maint/wi-1021`, cut from `refactor_again` at
 `1aa6c439a`, with the commit hooks on. The specref (the pointer rules) is
-cleared at close, as a terminal row's is. **The operator's ruling on the
-one-component table is still owed** (Done-when 4): the lane built on its own
-picks, and review waits until the ruling is recorded in this spec's Context.
+cleared at close, as a terminal row's is. The lane built on its own picks;
+the operator ruled the one-component table on 2026-11-21, accepting every
+pick, before the review (Done-when 4; Context, "The table, ruled").
 
 - `5e13999ca`: the plan ([plan](../../../plans/WI-1021/plan.md)) and the
   one-component table ([table](../../../plans/WI-1021/component-table.md)).
@@ -26,6 +26,9 @@ picks, and review waits until the ruling is recorded in this spec's Context.
   documents, the RESYNC entry, the tests and the regenerated views.
 - The close-out commit after it: this Deliverable, the move to `complete/`
   and the log fragment.
+- The commit after the close-out, before the review (the coordinator): the
+  operator's ruling recorded, and the declaration's batch and PowerShell
+  carriers narrowed to Done-when 1's (Deviations).
 
 **The table** (Done-when 4). Each of the 34 files with design rows tagged to
 several components, its tags with the rows behind them, the pick and the
@@ -44,7 +47,9 @@ scope and carry no header.
 `gen_arch_map.py`, beside `module_contracts` and `header_lines`:
 `file_component(path)` returns `(component, problem)` over a Python module's
 docstring (read off its first statement's tokens) or any other file's
-`header_lines`; `component_declaration` judges the lines: exactly
+`header_lines` over the grammar's own carriers (`_COMPONENT_FORMS`: the
+contract header's forms, with a batch file's narrowed to `REM` lines and a
+PowerShell script's to `#` lines); `component_declaration` judges the lines: exactly
 `Component: CMP-NNN`, else absent, doubled or malformed (a malformed line
 voids the file even beside an exact one).
 
@@ -136,6 +141,19 @@ re-cuts), TC-049.
   row.
 - An empty `__init__.py` under `[paths] src` owes a one-line docstring (the
   scope is every Python file); the RESYNC entry says so.
+- Before the review (the coordinator, 2026-11-21): the reader first read
+  the declaration through every form `header_lines` reads for the
+  `Contracts:` marker, a batch file's `::` lines and a PowerShell `<# #>`
+  help block included: looser than Done-when 1, which names a `REM` line
+  and a `#` line, and, for `::`, than LLR-396. It now reads only those two;
+  LLR-396 and TC-457 (both `Drafted`) follow, and `gen_arch_map.py`'s size
+  baseline moves 1655 -> 1657, a reviewed bump with its reason in the
+  ratchet's entry. Every written header already used those lines, so the
+  census still reads 167 declared, 0 findings.
+- Done-when 3 names the DevStg-Arch derivation among membership's readers;
+  `derive_stage` reads none (the DevStg-Arch rung reads only the component
+  rows' status and standing), so the clause is met with no change to it, as
+  the plan records.
 
 **Tests.** Red before the code: `tests/test_component_headers.py`, `37
 failed in 1.46s` as first written (each carrier, each finding class, the
@@ -180,6 +198,14 @@ green, `14 passed in 0.83s`.
   `5e13999ca` (`adjudicate_act.py` 0 functions, 1 site; `session_keep.py` 1
   and 8; `gen_arch_map.py` 0 and 6), so the baseline was stale before this
   row touched them (report-only).
+- Before the review: the outside-the-carrier test gains a PowerShell help
+  block and a batch `::` line (the help block left the carrier list), `1
+  failed, 12 passed in 6.97s` on the old reader, whose `::` case read
+  `CMP-001` too; with the narrowed carriers, every test module importing
+  `gen_arch_map` plus `test_import_layers` and `test_dogfood_sync`, `667
+  passed, 1 skipped in 215.22s (0:03:35)`; `trace.py --strict` `orphans=0
+  integrity=0`, `component-findings=0`.
+  <!-- fig: cmd="python -m pytest -q -n auto <each module listed>" rev="the worktree after fa057410d, before the review" -->
 
 **Byte deltas.** `PROCESS.md` 101,623 -> 101,950 (+327, watched);
 `PROCESS_OPTIONS.md` 202,180 -> 202,304 (+124, watched); the byte-budget
@@ -215,6 +241,17 @@ file. The real calls are the near-even splits: `check.py` (9/4/1),
 `census.py`, `held_status.py`, `kitlib/authority.py`, `id_carrier.py`). A
 file doing two components' work is evidence about the partition (OI-14); it
 is flagged and filed as its own row, never split here.
+
+**The table, ruled (operator, 2026-11-21, queue-drill HANDOFF §3.5).** Every
+pick in `docs/plans/WI-1021/component-table.md` stands as proposed: the
+eight near-even files (R1); the three picks against the tag majority,
+`hooks/pre-commit` CMP-007 and `kitlib/config` and `kitlib/git` CMP-006 by
+the kernel rule (R3); and the 22 in-scope files no design row names (R4).
+Of the two files doing two components' work (R2), `acceptance_record.py`
+keeps CMP-006 and WI-1045 is filed on trunk to move its CMP-008 landing
+rules into a CMP-008 module behind an interface; `check_doc_refs.py` keeps
+CMP-007 and gets no row until WI-1023 lands, since its symbol-binding
+oracle's spine role retires there.
 
 **Where the header goes (F point 1, revision 16).** In the same header that
 holds the file's `Contracts:` marker, by the file's comment syntax (Done-when

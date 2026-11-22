@@ -707,9 +707,10 @@ _HASH_FORM = (re.compile(r"#+"), None)
 _PREAMBLE_RE = re.compile(r"#!|@echo\s+off\b", re.I)
 
 
-def header_lines(path):
+def header_lines(path, forms=None):
     """The leading comment block of a NON-Python file, its comment markers
-    stripped, as the lines the marker and body grammar read.
+    stripped, as the lines the marker and body grammar read. `forms` replaces
+    `_HEADER_FORMS` for a grammar that names narrower carriers.
 
     The carriers: the FIRST `<!-- ... -->` block at the top of a Markdown
     file; line and block comments in the forms `_HEADER_FORMS` lists for
@@ -726,7 +727,7 @@ def header_lines(path):
         return []
     if path.suffix.lower() in _MARKDOWN_SUFFIXES:
         return _markdown_header(lines)
-    line_re, block = _HEADER_FORMS.get(path.suffix.lower(), _HASH_FORM)
+    line_re, block = (forms or _HEADER_FORMS).get(path.suffix.lower(), _HASH_FORM)
     if lines and _PREAMBLE_RE.match(lines[0].strip()):
         lines = lines[1:]
     out, closer = [], None
@@ -830,6 +831,10 @@ _COMPONENT_SHAPE_RE = re.compile(r"^component\s*:", re.I)
 COMPONENT_TYPES = frozenset(
     {".py", ".sh", ".command", ".ps1", ".toml", ".ini", ".csv", ".cmd", ".md", ""}
 )
+# The contract header's carriers, narrowed to the line the grammar names: a
+# batch file's `REM` (not `::`), a PowerShell script's `#` (not `<# #>`).
+_COMPONENT_FORMS = {**_HEADER_FORMS, ".ps1": _HASH_FORM}
+_COMPONENT_FORMS[".cmd"] = (re.compile(r"@?rem\b", re.I), None)
 
 
 def component_declaration(lines):
@@ -900,8 +905,9 @@ def file_component(path):
     """THE ONE READER of a file's component: `(component, problem)` as
     `component_declaration` gives it, over the file's carrier: a Python
     module's docstring, and every other file's top-of-file comment block as
-    `header_lines` reads it (`#`, `REM` or `::`, `<# #>`, the opening
-    `<!-- -->`). Any file may be read; which files owe a declaration is the
+    `header_lines` reads it over `_COMPONENT_FORMS` (`#`, `REM`, the opening
+    `<!-- -->`; a batch `::` line or a PowerShell help block declares
+    nothing). Any file may be read; which files owe a declaration is the
     caller's scope.
 
     Implements: SR-159, LLR-396
@@ -909,7 +915,7 @@ def file_component(path):
     path = Path(path)
     if path.suffix.lower() == ".py":
         return component_declaration(_docstring_lines(path))
-    return component_declaration(header_lines(path))
+    return component_declaration(header_lines(path, _COMPONENT_FORMS))
 
 
 def states_contract_body(path):
