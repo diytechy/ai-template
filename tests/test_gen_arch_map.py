@@ -381,7 +381,9 @@ def test_zero_modules_from_a_hidden_only_src_warns(scaffold):
 
 
 def test_contracts_and_if_edges(tmp_path):
-    """Implements: TC-081"""
+    # The module<->module rows below are a shape the trace check refuses since
+    # rows name components (WI-1022); TC-081 cites the diagram over component
+    # and party rows instead (WI-1048), and this pins the older arm.
     src = tmp_path / "src"
     src.mkdir()
     # The marker OPENS its own line since OI-66: the mid-line form this fixture
@@ -425,6 +427,33 @@ def test_contracts_and_if_edges(tmp_path):
     # edge — it is skipped here.
     ext = [{"IF-ID": "IF-005", "Provider": "src/a", "Consumers": "downstream adopter"}]
     assert "IF-005" not in gen_arch_map.build_dependency_diagram([str(src)], ext)
+
+
+def test_the_dependency_diagram_draws_imports_only(tmp_path):
+    """A row names components and external parties, never a module, so the
+    dependency diagram draws each internal import as a solid arrow and no
+    seam: no dotted edge and no interface id appear beside the rows.
+
+    Implements: TC-081"""
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "a.py").write_text(
+        '"""Module A."""\n\nimport b\n\n\ndef run():\n    """go"""\n    return b\n',
+        encoding="utf-8",
+    )
+    (src / "b.py").write_text(
+        '"""Module B."""\n\n\ndef go():\n    """g"""\n', encoding="utf-8"
+    )
+    rows = [
+        {"IF-ID": "IF-001", "Owner": "CMP-001", "Consumers": "CMP-002"},
+        {"IF-ID": "IF-002", "Owner": "CMP-002", "Requestors": "CMP-001"},
+        {"IF-ID": "IF-003", "Owner": "CMP-001", "Consumers": "external:git"},
+    ]
+    bare = gen_arch_map.build_dependency_diagram([str(src)])
+    diag = gen_arch_map.build_dependency_diagram([str(src)], rows)
+    assert "    m_src_a --> m_src_b" in diag.splitlines()
+    assert diag == bare
+    assert " -. " not in diag and "IF-00" not in diag
 
 
 # --- WI-478: the Contracts continuation grammar --------------------------------

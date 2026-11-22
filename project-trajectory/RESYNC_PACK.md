@@ -12248,6 +12248,21 @@ with no record read the same way until a first signing records them. A script of
 **Kit-owned files — overwrite:** `scripts/check_test_first.py`,
 `scripts/baseline_snapshot.py`, `scripts/acceptance_record.py`, `README.md`.
 
+### The module-to-component join's docstring states only what the join does [since 2474d7b4f]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** The docstring of `kitlib.spine.module_components` no longer
+says every caller intersects the map with its declared component ids, or that
+every rule reads a key holding several components as in no single one: the
+connectivity warns do neither. It says the ids are not filtered and leaves
+each reader's rule to the reader. Only the docstring moved: the map, and
+every check that reads it, is unchanged.
+
+**What to do.** Nothing is forced.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/spine.py`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
