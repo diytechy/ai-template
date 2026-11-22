@@ -42,6 +42,16 @@ grammar of the SR `permutations` cell, with its out-of-domain rule beside
 it (revision 20). The SR cell stays for system-boundary dimensions only. A
 schema change adopters inherit.
 
+**The companion cells are warn-first (operator, 2026-11-21, queue-drill
+HANDOFF §3.6 G2).** Round 1 of this row's scope critique (Sol) made
+`dimensions` and `out_of_domain` required on every LLR that carries
+`constrains`; the operator overruled that part. The `gen_cases` grammar has
+ranges, sets and booleans only, and most `file`, `stdout`, `bytes` and
+`git` interfaces carry a schema or a document, so a missing companion cell
+is reported, never failing `--strict`. A cell that is present must still
+parse. Whether the cells become required is decided later, on the counts
+this row's population records.
+
 **Placement and blast radius.** An LLR is placed at the owner component of
 each interface it constrains, or of the interface its verifying TC names
 (WI-1023 built the second half). An SR is not placed. Blast radius from a
@@ -79,14 +89,16 @@ contract-body prose into these LLRs.
 
 - [ ] **The cells.** LLR and SR rows accept an optional `constrains` cell:
       a list of one or more live `IF-NNN` ids, written like `sr_refs`. An
-      LLR carrying `constrains` must carry `dimensions` (one string in the
+      LLR carrying `constrains` may carry `dimensions` (one string in the
       `gen_cases` grammar, which refuses what it does not parse) and
       `out_of_domain` (one sentence: what the interface does with an input
       outside the dimensions, either refused at the boundary or a declared
       state its form names); both are absent on an LLR without
-      `constrains`. A dead id, an empty list, or a missing or unparsable
-      companion cell is a finding. Registry headers and templates state
-      the three cells.
+      `constrains`. A dead id, an empty list, an unparsable companion cell,
+      or a companion cell on an LLR without `constrains` is a finding. A
+      missing companion cell on an LLR with `constrains` is a warning that
+      never fails `--strict` (operator, G2). Registry headers and templates
+      state the three cells.
 - [ ] A derived check reports each interface that reaches no executable TC
       through an LLR's or SR's `constrains` or a TC's `verifies`; one
       reached only through Inspection, Analysis or Attest evidence is
@@ -98,8 +110,11 @@ contract-body prose into these LLRs.
       redundant for every LLR and SR the TC verifies.
 - [ ] Every live interface is reached: each has a constraining LLR or SR
       (the four `external:` rows included), or the Deliverable names it as
-      retired with its reason. Every LLR given `constrains` carries its
-      `dimensions` and `out_of_domain`. New LLRs are `Drafted`; amended
+      retired with its reason. Each LLR given `constrains` carries
+      `dimensions` and `out_of_domain` where the grammar fits its input; the
+      Deliverable counts, by interface channel, the LLRs that carry them and
+      those left without, the evidence the operator's later strictness call
+      reads. New LLRs are `Drafted`; amended
       accepted rows keep their status and show as drift, which does not
       fail `--strict`. The Deliverable lists every act owed for automated
       adjudication; the lane holds for none.
@@ -113,6 +128,6 @@ contract-body prose into these LLRs.
 - [ ] A RESYNC entry (variant F, after WI-1023's) gives adopters the three
       cells and the coverage rule.
 - [ ] `trace.py --strict` and `check_trajectory --strict` are clean; tests
-      are red-before for each finding class and for the per-pair rule's
-      mixed case (one verified LLR constrains the named interface, another
+      are red-before for each finding class, for the missing-cell warning
+      that leaves `--strict` passing, and for the per-pair rule's mixed case (one verified LLR constrains the named interface, another
       does not); every importer of a changed module runs green.

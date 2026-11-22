@@ -399,7 +399,7 @@ so the batch act cannot run until a sitting clears the drift.
 before F-3's batch act, beside the one after F-8. It also clears
 `docs/ratify/CURRENT.md` and lets WI-1038 start.
 
-**Answer:**
+**Answer:** Yes, run through antigravity cli (agy) model neon high.
 
 **G2. F-4 (WI-1024): how strict are `dimensions` and `out_of_domain`?** The
 review-churn plan's revision 20 made an LLR's `dimensions` cell the one
@@ -417,7 +417,14 @@ carry a schema or a document. About 197 interfaces need a constraining LLR.
 *Recommendation: (b).* It keeps the revision 20 ruling and defers only the
 critique's addition until there is evidence.
 
-**Answer:**
+**Answer:** b, this was already noted before though to go with route b and not follow the original filing, was this lost somewhere along the way?
+
+*Coordinator (2026-11-21):* the operator had agreed to warn-first in the
+coordinator's session, and the coordinator filed it here as a question
+instead of recording it as a ruling; no earlier file held it. Applied:
+WI-1024's Context records the ruling, and its Done-when makes a missing
+companion cell a warning, with the Deliverable counting the cells by
+interface channel for the later strictness call.
 
 **G3. F-6 (WI-1026): role tags, or imports?** Revision 35 ruled that an
 interface's consumers and requestors are generated from code once code
@@ -440,7 +447,7 @@ owner's module docstring.
 `call` rows survive as crossings. WI-1026 is late in F's order and nothing
 before it depends on it.
 
-**Answer:**
+**Answer:** Agreed, will wait.
 
 ## 4. One work item, start to finish
 
@@ -754,3 +761,7 @@ Append one line per step taken: the item, what happened, the commit.
   generated files trunk's, regenerated), regen `ed671a026`. Smoke on
   `ed671a026`: `3714 passed, 3 skipped` in 172 s, CPU 738.0 s against 540
   (over, report-only; WI-1039's). Worktree and branch removed.
+- 2026-11-21: the operator answered §3.6: G1 yes, the sitting before
+  F-3's batch act run through the Antigravity CLI (`agy`) on Neon at high
+  effort; G2 (b), applied to WI-1024 (Context and Done-when); G3, decided
+  before WI-1026 is claimed.
