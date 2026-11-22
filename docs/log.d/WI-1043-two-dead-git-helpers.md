@@ -48,3 +48,7 @@ commit hooks on. The record is in the row's Deliverable
 - **Byte deltas:** `RESYNC_PACK.md` 737,613 -> 738,316 (unbudgeted). No
   budgeted file was touched.
 - **Acts owed:** none.
+- **Review:** round 1, OpenAI Sol (low) over the whole diff and Gemini
+  Hydrogen (low, the Antigravity CLI) over the prose: Hydrogen APPROVE; Sol
+  one MINOR (the `_asof` checks never reached `_run_captured`), adopted and
+  fixed in `b47cae466`. Round 2, narrow: Sol `VERDICT: APPROVE findings=0`.

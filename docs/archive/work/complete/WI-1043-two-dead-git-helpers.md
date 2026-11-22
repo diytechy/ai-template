@@ -139,6 +139,22 @@ budgeted file was touched.
 
 **Acts owed:** none. No spine row changed.
 
+**Review** (the coordinator, 2026-11-21; queue-drill HANDOFF §4 step 4).
+Round 1 over `1b22c9355..67e4c9cec`, the generated views and this spec's
+copies withheld and the spec at the tip given whole: OpenAI Sol
+(`gpt-6.1-sol`, low, via `codex exec`) read the whole diff, and Gemini
+Hydrogen (`gemini-4-hydrogen-low`, via the Antigravity CLI) the prose part
+by file reference. Hydrogen: `VERDICT: APPROVE findings=0`. Sol:
+`VERDICT: CHANGES-REQUESTED findings=1`, a MINOR the coordinator confirmed
+by reading and adopted: the test's two `_asof(tmp_path)` checks returned at
+`_asof`'s empty-sources guard, so neither off-git path reached
+`_run_captured`, and the coverage this Deliverable and D-001 claim was not
+there at `13ad36174`. Fixed in `b47cae466` (the test seeds `README.md` and
+asserts each `log` call; red with `_asof`'s `except OSError` removed). Round
+2, narrow, over `67e4c9cec..b47cae466` with round 1's finding and the ruling
+prepended: Sol, `VERDICT: APPROVE findings=0`. The claim holds from
+`b47cae466`.
+
 ## Context
 
 Filed on trunk on 2026-11-21 from WI-1036's history-reader audit, which
