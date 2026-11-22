@@ -8,9 +8,11 @@ reading before starting.
 **Where the drill stands.** Waves A and B are merged, and WI-1036 and
 WI-1037 beside F-1. Variant F is filed (WI-1021 to WI-1030), critiqued, and
 its cut approved (§3.4). F-1 (WI-1021) is merged, its one-component table
-ruled by the operator (§3.5). F-2 (WI-1022) is building in its worktree
-(§10). WI-1040 to WI-1045 are critiqued; WI-1040, 1041, 1043 and 1044 may
-build beside F. §3.6's three questions are answered.
+ruled by the operator (§3.5). F-2 (WI-1022) is merged, and WI-1040,
+WI-1041, WI-1043, WI-1044 and WI-1046 beside it. Next: the adjudication
+sitting the operator ruled (§3.6's first question), run as §3.7 says, with
+WI-1042 building beside it; then F-3 (WI-1023) from the trunk the sitting
+leaves.
 
 **The job:** take each drillable work item through scope critique, build,
 review and merge into `refactor_again`, running items in parallel worktrees
@@ -28,17 +30,19 @@ adjudication sittings by Gemini Neon through `agy` (operator, 2026-11-21;
 - Merged: wave A, WI-1013 (`efafa872f`), WI-1014 (`2ea2fd150`) and WI-1017
   (`fd3ece15d`); wave B, WI-1019 (`da78f85ee`); beside F-1, WI-1036
   (`a0ca15d3f`) and WI-1037 (`b62079378`); F-1, WI-1021 (`147fed185`, regen
-  `ed671a026`). Their worktrees and branches are removed. Open: F-2's,
-  `D:/ai-template-wt-wi1022` on `maint/wi-1022`. Suites: after wave A on `361270a84`, `8264 passed,
-  31 skipped`; after wave B on `224ff2c68`, `8264 passed, 31 skipped`;
-  smoke after F-1 on `ed671a026`, `3714 passed, 3 skipped`. The next
-  unfiltered suite runs after F-3 (§3.4).
-- Acts owed, all to automated adjudication (§3.3 N4; on timing, §3.6 G1):
-  wave A's three chains (§3.1 Q5), LLR-395's first acceptance (SR-157's
-  chain), and F-1's (LLR-067, LLR-199, LLR-373, TC-067, TC-195, TC-435 and
-  TC-436 amended; CMP-006's `notes`; LLR-396, LLR-397, TC-457 to TC-461 and
-  IF-326 new), listed in `docs/ratify/CURRENT.md`. WI-1038 then re-points
-  TC-428 and TC-429, which drift.
+  `ed671a026`); beside F-2, WI-1044 (`e17c677f9`), WI-1043 (`7371f0cf6`),
+  WI-1041 (`8b50e28c1`), WI-1046 (`e29eb9d30`) and WI-1040 (`2a57861ec`);
+  F-2, WI-1022 (`b2b0d9476`, regen `24656b1de`). No drill worktree is
+  open. Suites: after wave A on `361270a84`, `8264 passed, 31 skipped`;
+  after wave B on `224ff2c68`, `8264 passed, 31 skipped`; smoke after F-2
+  on `24656b1de`, `3717 passed, 3 skipped`. The next unfiltered suite runs
+  after F-3 (§3.4).
+- Acts owed, all to automated adjudication (§3.3 N4; the sitting, §3.7):
+  every chain `docs/ratify/CURRENT.md` lists under "Waiting for automated
+  adjudication": wave A's three chains (§3.1 Q5), LLR-395's first
+  acceptance, F-1's and F-2's amendments and new rows, and TC-385, LLR-239
+  and SR-243 from the rows beside F-2. WI-1038 then re-points TC-428 and
+  TC-429, which drift.
 - The operator still owes, outside this drill: the OI-79 remote-ref delete
   and the push.
 
@@ -47,11 +51,11 @@ adjudication sittings by Gemini Neon through `agy` (operator, 2026-11-21;
 | Item | What | Wave | Notes |
 |---|---|---|---|
 | WI-1038 | TC-428 and TC-429 verify LLR-395 once accepted | After LLR-395's acceptance | Filed from WI-1019's build; claimable only once adjudication accepts LLR-395 |
-| WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6, §3.4) | F, after the N6 stop | Filed and critiqued (round 1, Sol and Argon, all findings applied, `a57782d59`). Order by `needs`: 1021; 1022; 1023; then 1024 and 1027 (either order); 1025; then 1026, 1028 and 1030; then 1029. Built side by side where `needs` allows, landing one at a time (plan revision 37). F-1 merged (`147fed185`) |
+| WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6, §3.4) | F, after the N6 stop | Filed and critiqued (round 1, Sol and Argon, all findings applied, `a57782d59`). Order by `needs`: 1021; 1022; 1023; then 1024 and 1027 (either order); 1025; then 1026, 1028 and 1030; then 1029. Built side by side where `needs` allows, landing one at a time (plan revision 37). F-1 merged (`147fed185`), F-2 merged (`b2b0d9476`) |
 | WI-1016 | A repository can switch off the implementation layer | After F | Re-critiqued once F lands; reverses SR-186, so its amendment is drafted for the operator |
 | WI-1018 | Row text a lane leaves stale is filed, and the first set is brought up to the code | After F-8 | F-8's text migration takes B1, B7 and B9 and likely more; this row then fixes what is left |
 | WI-1045 | `acceptance_record.py`'s landing rules move to a CMP-008 module (F-1's table, §3.5 R2) | After F-3 (WI-1023) | Critiqued (Sol and Hydrogen, all findings applied): the order settled after F-3, the cover held to F-2's rule, IF-308's callers named |
-| WI-1042 | The test-first order read from the act ledger | After F-2 | Critiqued (Sol and Hydrogen, all findings applied); amends LLR-257, gains a Trust section and settles its pre-ledger rule; needs WI-1022 (IF-220's consumers cell). Its spec now puts the cross-move reading in WI-1040's shared `_ledger_commits` walk, fixing the brief's heading and the accepted-risk reader too |
+| WI-1042 | The test-first order read from the act ledger | Now (F-2 merged), beside the sitting | Critiqued (Sol and Hydrogen, all findings applied); amends LLR-257, gains a Trust section and settles its pre-ledger rule; needs WI-1022 (IF-220's consumers cell). Its spec now puts the cross-move reading in WI-1040's shared `_ledger_commits` walk, fixing the brief's heading and the accepted-risk reader too |
 | WI-1039 | The smoke tier back under its CPU budget | Beside F-1 | Filed 2026-11-21 (§3.4, the suite during F); critiqued by Sol alone, findings applied (`d1c56e986`); not built |
 | WI-1031 to WI-1035 | The rest of phase 3 | Filed, not drilled | Owe a scope critique when they come up (§3.3 N2); WI-1035 carries §3.4 S4's answer |
 
@@ -891,4 +895,16 @@ Append one line per step taken: the item, what happened, the commit.
   justified); Sol four MINORs, all adopted (two contract bodies that escape
   the uniqueness scan, LLR-244's missing symbol, the RESYNC entry's
   external-owner wording); fixes in progress. §3.7 records how the
-  adjudication sitting runs.
+  adjudication sitting runs. `b8dff9239`.
+- 2026-11-22: F-2 round 1's fixes `edcd89c3f`; round 2 narrow: Hydrogen
+  APPROVE, Sol two MINORs the fix introduced (an unparseable listed header
+  raised through `interface_findings`; LLR-398's missing symbol), adopted,
+  fixed `7a94e148f`; round 3 narrow: Sol and Hydrogen APPROVE. Merged
+  `b2b0d9476`: the watermark took LLR 398 and TC 467 from the branch and WI
+  1046 from trunk; `RESYNC_PACK.md` kept every entry; `trace.py`'s size
+  baseline re-stamped to the merged 3780 (F-2 -55, WI-1040 -9). Before the
+  commit, `check_resync` refused F-2's entry as anchored at the branch base
+  rather than trunk's tip, which is how it reads any uncommitted merge (the
+  hook does not run it); after the commit it reads OK. trace `--strict`:
+  interface-findings 0. Regen `24656b1de`; smoke `3717 passed, 3 skipped` in
+  106 s, CPU 648.3 s. Worktree and branch removed; no drill worktree open.
