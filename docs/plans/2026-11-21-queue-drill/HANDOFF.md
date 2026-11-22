@@ -451,6 +451,42 @@ before it depends on it.
 
 **Answer:** Agreed, will wait.
 
+### 3.7 The adjudication sitting (§3.6's first question): how it runs
+
+The operator ruled the sitting: after F-2 merges, before F-3's batch act,
+on Gemini Neon through `agy` at high effort. The kit has no supported way
+to launch that model there. `coordinator_adjudicate.py` needs a claimed lane
+and an adjudicator route enabled in `docs/agents.toml` and
+`docs/agents-enabled`, and neither file has an `agy` or Gemini entry. Adding
+one is a consent change, which is the operator's. So the coordinator runs
+the kit's own pieces by hand on trunk, and only the launch differs:
+
+1. File an adjudication row (`safety_class = "adjudication"`,
+   `brief = "combined"`, `adjudicates` naming each drifted row as
+   `amendment:` and each Drafted SR, LLR or TC as `first-acceptance:`),
+   with `trace.py --bump-ids`, as WI-681 did.
+2. Compose the brief with `scripts/coordinator/compose_lane.py` (it calls
+   `adjudicate_brief.compose`), and bind the request with
+   `adjudicate_brief.bind_pending(..., exclusive=True)`, as the entry point
+   does.
+3. Run Neon on one self-contained bundle, by file reference from the
+   scratchpad, in plan mode: one session, never fanned out (PROCESS.md
+   §6). Its reply is the verdict file, kept as returned; `verdict_refusal`
+   must pass, and the binding records the outcome.
+4. Take the act `adjudicate_act.compose_act` derives from the verdict: the
+   re-acceptances in one commit (`intake.py snapshot --reaccepts`), then the
+   first acceptances' flips with `--accepts` in the next. Only CLARITY and
+   `MEANING+BLESS` amendments and ACCEPT rows are taken; MEANING and RETURN
+   rows stay owed, and their follow-up is filed.
+
+What it cannot accept: the first-acceptance brief covers SR, LLR and TC rows
+only, so Drafted interface rows (IF-325, IF-326, and any F-2 adds) stay
+Drafted. Drafted rows do not block F-3's batch act; drifted ones do. The
+commits record the launch by hand and the hand-written binding.
+
+To overrule: say so here before the sitting. The alternative is to register
+an `agy` route and run the sitting from a claimed lane.
+
 ## 4. One work item, start to finish
 
 Run the commands from the repository root with
@@ -842,4 +878,17 @@ Append one line per step taken: the item, what happened, the commit.
   readers. Left for the operator: `D:/rt1040`, a builder's scratch folder
   (logs and pytest temp, every link inside it), which the harness would not
   let the coordinator delete. Every branch beside F-2 has landed; F-2 is in
-  its builder's full-suite run.
+  its builder's full-suite run. `daa6bbe57`.
+- 2026-11-22: F-2 (WI-1022) built and closed out on `maint/wi-1022`
+  (`0b9921e98` plan, `d8ac920b8` build, `b2c4c2725` close): 240 interface
+  rows with component or declared-party endpoints, 30 `call` rows retired,
+  the one-body rule and the stricter cover (115 crossing edges, all
+  covered). The builder's full suite ran under heavy load: 77 failures, all
+  rerun green or fixed, or trunk's vocabulary red. Review round 1 split
+  Sol in two (code; registries and documents; the brief was 500 KB whole)
+  and gave the interface registry as a per-row summary in place of its
+  204 KB diff. Hydrogen APPROVE (the five recorded deviations judged
+  justified); Sol four MINORs, all adopted (two contract bodies that escape
+  the uniqueness scan, LLR-244's missing symbol, the RESYNC entry's
+  external-owner wording); fixes in progress. §3.7 records how the
+  adjudication sitting runs.
