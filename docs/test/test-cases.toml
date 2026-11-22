@@ -4469,7 +4469,7 @@ tier = "Full"
 expected = "The settled inputs derive DevStg-Release, and the table names no tier at that rung. Each tier put in work derives the rung the table names it at, and the table names them as SN and STK at DevStg-Needs; B, DA and SUR at DevStg-Boundary; SR at DevStg-Reqs; CMP at DevStg-Arch; LLR at DevStg-LLReqs; TC at DevStg-Tests; and the evidence record at DevStg-Impl. The table's rungs are the ladder's eight, in ladder order; no tier name or input appears twice; the inputs it names, with the four companions, are exactly the derivation's inputs, each companion's tier among them; and every tier it names is one the test puts in work."
 automated = "Yes"
 evidence = "tests/test_spine_rules.py::test_rung_tiers_covers_the_ladder_and_every_input_spine_stage_reads; tests/test_spine_rules.py::test_each_tier_in_work_holds_the_rung_rung_tiers_names"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-456]
@@ -4480,7 +4480,7 @@ tier = "Full"
 expected = "The lifecycle panel has a Vision row with no rung, then one row per rung in ladder order, DevStg-Release included, each naming in bold the tiers the stage derivation's rung table gives that rung, joined by a middle dot, or a dash for none. The counts read 1 SN · 2 STK, 3 B · 2 DA · 1 SUR, 2 SR, 1 CMP, 3 LLR, 4 TC and 1 evidence record, the Release row its stage description; over the spine fixture alone the tiers it lacks read no STK, no B, no DA, no SUR, no CMP and no evidence record. At each recorded rung exactly that rung's row is marked now, with the word."
 automated = "Yes"
 evidence = "tests/test_traj_panels.py::test_lifecycle_panel_has_a_row_for_every_rung_with_the_tiers_holding_it; tests/test_traj_panels.py::test_lifecycle_panel_counts_follow_the_registries; tests/test_traj_panels.py::test_lifecycle_panel_marks_the_row_of_each_recorded_rung"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-457]
@@ -4502,7 +4502,7 @@ tier = "Smoke"
 expected = "Only the file declaring a live component is in the declarations, and each other file is one finding naming it and its class, the example id as no live row. The scope reports only the two listed files with no declaration and the other-type file, whose finding names its suffix and the contract body; a listed source-root README is in the declarations, and a listed path that is no file is a finding. With only the example row the census is empty. The component rules carry the census finding with the check on and nothing with it off. The plain run warns naming the undeclared module and exits 0; the strict run reports it as an error and exits 1."
 automated = "Yes"
 evidence = "tests/test_component_headers.py::test_the_census_names_every_finding_class_and_keeps_the_valid_ones; tests/test_component_headers.py::test_the_scope_is_the_grammars_types_under_src_and_the_listed_headers; tests/test_component_headers.py::test_the_census_is_vacuous_with_no_live_component_row; tests/test_component_headers.py::test_the_census_rides_the_component_rules_and_their_opt_out; tests/test_trajectory_arch.py::test_cross_cmp_unmapped_endpoint_is_unclassified"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-459]
@@ -4513,7 +4513,7 @@ tier = "Smoke"
 expected = "The top view follows the headers, not the design rows: the declared module is in its component and the undeclared one is uncontained. Each undeclared case yields one finding naming both modules as unclassified, the covered and kernel cases included. The shared-key edge is the uncovered-seam finding, not silence. The edge inside one component is silent, and the multi-membership advisory no longer exists. The plain trajectory check names the edge as unclassified."
 automated = "Yes"
 evidence = "tests/test_component_headers.py::test_the_top_view_reads_the_headers_and_not_the_design_rows; tests/test_component_headers.py::test_an_edge_touching_an_undeclared_module_is_unclassified; tests/test_component_headers.py::test_a_key_two_files_share_silences_no_edge; tests/test_component_headers.py::test_an_edge_inside_one_component_is_silent_and_the_advisory_is_gone; tests/test_trajectory_arch.py::test_cross_cmp_unmapped_endpoint_is_unclassified"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-460]
@@ -4524,7 +4524,7 @@ tier = "Smoke"
 expected = "The moved file leaves its old component's modules and joins the new one's beside the added file; the seams stay where their endpoint cells put them; the design row tagged into the old component still places its row there."
 automated = "Yes"
 evidence = "tests/test_gen_components.py::test_the_modules_and_the_seams_follow_the_headers"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-461]
@@ -4535,7 +4535,7 @@ tier = "Smoke"
 expected = "Both digests carry the sha256 prefix and the owner's width; with the width changed, the record's digest follows it."
 automated = "Yes"
 evidence = "tests/test_acceptance_record.py::test_the_text_digest_takes_its_width_from_the_done_when_digest"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-462]
@@ -4546,7 +4546,7 @@ tier = "Smoke"
 expected = "Only the header's party lines declare a party. A component id a live row has and a declared party pass; a path, a module, a requirement id, an unknown component, a bare party and an undeclared one are each a strict finding naming the row and the cell. The all-external row is refused and the component cell is a finding."
 automated = "Yes"
 evidence = "tests/test_if_owner_component.py::test_each_endpoint_takes_one_of_two_forms"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-463]
@@ -4557,7 +4557,7 @@ tier = "Smoke"
 expected = "Zero bodies and one in the owner's file are clean; another component's file, an undeclared file and a file off the external row's far side are each one finding naming the file and both components; two files are one finding naming both; the declaration with no body is a finding; the quoted copies are never counted, and the listed configuration file's copy is a second body."
 automated = "Yes"
 evidence = "tests/test_if_owner_component.py::test_one_body_per_interface_in_a_file_of_the_right_component"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-464]
@@ -4568,7 +4568,7 @@ tier = "Smoke"
 expected = "Only the call row owned by the imported file's component naming the importer's covers the edge; every other case is the uncovered-seam finding."
 automated = "Yes"
 evidence = "tests/test_if_owner_component.py::test_only_a_call_row_owned_by_the_imported_component_naming_the_importer_covers"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-465]
@@ -4579,7 +4579,7 @@ tier = "Smoke"
 expected = "The first is internal to its component; the second and third are boundary rows of each component they name and internal to none; the nested row is internal to the enclosing component and shown in all three."
 automated = "Yes"
 evidence = "tests/test_if_owner_component.py::test_a_row_is_internal_to_the_lowest_component_enclosing_every_endpoint"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-466]
@@ -4590,7 +4590,7 @@ tier = "Smoke"
 expected = "The first reaches its design row's requirement, the second reaches none, and the internal interface is not judged; with no scanned source both boundary interfaces reach the requirement of the design row placed in their owner component."
 automated = "Yes"
 evidence = "tests/test_if_owner_component.py::test_a_boundary_row_reaches_requirements_through_the_file_stating_its_body"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-467]
@@ -4601,7 +4601,7 @@ tier = "Smoke"
 expected = "The first component is named as named by no row, the second as declaring no Consumes seam, and no warn names a module."
 automated = "Yes"
 evidence = "tests/test_if_owner_component.py::test_connectivity_warns_name_components_not_modules"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-468]
@@ -4623,7 +4623,7 @@ tier = "Full"
 expected = "Nothing before the cut is read: the test case accepted after the landing in the earlier spelling is reported unread at or before the cut, never late at its earlier act and never dated at the later act; a requirement landing after the merge is settled by the cut's date."
 automated = "Yes"
 evidence = "tests/test_check_test_first.py::test_the_record_before_its_cut_is_never_read"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-470]
@@ -4634,7 +4634,7 @@ tier = "Full"
 expected = "The test case's order, and with a declared start the requirement's own, is reported unread, never as a pass, and never settled by the copy's date; the run exits 0, and 1 under --strict."
 automated = "Yes"
 evidence = "tests/test_check_test_first.py::test_acceptances_no_act_records_are_unread_never_passing;tests/test_check_test_first.py::test_a_cut_whose_ledger_holds_no_act_is_unread"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-471]
@@ -4645,7 +4645,7 @@ tier = "Full"
 expected = "The gap and the malformed act are each read as a change no act dated: what they carry is reported unread at their commit, never as a pass and never dated at the later act, and each is listed among the record's gaps; what the first copy carries beside the malformed ledger is unread too, never settled by its date."
 automated = "Yes"
 evidence = "tests/test_check_test_first.py::test_a_record_change_with_no_act_is_unread_never_dated_later;tests/test_check_test_first.py::test_an_act_whose_ledger_is_malformed_is_unread;tests/test_check_test_first.py::test_a_cut_whose_ledger_is_malformed_is_unread"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-474]
@@ -4656,7 +4656,7 @@ tier = "Full"
 expected = "A declaration with no body, and a body the grammar refuses, each warn with exit 0 on a plain run and are errors with exit 1 under strict checking. With the interfaces check off, by the legacy file or by the process settings, no finding appears, and with it on again the finding returns. The listed file's body is a finding while the source root is scanned; in files mode, or with the source root absent, there is no surface and no finding appears, the listed file's included. Each body with no Contracts marker is one refusal naming its source and the missing marker. The listed Python file is read through its docstring as a module is, so the two bodies are one finding that the interface is stated by 2 files, naming both."
 automated = "Yes"
 evidence = "tests/test_trajectory_arch.py::test_a_declared_seam_with_no_body_warns_plain_and_fails_strict; tests/test_trajectory_arch.py::test_a_refused_header_reds_the_cli_under_strict; tests/test_trajectory_arch.py::test_the_gate_shares_the_interfaces_check_opt_out_and_the_files_mode_vacuity; tests/test_trajectory_arch.py::test_a_body_with_no_marker_is_refused_not_skipped; tests/test_trajectory_arch.py::test_a_python_file_listed_outside_the_source_root_is_read_as_a_module"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-475]
