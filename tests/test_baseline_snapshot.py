@@ -1775,6 +1775,20 @@ def test_a_malformed_ledger_reads_no_act_rather_than_raising(tmp_path):
     ), reason
 
 
+def test_an_undecodable_ledger_reads_malformed_rather_than_raising(tmp_path):
+    # Review round 1 (Sol): bytes that are not UTF-8 raised UnicodeDecodeError
+    # out of the reading, past the malformed outcome. They are a malformed
+    # ledger too: no entry, no commit, and the brief still renders.
+    root = _seeded(tmp_path)
+    ledger = SNAP.snapshot_root(root) / SNAP.ACTS
+    ledger.write_bytes(b"\xff\xfe[[act]]\nseq = 1\n" + ledger.read_bytes())
+    entry, commit, reason = SNAP.last_act(root)
+    assert (entry, commit) == (None, None)
+    assert reason.startswith(
+        "no acceptance act can be read: the act ledger {} is malformed".format(_LEDGER)
+    ), reason
+
+
 def test_the_README_is_prose_and_is_exempt_from_the_mirror(tmp_path):
     """Implements: TC-173"""
     # Design §F8 / repo-lock D-10's tripwire: the stamp is rendered, never

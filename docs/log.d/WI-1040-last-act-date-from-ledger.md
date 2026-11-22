@@ -50,4 +50,9 @@ the row's Deliverable
   WARN only. The current-path limit is left to WI-1042, whose spec the
   coordinator points at `_ledger_commits`.
   <!-- fig: derived="the totals are those the Deliverable's merge line declares, with its command and revision" -->
+- **Review round 1** (Sol's MINOR, adopted): an undecodable ledger now
+  reads as malformed in `last_act` instead of raising. Its new test failed
+  on `d6ccdb587` and passes after. `test_baseline_snapshot` and
+  `test_trace_briefs`: `197 passed in 129.61s (0:02:09)`.
+  <!-- fig: derived="the totals are those the Deliverable's round-1 test line declares, with its command and revision" -->
 - **Acts owed:** none.

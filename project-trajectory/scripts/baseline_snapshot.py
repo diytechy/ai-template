@@ -2236,13 +2236,13 @@ def last_act(root):
         window (the limit IF-217 states), or no git.
 
     A malformed ledger is outside the promise, since only a hand edit makes
-    one (IF-220): it reads `(None, None, reason)`, saying no act can be read,
-    and never raises. Advisory and read-only, like `stamp`; no clock is read."""
+    one (IF-220). Text that does not parse, or bytes that are not UTF-8, read
+    `(None, None, reason)`, saying no act can be read, and never raise. Advisory and read-only, like `stamp`; no clock is read."""
     where = "`{}/{}`".format(SNAPSHOT_DIR, ACTS)
-    text = _ledger_text(root)
     try:
+        text = _ledger_text(root)
         acts = parse_acts(text)
-    except ActLedgerError as exc:
+    except (ActLedgerError, UnicodeDecodeError) as exc:
         why = "no acceptance act can be read: the act ledger {} is malformed ({})"
         return None, None, why.format(where, exc)
     if not acts:

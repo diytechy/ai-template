@@ -130,6 +130,13 @@ and commit. The golden brief (no git, no record) was regenerated with
   `orphans=0 integrity=0`. `check_trajectory.py --strict` is clean and
   `check_resync.py` is OK.
   <!-- fig: cmd="python project-trajectory/scripts/run_menu.py smoke" rev="ea59f2a83 (its tree before the commit)" -->
+- Review round 1 (Sol's MINOR, adopted): a working-tree ledger that is not
+  UTF-8 raised `UnicodeDecodeError` out of `last_act`; it now reads as
+  malformed. The new test `test_an_undecodable_ledger_reads_malformed_rather_than_raising`
+  failed on `d6ccdb587` with that error (`1 failed, 155 deselected in
+  1.07s`). After the fix, `test_baseline_snapshot` and `test_trace_briefs`
+  with `--basetemp D:/rt1040/r2`: `197 passed in 129.61s (0:02:09)`.
+  <!-- fig: cmd="python -m pytest -q -n auto --basetemp D:/rt1040/r2 tests/test_baseline_snapshot.py tests/test_trace_briefs.py" rev="the round-1 answer commit (its tree before the commit)" -->
 - The unfiltered suite was not run.
 
 **Sizes.** `trace.py` re-stamped down, 3844 -> 3835 SLOC.
