@@ -267,7 +267,8 @@ README = "README.md"
 # (SR-178). Each entry carries its own sequence number, so two acts naming the
 # same rows on the same day are two entries and the later one is never read as
 # the earlier. Appended by `copy_live`; read by `risk_acceptance_act`, the
-# acceptance record, the sitting rules and the open-items audit list. An entry
+# re-acceptance brief's heading (`last_act`), the acceptance record, the
+# sitting rules and the open-items audit list. An entry
 # a commit adds must carry `copied` (`added_acts_findings`). It mirrors no
 # live file, so the mirror rules skip it by name
 # (`acceptance_record.SNAPSHOT_ACTS`, pinned equal by the snapshot tests).
@@ -642,65 +643,6 @@ def registry_stamps(root, rels=SNAPSHOTTED):
         if rev:
             out.append((rel, rev, date))
     return out
-
-
-def acceptance_stamp(root):
-    """`(short rev, date)` of the last commit that MOVED A STATUS CELL in a
-    snapshotted registry, or `("", "")` when git cannot say.
-
-    THE COMPANION TO `stamp`, AND THE ONE A READER ACTUALLY WANTS (adversarial
-    round, 2026-08-20: ROUND-OPUS MAJOR-4). `stamp` answers "when was this record
-    last WRITTEN", which is a fact about the copy and nothing more — a
-    traced-cell refresh moves it while accepting nothing. The provenance question
-    a brief's reader is asking is "when did an acceptance last happen here", and
-    the only mechanical trace of an acceptance is a `status` line moving in a
-    registry the snapshot covers.
-
-    `-G` over the status-line regex rather than `-S`: a pickaxe on the STRING
-    counts occurrences, and an acceptance changes a status line's VALUE without
-    changing how many there are, so `-S` is blind to exactly the commit being
-    looked for. `-G` matches the added/removed lines of the diff, where BOTH
-    sides of a maturity edit land — the removed line carrying the old value and
-    the added line carrying the new one.
-
-    ADVISORY, like `stamp`, and degrades the same way: it is rendered for a human
-    and computed by nothing. A row addition also moves a status line into
-    existence and will be named here — that is a first acceptance or a new draft,
-    and either way it is the honest answer to "what last touched a status cell".
-
-    **CARRIER-SHAPED, AND IT SAYS SO WHEN IT CANNOT ANSWER.** A status cell has a
-    LINE of its own under the TOML carrier and none under CSV, where it is one
-    field of a row line that changes for a dozen unrelated reasons. So this
-    derivation answers for TOML and returns the empty stamp for a CSV-carrier
-    repo, which the brief renders as "or git cannot say" — the degrade stated
-    rather than a wrong commit named. Widening it to CSV would mean claiming an
-    acceptance from any row edit, which is the overclaim this function exists to
-    replace."""
-    try:
-        proc = subprocess.run(
-            [
-                "git",
-                "-C",
-                str(root),
-                "log",
-                "-1",
-                "--format=%h %cs",
-                "-G",
-                r'^[[:space:]]*(status|Status)[[:space:]]*=[[:space:]]*"',
-                "--",
-                *SNAPSHOTTED,
-            ],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-        )
-    except (OSError, ValueError):
-        return "", ""
-    if proc.returncode != 0:
-        return "", ""
-    parts = proc.stdout.strip().split()
-    return (parts[0], parts[1]) if len(parts) >= 2 else ("", "")
 
 
 def _claims_acceptance(row):
@@ -2101,6 +2043,24 @@ def _act_names(root, sha, da_id):
     )
 
 
+def _ledger_commits(root):
+    """`(shas, shallow)`: the commits that touched the act ledger, newest first,
+    each one whose added entries `_acts_at` can judge, and whether this is a
+    shallow clone, whose window may leave out the commit a reader wants. A
+    shallow clone's boundary commits are left out: their diff reads as if they
+    added every entry. `(None, False)` when git cannot read the history. The
+    one walk both readers of an act's commit take: the accepted-risk anchor and
+    the last act.
+
+    It follows the ledger at its current path only. Where the record moved
+    directory, the commit that moved it reads as adding every entry it held."""
+    log = _git(root, ["log", "--format=%H", "--", SNAPSHOT_DIR + "/" + ACTS])
+    if log is None:
+        return None, False
+    shallow = _shallow_commits(root)
+    return [sha for sha in log.split() if sha not in shallow], bool(shallow)
+
+
 def _risk_first_written(root, da_id):
     """The fallback anchor: the first commit at which the live row's
     `accepted_risk` took its current value, walking back until it differs."""
@@ -2154,14 +2114,11 @@ def risk_acceptance_act(root, da_id):
 
     Implements: SR-202, LLR-239
     """
-    log = _git(root, ["log", "--format=%H", "--", SNAPSHOT_DIR + "/" + ACTS])
-    if log is None:
+    shas, shallow = _ledger_commits(root)
+    if shas is None:
         return None, "git cannot read this repository's history"
-    shallow = _shallow_commits(root)
     named = False
-    for sha in log.split():
-        if sha in shallow:
-            continue
+    for sha in shas:
         # Every ledger on the walk is read whole: a malformed one cannot say
         # which acts its commit added, so the anchor is refused, not guessed.
         try:
@@ -2240,3 +2197,89 @@ def risk_acceptance_view(root, da_id):
         "needs": _needs_at(root, act),
         "known": _records_at(root, act),
     }
+
+
+# --- THE LAST ACCEPTANCE ACT (the re-acceptance brief's heading) --------------
+# When the last act happened is recorded where the act happened: the entry it
+# appended to the act ledger, in the commit that landed it. So the heading reads
+# that record and never recomputes the answer from history, as it did from the
+# newest diff touching a `status =` line, which a new draft also is (the
+# history-reader audit, class (c) site 1).
+
+_NOT_IN_HISTORY = "its commit is not in the available history: "
+
+
+def _act_commit(root, seq):
+    """`(commit, None)`: the commit that added the act ledger's entry `seq`, by
+    the accepted-risk anchor's walk (`_ledger_commits`, `_acts_at`). Or
+    `(None, why)`, a clause naming no commit: the entry is in no commit yet,
+    the shallow window leaves its commit out, git cannot read the history, or
+    a ledger on the walk is malformed. The walk stops at the first commit
+    that added only older entries: the ledger only grows, and each entry is
+    numbered one above the highest (IF-220), so no older commit added `seq`."""
+    shas, shallow = _ledger_commits(root)
+    if shas is None:
+        return None, _NOT_IN_HISTORY + "git cannot read this repository's history"
+    uncommitted = _NOT_IN_HISTORY + "no commit adds it yet, so the act is not committed"
+    for sha in shas:
+        try:
+            added = [act["seq"] for act in _acts_at(root, sha)]
+        except ActLedgerError as exc:
+            return None, (
+                "its commit cannot be read: the act ledger at commit {} or its "
+                "parent is malformed ({})".format(sha[:12], exc)
+            )
+        if seq in added:
+            return sha, None
+        if added and max(added) < seq:
+            return None, uncommitted
+    if shallow:
+        return None, (
+            _NOT_IN_HISTORY + "this is a shallow clone, and the act may lie "
+            "beyond its window"
+        )
+    return None, uncommitted
+
+
+def last_act(root):
+    """`(entry, commit, reason)`: the last acceptance act as the act ledger
+    records it, and `reason`, the clause the re-acceptance brief states as its
+    provenance heading. `entry` is the newest entry of the working tree's
+    ledger (`read_acts`; the last, since `seq` increases in file order), and
+    `commit` the commit that added it (`_act_commit`).
+
+    Each state of the ledger reads one way, and none names a commit that is
+    not the act's:
+
+      * no ledger, or one with no entry: `(None, None, reason)`, saying no act
+        is recorded;
+      * the newest entry with its commit read: `(entry, sha, reason)`, naming
+        the entry's `seq`, its recorded `date` and the commit;
+      * the newest entry with no commit read: `(entry, None, reason)`, giving
+        its `seq` and `date` and why no commit is named: not committed yet (the
+        act's own commit regenerating the views), beyond a shallow clone's
+        window (the limit IF-217 states), or no git.
+
+    A malformed ledger is outside the promise, since only a hand edit makes
+    one (IF-220): it reads `(None, None, reason)`, saying no act can be read,
+    and never raises. Advisory and read-only, like `stamp`; no clock is read."""
+    where = "`{}/{}`".format(SNAPSHOT_DIR, ACTS)
+    text = _ledger_text(root)
+    try:
+        acts = parse_acts(text)
+    except ActLedgerError as exc:
+        why = "no acceptance act can be read: the act ledger {} is malformed ({})"
+        return None, None, why.format(where, exc)
+    if not acts:
+        held = "the act ledger {} holds no entry"
+        if text is None:
+            held = "there is no act ledger {}"
+        return None, None, "no acceptance act is recorded: " + held.format(where)
+    entry = acts[-1]
+    said = "the last acceptance act is the act ledger's seq {}, dated {}".format(
+        entry["seq"], entry["date"]
+    )
+    commit, why = _act_commit(root, entry["seq"])
+    if commit is None:
+        return entry, None, "{}; {}".format(said, why)
+    return entry, commit, "{}, added by commit {}".format(said, commit[:12])

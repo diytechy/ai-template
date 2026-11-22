@@ -689,8 +689,8 @@ def test_the_brief_states_what_the_stamp_IS_and_names_acceptance_provenance(tmp_
     """MAJOR-4, 2026-08-20: the baseline line called any snapshot write "the
     reviewed commit that last moved an acceptance", which a traced-cell refresh
     moves while accepting nothing. It now says what `stamp` is, and the
-    provenance a reader was being promised is derived beside it."""
-    _acceptance_repo(tmp_path)
+    provenance a reader was being promised is read beside it."""
+    _run_git, rev, _write = _acceptance_repo(tmp_path)
     assert _brief(tmp_path).returncode == 0
     out = (tmp_path / "docs" / "ratify" / "CURRENT.md").read_text(encoding="utf-8")
     # Each registry's copy is named by the commit that last wrote THAT copy
@@ -698,12 +698,15 @@ def test_the_brief_states_what_the_stamp_IS_and_names_acceptance_provenance(tmp_
     # newest write.
     assert "each registry's copy, named by the commit that last wrote it" in out, out
     assert "reviewed commit that last moved an acceptance" not in out
-    assert "_Acceptance provenance:" in out, out
-    # This fixture is a CSV-carrier repo, where a status move has no line shape
-    # to pickaxe for — so the honest answer here is the degrade, stated rather
-    # than guessed. `test_baseline_snapshot` drives the positive arm over the
-    # TOML carrier this repo actually runs on.
-    assert "or git cannot say" in out, out
+    # The provenance is the act ledger's newest entry and the commit that added
+    # it (WI-1040), so this CSV-carrier repo answers like a TOML one: the seed
+    # is the act, and the later amendment is not. `test_baseline_snapshot`
+    # drives each state of the ledger.
+    assert (
+        "_Acceptance provenance: the last acceptance act is the act ledger's seq"
+        " 1, dated "
+    ) in out, out
+    assert "added by commit {}._".format(rev[:12]) in out, out
 
 
 def test_a_row_added_after_the_brief_makes_it_stale(tmp_path):
