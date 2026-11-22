@@ -69,7 +69,7 @@ project-trajectory/scripts/dispatch.py	_admission	18	29
 project-trajectory/scripts/dispatch.py	_advance	18	28	RE-STAMPED DOWN 20 -> 18 (WI-657): landed with the redesign-baseline repair sitting (22b21b06, 2026-09-06) and was never recorded; it replaces the absorbed 16 -> 20 reason, which described the WI-552 close.
 project-trajectory/scripts/dispatch.py	_poll	21	34	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): 20 -> 21 with the redesign-baseline repair sitting (22b21b06, 2026-09-06): the `preserved` verb a code-restart drain reports. Repair is owed on trunk.
 project-trajectory/scripts/dispatch.py	run	21	48	RE-STAMPED DOWNWARD 25 -> 21 (SLOC 52 -> 43) 2026-09-04: the tick's pause arm moved OUT of `run` — under §5.6 a pause forbids the CLAIM and nothing else, so the banner-and-return block at the top of the loop became one read handed to `_admit` (`_paused_exit` owns the run's end). Recorded down in the same commit, per this file's rule. Reason in docs/log.d/2026-09-04-finished-lane-round-and-pause-resume.md
-project-trajectory/scripts/gen_arch_map.py	_contract_bodies	32	55
+project-trajectory/scripts/gen_arch_map.py	_contract_bodies	22	38
 project-trajectory/scripts/gen_arch_map.py	_seam_edges	18	15
 project-trajectory/scripts/gen_arch_map.py	build_contract_reference	24	53
 project-trajectory/scripts/gen_arch_map.py	build_dependency_diagram	17	40

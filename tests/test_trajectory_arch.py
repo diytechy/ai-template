@@ -1026,6 +1026,59 @@ def test_a_refused_header_is_a_finding_and_does_not_disarm_the_other_sources(
     assert [rel for rel, _msg in refused] == ["scripts/mod_a"], refused
 
 
+def test_a_python_file_listed_outside_the_source_root_is_read_as_a_module(tmp_path):
+    # Review round 1: a Python file `[arch-map] headers` lists outside the
+    # source root was read through the comment-header reader, which finds no
+    # contract in a docstring, so its body escaped the uniqueness and header
+    # rules. It is read through the module reader.
+    root = _gate_repo(
+        tmp_path, '"""A.\n\nContracts: IF-001\n\nContract IF-001: a states it."""\n'
+    )
+    (root / "tools").mkdir()
+    (root / "tools" / "helper.py").write_text(
+        '"""Helper.\n\nComponent: CMP-002\n\nContracts: IF-001\n\n'
+        'Contract IF-001: a second copy."""\n',
+        encoding="utf-8",
+    )
+    (root / "docs" / "stack.ini").write_text(
+        "[paths]\nsrc = scripts\n[arch-map]\nheaders = tools/helper.py\n",
+        encoding="utf-8",
+    )
+    findings = check_trajectory.contract_body_findings(root)
+    assert any(
+        "IF IF-001 is stated by 2 files (scripts/mod_a.py, tools/helper.py)" in f
+        for f in findings
+    ), findings
+
+
+def test_a_body_with_no_marker_is_refused_not_skipped(tmp_path):
+    # Review round 1: a file with a `Contract IF-###:` body and no `Contracts:`
+    # marker was skipped before its bodies were read, a module and a header
+    # file alike, so a second body there escaped uniqueness. The body is read
+    # and the missing marker refused, naming the source.
+    root = _gate_repo(
+        tmp_path, '"""A.\n\nContracts: IF-001\n\nContract IF-001: a states it."""\n'
+    )
+    (root / "scripts" / "mod_c.py").write_text(
+        '"""C.\n\nComponent: CMP-002\n\nContract IF-001: a body with no marker."""\n'
+        "\n\ndef go():\n    return None\n",
+        encoding="utf-8",
+    )
+    (root / "docs" / "conf.toml").write_text(
+        "# Component: CMP-002\n#\n# Contract IF-002: no marker here either.\n",
+        encoding="utf-8",
+    )
+    (root / "docs" / "stack.ini").write_text(
+        "[paths]\nsrc = scripts\n[arch-map]\nheaders = docs/conf.toml\n",
+        encoding="utf-8",
+    )
+    findings = check_trajectory.contract_body_findings(root)
+    for source in ("'scripts/mod_c'", "'docs/conf.toml'"):
+        refused = [f for f in findings if f.startswith(source)]
+        assert len(refused) == 1, (source, findings)
+        assert "no `Contracts:` marker" in refused[0], refused
+
+
 def test_a_refused_header_reds_the_cli_under_strict(tmp_path):
     # End-to-end through the real `main()` wiring, at the WARN-plain /
     # ERROR-under-`--strict` severity the gate's other three shapes ride.

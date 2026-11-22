@@ -126,6 +126,8 @@ def _header_declarations(root, out):
         except gen_arch_map.ContractsGrammarError as exc:
             out.append("{}: {}".format(label, exc))
             continue
+        except (OSError, UnicodeDecodeError, SyntaxError):
+            continue  # the reference's own "could not read" list
         if ids:
             declared[label] = set(ids)
     return declared

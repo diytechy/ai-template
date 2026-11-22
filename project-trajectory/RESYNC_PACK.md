@@ -12125,8 +12125,10 @@ components, not modules.
 
 Then list in `docs/stack.ini` `[arch-map] headers` each file outside
 `[paths] src` whose header states a contract (a registry, a configuration
-file, a hook, a directory's `README.md`), and give each a `Component:` line
-naming its row's owner. Run `python scripts/trace.py --strict` and
+file, a hook, a directory's `README.md`), and give each a `Component:` line:
+the owner of the rows whose bodies it states, or, for a row owned by an
+`external:` party, a component the row lists among its consumers or
+requestors. Run `python scripts/trace.py --strict` and
 `python scripts/check_trajectory.py --strict`: they name every endpoint left
 in the old form, every second body and every body in the wrong component's
 file. A `call` row whose owner and every endpoint are one component is no

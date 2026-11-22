@@ -617,6 +617,36 @@ def module_contract_bodies(tree, source_lines):
     return _contract_bodies(doc.splitlines(), declared)
 
 
+def _refuse_opener(iid, i, declared_at, declared, bodies):
+    """`_contract_bodies`' refusals at one body opener (line `i`, id `iid`): a
+    file with no marker, a body before its marker, a body for an undeclared
+    id, and a second body for one id each raise `ContractsGrammarError`."""
+    if not declared_at:
+        raise ContractsGrammarError(
+            "{} states a contract body in a file with no `Contracts:` "
+            "marker line — the marker declares the seam; add it there or "
+            "drop the body.".format(iid)
+        )
+    if iid not in declared_at or i < declared_at[iid]:
+        raise ContractsGrammarError(
+            "{} states a contract body before this module's "
+            "`Contracts:` marker line — the marker declares, the body "
+            "elaborates, and the order says which is which.".format(iid)
+        )
+    if iid not in declared:
+        raise ContractsGrammarError(
+            "{} carries a contract body but is not declared on this "
+            "module's `Contracts:` line — the marker line is the one "
+            "declaration site; add the id there or drop the "
+            "body.".format(iid)
+        )
+    if iid in bodies:
+        raise ContractsGrammarError(
+            "{} carries more than one contract body — one seam states "
+            "one contract.".format(iid)
+        )
+
+
 def _contract_bodies(lines, declared):
     """The body grammar over a list of LINES — a module docstring's, or a
     non-Python file's comment header with its markers stripped
@@ -654,24 +684,7 @@ def _contract_bodies(lines, declared):
         if m:
             flush()
             current, buf = m.group(1), [m.group(2)]
-            if current not in declared_at or i < declared_at[current]:
-                raise ContractsGrammarError(
-                    "{} states a contract body before this module's "
-                    "`Contracts:` marker line — the marker declares, the body "
-                    "elaborates, and the order says which is which.".format(current)
-                )
-            if current not in declared:
-                raise ContractsGrammarError(
-                    "{} carries a contract body but is not declared on this "
-                    "module's `Contracts:` line — the marker line is the one "
-                    "declaration site; add the id there or drop the "
-                    "body.".format(current)
-                )
-            if current in bodies:
-                raise ContractsGrammarError(
-                    "{} carries more than one contract body — one seam states "
-                    "one contract.".format(current)
-                )
+            _refuse_opener(current, i, declared_at, declared, bodies)
             continue
         if current is None:
             continue
@@ -767,11 +780,22 @@ def _markdown_header(lines):
 
 
 def file_contracts(path):
-    """`(ids, bodies)` a non-Python file declares through its header — the same
+    """`(ids, bodies)` a file declares through its header — the same
     `Contracts:` marker and `Contract IF-###:` bodies a module docstring
-    carries, so a registry, a config file or a git hook is an owner that
-    declares exactly as a module does (OI-67). `([], {})` for a file with no
-    header or no marker. Grammar errors raise as they do for a module."""
+    carries, so a registry, a config file or a git hook declares exactly as a
+    module does (OI-67); a Python file is read through its docstring, as the
+    module walk reads it. `([], {})` for a file with no header, or no marker
+    and no body. The bodies are read even with no marker, so a body there is
+    the grammar's refusal, never invisible. Grammar errors raise as they do
+    for a module; a Python file that will not parse raises `SyntaxError`.
+
+    Implements: SR-159, LLR-398
+    """
+    path = Path(path)
+    if path.suffix.lower() == ".py":
+        text = path.read_text(encoding="utf-8")
+        tree, lines = ast.parse(text), text.splitlines()
+        return module_contracts(tree, lines), module_contract_bodies(tree, lines)
     lines = header_lines(path)
     ids = set()
     for i, line in enumerate(lines):
@@ -779,7 +803,7 @@ def file_contracts(path):
         if found:
             ids.update(found)
             _refuse_ambiguous_continuation(lines[i + 1 :], ids)
-    return sorted(ids), (_contract_bodies(lines, ids) if ids else {})
+    return sorted(ids), _contract_bodies(lines, ids)
 
 
 def source_files(src_dir):
@@ -802,7 +826,8 @@ def header_files(root, src_roots):
     the module walk. Each non-`.py` file of a grammar type under a source
     root, labelled from the root's parent as a module is, then each declared
     header file (`kitlib.config.declared_headers`), labelled by its
-    repository path. One
+    repository path; a listed Python file under a source root is the module
+    walk's, and one outside it is read as a module (`file_contracts`). One
     entry per file, sorted by label.
 
     Implements: SR-159, LLR-398
@@ -812,8 +837,8 @@ def header_files(root, src_roots):
         src = Path(src)
         base = src.parent if src.name else src
         for path in source_files(src)[0]:
+            seen.add(path.resolve())  # a listed module is the module walk's
             if path.suffix.lower() != ".py":
-                seen.add(path.resolve())
                 out.append((path.relative_to(base).as_posix(), path))
     for rel, path in _kitconfig.declared_headers(root)[0]:
         if path.resolve() not in seen:
@@ -824,8 +849,12 @@ def header_files(root, src_roots):
 
 def file_grammar_findings(owner, path):
     """`contracts_grammar_findings` over a file header: the lossy marker forms
-    are reported by name for a registry or a hook exactly as for a module."""
-    return _grammar_findings_over(owner, header_lines(path))
+    are reported by name for a registry or a hook exactly as for a module (a
+    Python file's docstring, read as a module's)."""
+    if Path(path).suffix.lower() != ".py":
+        return _grammar_findings_over(owner, header_lines(path))
+    text = Path(path).read_text(encoding="utf-8")
+    return contracts_grammar_findings(owner, ast.parse(text), text.splitlines())
 
 
 # --- the Component declaration (process.md §8) ---------------------------------
@@ -1419,7 +1448,7 @@ def scan_contracts(src_roots, header_files=(), grammar_errors=None):
     for owner, path in header_files:
         try:
             ids, bodies = file_contracts(path)
-        except (UnicodeDecodeError, OSError) as exc:
+        except (UnicodeDecodeError, OSError, SyntaxError) as exc:
             unreadable.append((owner, type(exc).__name__))
             continue
         except ContractsGrammarError as exc:
@@ -1438,25 +1467,26 @@ def scan_contracts(src_roots, header_files=(), grammar_errors=None):
         lines = text.splitlines()
         # Both halves of the grammar are inside the arm: the marker line refuses
         # an id that only a continuation line declares, and the body parser
-        # refuses four shapes of its own. The ORDER is unchanged — a module that
-        # declares nothing is skipped before its bodies are read — so a lone
-        # `Contract IF-###:` in an undeclaring module stays as invisible to this
-        # walk as it has always been, rather than becoming a refusal here.
+        # refuses four shapes of its own. The bodies are read even in a module
+        # that declares nothing, so a lone `Contract IF-###:` there is the
+        # grammar's refusal (a body with no marker), never invisible to the one
+        # body per interface rule.
         try:
             ids = module_contracts(tree, lines)
-            if not ids:
-                continue
             bodies = module_contract_bodies(tree, lines)
         except ContractsGrammarError as exc:
             _grammar_refusal(grammar_errors, rel, exc)
             continue
-        out.append((rel, first_line(ast.get_docstring(tree)), ids, bodies))
+        if ids:
+            out.append((rel, first_line(ast.get_docstring(tree)), ids, bodies))
     return sorted(out), unreadable
 
 
 def _header_summary(path):
     """A file header's summary: its first line that is neither a `Contracts:`
-    marker nor a `Component:` declaration."""
+    marker nor a `Component:` declaration (a Python file's docstring)."""
+    if Path(path).suffix.lower() == ".py":
+        return first_line(ast.get_docstring(ast.parse(Path(path).read_text("utf-8"))))
     lines = [ln for ln in header_lines(path) if ln and _marker_ids(ln) is None]
     return next((ln for ln in lines if not COMPONENT_RE.match(ln)), "")
 

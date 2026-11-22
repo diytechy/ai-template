@@ -44,5 +44,7 @@ commit hooks on. The record is in the row's Deliverable
   `1 failed, 815 passed, 1 skipped` and `466 passed, 1 skipped`, the one
   failure trunk's `check_vocab` G2 red in WI-1024's spec).
   <!-- fig: cmd="python -m pytest -q -n auto (and the module reruns the Deliverable lists)" rev="the worktree ahead of d8ac920b8" -->
+- **Review round 1**: the two new cases `2 failed in 7.51s` on `b2c4c2725`, `2 passed in 0.25s` after; the importing modules `675 passed, 1 skipped in 165.89s (0:02:45)`; smoke `1 failed, 3716 passed, 3 skipped, 18 warnings in 80.39s (0:01:20)`, the one failure trunk's; `gen_arch_map.py` SLOC 1654 -> 1671, a reviewed bump (a listed Python file read as a module, bodies read with no marker).
+  <!-- fig: cmd="python -m pytest -q -n 8 <each module listed>; python project-trajectory/scripts/run_menu.py smoke" rev="the worktree ahead of the review-round-1 commit, on b2c4c2725" -->
 - **Smoke** over `d8ac920b8`: `trace.py --strict` `orphans=0 integrity=0`, `interface-findings=0`; `check_trajectory.py --strict` clean; `check_resync: OK`; the tier `1 failed, 3716 passed, 3 skipped, 18 warnings in 106.58s (0:01:46)`, the one failure trunk's.
   <!-- fig: cmd="python project-trajectory/scripts/run_menu.py smoke" rev="d8ac920b8" -->

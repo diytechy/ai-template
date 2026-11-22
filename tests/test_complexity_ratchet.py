@@ -240,7 +240,7 @@ BASELINE = {
     (
         "gen_arch_map.py",
         "_contract_bodies",
-    ): 14,  # RE-KEYED 2026-08-29, WI-529 (OI-67 slice 2): the walk moved, unchanged, from `module_contract_bodies` into `_contract_bodies` so a file header (`file_contracts`) and a module docstring read ONE body grammar; `module_contract_bodies` is now a two-line wrapper over it. Earlier +2 2026-08-29 the adversarial round: a body is ordered against the marker that declares ITS id (a per-id map, not the first marker in the file), and a marker line now ends a body so a declaration written below one is never swallowed into its prose. Both are branches in the walk itself. Reviewed bump.
+    ): 11,  # RE-STAMPED DOWN -3 (14 -> 11) 2026-11-22, WI-1022 review round 1: the four refusals at a body opener (the new one, a body in a file with no marker, among them) moved into `_refuse_opener`. Earlier: RE-KEYED 2026-08-29, WI-529 (OI-67 slice 2): the walk moved, unchanged, from `module_contract_bodies` into `_contract_bodies` so a file header (`file_contracts`) and a module docstring read ONE body grammar; `module_contract_bodies` is now a two-line wrapper over it. Earlier +2 2026-08-29 the adversarial round: a body is ordered against the marker that declares ITS id (a per-id map, not the first marker in the file), and a marker line now ends a body so a declaration written below one is never swallowed into its prose. Both are branches in the walk itself. Reviewed bump.
     ("gen_arch_map.py", "build_contract_reference"): 12,
     (
         "gen_arch_map.py",
