@@ -724,7 +724,7 @@ def load_all(root):
         return None
     out = {}
     for rel, id_col in SNAPSHOT_TIERS:
-        rows = _tier_rows(base, rel, id_col)
+        rows = _tier_rows(base, rel, id_col, declared=False)
         out[(spine_carrier.stem(rel), id_col)] = {
             str(r.get(id_col) or "").strip(): r
             for r in rows
@@ -757,16 +757,21 @@ def _copy_file(base, rel):
     return spine_carrier.resolve(Path(base) / rel, suffixes)
 
 
-def _tier_rows(base, rel, id_col):
+def _tier_rows(base, rel, id_col, declared=True):
     """One compared tier's rows under `base` (a repository root or the snapshot
     root), example rows dropped: the needs file's tiers through the one
     carrier-aware need-tier loader, so a markdown needs file is compared on
     both sides like a TOML one, and every other tier through `load`.
+    `declared=False` is the snapshot's read: its copy is the act's record and
+    keeps a cell the schema has since retired until the next act re-takes it,
+    so the loader's undeclared-key rule is not applied to it.
 
-    Implements: SR-147, LLR-277"""
+    Implements: SR-147, LLR-277, LLR-404"""
     if (rel, id_col) in NEED_TIERS:
-        return spine_carrier.load_need_tier(Path(base) / rel, id_col, False)
-    return spine_carrier.load(Path(base) / rel, id_col, keep_examples=False)
+        return spine_carrier.load_need_tier(Path(base) / rel, id_col, False, declared)
+    return spine_carrier.load(
+        Path(base) / rel, id_col, keep_examples=False, declared=declared
+    )
 
 
 # The one "cell" a REMOVED row is absorbed under (`refresh_ledger`). Worded as
@@ -910,8 +915,9 @@ def refresh_refusal(root, accepts=None, snapshot=None, *, seed=False, reaccepts=
     does not itself bless that row (`_unaccepted_rows`). A row is blessed in one
     of three ways, and the first two need no flag at all:
 
-      1. **It absorbs nothing accepted.** Traced-cell refreshes (a `Module`,
-         `CodeSymbol`, `TestRefs` or ref pointer re-point) and Drafted-row work
+      1. **It absorbs nothing accepted.** Traced-cell refreshes (a `TestRefs`
+         or `Evidence` change, a ref pointer re-point, a retired trace cell's
+         removal) and Drafted-row work
          stay exactly as cheap as they were — this is the common case, and the
          review verified the WI-482/WI-452 class of the same day was clean.
       2. **Its own `Status` moved into acceptance.** An operator moved THAT row's
@@ -1072,7 +1078,7 @@ def _refusal_text(blocked, scope):
         "them — a row marked removed is blessed as a removal the same way); or "
         "revert the amendment or restore the removed row and leave the drift "
         "standing, which is what the re-acceptance brief is for. Traced cells "
-        "(Module/CodeSymbol/TestRefs and the ref pointers) are never blocked here."
+        "(TestRefs, Evidence and the ref pointers) are never blocked here."
     )
     return "\n".join(lines)
 

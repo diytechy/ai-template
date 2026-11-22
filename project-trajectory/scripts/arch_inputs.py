@@ -25,8 +25,9 @@ scans; `read_interfaces_check_enabled(root)` and
 `read_components_check_enabled(root)` read the two opt-out dials, on by
 default; `component_headers(root)` gives each in-scope file's `Component:`
 declaration and the census's findings, `({}, [])` with no live component
-row. The registry paths are repository-relative constants. Every reader is
-lenient, and none writes.
+row; `implements_index(root)` gives `{spine id: [file, ...]}` from the
+`Implements:` tags on that same surface, `{}` with none. The registry paths
+are repository-relative constants. Every reader is lenient, and none writes.
 """
 
 import re
@@ -287,6 +288,42 @@ def component_headers(root):
         "its header (process.md §8)".format(f)
         for f in findings
     ]
+
+
+def implements_index(root):
+    """`{spine id: [file, ...]}`: every file whose literal `Implements:` line
+    names the id, repository-relative and sorted. THE ONE INDEX the readers of
+    a design row's realization read, since a row names no file (WI-1023): it is
+    generated from the tags in the code, which point up, and never authored.
+
+    The surface is the declared source root (`[paths] src`) and the files
+    `[arch-map] headers` lists, the one scan surface the contract scan and the
+    component census read. Read as text through the one declaration grammar
+    (`gen_arch_map.scan_backlinks`), so it holds in `files` mode and in any
+    language. `{}` with no source root, or without `gen_arch_map` beside this
+    script. Back-links stay encouraged, never obliged: a row no tag names is
+    simply absent.
+
+    Implements: SR-248, LLR-405"""
+    root = Path(root)
+    if gen_arch_map is None:
+        return {}
+    src, _mode = _arch_scan_profile(root)
+    src_dir = root / src.strip().replace("\\", "/").rstrip("/")
+    base = src_dir.parent if src_dir.name else src_dir
+    found = {}
+    for rid, paths in gen_arch_map.scan_backlinks([src_dir]).items():
+        found.setdefault(rid, set()).update(_rel_to(root, base / p) for p in paths)
+    headers, _missing = _kitconfig.declared_headers(root)
+    for rel, path in headers:
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except (UnicodeDecodeError, OSError):
+            continue
+        for line in lines:
+            for rid in gen_arch_map.backlink_ids(line):
+                found.setdefault(rid, set()).add(_rel_to(root, path))
+    return {rid: sorted(paths) for rid, paths in sorted(found.items())}
 
 
 def load_cmps(rows):

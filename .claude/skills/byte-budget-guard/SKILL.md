@@ -31,7 +31,7 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,964 | 2026-11-16 | -35: the vocabulary migration's close (stage, checks, pass and fail), re-stamped to the measured size |
 | `CLAUDE.md` | **8,500** | 8,052 | 2026-11-16 | +15: the vocabulary migration's close (stage, checks, pass and fail), re-stamped to the measured size |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,623 | 2026-11-21 | Restamps the PROCESS.md and PROCESS_OPTIONS.md rows below |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,603 | 2026-11-22 | Restamps the PROCESS.md and PROCESS_OPTIONS.md rows below |
 
 **`AGENTS.template.md` has less than 1% free**; `CLAUDE.md` about 6% and this skill
 about 10%. The DOC gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own
@@ -45,8 +45,8 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
-| `project-trajectory/PROCESS.md` | 101,959 | 2026-11-21 | **+9** WI-1022: §8's owner is a component id or a declared party, and one file states each body |
-| `project-trajectory/PROCESS_OPTIONS.md` | 202,446 | 2026-11-21 | **+142** WI-1022: interfaces name components, and only a `call` row covers an import |
+| `project-trajectory/PROCESS.md` | 102,060 | 2026-11-22 | **+101** WI-1023: an LLR names no file, symbol or component; §8 states its derived placement |
+| `project-trajectory/PROCESS_OPTIONS.md` | 202,593 | 2026-11-22 | **+147** WI-1023: an LLR carries no component; placement is derived |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped
 warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in

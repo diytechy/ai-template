@@ -184,18 +184,6 @@ BASELINE = {
     # than one shared helper, so a third follows the established idiom
     # instead of inventing a fourth shape for one caller.
     ("check_trajectory.py", "main"): 24,
-    # WI-502 (OI-53 ruled (d)): the Implements-tag vs CodeSymbol crosscheck.
-    # `codesymbol_crosscheck_findings` is a nested walk (file -> tag site ->
-    # id) over a live registry join; the actual containment/mismatch/
-    # unresolvable rule is already split out to `_codesymbol_site_finding`
-    # (a plain sequential function, well under the bound) so this entry is
-    # the walk's own irreducible branching, not an un-decomposed rule.
-    # Reviewed bump, reason in docs/log.d/2026-08-23-wi502-codesymbol-crosscheck.md.
-    # RE-KEYED, NOT RE-STAMPED, 2026-11-19, WI-1007: the function moved
-    # VERBATIM from trajectory_arch.py to arch_tags.py; complexity stays 13.
-    # Earlier RE-KEYED, NOT RE-STAMPED, 2026-09-29, WI-545: the function moved
-    # VERBATIM from check_trajectory.py to trajectory_arch.py; complexity stays 13.
-    ("arch_tags.py", "codesymbol_crosscheck_findings"): 13,
     (
         "acceptance_record.py",
         "committed_snapshot_findings",
@@ -274,7 +262,9 @@ BASELINE = {
     # caught it at +1. Extracted as the `field()` helper — the `links()` sibling
     # for plain cells — which removed all five branches instead of adding one.
     # The emitted bundle is byte-identical, so this is a pure shape change.
-    ("gen_okf.py", "emit"): 25,
+    # -1 (25 -> 24), WI-1023: the design row's `**Code.**` line left with the
+    # `module` and `code_symbol` cells it rendered.
+    ("gen_okf.py", "emit"): 24,
     ("gen_okf.py", "main"): 13,
     # WI-667: main dropped below C901 after phase selection and checklist
     # sections moved to named functions; remove its former baseline of 20.
@@ -354,7 +344,9 @@ BASELINE = {
     ("trace.py", "mermaid_graph"): 17,
     # 28 -> 27: the L-3 accept bucketing removed a nested scan (re-stamped
     # downward per the ratchet's improvement rule).
-    ("trace.py", "acceptance_lines"): 27,
+    # 27 -> 24, WI-1023: the design row's `Module`/`Component` meta line left
+    # the acceptance brief with the cells it read.
+    ("trace.py", "acceptance_lines"): 24,
     # WI-322 split the git archaeology out of the renderer: reaccept_lines went
     # prose-only (25 -> 14) and the extracted model carries the branching (21) —
     # one computation, two renderers. WI-347 then took it UNDER the limit

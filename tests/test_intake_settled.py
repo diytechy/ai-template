@@ -569,8 +569,6 @@ def _llr001(detail):
         "[design.LLR-001]\n"
         'sr_refs = ["SR-001"]\n'
         'title = "Adder"\n'
-        'module = "adder.py"\n'
-        'code_symbol = "add"\n'
         'detail = "{}"\n'
         'test_refs = "(see TC-001)"\n'
         'status = "Accepted"\n'

@@ -90,9 +90,11 @@ def test_supersededby_must_name_a_real_cmp(scaffold):
     assert "CMP CMP-001 SupersededBy references unknown CMP-777" in report_of(scaffold)
 
 
-def test_llr_component_tag_must_resolve(scaffold):
-    # The membership join, checked from the primitive side: an LLR tagged with a
-    # phantom component is a finding once a real CMP registry exists.
+def test_a_design_row_component_column_places_nothing(scaffold):
+    # A design row names no component since WI-1023: its placement is derived
+    # from the interfaces its verifying cases name. A legacy CSV registry still
+    # carrying the column is not read for membership, so a phantom id there is
+    # no finding (the TOML carrier refuses the key outright).
     make_minimal_project(scaffold)
     write_cmps(scaffold, row("CMP-001"))
     llr = scaffold / "docs" / "requirements" / "low-level-requirements.csv"
@@ -101,8 +103,8 @@ def test_llr_component_tag_must_resolve(scaffold):
     text[1] += ",CMP-404"
     llr.write_text("\n".join(text) + "\n", encoding="utf-8")
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
-    assert proc.returncode == 1, proc.stdout + proc.stderr
-    assert "Component tag references unknown CMP-404" in report_of(scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "CMP-404" not in report_of(scaffold)
 
 
 def test_llr_component_tag_resolving_passes(scaffold):

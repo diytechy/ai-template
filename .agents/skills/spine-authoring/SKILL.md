@@ -39,8 +39,8 @@ whether your row obeys it.
 
 The rule that stops most arguments: **keep the SR independent of filenames.**
 Record where a capability currently lives in the trace fields that already
-exist for it — the LLR `Module` cell, the TC `Evidence` cell, the `Implements:`
-back-links in code, or a registry id (an interface row, a component row) — not
+exist for it — the TC `Evidence` cell, the `Implements:` back-links in code
+(a design row names no file), or a registry id (an interface row, a component row) — not
 in requirement text and not in acceptance criteria. A registry **id** is a safe
 anchor where a filename is not: the id is stable while its contents are
 rewritable.

@@ -74,8 +74,8 @@ the **amend-without-flip** warn (WI-316): a staged diff changing the **accepted*
 cells of an `Accepted` spine row without re-blessing it in the same commit
 (process.md §7), the write-time discipline commit-message prose never had.
 *Accepted*, not every cell — the §A5.1 cell split (operator ruling 2026-07-31;
-WI-380) rules traceability **traced, not accepted**, so a `Module`/`CodeSymbol`/
-`TestRefs`/`SN-Refs`/`Verifies` pointer following code that moved does **not**
+WI-380) rules traceability **traced, not accepted**, so a `TestRefs`/`Evidence`/
+`SN-Refs`/`Verifies` pointer following code that moved does **not**
 arm the marker. The traced half is not discarded: it is carried structurally by
 `staged_spine_amendments`, which returns both halves per amended row.
 
@@ -341,11 +341,11 @@ if_tc_allow_growth = _trajectory_arch.if_tc_allow_growth
 if_tc_coverage_findings = _trajectory_arch.if_tc_coverage_findings
 if_tc_allow_hygiene_findings = _trajectory_arch.if_tc_allow_hygiene_findings
 if_tc_allow_parse_findings = _trajectory_arch.if_tc_allow_parse_findings
-_CODESYMBOL_SPLIT_RE = _trajectory_arch._CODESYMBOL_SPLIT_RE
-_codesymbol_candidates = _trajectory_arch._codesymbol_candidates
-_codesymbol_site_finding = _trajectory_arch._codesymbol_site_finding
-codesymbol_crosscheck_findings = _trajectory_arch.codesymbol_crosscheck_findings
 tc_tag_findings = _trajectory_arch.tc_tag_findings
+generated_evidence = _trajectory_arch.generated_evidence
+evidence_regen = _trajectory_arch.evidence_regen
+write_evidence = _trajectory_arch.write_evidence
+implements_index = _trajectory_arch.implements_index
 load_cmps = _trajectory_arch.load_cmps
 _cmp_roots = _trajectory_arch._cmp_roots
 component_top_view = _trajectory_arch.component_top_view
@@ -2360,27 +2360,42 @@ def _spec_text_for(work_dir, wid):
     return None
 
 
+def _placed_sr_components(root, components):
+    """`{SR id: {CMP ids}}`: the components among `components` each design row
+    is placed in (`kitlib.spine.llr_placement`), keyed by the requirements the
+    row decomposes. `knowledge_pack_findings`' join, split out of it."""
+    placement = _kitspine.llr_placement(
+        spine_carrier.load(root / TC_CSV, "TC-ID"),
+        spine_carrier.load(root / IF_CSV, "IF-ID"),
+    )
+    out = {}
+    for r in spine_carrier.load(root / LLR_CSV, "LLR-ID"):
+        placed = set(placement.get((r.get("LLR-ID") or "").strip(), ())) & set(
+            components
+        )
+        for sr in _split_refs(r.get("SR-Refs") or "") if placed else ():
+            out.setdefault(sr, set()).update(placed)
+    return out
+
+
 def knowledge_pack_findings(root, wis):
     """The WI-388 pack-citation warn (consumer 3 of the intake context block)
     — WARN-ONLY, never the exit code, not even under --strict (advisory is
     the block's contract): a hand-authored OPEN spec (queued/active) whose
     rows' components declare knowledge packs the spec never cites is building
     blind on rows whose how-knowledge is recorded. The join is the same
-    LLR.Component -> CMP.Knowledge join `intake.context_block` makes,
-    re-derived here under this module's F5 independence (the shipped hook
-    imports no sibling). A minted row's `## Context` block cites the packs at
+    placement -> CMP.Knowledge join `intake.context_block` makes, each design
+    row placed by `kitlib.spine.llr_placement` (the owner components of the
+    interfaces its verifying cases name; a row names no component since
+    WI-1023), re-derived here under this module's F5 independence (the shipped
+    hook imports no sibling). A minted row's `## Context` block cites the packs at
     mint, so minted rows satisfy the rule by construction — the warn reaches
     exactly the hand-authored residue. A pack is cited by its full token or
     its basename; vacuous with no CMP Knowledge cells or no resolving pack."""
     packs = _declared_packs(root)
     if not packs:
         return []
-    sr_comps = {}
-    for r in spine_carrier.load(root / LLR_CSV, "LLR-ID"):
-        comp = (r.get("Component") or "").strip()
-        if comp in packs:
-            for sr in _split_refs(r.get("SR-Refs") or ""):
-                sr_comps.setdefault(sr, set()).add(comp)
+    sr_comps = _placed_sr_components(root, packs)
     findings = []
     work_dir = spec_work_dir(root / WI_CSV)
     for w in wis:
@@ -3353,7 +3368,6 @@ def main():
         interface_findings(root)
         + unchecked_contract_rows(root)
         + if_tc_allow_hygiene_findings(root)
-        + codesymbol_crosscheck_findings(root)
         + loop_held_status_findings(root)
         + observation_rubric_findings(
             spine_carrier.load(root / "docs/test/test-cases.toml", "TC-ID")

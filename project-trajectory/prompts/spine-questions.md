@@ -19,9 +19,9 @@
 
      §3's first bullet (WI-911) is ruling 5 of the review-churn plan's operator
      rulings of 2026-10-11, as revisions 35 and 36 refine it: an LLR in
-     contract voice, no implementation carrier in row text, and the traced
-     `module` and `code_symbol` cells kept filled and binding until the plan's
-     item 5 schema lane removes them. §0's naming rule (WI-911) is ruling 5's
+     contract voice and no implementation carrier in row text, the row
+     carrying no `module`, `code_symbol` or `component` cell since the plan's
+     item 5 schema lane removed them. §0's naming rule (WI-911) is ruling 5's
      file-naming clause, held once where tier_questions composes it into every
      tier's brief, so an SN or SR sitting reads the same rule as an LLR or TC
      one; §1(e), §2(b), §2(d) and §3 point at it.
@@ -112,7 +112,7 @@ Questions:
 - **(b) Voice.** SN and SR alike state the delivered capability or the artifact
   **class** ("the delivered harness", "the launchers at the repository root") —
   one rule, two tiers, since the 2026-08-18 directive. The concrete
-  name belongs one tier down — LLR `Module`, TC `Evidence` — and never in an SR
+  name belongs in the code's `Implements:` tag or a TC `Evidence` cell — never in an SR
   cell, acceptance included (§0's naming rule); where acceptance genuinely needs
   an anchor, it cites a registry **id**. Acceptance criteria carry the **observable condition and its
   threshold** (Volere's *fit criterion*: an objective measure of the
@@ -245,11 +245,10 @@ Questions:
   the row true. It names no implementation carrier (a code file, function or
   symbol), and §0's naming rule says which tiers may name a shipped boundary
   artifact. Do not launder a concrete name upward
-  into the SR to keep the LLR abstract. The traced `module` and `code_symbol`
-  cells are trace homes, not row text: they stay filled and binding while the
-  schema requires them (`trace.py --strict-schema` requires both;
-  `check_doc_refs --strict` binds the symbol), so never return a row for
-  keeping them. No `shall` in an LLR — the SR states the obligation, the child
+  into the SR to keep the LLR abstract. A row has no file, symbol or
+  component cell: the code points up to it with an `Implements:` tag and its
+  placement is derived from the interfaces its verifying TCs name, so never
+  ask a row to name where it lives. No `shall` in an LLR — the SR states the obligation, the child
   decomposes it.
 - **A child adds detail.** If the LLR would merely re-word its parent, link
   instead. `trace.py`'s paraphrase advisory is lexical and warns forever; the
@@ -277,8 +276,8 @@ Questions:
 - **Acceptance criteria hold the observable condition + threshold.** True of
   every cell that states acceptance, SN `acceptance` included — the tier changes
   what the condition is *about*, never that it must be a condition. Artifact
-  identity lives at the trace homes: the LLR `Module` cell, the TC `Evidence`
-  cell, `Implements:` back-links, registry ids. Trace media are explicitly open
+  identity lives at the trace homes: the TC `Evidence` cell, `Implements:`
+  back-links, registry ids. Trace media are explicitly open
   — code-comment back-links are a legitimate trace carrier, not a lesser one.
   **An artifact the TC already lists has no second home in the AC**: the second
   copy is the one that goes stale, and it goes stale silently because nothing

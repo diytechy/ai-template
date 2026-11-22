@@ -419,6 +419,12 @@ SPINE_TRACED_CELLS = {
     # adjudication kind exists to make, so a changed `SR-Refs` ROUTES to
     # adjudication (intake.ROUTED_TRACED_CELLS) like its two siblings; it
     # never arms a re-accept window directly.
+    # `Module`, `CodeSymbol` and `Component` left the design tier's schema at
+    # WI-1023 and STAY CLASSED TRACED: the approval snapshot and every revision
+    # before the removal still carry them, and a column this table does not
+    # name reads as accepted, so dropping the names would turn the removal, a
+    # traced change ("trace cells removed, requirement text unchanged"), into
+    # an accepted-text amendment of every accepted design row.
     "docs/requirements/low-level-requirements.toml": frozenset(
         {
             "Module",
@@ -1569,8 +1575,8 @@ def staged_spine_amendments(root, base="HEAD", head=None):
     `SN-Refs`/`Verifies`/`SR-Refs` subset of those is the WI-388 case (§A5.1
     routes a re-point of what a requirement answers to, what a test claims to
     cover, or which SR owns an LLR — the last ruled traced at WI-388 — to
-    adjudication); a `Module`/`CodeSymbol`/`TestRefs`/`Component`/`Phase`
-    change is simply silent — traced, not pending, nothing owed. Rows are parsed
+    adjudication); a `TestRefs`/`Phase` change, or the removal of a retired
+    `Module`/`CodeSymbol`/`Component` cell, is simply silent — traced, not pending, nothing owed. Rows are parsed
     with the csv module over the full file text on each side (spine cells are
     long; never line-split). Returns [] when not applicable; any missing git
     context is a silent no-op, like staged_findings. A NEW row (id absent on the

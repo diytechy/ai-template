@@ -208,7 +208,7 @@ def test_the_mechanical_flip_TOUCHES_NO_SNAPSHOT_AT_ALL(tmp_path):
 
 def test_a_TRACED_only_refresh_needs_no_authority_at_all(tmp_path):
     """The common case, and the one that must stay free of a flag: the
-    WI-482/WI-452 class (a `Module`/`CodeSymbol`/`TestRefs` re-point) moves no
+    WI-482/WI-452 class (a `TestRefs` or other trace-cell re-point) moves no
     accepted text, so the gate never fires. And since WI-571 it also authorises
     NO copy — a traced re-point flips no Status and is named by nothing, so the
     snapshot's whole-file copy of that registry simply lags live until a real
@@ -217,7 +217,7 @@ def test_a_TRACED_only_refresh_needs_no_authority_at_all(tmp_path):
     root = _seeded(tmp_path)
     llr_rel = "docs/requirements/low-level-requirements.toml"
     before_llr = (SNAP.snapshot_root(root) / llr_rel).read_bytes()
-    _rewrite(root, llr_rel, 'code_symbol = "', 'code_symbol = "renamed_')
+    _rewrite(root, llr_rel, 'test_refs = "', 'test_refs = "renamed_')
     assert SNAP.refresh_refusal(root) == ""  # never refused...
     assert SNAP.copy_live(root) == []  # ...and authorises no copy
     assert (SNAP.snapshot_root(root) / llr_rel).read_bytes() == before_llr
@@ -666,11 +666,23 @@ def _ids(id_col, n):
     return ["{}9{:03d}".format(prefix, i) for i in range(1, n + 1)]
 
 
+# The accepted text cell each fixture row carries: `title` where the tier
+# declares one, else the tier's own statement cell, since the loader refuses a
+# key a requirement tier does not declare (WI-1023).
+_TEXT_KEY = {"SN-ID": ("need", "Need"), "TC-ID": ("method", "Method")}
+
+
+def _text_key(id_col):
+    """`(key, column)` of the accepted text cell a fixture row of `id_col` sets."""
+    return _TEXT_KEY.get(id_col, ("title", "Title"))
+
+
 def _block(id_col, rid, status, title):
-    """One appended TOML row of tier `id_col`: a `title`, which is an accepted
-    cell on every compared tier, and a `status` that claims acceptance or not."""
-    return '\n[{}.{}]\ntitle = "{}"\nstatus = "{}"\n'.format(
-        _SPINE_CARRIER.REGISTRY_TABLE[id_col], rid, title, status
+    """One appended TOML row of tier `id_col`: an accepted text cell (`title`, or
+    the tier's own statement cell where it declares no title) and a `status`
+    that claims acceptance or not."""
+    return '\n[{}.{}]\n{} = "{}"\nstatus = "{}"\n'.format(
+        _SPINE_CARRIER.REGISTRY_TABLE[id_col], rid, _text_key(id_col)[0], title, status
     )
 
 
@@ -744,9 +756,10 @@ def test_a_drifted_row_outside_the_act_REFUSES_it_until_the_act_names_it(
     )
     root, _git = _git_tree(tmp_path, lambda r: _append(r, rel, seeded))
     _accept(root, rel, id_col, a, "Row A")
-    _rewrite(root, rel, 'title = "Row B"', 'title = "Row B, rewritten unread"')
+    key, column = _text_key(id_col)
+    _rewrite(root, rel, key + ' = "Row B"', key + ' = "Row B, rewritten unread"')
     recorded = (SNAP.snapshot_root(root) / rel).read_bytes()
-    named = "{} {}: Title".format(rel, b)
+    named = "{} {}: {}".format(rel, b, column)
     ref = ["--accepts", Path(rel).name + "=the-sitting"]
 
     bare = _snapshot_cli(root)
@@ -775,10 +788,11 @@ def test_in_a_SHARED_file_one_tiers_drift_refuses_anothers_acceptance(
     )
     root, _git = _git_tree(tmp_path, lambda r: _append(r, rel, seeded))
     _accept(root, rel, accepted_col, a, "Row A")
-    _rewrite(root, rel, 'title = "Row B"', 'title = "Row B, rewritten unread"')
+    key, column = _text_key(drifted_col)
+    _rewrite(root, rel, key + ' = "Row B"', key + ' = "Row B, rewritten unread"')
     proc = _snapshot_cli(root)
     assert proc.returncode != 0, proc.stdout + proc.stderr
-    assert "{} {}: Title".format(rel, b) in proc.stderr, proc.stderr
+    assert "{} {}: {}".format(rel, b, column) in proc.stderr, proc.stderr
 
 
 def test_an_act_with_NO_drift_outside_it_refreshes_as_before(tmp_path):

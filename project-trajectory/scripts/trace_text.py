@@ -93,7 +93,7 @@ is_drafted = _spine.is_drafted
 
 
 # Source-file extensions stripped when normalizing a module path so the two
-# module-naming conventions in play align: an LLR `Module` cell carries the full
+# module-naming conventions in play align: the Implements index carries the full
 # repo path with extension (`project-trajectory/scripts/check.py`) while the
 # arch-map / an IF endpoint may use the shorter map form (`scripts/check`).
 # ONE HOME since WI-448 slice 4 — `kitlib.spine`, alongside the other cell rules
@@ -575,9 +575,9 @@ _ACTORLESS_RE = re.compile(r"\bshall be\s+\w+(?:ed|en)\b(?!\s+by\b)", re.IGNOREC
 
 
 # Every spine cell whose text a reader treats as the SPECIFICATION — the columns
-# a downstream adopter reads to learn what the system does and why. `Module`,
-# `CodeSymbol`, `TestRefs`, `Evidence`, a need's `source` and the id/status
-# columns are pointers by design and are deliberately out of scope.
+# a downstream adopter reads to learn what the system does and why. `TestRefs`,
+# `Evidence`, a need's `source` and the id/status columns are pointers by design
+# and are deliberately out of scope.
 PROVENANCE_COLS = (
     ("SR", "SR-ID", ("Title", "Requirement", "Rationale", "AcceptanceCriteria")),
     ("LLR", "LLR-ID", ("Title", "Detail", "Rationale")),
@@ -1099,8 +1099,9 @@ def sr_artifact_advisories(srs):
     cannot be re-carried without re-writing an obligation, and the binding is
     stated in a tier that has no business holding it. The concrete name has three
     better homes: `AcceptanceCriteria` as rewritable current-carrier evidence
-    ("read off the current carrier, as the current set: ..."), the LLR `Module`
-    cell (who implements), and the shipped-file inventory (why it ships).
+    ("read off the current carrier, as the current set: ..."), an `Implements:`
+    tag in the implementing file (who implements), and the shipped-file
+    inventory (why it ships).
 
     Two independent censuses, deliberately not folded together:
 
@@ -1140,7 +1141,7 @@ def sr_artifact_advisories(srs):
             "delivered capability or the artifact CLASS ('the delivered "
             "harness', 'the launchers at the repository root'); move the "
             "concrete name to AcceptanceCriteria as current-carrier evidence, "
-            "or to the LLR Module cell (process.md §3 'a requirement cell never "
+            "or to an Implements: tag in the implementing file (process.md §3 'a requirement cell never "
             "names a concrete artifact'; warn-only, never the exit code)".format(
                 rid, ", ".join(repr(t) for t in named)
             )
@@ -1153,7 +1154,7 @@ def sr_artifact_advisories(srs):
                 "artifact identity is a tiering defect (one decision per row, "
                 "one home per method), not a naming style: decide which row "
                 "owns the capability and decompose the rest, or re-carry the "
-                "binding at the LLR Module cell (process.md §3; a recorded "
+                "binding as an Implements: tag in the implementing file (process.md §3; a recorded "
                 "waiver excuses a row's own naming, never a shared identity; "
                 "warn-only, never the exit code)".format(", ".join(owners), token)
             )
@@ -1199,8 +1200,9 @@ def sn_artifact_advisories(needs):
     only reader this tier exists for, cannot validate a sentence naming a file
     they have never opened. The condition ("the strict traceability check reports
     zero orphans") survives every re-carry; the carrier's name belongs at SR
-    `AcceptanceCriteria` as rewritable current-carrier evidence, at the LLR
-    `Module` cell, or in the shipped-file inventory.
+    `AcceptanceCriteria` as rewritable current-carrier evidence, in an
+    `Implements:` tag in the implementing file, or in the shipped-file
+    inventory.
 
     SCANS `acceptance` ONLY, and that is a division of labour rather than an
     oversight. The `need` cell already has a stronger, more specific enforcer in
@@ -1350,3 +1352,30 @@ def endpoint_problem(endpoint, cmp_ids, parties):
     if _REQUIREMENT_ID_RE.match(e):
         return "names a requirement or design id — an endpoint is a component"
     return "is not a component id or an `external:` party"
+
+
+# How many unplaced design-row ids the console line names before it counts the
+# rest; the component view lists every one.
+_PLACEMENT_SHOWN = 10
+
+
+def placement_line(llrs, tcs, ifs):
+    """The one console line counting where the design rows sit: placed through
+    the interfaces their verifying cases name (`kitlib.spine.llr_placement`),
+    or unplaced, the first `_PLACEMENT_SHOWN` unplaced ids named. Informational:
+    an unplaced row is counted, never refused, and the line joins no exit code.
+
+    Implements: SR-248, LLR-403
+    """
+    placement = _spine.llr_placement(tcs, ifs)
+    unplaced = _spine.unplaced_llrs(llrs, placement)
+    placed = len({str(r.get("LLR-ID") or "").strip() for r in llrs} & set(placement))
+    shown = ", ".join(unplaced[:_PLACEMENT_SHOWN])
+    if len(unplaced) > _PLACEMENT_SHOWN:
+        shown += ", +{} more".format(len(unplaced) - _PLACEMENT_SHOWN)
+    return (
+        "placement: {} design row(s) placed, {} unplaced{}; unplaced is counted, "
+        "never refused".format(
+            placed, len(unplaced), " ({})".format(shown) if unplaced else ""
+        )
+    )

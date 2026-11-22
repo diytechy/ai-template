@@ -103,8 +103,6 @@ per-aspect SR counts when it is filled.
 [design.LLR-001]
 sr_refs = ["SR-001"]
 title = "Pure records->CSV serializer"
-module = "src/export/csv"
-code_symbol = "to_csv"
 detail = """Pure function: records -> String. Header from the schema; values quoted per RFC-4180. No I/O — unit-testable in isolation."""
 test_refs = "(see TC)"
 status = "Accepted"
@@ -112,17 +110,18 @@ status = "Accepted"
 [design.LLR-002]
 sr_refs = ["SR-002"]
 title = "Atomic file write"
-module = "src/export/io"
-code_symbol = "write_atomic"
 detail = """Write bytes to <path>.tmp, then rename to <path>; remove the tmp on any error. Rename is atomic on the same volume. The I/O shell around the pure core."""
 rationale = """Streaming the write in place was ruled out: a crash mid-write leaves a half-file the next run reads as valid. Costs one temp file per export."""
 test_refs = "(see TC)"
 status = "Accepted"
 ```
 
-Note the split: **`to_csv` is a pure core** (cheap, exhaustive unit tests);
-**`write_atomic` is the I/O shell** (a smaller number of integration tests).
-Detail *decomposes* the SR — it doesn't restate it.
+Note the split: **the serializer is a pure core** (cheap, exhaustive unit
+tests); **the atomic write is the I/O shell** (a smaller number of integration
+tests). Detail *decomposes* the SR — it doesn't restate it. A design row names
+no file, symbol or component: the code points up to it with an `Implements:`
+tag (§5), and where it sits is derived from the interfaces its verifying test
+cases name (process.md §8).
 
 Note also the **`rationale`** split, and that `LLR-001` omits the key (an
 absent key IS the blank cell). `detail`
@@ -252,7 +251,7 @@ Not every requirement is a pure function with a unit test. Operational needs —
 databases, networking, deployment — flow through the **same spine**, with three
 differences: a **domain hat** owns the rows, the verification method is
 **Demonstration** or **Manual** (a human runs it and observes), and the rows
-are identified by their LLRs' **`Module`**/component so the slice is filterable
+are identified by the component their LLRs are placed in, so the slice is filterable
 (process.md §1 "Domain hats"). No new mechanism — just a different fill of the
 same columns.
 
@@ -264,8 +263,8 @@ SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priori
 SR-101,Database failover under primary loss,SN-020,"The system shall promote the standby database and resume serving within 30 s of losing the primary, with no committed transaction lost.","Realizes SN-020: the service survives a database outage.","With the primary killed, the app serves reads and writes from the standby within 30 s and the last transaction committed before the kill is present after promotion.","failure=set{kill,network-loss,disk-full}",H,Demonstration,Accepted,,Runtime
 ```
 
-The domain hat filters and owns its slice through the rows' LLR
-**`Module`**/component, not through a tag on the SR. The trailing
+The domain hat filters and owns its slice through the component the rows'
+LLRs are placed in, not through a tag on the SR. The trailing
 **`Lifecycle`** column (`Runtime`) is the same kind of optional tag for *when in
 the running product's life* the requirement holds (process.md §4 "Lifecycle
 phase").
@@ -364,13 +363,13 @@ The registry here is just the captured, tracked source of truth.
 ## 9. Two modules in one repo — an internal seam
 
 Everything above is **one module**. A larger repo may hold **several** modules on
-the same spine, grouped by the `Module`/component columns, each with an explicit
+the same spine, grouped by the component each LLR is placed in, each with an explicit
 contract and an integration test at its seam — no new machinery (process.md §10).
 Say this repo grows a second module, **`delivery`**, that ships a completed export
 to a destination; it consumes the **`export`** module's output. A new stakeholder
-need `SN-030` ("get my export off the box automatically") drives its SR. Tag each
-module's rows through their LLRs' `Module`/component so a domain hat can own and
-filter its slice:
+need `SN-030` ("get my export off the box automatically") drives its SR. Each
+module's rows are placed through their LLRs' verifying test cases, so a domain
+hat can own and filter its slice:
 
 ```toml
 [requirement.SR-001]
@@ -456,12 +455,12 @@ evidence = "tests/test_delivery_seam.py"
 status = "Accepted"
 ```
 
-Each module's SRs still decompose into their own `Module`-tagged LLRs as usual (§3;
+Each module's SRs still decompose into their own LLRs as usual (§3;
 omitted here to keep the seam in focus), so `SR-050` carries a `delivery`-module LLR
 just as `SR-001` carries its `export` one. `Tier=Full` keeps the cross-module test
 in the pre-merge suite; the whole-repo `python scripts/trace.py --strict` still
-demands **0 orphans across both modules and the seam**. Filtering the registries by
-`Module`/component (`export` vs `delivery`) is how each hat reviews its own slice — a reading
+demands **0 orphans across both modules and the seam**. Filtering by the component
+each row is placed in (`export` vs `delivery`) is how each hat reviews its own slice — a reading
 convention over columns that already exist, never a separate per-module gate
 (process.md §10).
 
@@ -593,7 +592,7 @@ coordinator sequences and reads status; it never builds or runs anything.
   trace links. It's an Inspection call; `scripts/check_stubs.py` is the optional,
   warn-first Python tripwire that surfaces candidates (process.md §4).
 - **Several modules share one repo and one spine** (§9) — group each module's rows
-  by `Module`/component, record every internal seam as an `IF-###`, and test it with a
+  by the component each is placed in, record every internal seam as an `IF-###`, and test it with a
   dedicated integration TC; the whole-repo trace gate stays the source of truth
   (process.md §10). Single-module is still the default — scale up only when the
   scope forces it.

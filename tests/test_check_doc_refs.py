@@ -8,7 +8,7 @@ cleanly without a module-map inventory. Exercised over temp repos.
 Implements: TC-041
 """
 
-from conftest import SCRIPTS, load_script, run_py
+from conftest import SCRIPTS, run_py
 
 # The sym: oracle scans the source AST under the default `[paths] src` root
 # (WI-455 — the committed architecture.md map it once parsed is retired), so
@@ -35,10 +35,7 @@ def make_repo(root, body, with_arch=True):
         (root / "src").mkdir(exist_ok=True)
         (root / "src" / "demo.py").write_text(DEMO_SRC, encoding="utf-8")
     (root / "scripts").mkdir(exist_ok=True)
-    # `load`/`save` are the names the spine fixtures' LLR CodeSymbol cites, and
-    # they are DEFINED here so those rows are FOUNDED under the WI-429 anchor
-    # rule: a fixture whose LLR names code that does not exist would make every
-    # registry-tier test convict for the wrong reason.
+    # A real file the registry fixtures' evidence cells can cite.
     (root / "scripts" / "real.py").write_text(
         "x = 1\n\n\ndef load():\n    pass\n\n\ndef save():\n    pass\n",
         encoding="utf-8",
@@ -416,17 +413,17 @@ def test_declared_absences_is_a_declaration_not_a_suppression_list(tmp_path):
 
 # --- WI-394 ruling (c): the REGISTRY tier -------------------------------------
 # The markdown tiers never see the CSVs, yet the spine's Evidence-class cells
-# (TC `Evidence`; LLR `Module`/`CodeSymbol`/`TestRefs`) are exactly the pointers
-# that carry the spine's claim to be grounded in the code. The FILE half of each
+# (TC `Evidence`; LLR `TestRefs`) are exactly the pointers that carry the
+# spine's claim to be grounded in the tests. The FILE half of each
 # citation must exist; the `::node` selector is ruled PROSE (accepted gap). The
 # tier's absence-skip needs no test of its own: every fixture above runs the tool
 # without the registries and keeps passing.
 
 TC_HEADER = "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status,Phase\n"
-LLR_HEADER = "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,Rationale,TestRefs,Status,Component,Phase\n"
+LLR_HEADER = "LLR-ID,SR-Refs,Title,Detail,Rationale,TestRefs,Status,Phase\n"
 
 
-def spine_repo(root, evidence, module="scripts/real.py", symbol="load/save"):
+def spine_repo(root, evidence):
     """A repo whose spine has one TC row (Evidence as given) and one LLR row."""
     make_repo(root, "clean doc\n")
     (root / "docs" / "test").mkdir(parents=True)
@@ -437,10 +434,7 @@ def spine_repo(root, evidence, module="scripts/real.py", symbol="load/save"):
         encoding="utf-8",
     )
     (root / "docs" / "requirements" / "low-level-requirements.csv").write_text(
-        LLR_HEADER
-        + "LLR-001,SR-001,T,{},{},detail,,(see TC-001),Accepted,,1\n".format(
-            module, symbol
-        ),
+        LLR_HEADER + "LLR-001,SR-001,T,detail,,(see TC-001),Accepted,1\n",
         encoding="utf-8",
     )
     return root
@@ -467,23 +461,21 @@ def test_an_invented_registry_evidence_citation_reds_under_strict(tmp_path):
     assert refs(tmp_path, "--strict").returncode == 1
 
 
-def test_registry_joined_module_list_is_split_and_judged_per_half(tmp_path):
+def test_registry_joined_evidence_list_is_split_and_judged_per_half(tmp_path):
     # A registry cell is a KNOWN joined list — unlike a prose token, the joiner
     # is a separator, not an out-of-scope marker. Only the dead half convicts.
-    spine_repo(tmp_path, "scripts/real.py", module="scripts/real.py;scripts/gone.py")
+    spine_repo(tmp_path, "scripts/real.py;scripts/gone.py")
     proc = refs(tmp_path, "--strict")
     assert proc.returncode == 1
-    assert "LLR-001 Module" in proc.stderr
+    assert "TC-001 Evidence" in proc.stderr
     assert "`scripts/gone.py` does not exist" in proc.stderr
     assert "`scripts/real.py`" not in proc.stderr
 
 
-def test_registry_placeholder_rows_and_symbol_joins_stay_out_of_scope(tmp_path):
-    # `*-000` example rows keep the scaffolded templates copy-ready, and a
-    # CodeSymbol's `/`-joined symbol names are not paths — neither may convict.
-    # `load/save` is the `/`-joined shape under test: two symbol names, not a
-    # path — the joiner must keep it out of the PATH tier entirely.
-    spine_repo(tmp_path, "scripts/real.py", symbol="load/save")
+def test_registry_placeholder_rows_stay_out_of_scope(tmp_path):
+    # `*-000` example rows keep the scaffolded templates copy-ready, so an
+    # example row citing a file that does not exist may not convict.
+    spine_repo(tmp_path, "scripts/real.py")
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
         TC_HEADER
         + "TC-000,SR-000,Unit,example,Full,,ok,Yes,tests/nope.py::test_x,Accepted,1\n",
@@ -491,285 +483,3 @@ def test_registry_placeholder_rows_and_symbol_joins_stay_out_of_scope(tmp_path):
     )
     proc = refs(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
-
-
-# --- the LLR CodeSymbol ANCHOR rule (WI-429) ---------------------------------
-# The discharge test D-9 leaves open for the LLR tier: `Status = Founded` means
-# the artifacts a row calls for EXIST, and an LLR has no children here, so its
-# discharge is resolving code. The rule is an ANCHOR — at least one
-# identifier-shaped CodeSymbol token must bind in a named `.py` Module — for
-# the reason the census established: the cell has no stated grammar and really
-# does carry locals, attributes, CSS tokens and prose, so a per-token rule
-# would fail 31 of this repo's 149 live rows on arrival.
-
-
-def test_llr_symbol_anchor_reds_on_a_planted_defect(tmp_path):
-    """Implements: TC-175"""
-    # NON-VACUITY, planted: a real module and a real LLR naming a real symbol
-    # is silent; the same fixture plus one row naming a symbol nothing defines
-    # is a DANGLING finding that gates under --strict.
-    spine_repo(tmp_path, "scripts/real.py")
-    assert refs(tmp_path, "--strict").returncode == 0, "the founded row is silent"
-    llr = tmp_path / "docs" / "requirements" / "low-level-requirements.csv"
-    llr.write_text(
-        llr.read_text(encoding="utf-8")
-        + "LLR-901,SR-001,Planted,scripts/real.py,no_such_symbol_anywhere,"
-        "detail,,(see TC-001),Accepted,,1\n",
-        encoding="utf-8",
-    )
-    proc = refs(tmp_path)
-    assert proc.returncode == 0, "warn-first, the WI-062 precedent"
-    assert "LLR-901 CodeSymbol" in proc.stderr
-    assert "no_such_symbol_anywhere" in proc.stderr
-    assert "LLR-001" not in proc.stderr, "the founded row must not be swept in"
-    assert refs(tmp_path, "--strict").returncode == 1
-
-
-def test_llr_symbol_anchor_needs_only_one_resolving_token(tmp_path):
-    """Implements: TC-175"""
-    # The anchor, stated as a test: a cell whose OTHER members are a local, a
-    # CSS custom property and free prose is still founded on its one real
-    # symbol — and the misses are COUNTED as untraced, never silently dropped.
-    spine_repo(tmp_path, "scripts/real.py", symbol="load/a_local_name/--nhead")
-    proc = refs(tmp_path, "--strict", "--show-untraced")
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "a_local_name" in proc.stderr, "the miss is reported"
-    assert "UNTRACED" in proc.stderr, "...as untraced, not as a gate"
-
-
-def _nonpy_repo(root, module="hooks/pre-commit"):
-    """A spine whose one LLR names only a non-Python module, on disk."""
-    spine_repo(root, "scripts/real.py", module=module, symbol="pre-commit")
-    (root / "hooks").mkdir(exist_ok=True)
-    (root / "hooks" / "pre-commit").write_text("#!/bin/sh\n", encoding="utf-8")
-    return root
-
-
-def test_llr_symbol_anchor_skips_a_non_python_module(tmp_path):
-    """Implements: TC-175"""
-    # A hook or a shell template has no Python name to bind, so the rule has
-    # nothing to say — it must skip, not convict.
-    _nonpy_repo(tmp_path)
-    proc = refs(tmp_path, "--strict")
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-
-
-def test_llr_symbol_anchor_reports_the_non_python_skip_as_an_advisory(tmp_path):
-    """Implements: TC-175"""
-    # WI-449 / OI-20's OI-28 guard: the skip is CORRECT and unchanged, but it
-    # used to be SILENT, which is a fail-open now that template paths are ruled
-    # admissible in Module as realization artifacts. The row must be named,
-    # with its module and the reason discharge is not computed for it.
-    _nonpy_repo(tmp_path)
-    proc = refs(tmp_path)
-    assert "ADVISORY" in proc.stderr, proc.stdout + proc.stderr
-    assert "LLR-001" in proc.stderr
-    assert "hooks/pre-commit" in proc.stderr
-    assert "NOT computed" in proc.stderr
-    # ...and it is NEVER the exit code, not even under --strict, and never a
-    # WARN (which in this module is exactly the ink that gates under --strict).
-    strict = refs(tmp_path, "--strict")
-    assert strict.returncode == 0, strict.stdout + strict.stderr
-    assert "ADVISORY" in strict.stderr
-    assert "LLR-001 CodeSymbol" not in strict.stderr, "an advisory is not a finding"
-
-
-def test_llr_symbol_anchor_binds_through_the_py_half_of_a_mixed_module_cell(tmp_path):
-    """Implements: TC-175"""
-    # A row naming BOTH a hook and a `.py` module is checkable through its `.py`
-    # half, so the rule runs normally: it founds on the binding token and stays
-    # silent. The advisory is for rows with NO Python module at all.
-    spine_repo(
-        tmp_path,
-        "scripts/real.py",
-        module="scripts/real.py;hooks/pre-commit",
-        symbol="load",
-    )
-    (tmp_path / "hooks").mkdir()
-    (tmp_path / "hooks" / "pre-commit").write_text("#!/bin/sh\n", encoding="utf-8")
-    proc = refs(tmp_path, "--strict")
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "ADVISORY" not in proc.stderr, "a checkable row must not be advised"
-
-
-def test_the_non_python_advisory_folds_to_one_line_when_the_list_is_long():
-    """Implements: TC-175"""
-    # Legibility is the point of making the skip visible, so past the threshold
-    # the per-row report folds to ONE line — which still names every row id, so
-    # nothing is dropped, only the repetition.
-    check_doc_refs = load_script("check_doc_refs")
-    n = check_doc_refs.ADVISORY_FOLD_ABOVE
-    rel = check_doc_refs.LLR_REL
-    rows = [
-        "{}: LLR-{:03d} Module names only ...".format(rel, i) for i in range(1, n + 1)
-    ]
-    assert check_doc_refs.fold_advisories(rows) == rows, "at the threshold, per row"
-    folded = check_doc_refs.fold_advisories(rows + [rows[0].replace("001", "900")])
-    assert len(folded) == 1
-    assert "{} row(s)".format(n + 1) in folded[0]
-    assert "LLR-001" in folded[0] and "LLR-900" in folded[0], "no row id is dropped"
-
-
-def test_the_codesymbol_grammar_is_stated_where_the_rule_binds():
-    # OI-20 ruled WHAT THE CELL MAY NAME, and a ruling nobody can find at the
-    # point of enforcement is a ruling that gets re-litigated. A light presence
-    # pin: the admissible list and the floor live in the rule's own docstring.
-    doc = load_script("check_doc_refs").symbol_findings.__doc__
-    for phrase in ("RESOLVABLE CODE SYMBOL", "MODULE PATH", "PART SOURCE"):
-        assert phrase in doc, "admissible: " + phrase
-    for phrase in ("NOT ADMISSIBLE", "GENERATED ARTIFACT", "PROSE CONTRACT"):
-        assert phrase in doc, "inadmissible: " + phrase
-    assert "DECOMPOSITION FLOOR" in doc, "the ruling's weight (OI-21 rung 4)"
-
-
-def test_llr_symbol_anchor_sees_private_names_and_constants(tmp_path):
-    """Implements: TC-175"""
-    # The reason the oracle is gen_arch_map.module_bindings and NOT the rendered
-    # module map: the map is a public-API view that drops `_`-names and every
-    # constant, and 41 of this repo's 149 live LLR rows name exactly those.
-    for i, symbol in enumerate(("_helper", "CONST", "Klass", "method")):
-        root = tmp_path / "r{}".format(i)
-        root.mkdir()
-        spine_repo(root, "scripts/real.py", symbol=symbol)
-        (root / "scripts" / "real.py").write_text(
-            "CONST = 1\n\n\ndef _helper():\n    pass\n\n\n"
-            "class Klass:\n    def method(self):\n        pass\n",
-            encoding="utf-8",
-        )
-        proc = refs(root, "--strict")
-        assert proc.returncode == 0, symbol + ": " + proc.stdout + proc.stderr
-
-
-def test_llr_symbol_anchor_does_not_double_report_a_missing_module(tmp_path):
-    """Implements: TC-175"""
-    # A Module that is not on disk is the PATH tier's finding. Reporting it here
-    # too would count one rot twice and make the anchor's number unreadable.
-    spine_repo(tmp_path, "scripts/real.py", module="scripts/gone.py", symbol="load")
-    proc = refs(tmp_path)
-    assert "LLR-001 Module" in proc.stderr, "the path tier still convicts"
-    assert "LLR-001 CodeSymbol" not in proc.stderr
-
-
-def test_llr_symbol_anchor_skips_placeholder_rows(tmp_path):
-    """Implements: TC-175"""
-    # `*-000` example rows keep a scaffolded template copy-ready.
-    spine_repo(tmp_path, "scripts/real.py")
-    llr = tmp_path / "docs" / "requirements" / "low-level-requirements.csv"
-    llr.write_text(
-        llr.read_text(encoding="utf-8")
-        + "LLR-000,SR-000,Example,scripts/real.py,your_symbol_here,"
-        "detail,,(see TC-000),Drafted,,1\n",
-        encoding="utf-8",
-    )
-    assert refs(tmp_path, "--strict").returncode == 0
-
-
-# --- the per-module UNBOUND count (the `module` cell lists the modules holding
-# the row's code) -------------------------------------------------------------
-# The anchor verdict reads a row's `Module` list as a UNION, so a module the
-# row lists but holds none of its code passed silently: a reader sent there
-# finds nothing. Each such module is now counted, untraced-class — listed by
-# --show-untraced, never a WARN, never the exit code — and a generic token
-# (`main`, or a name every CLI module defines) does not bind for the count,
-# because a name every entry point carries says nothing about where a row's
-# code lives.
-
-
-def _two_module_row(root, symbol, other_src):
-    """A spine whose one LLR lists `scripts/real.py;scripts/other.py`."""
-    spine_repo(
-        root,
-        "scripts/real.py",
-        module="scripts/real.py;scripts/other.py",
-        symbol=symbol,
-    )
-    (root / "scripts" / "other.py").write_text(other_src, encoding="utf-8")
-    return root
-
-
-def _add_llr(root, line):
-    llr = root / "docs" / "requirements" / "low-level-requirements.csv"
-    llr.write_text(llr.read_text(encoding="utf-8") + line, encoding="utf-8")
-
-
-def test_a_listed_module_none_of_the_row_symbols_binds_in_is_counted_untraced(
-    tmp_path,
-):
-    """Implements: TC-175"""
-    _two_module_row(tmp_path, "load", "def unrelated():\n    pass\n")
-    proc = refs(tmp_path, "--strict", "--show-untraced")
-    assert proc.returncode == 0, "never the exit code: " + proc.stdout + proc.stderr
-    listed = [ln for ln in proc.stderr.splitlines() if "unbound module" in ln]
-    assert len(listed) == 1, proc.stderr
-    assert listed[0].startswith("check_doc_refs: UNTRACED - "), "untraced-class"
-    assert "LLR-001" in listed[0] and "scripts/other.py" in listed[0]
-    assert "WARN" not in proc.stderr, "never dangling"
-    assert "1 unbound module(s)" in proc.stdout, "the count is reported"
-    # Without the flag the entry is not listed, and the count still is.
-    quiet = refs(tmp_path)
-    assert "unbound module" not in quiet.stderr
-    assert "1 unbound module(s)" in quiet.stdout
-    # The module that holds the row's code is never counted.
-    assert "scripts/real.py` —" not in proc.stderr
-
-
-def test_a_generic_main_does_not_bind_a_listed_module_for_the_count(tmp_path):
-    """Implements: TC-175"""
-    # LLR-235's shape: the row names `main` beside its real symbol, and a second
-    # listed module happens to define `main` too. The union anchor is unchanged
-    # (the row is founded on `load`), but `main` no longer vouches for the
-    # second module, so it is counted where it used to pass silently.
-    _two_module_row(tmp_path, "load/main", "def main():\n    pass\n")
-    real = tmp_path / "scripts" / "real.py"
-    real.write_text(real.read_text(encoding="utf-8") + "\n\ndef main():\n    pass\n")
-    # A row listing ONE module is the anchor verdict's alone: its only module
-    # holds `main`, which is where the row's code is, so it is not counted.
-    _add_llr(
-        tmp_path,
-        "LLR-002,SR-001,T,scripts/other.py,main,detail,,(see TC-001),Accepted,,1\n",
-    )
-    proc = refs(tmp_path, "--strict", "--show-untraced")
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    listed = [ln for ln in proc.stderr.splitlines() if "unbound module" in ln]
-    assert len(listed) == 1, proc.stderr
-    assert "LLR-001" in listed[0] and "scripts/other.py" in listed[0]
-    assert "LLR-001 CodeSymbol" not in proc.stderr.replace(listed[0], ""), (
-        "the anchor verdict is unchanged: the row stays founded"
-    )
-
-
-def test_a_name_every_cli_module_defines_does_not_bind_for_the_count(tmp_path):
-    """Implements: TC-175"""
-    # Beyond `main`: a helper every entry point defines (here `parse_args`) is
-    # as uninformative. `other.py` binds only the shared CLI names, so it is
-    # counted; the registry names three CLI modules, and the shared set is
-    # computed over them.
-    cli = "def main():\n    pass\n\n\ndef parse_args():\n    pass\n"
-    _two_module_row(tmp_path, "load/parse_args", cli)
-    real = tmp_path / "scripts" / "real.py"
-    real.write_text(real.read_text(encoding="utf-8") + "\n\n" + cli)
-    (tmp_path / "scripts" / "third.py").write_text(
-        cli + "\n\ndef own():\n    pass\n", encoding="utf-8"
-    )
-    _add_llr(
-        tmp_path,
-        "LLR-002,SR-001,T,scripts/third.py,own,detail,,(see TC-001),Accepted,,1\n",
-    )
-    proc = refs(tmp_path, "--strict", "--show-untraced")
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    listed = [ln for ln in proc.stderr.splitlines() if "unbound module" in ln]
-    assert len(listed) == 1, proc.stderr
-    assert "LLR-001" in listed[0] and "scripts/other.py" in listed[0]
-
-
-def test_the_unbound_total_counts_entries_not_the_phrase_in_other_prose(tmp_path):
-    """Implements: TC-175"""
-    # The total is carried from the unbound entries themselves. A row whose own
-    # CodeSymbol prose happens to contain the phrase renders an ordinary
-    # untraced miss that quotes it, and that entry is not an unbound module.
-    spine_repo(tmp_path, "scripts/real.py", symbol="load/missing_name/unbound module")
-    proc = refs(tmp_path, "--strict", "--show-untraced")
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "`missing_name` is not a module-level name" in proc.stderr
-    assert "unbound module" in proc.stderr, "the collision is really rendered"
-    assert "unbound module(s)" not in proc.stdout, proc.stdout

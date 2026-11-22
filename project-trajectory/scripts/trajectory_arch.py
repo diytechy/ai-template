@@ -5,8 +5,8 @@ This module is the architecture rule surface ``check_trajectory`` imports. It
 composes five modules beneath it and re-exports their names: `arch_inputs`
 (registry paths, dials, loaders, the declared scan profile and the source
 inventory), `arch_interfaces` (interface connectivity, contract bodies and
-seam-to-test coverage), `arch_tags` (code-symbol and test-file tag
-crosschecks), `arch_seams` (cross-component edges and the declared kernel)
+seam-to-test coverage), `arch_tags` (the test-file tag rule and the
+evidence column generated from the tags), `arch_seams` (cross-component edges and the declared kernel)
 and `arch_components` (component containment, the How-SW top view and the
 derivation record). It keeps one rule of its own, spec interface citations.
 Trajectory lifecycle, phase, staleness, and CLI composition stay in
@@ -21,8 +21,9 @@ spec-boundary rule. Inputs are a repository root, the spine/config files
 beneath it and, for `tc_tag_findings`, the test files under the declared tests
 root, whose tags it holds equal to the TC rows' `Evidence` cells and requires
 of each accepted automated TC; outputs are normalized inventories or finding
-strings. No module of the surface performs a write or exposes a command-line
-entry point.
+strings. One function writes, `write_evidence`, the generated evidence column
+into the test-case registry (`trace.py --regen-evidence` calls it); no module
+of the surface exposes a command-line entry point.
 """
 
 import re
@@ -52,6 +53,7 @@ from arch_inputs import (
     _stack_ini_get,
     arch_inventory,
     component_headers,
+    implements_index,
     load_cmps,
     load_ifs,
     load_seams,
@@ -81,11 +83,10 @@ from arch_interfaces import (
     unchecked_contract_rows,
 )
 from arch_tags import (
-    _CODESYMBOL_SPLIT_RE,
-    _codesymbol_candidates,
-    _codesymbol_site_finding,
-    codesymbol_crosscheck_findings,
+    evidence_regen,
+    generated_evidence,
     tc_tag_findings,
+    write_evidence,
 )
 from arch_seams import (
     KERNEL_ALLOW,
@@ -250,11 +251,11 @@ __all__ = (
     "if_tc_coverage_findings",
     "if_tc_allow_hygiene_findings",
     "if_tc_allow_parse_findings",
-    "_CODESYMBOL_SPLIT_RE",
-    "_codesymbol_candidates",
-    "_codesymbol_site_finding",
-    "codesymbol_crosscheck_findings",
     "tc_tag_findings",
+    "generated_evidence",
+    "evidence_regen",
+    "write_evidence",
+    "implements_index",
     "load_cmps",
     "_cmp_roots",
     "component_top_view",

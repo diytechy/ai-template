@@ -24,7 +24,7 @@ reviewer should push back on a premature jump:
    `SN→SR→LLR→TC` spine, one gate run, one release.
 2. **Several modules, one repo** (`PROCESS.md` §10) — when a repo grows distinct
    sub-systems that still **build and release as one**. Partition the spine by the
-   `Module`/component columns; no new machinery.
+   component each LLR is placed in; no new machinery.
 3. **Several repos + a coordinator** (this document) — **only** when modules genuinely
    need *independent* versioning, ownership, access, or release cadence at a scale one
    repo can't sustain.

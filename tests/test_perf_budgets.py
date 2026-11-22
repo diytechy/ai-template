@@ -41,13 +41,14 @@ def test_budget_referencing_unknown_id_fails_strict(scaffold):
     assert "PB PB-001 references unknown SR-999" in report_of(scaffold)
 
 
-def test_budget_may_back_link_a_module_path(scaffold):
-    # Refs resolve against SR/LLR ids OR an LLR Module path (the demo LLR's
-    # Module is src/demo), so a budget can bound a whole module.
+def test_a_budget_naming_a_module_path_is_an_unknown_ref(scaffold):
+    # Refs resolve against SR and LLR ids only: a design row names no file
+    # since WI-1023, so a module path a budget names resolves to nothing.
     make_minimal_project(scaffold)
     write_budgets(scaffold, ROW.format(pid="PB-001", refs="src/demo"))
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
-    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "PB PB-001 references unknown src/demo" in report_of(scaffold)
 
 
 def test_budget_with_empty_refs_fails_strict(scaffold):

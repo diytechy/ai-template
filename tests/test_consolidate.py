@@ -271,21 +271,21 @@ def test_the_module_signal_reads_both_the_llr_join_and_the_row_prose(tmp_path):
     """Both halves, because each is blind where the other sees: the LLR join is
     traceable but says nothing about a row citing no SR (most process rows), and
     the prose scan sees those. Compared by BASENAME — a row writes `intake.py`
-    where an LLR's Module cell writes the full path.
+    where the Implements index, read up from the code's tags, writes the full
+    path (a design row names no file).
 
     Implements: TC-208
     """
-    llrs = (
-        "[design.LLR-001]\n"
-        'sr_refs = ["SR-001"]\n'
-        'module = "project-trajectory/scripts/intake.py"\n'
-        'detail = "d"\n'
-    )
+    llrs = '[design.LLR-001]\nsr_refs = ["SR-001"]\ndetail = "d"\n'
     rows = [
         _row("WI-001", **{"SR-Refs": "SR-001"}),
         _row("WI-002", Title="rework the mint in intake.py"),
     ]
     repo = _repo(tmp_path, rows, llrs=llrs)
+    (repo / "src" / "lib").mkdir(parents=True)
+    (repo / "src" / "lib" / "intake.py").write_text(
+        "# Implements: LLR-001\n", encoding="utf-8"
+    )
     findings = consolidate.pair_findings(repo, rows)
     assert any("both touch intake.py" in f[2] for f in findings), findings
 

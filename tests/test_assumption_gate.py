@@ -409,8 +409,8 @@ def test_the_derived_stage_is_identical_with_the_gate_on_and_off(scaffold):
 
 # --- TC-239: the interface-form requirement, both arms (SR-212) ------------------
 # THE ARCH ARM: an interface-form requirement is reached through the files its
-# design rows name by each boundary interface whose contract body one of them
-# states. SR-001 is
+# design rows' back-link tags are in by each boundary interface whose contract
+# body one of them states. SR-001 is
 # reached by a coincident interface, SR-002 by one bridged by an assumption it
 # cites; SR-003 only by one bridged by another assumption; SR-004 by none;
 # SR-005 by one valid and one invalid interface. SR-006 and SR-007 are of the
@@ -427,35 +427,30 @@ ARCH_SRS = (
 )
 
 
-def _design(lid, module, sid):
+def _design(lid, sid):
     return (
         "\n[design.{}]\n"
         'sr_refs = ["{}"]\n'
         'title = "Design {}"\n'
-        'module = "{}"\n'
-        'code_symbol = "run"\n'
         'detail = "How {} is built."\n'
         'status = "Accepted"\n'
-    ).format(lid, sid, lid, module, sid)
+    ).format(lid, sid, lid, sid)
 
 
-ARCH_LLRS = (
-    _design("LLR-001", "src/alpha.py", "SR-001")
-    + _design("LLR-002", "src/beta.py", "SR-002")
-    + _design("LLR-003", "src/gamma.py", "SR-003")
-    + _design("LLR-004", "src/epsilon.py", "SR-004")
-    + _design("LLR-005", "src/delta.py", "SR-005")
-    + _design("LLR-006", "src/zeta.py", "SR-006")
-    + _design("LLR-007", "src/eta.py", "SR-007")
+ARCH_LLRS = "".join(
+    _design("LLR-{:03d}".format(n), "SR-{:03d}".format(n)) for n in range(1, 8)
 )
 
 
-def _stating(*ids):
-    """A source module stating each of `ids`' contract bodies: an interface
-    reaches the requirements of the design rows naming the file that states
-    its body."""
+def _stating(lid, *ids):
+    """A source module realizing design row `lid`, as its back-link tag says,
+    and stating each of `ids`' contract bodies: an interface reaches the
+    requirements of the design rows whose tags the file stating its body
+    carries."""
     bodies = "".join("Contract {}: the outcome line.\n".format(i) for i in ids)
-    return '"""A module.\n\nContracts: {}\n\n{}"""\n'.format(", ".join(ids), bodies)
+    return '"""A module.\n\nImplements: {}\n\nContracts: {}\n\n{}"""\n'.format(
+        lid, ", ".join(ids), bodies
+    )
 
 
 def _interface(iid, owner, *, bridged=(), coincident=None):
@@ -497,11 +492,11 @@ ARCH = {
     LLR_REL: ARCH_LLRS,
     IF_REL: ARCH_IFS,
     DA_REL: _assumption("DA-001") + _assumption("DA-009"),
-    "src/alpha.py": _stating("IF-001"),
-    "src/beta.py": _stating("IF-002"),
-    "src/gamma.py": _stating("IF-003"),
-    "src/delta.py": _stating("IF-004", "IF-005"),
-    "src/epsilon.py": _stating("IF-006"),
+    "src/alpha.py": _stating("LLR-001", "IF-001"),
+    "src/beta.py": _stating("LLR-002", "IF-002"),
+    "src/gamma.py": _stating("LLR-003", "IF-003"),
+    "src/delta.py": _stating("LLR-005", "IF-004", "IF-005"),
+    "src/epsilon.py": _stating("LLR-004", "IF-006"),
 }
 
 ARCH_FAILURES = {

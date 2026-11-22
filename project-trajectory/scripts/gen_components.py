@@ -13,6 +13,7 @@ that column was pointing at, so the column retires with this file.
   docs/requirements/low-level-requirements.toml  the design rows + the SR reach
   docs/requirements/system-requirements.toml     the requirement tier + hats
   docs/requirements/interfaces.toml              the seams
+  docs/test/test-cases.toml                      where each design row sits
   -> docs/requirements/components.derived.toml   this view
 
 THE SPLIT, and it is the ruling's: the hand file DECLARES a component (that it
@@ -32,10 +33,14 @@ THE THREE COVERAGE EDGES, each answered EXPLICITLY here rather than papered
 over (the brief demanded that; a generator that silently drops rows is
 indistinguishable from one with a bug):
 
+  * A DESIGN ROW IS PLACED, NEVER TAGGED (WI-1023, variant F): it sits at the
+    owner component of each interface a test case verifying it names
+    (`kitlib.spine.llr_placement`), at each when there are several, and one
+    placed nowhere is listed in `[unplaced] llr_refs` and counted, never
+    refused. A row names no component of its own.
   * AN SR THAT REACHES NO COMPONENT IS LISTED, ONCE, in `[unplaced]`. An SR
-    carries no `Component` cell — membership is a primitive-tier tag — so its
-    components are derived through its LLR children, and an SR with no child has
-    none. Some of those are decompositions not yet written; some are CONSTRAINTS
+    carries no `Component` cell, so its components are derived through its
+    placed LLR children, and an SR with none has none. Some of those are decompositions not yet written; some are CONSTRAINTS
     OVER EVERY COMPONENT (a stdlib rule, a cross-OS rule) that name no object and
     correctly belong to no component. THIS VIEW DOES NOT DISTINGUISH THE TWO,
     because nothing in the registries does, and inventing a per-repo list of
@@ -78,7 +83,8 @@ Contract IF-140: the derived view itself — a TOML document carrying one
     `[derived]` census table, one `[component_view.CMP-###]` table per declared
     component (`name`, `sr_refs`, `sr_shared_refs`, `llr_refs`, `hat_refs`,
     `modules`, `seam_internal_refs`, `seam_boundary_refs`) and one `[unplaced]`
-    table naming the requirements and seams that reach no component. Every
+    table naming the requirements, design rows and seams that reach no
+    component; the census counts the unplaced design rows too. Every
     collection is sorted and nothing reads a clock or the environment, so the
     byte-compare behind `--check` is stable in any clone. It carries no
     maturity, standing or acceptance cell, ever, and nothing in it may be cited
@@ -104,6 +110,7 @@ CMP_REL = "docs/requirements/components.toml"
 SR_REL = "docs/requirements/system-requirements.toml"
 LLR_REL = "docs/requirements/low-level-requirements.toml"
 IF_REL = "docs/requirements/interfaces.toml"
+TC_REL = "docs/test/test-cases.toml"
 OUT_REL = "docs/requirements/components.derived.toml"
 
 # The generated-but-LIVE staleness form (WI-505 / OI-56 ruled (a)): a generated
@@ -122,16 +129,19 @@ BANNER = (
     "# hand-authored components.toml row, and nothing in this file is evidence\n"
     "# that an operator blessed anything.\n"
     "#\n"
-    "# An `[unplaced] sr_refs` entry reaches no component because it has no design\n"
-    "# child — either a decomposition not yet written, or a constraint over EVERY\n"
-    "# component that names no single object. This view does not distinguish the\n"
-    "# two: no registry cell does, and the distinction is a judgement about a\n"
-    "# specific repo's rows.\n"
+    "# A design row sits at the owner component of each interface a test case\n"
+    "# verifying it names; `[unplaced] llr_refs` lists the rows placed nowhere.\n"
+    "#\n"
+    "# An `[unplaced] sr_refs` entry reaches no component because it has no placed\n"
+    "# design child — a decomposition not yet written or placed, or a constraint\n"
+    "# over EVERY component that names no single object. This view does not\n"
+    "# distinguish the two: no registry cell does, and the distinction is a\n"
+    "# judgement about a specific repo's rows.\n"
 )
 
 
 def _load(root):
-    """The four registries this view joins, each through the carrier resolver so
+    """The five registries this view joins, each through the carrier resolver so
     a repo that has not migrated off CSV still renders."""
     root = Path(root)
     return (
@@ -139,6 +149,7 @@ def _load(root):
         spine_carrier.load(root / SR_REL, "SR-ID", keep_examples=False),
         spine_carrier.load(root / LLR_REL, "LLR-ID", keep_examples=False),
         spine_carrier.load(root / IF_REL, "IF-ID", keep_examples=False),
+        spine_carrier.load(root / TC_REL, "TC-ID", keep_examples=False),
     )
 
 
@@ -186,20 +197,23 @@ def _blank(name):
     }
 
 
-def _add_members(view, srs, llrs):
-    """Fold the design tier into `view` and return `{SR id: {CMP ids}}`. The
-    design rows' `Component` cells place the rows and the requirements they
-    reach; the files are `_add_modules`'.
+def _add_members(view, srs, llrs, placement):
+    """Fold the design tier into `view` and return `{SR id: {CMP ids}}`. Each
+    design row's derived placement (`placement`, `kitlib.spine.llr_placement`)
+    places the row and the requirements it reaches; the files are
+    `_add_modules`'.
 
-    An LLR tagged into a component nothing declares is NOT invented here as a
-    section: that dangling tag is trace.py's finding to report, and a view that
-    materialized the id would hide it behind a plausible-looking heading."""
+    A row placed at a component nothing declares is NOT invented here as a
+    section: the interface naming that owner is trace.py's finding, and a view
+    that materialized the id would hide it behind a plausible-looking heading.
+
+    Implements: SR-070, LLR-199, LLR-403"""
     sr_by_id = {r["SR-ID"]: r for r in srs}
     sr_components = {}
     for row in llrs:
         hats = tr.effective_hats(row, sr_by_id)
         parents = [x for x in refs(row.get("SR-Refs")) if x in sr_by_id]
-        for cid in refs(row.get("Component")):
+        for cid in placement.get(row["LLR-ID"], ()):
             if cid not in view:
                 continue
             view[cid]["llr_refs"].add(row["LLR-ID"])
@@ -236,7 +250,7 @@ def _add_seams(view, ifs, parents):
     return unplaced
 
 
-def build(cmps, srs, llrs, ifs, declared):
+def build(cmps, srs, llrs, ifs, tcs, declared):
     """The whole view as plain data: `(per_component, unplaced)`.
 
     Separated from `render` so the derivation is testable without parsing TOML
@@ -245,15 +259,24 @@ def build(cmps, srs, llrs, ifs, declared):
     `declared` is each file's component as its `Component:` header declares it
     (`arch_inputs.component_headers`), which places the files. A seam is placed
     from its endpoint cells and the components' `part_of` (`seam_placement`).
+    A design row is placed through the interfaces the test cases `tcs`
+    verifying it name (`kitlib.spine.llr_placement`); one placed nowhere is in
+    `unplaced["llr_refs"]`.
 
-    Implements: SR-070, LLR-199"""
+    Implements: SR-070, LLR-199, LLR-403"""
     view = {r["CMP-ID"]: _blank((r.get("Name") or "").strip()) for r in cmps}
-    sr_components = _add_members(view, srs, llrs)
+    placement = _kitspine.llr_placement(tcs, ifs)
+    sr_components = _add_members(view, srs, llrs, placement)
     _add_modules(view, declared)
     parents = {r["CMP-ID"]: refs(r.get("PartOf")) for r in cmps}
     unplaced_seams = _add_seams(view, ifs, parents)
     unplaced_srs = sorted(r["SR-ID"] for r in srs if r["SR-ID"] not in sr_components)
-    return view, {"sr_refs": unplaced_srs, "seam_refs": sorted(unplaced_seams)}
+    placed = {lid for v in view.values() for lid in v["llr_refs"]}
+    return view, {
+        "sr_refs": unplaced_srs,
+        "llr_refs": sorted(r["LLR-ID"] for r in llrs if r["LLR-ID"] not in placed),
+        "seam_refs": sorted(unplaced_seams),
+    }
 
 
 def _array(name, values):
@@ -268,13 +291,15 @@ def _array(name, values):
 def render(root):
     """The whole file as text. Deterministic: every collection is sorted and
     nothing reads a clock or the environment."""
-    cmps, srs, llrs, ifs = _load(root)
-    view, unplaced = build(cmps, srs, llrs, ifs, arch_inputs.component_headers(root)[0])
+    cmps, srs, llrs, ifs, tcs = _load(root)
+    declared = arch_inputs.component_headers(root)[0]
+    view, unplaced = build(cmps, srs, llrs, ifs, tcs, declared)
     out = [BANNER]
     out.append(
         "\n[derived]\n"
         + "components = {}\n".format(len(view))
         + "design_rows = {}\n".format(sum(len(v["llr_refs"]) for v in view.values()))
+        + "design_rows_unplaced = {}\n".format(len(unplaced["llr_refs"]))
         + "seam_rows = {}\n".format(len(ifs))
         + "requirements_placed = {}\n".format(len(srs) - len(unplaced["sr_refs"]))
         + "requirements_unplaced = {}\n".format(len(unplaced["sr_refs"]))
@@ -296,6 +321,7 @@ def render(root):
             out.append(_array(key, sorted(row[key])))
     out.append("\n[unplaced]\n")
     out.append(_array("sr_refs", unplaced["sr_refs"]))
+    out.append(_array("llr_refs", unplaced["llr_refs"]))
     out.append(_array("seam_refs", unplaced["seam_refs"]))
     return "".join(out)
 

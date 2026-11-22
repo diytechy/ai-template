@@ -83,17 +83,20 @@ def test_a_drafted_row_stands_the_child_rules_down_but_not_its_sn_link(coherence
     assert not [f for f in orphans if f.startswith("SR SR-002 has no")]
 
 
-def test_off_spine_backlinks_resolve_against_ids_and_llr_module_paths(coherence):
+def test_off_spine_backlinks_resolve_against_ids_only(coherence):
     """Implements: TC-197"""
-    llrs = [{"LLR-ID": "LLR-001", "Module": "scripts/thing.py"}]
-    assert coherence.llr_module_ids(llrs) == {"scripts/thing.py"}
-    targets = {"SR-001", "LLR-001", "scripts/thing.py"}
+    # A design row names no file (WI-1023), so a budget's Refs resolve against
+    # requirement and design-row ids alone, and a file path is unknown.
+    targets = {"SR-001", "LLR-001"}
     assert (
         coherence.budget_backlink_findings(
-            [{"PB-ID": "PB-001", "Refs": "scripts/thing.py"}], targets
+            [{"PB-ID": "PB-001", "Refs": "SR-001; LLR-001"}], targets
         )
         == []
     )
+    assert coherence.budget_backlink_findings(
+        [{"PB-ID": "PB-004", "Refs": "scripts/thing.py"}], targets
+    ) == ["PB PB-004 references unknown scripts/thing.py"]
     assert coherence.budget_backlink_findings(
         [{"PB-ID": "PB-002", "Refs": ""}], targets
     )
@@ -108,16 +111,16 @@ def test_off_spine_backlinks_resolve_against_ids_and_llr_module_paths(coherence)
 def test_component_membership_is_checked_from_the_primitive_side(coherence):
     """Implements: TC-197"""
     cmps = [{"CMP-ID": "CMP-001", "PartOf": "", "SupersededBy": ""}]
-    assert coherence.component_membership_findings(cmps, [], [], [], []) == []
+    assert coherence.component_membership_findings(cmps, [], [], []) == []
     bad = coherence.component_membership_findings(
-        cmps, [{"LLR-ID": "LLR-001", "Component": "CMP-404"}], [], [], []
+        cmps, [], [{"PART-ID": "PART-001", "Component": "CMP-404"}], []
     )
-    assert bad == ["LLR LLR-001 Component tag references unknown CMP-404"]
+    assert bad == ["PART PART-001 Component tag references unknown CMP-404"]
     # An empty component registry disarms the membership half entirely (a
     # project that declares no components tags nothing).
     assert (
         coherence.component_membership_findings(
-            [], [{"LLR-ID": "LLR-001", "Component": "CMP-404"}], [], [], []
+            [], [], [{"PART-ID": "PART-001", "Component": "CMP-404"}], []
         )
         == []
     )
@@ -280,7 +283,6 @@ def test_trace_re_exports_every_moved_name(trace, coherence):
     # to the SAME object rather than to a re-implementation.
     for name in (
         "spine_orphan_findings",
-        "llr_module_ids",
         "budget_backlink_findings",
         "delegation_findings",
         "component_membership_findings",

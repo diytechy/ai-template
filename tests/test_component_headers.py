@@ -248,7 +248,7 @@ def test_the_top_view_reads_the_headers_and_not_the_design_rows(tmp_path):
             "scripts/a.py": _mod("CMP-001", "def f():\n    pass\n"),
             "scripts/b.py": _mod(None, "def g():\n    pass\n"),
             "docs/requirements/low-level-requirements.toml": (
-                '[design.LLR-001]\nmodule = "scripts/b.py"\ncomponent = "CMP-002"\n'
+                '[design.LLR-001]\nsr_refs = ["SR-001"]\n'
             ),
         },
     )

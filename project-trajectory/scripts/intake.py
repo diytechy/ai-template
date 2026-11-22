@@ -181,6 +181,7 @@ except ImportError:  # pragma: no cover - in-process fallback
 
 import acceptance_record
 import agent_common as ac
+import arch_inputs
 import baseline_snapshot
 import bookkeeping
 import census
@@ -509,10 +510,12 @@ def context_block(root, wi_row, rows=None):
          re-proposing the refuted (the measured WI-391 failure mode);
       2. pending OIs that self / predecessors / siblings cite in `needs`
          (premise risk);
-      3. the LLR/TC decomposition rows with their Module/CodeSymbol/TestRefs
-         code map;
-      4. LLR.Component -> CMP.Knowledge packs;
-      5. IF seams via LLR.Module;
+      3. the LLR/TC decomposition rows with their code map: the files the
+         Implements index reads up from the code's tags, and where each row is
+         placed (or `unplaced`);
+      4. placement -> CMP.Knowledge packs, a row's placement derived from the
+         interfaces its verifying cases name (`kitlib.spine.llr_placement`);
+      5. IF seams of the components the rows are placed in;
       6. docs/reviews/ records of precedent rows.
 
     Excluded BY DESIGN: docs/status.md (not a resume surface, WI-210), the OKF
@@ -523,7 +526,7 @@ def context_block(root, wi_row, rows=None):
     have no spec author); computed fresh in `agent_loop.worker_prompt` at
     claim; and the warn-first pack-citation check on hand-authored specs
     (`check_trajectory.knowledge_pack_findings` makes the same
-    Component->Knowledge join under its F5 independence)."""
+    placement->Knowledge join under its F5 independence)."""
     try:
         return _context_block(Path(root), wi_row or {}, rows)
     except Exception:  # advisory-never-gating: a broken join is no join
@@ -560,6 +563,8 @@ def _context_block(root, wi_row, rows):
         )
         if srs & set(_split(r.get("SR-Refs")))
     ]
+    placement = _placement(root)
+    comps = {c for r in llrs for c in placement.get(r.get("LLR-ID"), ())}
     sections = [
         (
             "Cancelled precedent on the same SRs (do not re-propose the refuted)",
@@ -578,13 +583,13 @@ def _context_block(root, wi_row, rows):
         ),
         (
             "Decomposition code map (LLR/TC on the same SRs)",
-            _code_map_lines(root, llrs, srs),
+            _code_map_lines(root, llrs, srs, placement),
         ),
         (
             "Knowledge packs the touched components declare (read before building)",
-            _pack_lines(root, llrs),
+            _pack_lines(root, comps),
         ),
-        ("Interface seams of the touched components", _seam_lines(root, llrs)),
+        ("Interface seams of the touched components", _seam_lines(root, comps)),
         (
             "Review records of precedent rows",
             _review_lines(root, preds | {r["WI-ID"] for r in cancelled}),
@@ -621,12 +626,22 @@ def _pending_oi_lines(root, wi_row, rows, kin):
     ]
 
 
-def _code_map_lines(root, llrs, srs):
+def _placement(root):
+    """Each design row's derived placement (`kitlib.spine.llr_placement`): the
+    owner components of the interfaces its verifying cases name."""
+    return _spine.llr_placement(
+        spine_carrier.load(root / "docs/test/test-cases.toml", "TC-ID"),
+        spine_carrier.load(root / "docs/requirements/interfaces.toml", "IF-ID"),
+    )
+
+
+def _code_map_lines(root, llrs, srs, placement):
+    index = arch_inputs.implements_index(root)
     lines = [
-        "- {} [{} :: {}] tests: {} — {}".format(
+        "- {} [{}] placed: {} tests: {} — {}".format(
             r.get("LLR-ID"),
-            r.get("Module") or "?",
-            r.get("CodeSymbol") or "?",
+            ", ".join(index.get(r.get("LLR-ID"), ())) or "no Implements: tag",
+            ", ".join(placement.get(r.get("LLR-ID"), ())) or "unplaced",
             r.get("TestRefs") or "-",
             _clip(r.get("Title"), 60),
         )
@@ -641,8 +656,7 @@ def _code_map_lines(root, llrs, srs):
     return lines
 
 
-def _pack_lines(root, llrs):
-    comps = {r.get("Component") for r in llrs} - {"", None}
+def _pack_lines(root, comps):
     return [
         "- {} {}: {}".format(
             c.get("CMP-ID"), _clip(c.get("Name"), 40), c.get("Knowledge")
@@ -654,8 +668,7 @@ def _pack_lines(root, llrs):
     ]
 
 
-def _seam_lines(root, llrs):
-    comps = {r.get("Component") for r in llrs} - {"", None}
+def _seam_lines(root, comps):
     return [
         "- {} {} {} {}: {}".format(
             i.get("IF-ID"),

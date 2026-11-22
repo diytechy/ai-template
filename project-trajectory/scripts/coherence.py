@@ -37,9 +37,9 @@ and while every rule here happens to import only `kitlib.spine` today, these
 are the CHECKER's rules — the scaffolder has no business importing them, and
 `census.py` recorded the same reasoning one slice earlier.
 
-The row's `Implements:` tag sits on `spine_orphan_findings` below, not here: the
-cross-check reads the ENCLOSING symbol of a tag, and a module-scope tag on a row
-whose CodeSymbol names nine functions resolves to nothing it can match.
+The row's `Implements:` tag sits on `spine_orphan_findings` below, not here: a
+tag names the code that delivers a row, and the module holds more than that
+row's rules.
 
 Component: CMP-006
 """
@@ -234,22 +234,11 @@ def spine_orphan_findings(
     return [f for _, f in pairs], {rid for rid, _ in pairs}
 
 
-def llr_module_ids(llrs):
-    """The set of modules the LLR tier's `Module` cells name — the third kind
-    of target an off-spine back-link may name, beside an SR id and an LLR id.
-
-    A cell listing several modules is `;`-joined (both carriers hand it so), and
-    each module is its own key: taken whole, the joined string matches no owner
-    and no back-link, so every module named only inside such a cell read as
-    reached by no design row."""
-    module_ids = {m.strip() for lr in llrs for m in (lr.get("Module") or "").split(";")}
-    module_ids.discard("")
-    return module_ids
-
-
 def budget_backlink_findings(pbs, budget_targets):
     """Performance budgets (process.md §9) sit off the spine but stay traceable:
-    each row's Refs must resolve to a real SR/LLR id or an LLR Module path.
+    each row's Refs must resolve to a real SR or LLR id. A file path no longer
+    resolves: the design rows' `Module` cell it was read against retired at
+    WI-1023, and a budget names the requirement it bounds, never the file.
     Pure; extracted outward from `analyze` at WI-483."""
     budget_findings = []
     for r in pbs:
@@ -284,15 +273,16 @@ def delegation_findings(mods, sr_ids):
     return module_findings
 
 
-def component_membership_findings(cmps, llrs, ifs, parts, assets):
+def component_membership_findings(cmps, ifs, parts, assets):
     """Component registry (CMP-###, process-options.md "Component layer") sits off
     the spine like PART/ASSET, but its two structural cells stay traceable:
     PartOf (nesting — tag primitives at the finest CMP, coarser membership
     derives) and SupersededBy (lifecycle identity across a rewrite) must name
     real CMP ids. And the membership join is checked from the primitive side:
-    a `Component` tag on an LLR/IF/PART/ASSET row must resolve to a real CMP
-    row (the IF tier joined the sweep at WI-064 — trace.py has read the IF
-    registry since WI-056, so its tags were the one unvalidated cell). Named
+    a `Component` tag on an IF/PART/ASSET row must resolve to a real CMP row
+    (the IF tier joined the sweep at WI-064 — trace.py has read the IF
+    registry since WI-056, so its tags were the one unvalidated cell; a design
+    row carries no tag since WI-1023, its placement derived). Named
     by TIER rather than by file: the row of record moved to `interfaces.toml`
     at WI-443, and "has read interfaces.csv since WI-056" would have been the
     kind of claim that is true only of a carrier nobody runs any more.
@@ -308,7 +298,6 @@ def component_membership_findings(cmps, llrs, ifs, parts, assets):
                     component_findings.append(f"CMP {cid} {col} references unknown {x}")
     if cmp_ids:
         for label, rows_, key in (
-            ("LLR", llrs, "LLR-ID"),
             ("IF", ifs, "IF-ID"),
             ("PART", parts, "PART-ID"),
             ("ASSET", assets, "ASSET-ID"),

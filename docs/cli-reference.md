@@ -379,7 +379,7 @@ Contracts (interfaces): IF-239, IF-240
 
 ### `scripts/gen_arch_map`
 _The module/function AST walk behind the DERIVED architecture (WI-455)._
-Contracts (interfaces): IF-010, IF-028, IF-117, IF-131, IF-132, IF-150, IF-199, IF-310
+Contracts (interfaces): IF-010, IF-028, IF-131, IF-132, IF-150, IF-199, IF-310
 
 | Option | Help |
 |---|---|
@@ -549,6 +549,7 @@ Contracts (interfaces): IF-103
 | `--root` |  |
 | `--check` | convert in memory and verify the round-trip; write nothing |
 | `--if-shape` | rewrite an old-shape interfaces.toml in place (OI-67): owner / requestors\|consumers / channel / data; --check reports without writing |
+| `--llr-trace-cells` | remove module, code_symbol and component from every design row of low-level-requirements.toml in place (WI-1023); --check reports without writing |
 
 ### `scripts/migrate_decisions`
 _Rewrite every delegated-decisions record off the retired `reviewed` key_
@@ -759,7 +760,8 @@ Contracts (interfaces): IF-001, IF-042, IF-075, IF-089, IF-101, IF-141, IF-145, 
 | `--accept` | emit ONLY the batch-scoped acceptance hierarchy (SN->SR->LLR->TC with prose) for SCOPE — a phase tag (e.g. v3) or an SR-id list (e.g. 'SR-052,SR-053'); a DevStg-Reqs/DevStg-Tests brief links this instead of hand-copying rows (WI-146). The reserved scope 'modified' (WI-316) emits the RE-ACCEPTANCE brief instead: per-cell before/after for every row owing an operator act, against its copy in docs/archive/last_accepted/. The reserved scope 'assumptions', or a DA-/SUR-id list, emits the assumption section: each assumption or surrogate owing an acceptance, or each one named, with the requirements citing it first. A scope matching nothing is REFUSED, never rendered empty. Prints to stdout unless --out is given; runs no checks |
 | `--check` | with --accept modified: FRESHNESS mode. Re-render the brief and compare it against the committed file (--out, else docs/ratify/CURRENT.md), exiting nonzero when they differ. A plain regenerate-and-compare — the baseline is a directory of files, so there is nothing a re-render could move (WI-325's blocker dissolved with the git-derived baseline). Silent no-op when there is no brief, or when no row owes an act (the window is closed and the brief is a record, not a live surface) |
 | `--out` | with --accept, write the view to FILE (parent dirs created) instead of stdout, so a brief can link a stable path |
-| `--tests-for` | print the test files the spine links to MODULE (a module path, a trailing part of one, or a stem) and exit; runs no checks |
+| `--tests-for` | print the test files the spine links to MODULE (a file an Implements: tag names, a trailing part of its path, or a stem) and exit; runs no checks |
+| `--regen-evidence` | write each test case's evidence cell as the test files' tags generate it (other parts kept) and exit; runs no checks |
 | `--root` | repo root (default: .) |
 | `--docs` | docs directory path, used as-is (default: <root>/docs) |
 

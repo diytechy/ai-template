@@ -274,7 +274,7 @@ def test_regen_creates_the_okf_bundle_a_fresh_scaffold_lacks(tmp_path, capsys):
     reqs = tmp_path / "docs" / "requirements"
     reqs.mkdir(parents=True)
     (reqs / "stakeholder-needs.toml").write_text(
-        '[need.SN-001]\ntitle = "n"\nstatus = "Drafted"\n', encoding="utf-8"
+        '[need.SN-001]\nneed = "n"\nstatus = "Drafted"\n', encoding="utf-8"
     )
     assert ts.regen(tmp_path) == 0, capsys.readouterr().err
     assert "regen — okf ok" in capsys.readouterr().out
@@ -364,7 +364,7 @@ def _seed_regen_repo(root):
     (root / "docs" / "test").mkdir(parents=True)
     reqs = root / "docs" / "requirements"
     (reqs / "stakeholder-needs.toml").write_text(
-        '[need.SN-001]\ntitle = "n"\nstatus = "Drafted"\n', encoding="utf-8"
+        '[need.SN-001]\nneed = "n"\nstatus = "Drafted"\n', encoding="utf-8"
     )
     (reqs / "system-requirements.toml").write_text(
         '[system_requirement.SR-001]\ntitle = "t"\nstatus = "Drafted"\n',

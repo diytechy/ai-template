@@ -208,8 +208,8 @@ EXEMPT_EMAILS = ["*noreply*"]
 # by which literal it happened to be typed into — the WI-508 alignment pass
 # measured four of five driven samples disagreeing, in both directions,
 # before this. `KEY_RE` / `TOKEN_RES` keep their long-standing names and
-# shapes (LLR-017's own `code_symbol` cell names `Scanner/KEY_RE`) as this
-# floor's VIEW of the shared table; `Scanner.scan_line` below is unchanged.
+# shapes as this floor's VIEW of the shared table; `Scanner.scan_line` below
+# is unchanged.
 KEY_RE = _kitsecrets.SECRET_CLASSES_BY_NAME["private key header"].scan_pattern
 TOKEN_RES = tuple(
     (cls.name, cls.scan_pattern)

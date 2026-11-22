@@ -2221,8 +2221,10 @@ def test_a_draft_declaring_the_adjudication_kind_is_refused(tmp_path):
 def context_repo(tmp_path):
     """A repo whose registries hold one of EVERY join the context block makes:
     a cancelled precedent with its reason, a pending OI naming kin, the LLR/TC
-    code map, a component knowledge pack, an IF seam via the LLR's module, and
-    a review record of the precedent row."""
+    code map (the design row's file read from its `Implements:` tag), a
+    component knowledge pack and an IF seam of the component the design row is
+    placed in (its case names IF-001, which CMP-001 owns), and a review record
+    of the precedent row."""
     root = git_repo(tmp_path)
     req = root / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)
@@ -2238,7 +2240,7 @@ def context_repo(tmp_path):
     (test_dir / "test-cases.csv").write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,"
         "Evidence,Status,Phase\n"
-        "TC-001,SR-001;LLR-001,Unit,run it,smoke,,works,Y,tests/test_widget.py,"
+        "TC-001,SR-001;LLR-001;IF-001,Unit,run it,smoke,,works,Y,tests/test_widget.py,"
         "Accepted,1\n",
         encoding="utf-8",
         newline="\n",
@@ -2272,6 +2274,10 @@ def context_repo(tmp_path):
         "WI-005,,\n",
         encoding="utf-8",
         newline="\n",
+    )
+    (root / "src").mkdir(parents=True, exist_ok=True)
+    (root / "src" / "widget.py").write_text(
+        "# Implements: LLR-001\n", encoding="utf-8", newline="\n"
     )
     reviews = root / "docs" / "reviews"
     reviews.mkdir(parents=True, exist_ok=True)
@@ -2311,10 +2317,11 @@ def test_the_context_block_renders_from_real_joins_in_failure_cost_order(tmp_pat
     assert "WI-002" in text and "REFUTED" in text  # precedent WITH ITS REASONS
     assert "OI-002" in text  # a pending OI the row cites in `needs` (WI-790)
     assert "OI-003" not in text  # a historical `wi_refs` pointer is read by nothing
-    assert "LLR-001" in text and "src/widget.py" in text and "widget_f" in text
+    assert "LLR-001" in text and "src/widget.py" in text  # the Implements index
+    assert "placed: CMP-001" in text  # derived through IF-001's owner
     assert "tests/test_widget.py" in text  # the TC evidence map
-    assert "docs/knowledge/widgetry" in text  # LLR.Component -> CMP.Knowledge
-    assert "IF-001" in text  # IF seams via LLR.Component
+    assert "docs/knowledge/widgetry" in text  # placement -> CMP.Knowledge
+    assert "IF-001" in text  # the seams of the placed component
     assert "docs/reviews/WI-002-REVIEW-A.md" in text  # precedent reviews
     # ...in the ruled order (content order by failure cost: the refuted
     # precedent first, premise risk second, then the maps).

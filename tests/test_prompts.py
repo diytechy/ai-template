@@ -399,7 +399,10 @@ def test_a_lane_writes_its_tc_rows_and_tests_before_its_code():
         .split()
     )
     assert "TC rows are authored with their LLRs before the build" in in_lane
-    assert "LLR `Module` and symbols name what the build will create" in in_lane
+    # WI-1023: a design row names no file or symbol; the code the build
+    # creates points up to it.
+    assert "An LLR names no file or symbol" in in_lane
+    assert "LLR `Module` and symbols name what the build will create" not in in_lane
     assert "Write the row text against settled code" not in in_lane
     assert in_lane.index("**Author it before the build.**") < in_lane.index(
         "**Amend the row text against settled code.**"
@@ -1083,10 +1086,10 @@ def test_the_convergence_render_excludes_every_record_of_earlier_findings():
         assert "':(exclude){}'".format(record) in converging, record
 
 
-def test_the_llr_questions_ask_for_contract_voice_and_keep_the_trace_cells_binding():
+def test_the_llr_questions_ask_for_contract_voice_and_name_no_trace_cell():
     # WI-911 (review-churn ruling 5, revisions 35 and 36): section 3 asks for
-    # an LLR's contract, names no implementation carrier, and keeps the
-    # traced cells binding while the schema requires them.
+    # an LLR's contract and names no implementation carrier; since WI-1023 the
+    # row has no file, symbol or component cell to keep.
     home = (KIT / "prompts" / "spine-questions.md").read_text(encoding="utf-8")
     section = home[home.index("## 3. At LLR and TC") :]
     flat = " ".join(section.split())
@@ -1098,9 +1101,10 @@ def test_the_llr_questions_ask_for_contract_voice_and_keep_the_trace_cells_bindi
         "and §0's naming rule says which tiers may name a shipped boundary "
         "artifact.",
         "Do not launder a concrete name upward into the SR",
-        "they stay filled and binding while the schema requires them "
-        "(`trace.py --strict-schema` requires both; `check_doc_refs --strict` "
-        "binds the symbol), so never return a row for keeping them.",
+        "A row has no file, symbol or component cell: the code points up to "
+        "it with an `Implements:` tag and its placement is derived from the "
+        "interfaces its verifying TCs name, so never ask a row to name where "
+        "it lives.",
         "No `shall` in an LLR",
     ):
         assert clause in flat, clause

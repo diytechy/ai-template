@@ -2666,11 +2666,14 @@ When findings need to outlive the session that produced them, use the
 durable component-to-pack association, not a second copy of the findings.
 
 **Structure is derived, never restated.** Membership lives on the **primitive**
-rows: LLR / ASSET / PART each carry a `Component` cell (`;`-joined CMP ids
+rows: ASSET / PART each carry a `Component` cell (`;`-joined CMP ids
 — tag at the *finest* enclosing CMP; coarser membership derives through
 `PartOf`). A source file or listed header file declares its one component in its own
 header instead (`Component: CMP-###`, PROCESS.md §8), and the software rules
-and views read only that; an interface names components as its endpoints. From those everything else is a **view**: an interface is
+and views read only that; an interface names components as its endpoints. An
+LLR carries no component: it is placed at the owner of each interface its
+verifying TCs name, and one placed nowhere is listed and counted in the
+component view, never refused. From those everything else is a **view**: an interface is
 *internal* to the lowest CMP enclosing every endpoint and on the *boundary* of
 each other CMP it names — "the component **is** its interface set" as a derived
 characterization, never an authored list. A CMP row therefore has **no**
@@ -2680,7 +2683,7 @@ IFs is legal.
 **What the kit checks** (`trace.py`, when real CMP rows exist): `CMP-` id
 integrity; `PartOf`/`SupersededBy` resolve to real CMP ids; and every primitive
 `Component` tag resolves to a real CMP row (the membership join — checked on
-the registries `trace.py` reads: LLR/PART/ASSET; an interface endpoint is held
+the registries `trace.py` reads: PART/ASSET; an interface endpoint is held
 to a live CMP id by the IF tier's own rule).
 
 **The partition carries its derivation record** (SR-165). The record of how
@@ -2816,15 +2819,15 @@ emitting a `docs/test/perf-metrics.json` map of `PB-ID → number`; *comparing* 
 sub-systems that still build and release as one (rung 2 of the scale ladder).
 
 **No new machinery, just partition the spine.** A multi-module repo is the *same*
-spine, grouped by columns that already exist: the LLR **`Module`** column and its
-component id (§1 "Domain hats"). Each module is a sub-tree of
+spine, grouped by the component each LLR is placed in (PROCESS.md §8; §1
+"Domain hats"). Each module is a sub-tree of
 `SN→SR→LLR→TC`; where a module needs its own discipline it gets its own **domain
 hat** owning that slice (§1 already allows this). The repo still builds, gates, and
 releases as a whole.
 
 - **Module-scoped review is a convention over the existing columns, not a new
-  flag.** A module owner reviews their slice by filtering the registries on
-  `Module`/component (a grep or spreadsheet filter); the **repo-level gate stays the
+  flag.** A module owner reviews their slice by filtering on the component
+  each row is placed in (the generated component view); the **repo-level gate stays the
   source of truth** — `trace.py --strict` still requires **0 orphans across the
   whole repo, seams included**. The kit deliberately ships **no**
   `--module`/`--area` filter on `trace.py`/`check.py`: a per-module gate would

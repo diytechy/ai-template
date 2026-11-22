@@ -21,7 +21,7 @@ from .traj_graph import (
     flat_graph,
     route_graph,
 )
-from traj_parse import WORKSTREAM_LABELS, _sn_rows, _spine
+from traj_parse import WORKSTREAM_LABELS, _sn_rows, _spine, placed_llrs
 from traj_parse import spine_carrier as _carrier
 
 
@@ -85,7 +85,10 @@ class TierSpec:
 SR_TIER = TierSpec(
     "SR-ID", "sr", "Requirement", "Acceptance", "AcceptanceCriteria", "SN-Refs"
 )
-LLR_TIER = TierSpec("LLR-ID", "llr", "Detail", "Module", "Module", "SR-Refs")
+# A design row's meta is where it sits: its derived placement (a row names no
+# module or component since WI-1023), carried on the row as `Placed` by
+# `traj_parse.placed_llrs` so the shared loop reads one column like the SR arm.
+LLR_TIER = TierSpec("LLR-ID", "llr", "Detail", "Placed", "Placed", "SR-Refs")
 
 
 def _add_tier_rows(rows, spec, parent_ids, add, link):
@@ -152,7 +155,7 @@ def arch_icicle(root):
 
     srs, llrs, tcs = _spine(root)
     sr_ids = _add_tier_rows(srs, SR_TIER, sn_ids, add, link)
-    llr_ids = _add_tier_rows(llrs, LLR_TIER, sr_ids, add, link)
+    llr_ids = _add_tier_rows(placed_llrs(root, llrs, tcs), LLR_TIER, sr_ids, add, link)
 
     for r in tcs:
         tid = r["TC-ID"].strip()

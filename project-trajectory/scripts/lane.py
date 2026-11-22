@@ -130,7 +130,7 @@ def run_worker(root, branch, wi_id, args):
     Returns the worker's exit code.
 
     WHO CALLS THIS: nothing inside the kit — it is a DECLARED SEAM (LLR-150's
-    `code_symbol` names it) kept for a caller that wants one lane run
+    seam) kept for a caller that wants one lane run
     synchronously: an attended single-lane run, or a downstream driver that
     does not want `dispatch.py`'s poll loop. `dispatch._launch`'s own default
     is `spawn_worker` (non-blocking, so N lanes overlap), and its `worker=`

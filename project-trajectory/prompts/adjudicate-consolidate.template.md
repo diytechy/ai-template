@@ -13,8 +13,8 @@
      It clusters rows by
      the mechanical pre-filter (near-duplicate title, shared SR-Refs, shared
      SpecRef) plus two signals a queue accumulates on its own: rows commissioned
-     by ONE plan document or open item, and rows whose SR-Refs reach the same
-     LLR `Module`. The cluster is fixed at the mint in the row's typed
+     by ONE plan document or open item, and rows whose SR-Refs reach design
+     rows one source file's `Implements:` tags name. The cluster is fixed at the mint in the row's typed
      `Adjudicates` cell — this session judges THOSE rows and no others.
 
      WHY IT CANNOT RECURSE. The row carries a `Digests` cell: the queue digest

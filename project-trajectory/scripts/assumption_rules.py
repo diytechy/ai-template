@@ -176,11 +176,12 @@ Contract IF-231: the assumption gate's rules, read by the gate's check step
     (SR-205), with `reach` from `reach_gaps(das, srs, needs, stks, exts, bifs,
     surs) -> {assumption id: [reasons]}`, the reach check's own derivation;
     `crossing_gate_findings(srs, das, bifs)` and
-    `interface_form_gate_findings(srs, ifs, llrs, homes)` (SR-212's Boundary
-    and Arch arms), over `if_reached_srs(ifs, llrs, homes) -> {interface id:
-    [requirement ids]}`, `homes` mapping each interface id to the one file
-    stating its body, and `module_srs(llrs) -> {module: [requirement ids]}`;
-    and
+    `interface_form_gate_findings(srs, ifs, llrs, homes, index, tcs)`
+    (SR-212's Boundary and Arch arms), over `if_reached_srs(ifs, llrs, homes,
+    index, tcs) -> {interface id: [requirement ids]}`, `homes` mapping each
+    interface id to the one file stating its body, `index` the Implements
+    index (`{spine id: [file, ...]}`) and `tcs` the test-case rows, and
+    `module_srs(llrs, index) -> {file: [requirement ids]}`; and
     `release_gate_findings(das, srs, risks)` (SR-206), with `risks` mapping
     each assumption id to its `accepted_risk_state` pair. A `-000` row is never
     judged. `held_until_agreed(lines, stks, what)` returns reach-caused
@@ -200,7 +201,7 @@ try:
         is_example,
         refs,
     )
-    from kitlib.spine import is_accepted, is_founded, norm_module
+    from kitlib.spine import is_accepted, is_founded, llr_placement, norm_module
 except ImportError:  # pragma: no cover - in-process fallback
     import sys
     from pathlib import Path
@@ -214,7 +215,7 @@ except ImportError:  # pragma: no cover - in-process fallback
         is_example,
         refs,
     )
-    from kitlib.spine import is_accepted, is_founded, norm_module
+    from kitlib.spine import is_accepted, is_founded, llr_placement, norm_module
 
 # The observation record's reader (SR-199): the shipped package again,
 # importable once the block above has put this directory on the path.
@@ -1768,41 +1769,44 @@ def release_gate_findings(das, srs, risks):
     return out
 
 
-def module_srs(llrs):
-    """`{module: [requirement ids]}`: each design row's `Module` entries,
-    normalized by `norm_module`, mapped to the requirements its `SR-Refs`
-    names, in row order and once each.
+def module_srs(llrs, index):
+    """`{file: [requirement ids]}`: each file the Implements index (`index`,
+    `{spine id: [file, ...]}`) names for a design row, normalized by
+    `norm_module`, mapped to the requirements that row's `SR-Refs` names, in
+    row order and once each. A design row names no file; the code's tags say
+    which file realizes it.
 
     Implements: SR-212, LLR-244
     """
     out = {}
-    for _lid, row in _real(llrs, "LLR-ID"):
-        for module in refs(row.get("Module")):
-            listed = out.setdefault(norm_module(module), [])
+    for lid, row in _real(llrs, "LLR-ID"):
+        for path in index.get(lid, ()):
+            listed = out.setdefault(norm_module(path), [])
             listed += [s for s in refs(row.get("SR-Refs")) if s not in listed]
     return out
 
 
-def if_reached_srs(ifs, llrs, homes):
+def if_reached_srs(ifs, llrs, homes, index, tcs):
     """`{interface id: [requirement ids]}` for each BOUNDARY interface (a
     from- or to-external tie-back): the requirements the file stating its
-    body realizes, through the design rows naming that file. `homes` is `{IF
-    id: file path}` (`arch_interfaces.contract_homes`); a row with no body yet
-    reaches none. `homes` is None where no source is scanned (`files` mode):
-    each row then reaches the requirements of the design rows placed in its
-    owner component. Derived here and never recorded on the interface, so the
-    relation has one home.
+    body realizes, through the design rows the Implements index (`index`)
+    names that file for. `homes` is `{IF id: file path}`
+    (`arch_interfaces.contract_homes`); a row with no body yet reaches none.
+    `homes` is None where no source is scanned (`files` mode): each row then
+    reaches the requirements of the design rows placed in its owner
+    component, placement derived from the test cases `tcs`. Derived here and
+    never recorded on the interface, so the relation has one home.
 
     Implements: SR-212, LLR-244
     """
     if homes is None:
-        by_cmp = component_srs(llrs)
+        by_cmp = component_srs(llrs, tcs, ifs)
         return {
             iid: by_cmp.get(_cell(row, "Owner"), [])
             for iid, row in _real(ifs, "IF-ID")
             if _crossings(row)
         }
-    by_module = module_srs(llrs)
+    by_module = module_srs(llrs, index)
     return {
         iid: by_module.get(norm_module(homes.get(iid, "")), [])
         for iid, row in _real(ifs, "IF-ID")
@@ -1810,16 +1814,19 @@ def if_reached_srs(ifs, llrs, homes):
     }
 
 
-def component_srs(llrs):
-    """`{component: [requirement ids]}`: each design row's `Component` entries
-    mapped to the requirements its `SR-Refs` names, in row order and once
-    each; `if_reached_srs`' reach where no source is scanned.
+def component_srs(llrs, tcs, ifs):
+    """`{component: [requirement ids]}`: each design row's derived placement
+    (`kitlib.spine.llr_placement`, the owner components of the interfaces its
+    verifying cases name) mapped to the requirements its `SR-Refs` names, in
+    row order and once each; `if_reached_srs`' reach where no source is
+    scanned.
 
     Implements: SR-212, LLR-244
     """
+    placement = llr_placement(tcs, ifs)
     out = {}
-    for _lid, row in _real(llrs, "LLR-ID"):
-        for cid in refs(row.get("Component")):
+    for lid, row in _real(llrs, "LLR-ID"):
+        for cid in placement.get(lid, ()):
             listed = out.setdefault(cid, [])
             listed += [s for s in refs(row.get("SR-Refs")) if s not in listed]
     return out
@@ -1830,10 +1837,11 @@ def _interface_form(srs):
     return [(s, r) for s, r in _real(srs, "SR-ID") if _cell(r, "Form") == "interface"]
 
 
-def interface_form_gate_findings(srs, ifs, llrs, homes):
+def interface_form_gate_findings(srs, ifs, llrs, homes, index, tcs):
     """SR-212's Arch arm, as findings: each interface-form requirement judged
     against EVERY boundary interface reaching it (`if_reached_srs`, through
-    `homes`, the file stating each row's body).
+    `homes`, the file stating each row's body, and `index`, the Implements
+    index; `tcs` places the design rows where no source is scanned).
 
     One reached by none fails, naming it and stating that no boundary
     interface reaches it; nothing is invented to reach it. Each reaching
@@ -1846,7 +1854,7 @@ def interface_form_gate_findings(srs, ifs, llrs, homes):
     """
     rows = dict(_real(ifs, "IF-ID"))
     reaching = {}
-    for iid, sids in if_reached_srs(ifs, llrs, homes).items():
+    for iid, sids in if_reached_srs(ifs, llrs, homes, index, tcs).items():
         for sid in sids:
             reaching.setdefault(sid, []).append(iid)
     out = []
@@ -1854,7 +1862,7 @@ def interface_form_gate_findings(srs, ifs, llrs, homes):
         if sid not in reaching:
             out.append(
                 "SR {} is of interface form, but no boundary interface reaches it "
-                "through the files its design rows name".format(sid)
+                "through the files its design rows' Implements: tags are in".format(sid)
             )
             continue
         cited = set(refs(row.get("DA-Refs")))

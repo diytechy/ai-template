@@ -80,7 +80,9 @@ Contract IF-102: the carrier's whole read surface, as trace.py imports it — an
     RAISES when a stem exists under both, rather than resolving by precedence;
     load(path, id_col) returns rows in file order, the shape csv.DictReader
     returns, [] when the registry is absent and SystemExit when it exists and
-    will not parse. status_cells(text, tables=None) returns {row id: status}
+    will not parse, or when a requirement tier's row sets a key the tier does
+    not declare (`declared=False` reads the approval snapshot without that
+    rule). status_cells(text, tables=None) returns {row id: status}
     for every row of every table of a TOML text (or of the named tables only)
     that carries a `status` cell, or None when it does not parse. The `-000`
     example filter is NOT applied here.
@@ -89,9 +91,8 @@ Contract IF-104: check_doc_refs reads the spine through resolve() and load()
     for its Evidence-class pointer scan. resolve() is asked first, so an absent
     tier SKIPs cleanly instead of reporting every pointer in it as dangling;
     load() then hands back the TC and LLR rows under today's column names
-    (Evidence, Module, CodeSymbol, TestRefs) whichever carrier is live, and
-    raises rather than returning [] on a registry that exists and will not
-    parse.
+    (Evidence, TestRefs) whichever carrier is live, and raises rather than
+    returning [] on a registry that exists and will not parse.
 
 Contract IF-105: check_flows needs id UNIVERSES, not cells. load(path, id_col)
     supplies the SR/LLR/SN/TC keys a runtime-flow diagram's citations are
@@ -367,6 +368,12 @@ SPINE_COLUMN = {
     "superseded_by": "SupersededBy",
     "lifecycle": "Lifecycle",
     "detail": "Detail",
+    # `module` and `code_symbol` left the design tier's schema at WI-1023, and
+    # `component` with them; the names stay mapped because the approval
+    # snapshot and every revision before the removal still carry them, and the
+    # traced-cell classification (`acceptance_record.SPINE_TRACED_CELLS`)
+    # knows them under these column names. A live row carrying one is refused
+    # by `load` (`undeclared_key_findings`).
     "module": "Module",
     "code_symbol": "CodeSymbol",
     "test_refs": "TestRefs",
@@ -775,7 +782,43 @@ def empty_value_findings(rows, id_col, rel=""):
     return out
 
 
-def load(path, id_col, keep_examples=True):
+def undeclared_key_findings(text, id_col, rel=""):
+    """One finding per key a REQUIREMENT tier's row sets that the tier does not
+    declare: deny by default.
+
+    The tiers are the four `SPINE_TIER_KEYS` names (needs, system requirements,
+    design rows, test cases), the example row included, since it is the
+    template's schema. A key outside the declaration is a cell no reader knows:
+    a cell a format change retired (a design row's `module`, `code_symbol` and
+    `component` left at WI-1023, when the realization started to be read up
+    from the code), or a misspelling that would otherwise load as data nobody
+    reads. Refused rather than dropped, for `empty_value_findings`' reason: the
+    file and the loaded registry must not disagree about what a row says. An
+    off-spine tier is not judged here. `[]` when the text does not parse; the
+    caller's own parse reports that.
+
+    Implements: SR-157, LLR-404"""
+    declared = SPINE_TIER_KEYS.get(id_col)
+    if declared is None:
+        return []
+    try:
+        tables = tomllib.loads(text)
+    except tomllib.TOMLDecodeError:
+        return []
+    return [
+        "{}{} sets `{}`, a key the {} tier does not declare (kitlib.spine."
+        "SPINE_TIER_KEYS) - delete it, or move what it says to where the schema "
+        "puts it; a design row's `module`, `code_symbol` and `component` left "
+        "the schema (scripts/migrate_carrier.py --llr-trace-cells removes "
+        "them).".format(rel and rel + ": ", rid, key, id_col[:-3])
+        for rid, cells in sorted((tables.get(REGISTRY_TABLE[id_col]) or {}).items())
+        if isinstance(cells, dict)
+        for key in sorted(cells)
+        if key not in declared
+    ]
+
+
+def load(path, id_col, keep_examples=True, declared=True):
     """The live registry as a LIST of rows in file order — the shape
     `csv.DictReader` returns, so a caller swaps its loader and changes nothing
     else. `[]` when the registry does not exist.
@@ -786,7 +829,13 @@ def load(path, id_col, keep_examples=True):
     empty" — would turn a broken registry into a clean gate. The BASELINE reads
     stay permissive on purpose (`rows_from_text` never raises): history is not
     editable, and a strict reader pointed at an old revision would fail a check
-    over a file nobody can fix."""
+    over a file nobody can fix.
+
+    A requirement tier's row setting a key the tier does not declare is refused
+    too (`undeclared_key_findings`). `declared=False` reads without that rule,
+    for the approval snapshot alone: its copy is the act's record, written by an
+    act and rewritten only by the next one, so a cell the schema has since
+    retired stays in it until then."""
     live = resolve(path)
     if live is None:
         return []
@@ -799,9 +848,11 @@ def load(path, id_col, keep_examples=True):
             "unreadable registry as an empty one".format(live)
         )
     if live.suffix == ".toml":
-        findings = nested_table_findings(
-            live.read_text(encoding="utf-8-sig", errors="replace"), id_col, str(live)
-        ) + empty_value_findings(rows, id_col, str(live))
+        text = live.read_text(encoding="utf-8-sig", errors="replace")
+        findings = nested_table_findings(text, id_col, str(live))
+        findings += empty_value_findings(rows, id_col, str(live))
+        if declared:
+            findings += undeclared_key_findings(text, id_col, str(live))
         if findings:
             raise SystemExit("spine_carrier: " + "\n".join(findings))
     return [
@@ -1083,7 +1134,7 @@ def load_needs(path):
     return needs
 
 
-def load_need_tier(path, id_col, keep_examples=True):
+def load_need_tier(path, id_col, keep_examples=True, declared=True):
     """The needs file's `id_col` tier (`SN-ID` or `STK-ID`) as rows under
     today's column names, whichever of the two need carriers is live — the
     shape `load` returns for every other tier, so one comparison reads them.
@@ -1101,7 +1152,7 @@ def load_need_tier(path, id_col, keep_examples=True):
     if live is None:
         return []
     if live.suffix != ".md":
-        return load(live, id_col, keep_examples)
+        return load(live, id_col, keep_examples, declared)
     text = live.read_text(encoding="utf-8-sig", errors="replace")
     return [
         row

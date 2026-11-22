@@ -1,7 +1,8 @@
 """The evidence join — a test case's `Evidence` cell, read two ways: which
 tests the spine links to a module (`trace.py --tests-for`, over
-`kitlib.spine.module_tests`), and whether an accepted case's `Tier` agrees with
-the tier its evidence runs in (`kitlib.spine.tier_findings`).
+`kitlib.spine.module_tests` and the Implements index the code's tags make,
+since a design row names no file), and whether an accepted case's `Tier`
+agrees with the tier its evidence runs in (`kitlib.spine.tier_findings`).
 
 In-process throughout: synthetic registries under `tmp_path` and the live
 registries read as data, with no scaffold, subprocess or git, so the module
@@ -22,6 +23,7 @@ from conftest import ROOT, load_script, smoke_tier_for
 from kitlib import spine
 
 spine_carrier = load_script("spine_carrier")
+arch_inputs = load_script("arch_inputs")
 trace = load_script("trace")
 
 LLR_REL = "docs/requirements/low-level-requirements.toml"
@@ -148,19 +150,24 @@ def test_a_case_below_acceptance_is_not_judged():
 
 LLRS = """[design.LLR-001]
 sr_refs = ["SR-001"]
-module = "src/pay.py;src/ledger.py"
 status = "Accepted"
 
 [design.LLR-002]
 sr_refs = ["SR-001"]
-module = "src/other.py"
 status = "Accepted"
 
 [design.LLR-003]
 sr_refs = ["SR-001"]
-module = "lib/pay.py"
 status = "Drafted"
 """
+
+# The files realizing each design row, as their own `Implements:` tags say.
+SOURCES = {
+    "src/pay.py": "# Implements: LLR-001\n",
+    "src/ledger.py": "# Implements: LLR-001\n",
+    "src/other.py": "# Implements: LLR-002\n",
+    "src/lib/pay.py": "# Implements: LLR-003\n",
+}
 
 TCS = """[test.TC-001]
 verifies = ["SR-001", "LLR-001"]
@@ -195,9 +202,14 @@ status = "Drafted"
 
 
 def _docs(docs, stack=None):
-    """The synthetic registries (and optionally a `stack.ini`) in a docs dir."""
+    """The synthetic registries (and optionally a `stack.ini`) in a docs dir,
+    and the tagged sources under `src/` of the repository holding it."""
     (docs / "requirements").mkdir(parents=True)
     (docs / "test").mkdir(parents=True)
+    for rel, text in SOURCES.items():
+        path = docs.parent / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
     (docs / "requirements" / "low-level-requirements.toml").write_text(
         LLRS, encoding="utf-8"
     )
@@ -213,39 +225,39 @@ def _spine(root, stack=None):
 
 
 def _rows(root):
-    llrs = spine_carrier.load(root / LLR_REL, "LLR-ID", keep_examples=False)
+    index = arch_inputs.implements_index(root)
     tcs = spine_carrier.load(root / TC_REL, "TC-ID", keep_examples=False)
-    return llrs, tcs
+    return index, tcs
 
 
 def test_the_module_map_follows_design_rows_not_file_names(tmp_path):
     """Implements: TC-258"""
     # src/pay.py's tests are named for checkout and the ledger, not for `pay`:
-    # the map reaches them through LLR-001 and the cases that verify it, a
-    # Drafted case included (a builder iterating runs the case being written).
-    # A case that verifies only the SR, another module's case, and a document
-    # among the evidence all stay out.
-    llrs, tcs = _rows(_spine(tmp_path))
-    assert spine.module_tests(llrs, tcs, "src/pay.py") == [
+    # the map reaches them through LLR-001, whose tag the file carries, and the
+    # cases that verify it, a Drafted case included (a builder iterating runs
+    # the case being written). A case that verifies only the SR, another
+    # module's case, and a document among the evidence all stay out.
+    index, tcs = _rows(_spine(tmp_path))
+    assert spine.module_tests(index, tcs, "src/pay.py") == [
         "tests/test_checkout.py",
         "tests/test_ledger.py",
     ]
-    assert spine.module_tests(llrs, tcs, "src/other.py") == ["tests/test_other.py"]
-    assert spine.module_tests(llrs, tcs, "src/pay.py", test_root="spec") == []
+    assert spine.module_tests(index, tcs, "src/other.py") == ["tests/test_other.py"]
+    assert spine.module_tests(index, tcs, "src/pay.py", test_root="spec") == []
 
 
 def test_a_module_resolves_by_path_suffix_or_stem(tmp_path):
     """Implements: TC-258"""
-    llrs, _tcs = _rows(_spine(tmp_path))
-    assert spine.resolve_modules(llrs, "src/ledger.py") == ["src/ledger.py"]
-    assert spine.resolve_modules(llrs, "ledger.py") == ["src/ledger.py"]
-    assert spine.resolve_modules(llrs, "src/ledger") == ["src/ledger.py"]
-    assert spine.resolve_modules(llrs, "ledger") == ["src/ledger.py"]
-    # `pay` names two declared modules; the caller is told both, never one
-    # picked for it.
-    assert spine.resolve_modules(llrs, "pay") == ["lib/pay.py", "src/pay.py"]
-    assert spine.resolve_modules(llrs, "nothing") == []
-    assert spine.resolve_modules(llrs, "") == []
+    index, _tcs = _rows(_spine(tmp_path))
+    assert spine.resolve_modules(index, "src/ledger.py") == ["src/ledger.py"]
+    assert spine.resolve_modules(index, "ledger.py") == ["src/ledger.py"]
+    assert spine.resolve_modules(index, "src/ledger") == ["src/ledger.py"]
+    assert spine.resolve_modules(index, "ledger") == ["src/ledger.py"]
+    # `pay` names two indexed files; the caller is told both, never one picked
+    # for it.
+    assert spine.resolve_modules(index, "pay") == ["src/lib/pay.py", "src/pay.py"]
+    assert spine.resolve_modules(index, "nothing") == []
+    assert spine.resolve_modules(index, "") == []
 
 
 def _tests_for(monkeypatch, root, module, *extra):
@@ -301,10 +313,10 @@ def test_the_command_refuses_an_unknown_or_ambiguous_module(
     """Implements: TC-258"""
     root = _spine(tmp_path)
     assert _tests_for(monkeypatch, root, "nothing") == 1
-    assert "no module a design row declares" in capsys.readouterr().err
+    assert "no file an Implements: tag names" in capsys.readouterr().err
     assert _tests_for(monkeypatch, root, "pay") == 2
     err = capsys.readouterr().err
-    assert "lib/pay.py" in err and "src/pay.py" in err
+    assert "src/lib/pay.py" in err and "src/pay.py" in err
 
 
 def test_the_live_map_reaches_tests_not_named_for_their_module():
@@ -313,11 +325,11 @@ def test_the_live_map_reaches_tests_not_named_for_their_module():
     # no test file is named `test_coherence*`: a file-name match finds nothing
     # for this module, while the spine reaches its suite. frame_rules.py shows
     # the other half, a driven scaffold suite beside its own unit module.
-    llrs, tcs = _rows(ROOT)
-    files = spine.module_tests(llrs, tcs, "project-trajectory/scripts/coherence.py")
+    index, tcs = _rows(ROOT)
+    files = spine.module_tests(index, tcs, "project-trajectory/scripts/coherence.py")
     assert "tests/test_trace_coherence.py" in files
     assert not any(Path(f).stem.startswith("test_coherence") for f in files)
-    frame = spine.module_tests(llrs, tcs, "project-trajectory/scripts/frame_rules.py")
+    frame = spine.module_tests(index, tcs, "project-trajectory/scripts/frame_rules.py")
     assert {"tests/test_frame_rules.py", "tests/test_frame_system.py"} <= set(frame)
 
 

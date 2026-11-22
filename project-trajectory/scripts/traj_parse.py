@@ -53,6 +53,7 @@ except ImportError:  # pragma: no cover - in-process fallback
 # repair, and it runs before this module is ever imported.
 import check_trajectory as ct
 from kitlib import evidence as _kitevidence
+from kitlib import spine as _kitspine
 from kitlib import ladder as _ladder
 from kitlib import stage as _kitstage
 
@@ -162,6 +163,21 @@ def _spine(root, skip_example=False):
         rows("docs/requirements/low-level-requirements.toml", "LLR-ID", "LLR-"),
         rows("docs/test/test-cases.toml", "TC-ID", "TC-"),
     )
+
+
+def placed_llrs(root, llrs, tcs):
+    """`llrs`, each with a `Placed` cell: the components a design row sits in,
+    derived by `kitlib.spine.llr_placement` from the interfaces the test cases
+    `tcs` verifying it name, or `unplaced`. The state view's design-row detail
+    reads it; a row names no component since WI-1023.
+
+    Implements: SR-248, LLR-403"""
+    ifs = spine_carrier.load(root / "docs/requirements/interfaces.toml", "IF-ID")
+    where = _kitspine.llr_placement(tcs, ifs)
+    return [
+        dict(r, Placed=", ".join(where.get(r["LLR-ID"].strip(), ())) or "unplaced")
+        for r in llrs
+    ]
 
 
 def _needs_srs(srs):
