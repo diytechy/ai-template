@@ -26,9 +26,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 
 - **RESUME HERE:** read
   [plans/2026-11-21-queue-drill/HANDOFF.md](plans/2026-11-21-queue-drill/HANDOFF.md)
-  first. The drill's first wave has landed and it is stopped at its §3.1,
-  where the operator answers the questions that wave B waits on; it also
-  holds the waves, builder rules and review routing. The longer history is
+  first. The drill is building variant F one row at a time: its §1 gives
+  the current state and its §3 the operator's open questions; it also holds
+  the queue, builder rules and review routing. The longer history is
   [plans/2026-11-11-test-tiers/HANDOFF.md](plans/2026-11-11-test-tiers/HANDOFF.md)
   §12.6, and its §6 still lists the functional changes. The
   vocabulary migration is landed and accepted (act seq 183), and the queue's
@@ -55,9 +55,9 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
 
   The operator's open items render on [open-items.html](open-items.html);
   the rows they hold are under "Blocked" below. Reviews (operator,
-  2026-11-19): prose and requirement text by Gemini Argon
-  (`opencode-go/gemini-4-argon`) at low effort, code by Sol (`gpt-6.1-sol`)
-  at low effort. Pushing is the operator's (`push = "operator"`).
+  2026-11-21): code by Sol (`gpt-6.1-sol`) at low effort; prose and
+  requirement text by Sol and Gemini Argon (`opencode-go/gemini-4-argon`),
+  both at low effort. Pushing is the operator's (`push = "operator"`).
 - **Assumption tier — C1 and C2 have landed and are approved:** the
   redrawn frame, checkpoint re-judging of observation tests, the assumption
   gate's four steps (`[checks] assumption_gate`, on since 2026-11-20), and C2's

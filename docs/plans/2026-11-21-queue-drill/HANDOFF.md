@@ -1,14 +1,16 @@
-# Queue drill hand-off (2026-11-21, wave A landed)
+# Queue drill hand-off (2026-11-21, variant F building)
 
 For the coordinator session that works the queue next, and for the operator.
 Read this file first; it is the resume point. The longer history is
 `docs/plans/2026-11-11-test-tiers/HANDOFF.md` §12.6, and nothing there needs
 reading before starting.
 
-**Where the drill stands.** Waves A and B are merged. Variant F is filed
-(WI-1021 to WI-1030) and critiqued by Sol and Argon, with every finding
-applied. The drill is stopped at §3.3 N6: the operator sees F's cut (§3.4)
-before any F builder starts. The suite after wave B runs during the stop.
+**Where the drill stands.** Waves A and B are merged, and WI-1036 and
+WI-1037 beside F-1. Variant F is filed (WI-1021 to WI-1030), critiqued, and
+its cut approved (§3.4). F-1 (WI-1021) is built on its branch, and the
+operator has ruled its one-component table (§3.5); it goes to review, then
+merges. §3.6 holds three questions for the operator about later F rows;
+none blocks F-1 or F-2.
 
 **The job:** take each drillable work item through scope critique, build,
 review and merge into `refactor_again`, running items in parallel worktrees
@@ -18,21 +20,23 @@ and documentation by Sol at low effort **and** Gemini Argon at low effort
 
 ## 1. State at hand-off
 
-- Trunk `refactor_again`, tree clean once this hand-off's own commit (the
-  one after `361270a84`) lands. It is ahead of the remote; pushing is the
-  operator's (`push = "operator"`).
-- The baseline suite ran on `380764dd3`: `8255 passed, 31 skipped` in 34:56,
-  no failure. Wave A merged: WI-1013 (`efafa872f`), WI-1014 (`2ea2fd150`)
-  and WI-1017 (`fd3ece15d`), each followed by its regeneration; WI-1018 to
-  WI-1020 were filed from WI-1017's evidence sample (`361270a84`). The suite
-  after wave A ran on `361270a84`: `8264 passed, 31 skipped` in 26:12, no
-  failure. The wave's worktrees and branches are removed.
-- Wave B: WI-1019 merged (`da78f85ee`, regen `d19ab3efe`). Its worktree and
-  branch are removed. No worktree is open for this drill; no branch or
-  snapshot is pending.
-- Acts owed, all to automated adjudication (§3.3 N4): wave A's three chains
-  (§3.1 Q5) and LLR-395's first acceptance (SR-157's chain). WI-1038 then
-  re-points TC-428 and TC-429, which drift.
+- Trunk `refactor_again` at this hand-off's latest commit (§10's last
+  line), tree clean. It is ahead of the remote; pushing is the operator's
+  (`push = "operator"`).
+- Merged: wave A, WI-1013 (`efafa872f`), WI-1014 (`2ea2fd150`) and WI-1017
+  (`fd3ece15d`); wave B, WI-1019 (`da78f85ee`); beside F-1, WI-1036
+  (`a0ca15d3f`) and WI-1037 (`b62079378`). Their worktrees and branches are
+  removed. Suites: after wave A on `361270a84`, `8264 passed, 31 skipped`;
+  after wave B on `224ff2c68`, `8264 passed, 31 skipped`; smoke on
+  `78ea4e843`, `3699 passed, 3 skipped`.
+- Open: one worktree, `D:/ai-template-wt-wi1021` on `maint/wi-1021` (F-1),
+  built, closed out and its table ruled (§3.5). Next: its review (§4 step
+  4), then its merge (§7).
+- Acts owed, all to automated adjudication (§3.3 N4; on timing, §3.6 G1):
+  wave A's three chains (§3.1 Q5) and LLR-395's first acceptance (SR-157's
+  chain), listed in `docs/ratify/CURRENT.md`. WI-1038 then re-points TC-428
+  and TC-429, which drift. F-1's acts join them when it merges (its
+  Deliverable lists them).
 - The operator still owes, outside this drill: the OI-79 remote-ref delete
   and the push.
 
@@ -41,13 +45,13 @@ and documentation by Sol at low effort **and** Gemini Argon at low effort
 | Item | What | Wave | Notes |
 |---|---|---|---|
 | WI-1038 | TC-428 and TC-429 verify LLR-395 once accepted | After LLR-395's acceptance | Filed from WI-1019's build; claimable only once adjudication accepts LLR-395 |
-| WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6, §3.4) | F, after the N6 stop | Filed and critiqued (round 1, Sol and Argon, all findings applied, `a57782d59`). Order by `needs`: 1021; 1022; 1023; then 1024 and 1027 (either order); 1025; then 1026, 1028 and 1030; then 1029. Built side by side where `needs` allows, landing one at a time (plan revision 37) |
+| WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6, §3.4) | F, after the N6 stop | Filed and critiqued (round 1, Sol and Argon, all findings applied, `a57782d59`). Order by `needs`: 1021; 1022; 1023; then 1024 and 1027 (either order); 1025; then 1026, 1028 and 1030; then 1029. Built side by side where `needs` allows, landing one at a time (plan revision 37). F-1 built and its table ruled (§3.5) |
 | WI-1016 | A repository can switch off the implementation layer | After F | Re-critiqued once F lands; reverses SR-186, so its amendment is drafted for the operator |
 | WI-1018 | Row text a lane leaves stale is filed, and the first set is brought up to the code | After F-8 | F-8's text migration takes B1, B7 and B9 and likely more; this row then fixes what is left |
-| WI-1044 | WI-1037's leftovers: the author's prompt template and TC-385 name roles; recipes §5's `
-` escapes | Filed, not drilled | Owes a scope critique; amends TC-385 |
+| WI-1045 | `acceptance_record.py`'s landing rules move to a CMP-008 module (F-1's table, §3.5 R2) | After F-1; the critique settles before or after F-3 | Filed, not drilled; owes a scope critique |
+| WI-1044 | WI-1037's leftovers: the author's prompt template and TC-385 name roles; recipes §5's carriage-return escapes | Filed, not drilled | Owes a scope critique; amends TC-385 |
 | WI-1040 to WI-1043 | WI-1036's findings: the last-act date and the test-first order read from the act ledger, an unanchored risk said so, two dead history helpers removed | Filed, not drilled | Owe a scope critique; WI-1041 amends LLR-239, WI-1042 amends LLR-257 |
-| WI-1039 | The smoke tier back under its CPU budget | Beside F-1 | Filed 2026-11-21 (§3.4, the suite during F); owes its critique |
+| WI-1039 | The smoke tier back under its CPU budget | Beside F-1 | Filed 2026-11-21 (§3.4, the suite during F); critiqued by Sol alone, findings applied (`d1c56e986`); not built |
 | WI-1031 to WI-1035 | The rest of phase 3 | Filed, not drilled | Owe a scope critique when they come up (§3.3 N2); WI-1035 carries §3.4 S4's answer |
 
 Done in wave A: WI-1013, WI-1014 and WI-1017; in wave B: WI-1019; beside
@@ -343,7 +347,8 @@ thirds of the tags): `acceptance_record` CMP-006, `check` CMP-007,
 Each pick follows the file's stated job; the picks create three new
 crossings, each now covered by an interface row. *Recommendation:* accept.
 
-**Answer:**
+**Answer:** Accept, as recommended (operator, 2026-11-21, given in the
+coordinator's session; recorded by the coordinator).
 
 **R2. Two files doing two components' work.** `acceptance_record.py` holds
 the spine's two-tree comparison (CMP-006) and five coordinator landing rules
@@ -354,14 +359,15 @@ landing rules into a CMP-008 module behind an interface; no row for
 `check_doc_refs` until WI-1023 lands, since the oracle's spine role goes
 with it.
 
-**Answer:**
+**Answer:** As recommended (operator, 2026-11-21). Filed as WI-1045;
+`check_doc_refs` is looked at again when WI-1023 lands.
 
 **R3. Three picks against the tag majority.** `hooks/pre-commit` CMP-007
 (CMP-007's row names it and its interface carries CMP-007; its CMP-008 tags
 are lane rules it runs as steps); `kitlib/config` and `kitlib/git` CMP-006
 (the shared-kernel rule). *Recommendation:* accept.
 
-**Answer:**
+**Answer:** Accept, as recommended (operator, 2026-11-21).
 
 **R4. 22 in-scope files no LLR names.** Launchers and setup scripts CMP-009
 (`check.{ps1,sh}` CMP-007); registries CMP-006; configuration files to the
@@ -369,6 +375,70 @@ component that mainly reads them (`process.toml`, `agents.toml`,
 `agents-enabled`, `status.md` CMP-008; `stack.ini`, `coverage-floors`,
 `declared-absences`, `pre-push` CMP-007; `runtime-flows.md` CMP-009).
 *Recommendation:* accept.
+
+**Answer:** Accept, as recommended (operator, 2026-11-21). The ruling is
+recorded in WI-1021's Context on its branch.
+
+### 3.6 Raised by a review of this hand-off (answer in place)
+
+The operator brought a Gemini review of this hand-off and the F rows
+(2026-11-21). The coordinator checked each point against the code; the
+stale sections it found are fixed in place (§10). Three are the operator's
+to decide. None blocks F-1 or F-2.
+
+**G1. An adjudication sitting before F-3's batch act.** N4 schedules one
+sitting, after F-8's text migration. But an acceptance act is refused while
+any row of a registry it copies has accepted text drifted from its recorded
+copy, unless the act itself blesses that row (`baseline_snapshot`, SR-207).
+F-3's batch act copies the design and test-case registries, which already
+carry drift (LLR-283, LLR-311, TC-293 and TC-332 from wave A, §3.1 Q5), and
+F-1 and F-2 add more (F-1: LLR-373, LLR-067, LLR-199 and four TCs). Naming
+those rows in the act's `--reaccepts` would bless text no sitting has read,
+so the batch act cannot run until a sitting clears the drift.
+*Recommendation:* one automated adjudication sitting after F-2 merges and
+before F-3's batch act, beside the one after F-8. It also clears
+`docs/ratify/CURRENT.md` and lets WI-1038 start.
+
+**Answer:**
+
+**G2. F-4 (WI-1024): how strict are `dimensions` and `out_of_domain`?** The
+review-churn plan's revision 20 made an LLR's `dimensions` cell the one
+home of a behaviour's input set. Requiring both cells on every LLR that
+`constrains` an interface came later, from Sol's scope critique of WI-1024,
+which the coordinator adopted. The `gen_cases` grammar has ranges, sets and
+booleans only; the plan counted 68 of 243 interface `data` cells as
+alphabet-shaped, and most `file`, `stdout`, `bytes` and `git` interfaces
+carry a schema or a document. About 197 interfaces need a constraining LLR.
+- (a) As filed: both cells required; a missing one fails `--strict`.
+- (b) Warn-first: a missing cell is reported but does not fail `--strict`;
+  strictness is decided once population shows how many interfaces the
+  grammar fits.
+
+*Recommendation: (b).* It keeps the revision 20 ruling and defers only the
+critique's addition until there is evidence.
+
+**Answer:**
+
+**G3. F-6 (WI-1026): role tags, or imports?** Revision 35 ruled that an
+interface's consumers and requestors are generated from code once code
+exists; revision 36, that each side hands over on its own. WI-1026 reads
+them from `Consumes:` and `Requests:` header tags. No record weighs
+inferring them from imports instead, and with WI-1015's item 3 retired
+(§3.1 Q1) nothing checks that a `Requests:` tag matches an import. Of the
+222 live interfaces with a local consumer or requestor, 133 are `call` rows,
+which imports show; the other 89 are file reads, exit codes, CLI calls,
+stdout and the environment, which imports do not show. An import also names
+a file, not which of its interfaces, since a contract body sits in the
+owner's module docstring.
+- (a) As filed: tags for every channel.
+- (b) Hybrid: cross-component `call` requestors read from imports and
+  `Component:` headers; tags only for the other channels.
+- (c) Tags as filed, plus a check that a `Requests:` tag's file imports the
+  owner.
+
+*Recommendation:* decide before WI-1026 is claimed, once F-2 shows how many
+`call` rows survive as crossings. WI-1026 is late in F's order and nothing
+before it depends on it.
 
 **Answer:**
 
@@ -495,7 +565,9 @@ Run the commands from the repository root with
 2. Conflicts: in a registry, rows with distinct new ids are all kept; an
    existing row both sides edited is reconciled cell by cell, keeping its
    status, and two edits that disagree in meaning go to the operator.
-   `docs/id-watermark` takes theirs, then `trace.py --bump-ids`. A generated
+   `docs/id-watermark` takes, in each id space, the higher of the two marks
+   (taking either side whole can lower a mark the other raised), then
+   `trace.py --bump-ids`. A generated
    file (`PROJECT_STATE.html`, `docs/open-items.html`, `docs/status.md`'s
    generated block, `docs/stage`, `docs/ratify/CURRENT.md`,
    `docs/interface-reference.md`, `docs/cli-reference.md`,
@@ -516,16 +588,20 @@ Run the commands from the repository root with
    before the next wave starts; the baseline run's failures are fixed before
    wave A.
 
-## 8. Ids for wave B
+## 8. Ids
 
-Marks at hand-off (`docs/id-watermark`): SR 247, LLR 394, TC 456, IF 325,
-DA 28, SUR 4, CMP 9, WI 1020. Wave A minted LLR-393, LLR-394, TC-455, TC-456
+Marks on trunk (`docs/id-watermark`): SR 247, LLR 395, TC 456, IF 325,
+DA 28, SUR 4, CMP 9, WI 1045. Wave A minted LLR-393, LLR-394, TC-455, TC-456
 and IF-325 (WI-1014); the rest of its ranges went unused and are free.
+`maint/wi-1021` minted LLR-396, LLR-397, TC-457 to TC-461 and IF-326; its
+marks rise to those on its merge (§7.2).
 
-WI ids filed on trunk by §3.3: WI-1021 to WI-1030 (F-1 to F-10),
-WI-1031 to WI-1037 (the rest of phase 3, and the author-role row) and
-WI-1038 (WI-1019's follow-up). F-3 (WI-1023) mints a successor SR for
-SR-180's discharge rule, so its launch range includes one SR.
+WI ids filed on trunk: WI-1021 to WI-1030 (F-1 to F-10), WI-1031 to
+WI-1037 (the rest of phase 3, and the author-role row), WI-1038 (WI-1019's
+follow-up), WI-1039 (the smoke tier), WI-1040 to WI-1044 (WI-1036's and
+WI-1037's findings) and WI-1045 (F-1's table, §3.5 R2). F-3 (WI-1023) mints
+a successor SR for SR-180's discharge rule, so its launch range includes
+one SR.
 
 | Branch | LLR | TC | IF |
 |---|---|---|---|
@@ -533,7 +609,9 @@ SR-180's discharge rule, so its launch range includes one SR.
 | WI-1021 (F-1) | 396–400 | 457–464 | 326–328 |
 | WI-1036, WI-1037 | none | none | none |
 
-WI-1019 used LLR-395 only; its TC range went unused and passes to WI-1021.
+WI-1019 used LLR-395 only; its TC range went unused and passes to WI-1021,
+which used LLR-396 and LLR-397, TC-457 to TC-461 and IF-326; the rest of its
+ranges are free once it merges.
 The other F rows' ranges are set as each launches; WI-1023's includes one
 SR (§3.4 S2). No other SR, DA or SUR is expected; a builder that needs one
 stops and asks.
@@ -657,3 +735,12 @@ Append one line per step taken: the item, what happened, the commit.
   read from the headers, the multi-membership advisory retired, IF-326 and
   three requestor additions cover the new crossings; smoke `3713 passed, 3
   skipped`. Stopped at §3.5 for the operator's ruling on its table.
+- 2026-11-21: the operator ruled §3.5 (R1 to R4 as recommended); WI-1045
+  filed for R2. The operator brought a Gemini review of this hand-off; the
+  coordinator checked it and brought the opening, §1, §2 (WI-1044's broken
+  row, WI-1039's critique), §7.2's watermark rule and §8 current, updated
+  `docs/status.md`'s resume point, and raised G1 to G3 (§3.6; G1 confirmed
+  in `baseline_snapshot`). On `maint/wi-1021` (`2e22775b6`): the ruling in
+  the spec's Context, and the declaration's batch and PowerShell carriers
+  narrowed to Done-when 1's (`::` and `<# #>` were read too), red first,
+  `667 passed, 1 skipped` over every importer of `gen_arch_map`.
