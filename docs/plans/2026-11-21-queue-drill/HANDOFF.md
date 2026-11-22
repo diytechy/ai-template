@@ -51,7 +51,8 @@ adjudication sittings by Gemini Neon through `agy` (operator, 2026-11-21;
 | WI-1016 | A repository can switch off the implementation layer | After F | Re-critiqued once F lands; reverses SR-186, so its amendment is drafted for the operator |
 | WI-1018 | Row text a lane leaves stale is filed, and the first set is brought up to the code | After F-8 | F-8's text migration takes B1, B7 and B9 and likely more; this row then fixes what is left |
 | WI-1045 | `acceptance_record.py`'s landing rules move to a CMP-008 module (F-1's table, §3.5 R2) | After F-3 (WI-1023) | Critiqued (Sol and Hydrogen, all findings applied): the order settled after F-3, the cover held to F-2's rule, IF-308's callers named |
-| WI-1044 | WI-1037's leftovers: the author's prompt template and TC-385 name roles; recipes §5's carriage-return escapes | Beside F | Critiqued: Sol and Hydrogen both APPROVE, spec unchanged; amends TC-385 |
+| WI-1044 | WI-1037's leftovers: the author's prompt template and TC-385 name roles; recipes §5's carriage-return escapes | Beside F | Critiqued: Sol and Hydrogen both APPROVE, spec unchanged; amends TC-385. Building on `maint/wi-1044` |
+| WI-1046 | SR-243 names the author, critic and REVIEW-A roles, not "Sol or Terra" | After WI-1044 | Filed 2026-11-21 from WI-1044's build; owes a scope critique; amends SR-243 (Accepted, drifts) |
 | WI-1040 to WI-1043 | WI-1036's findings: the last-act date and the test-first order read from the act ledger, an unanchored risk said so, two dead history helpers removed | WI-1040, 1041 and 1043 beside F; WI-1042 after F-2 | Critiqued (Sol and Hydrogen, all findings applied). WI-1041 amends LLR-239; WI-1042 amends LLR-257, gains a Trust section and settles its pre-ledger rule, and needs WI-1022 (IF-220's consumers cell) |
 | WI-1039 | The smoke tier back under its CPU budget | Beside F-1 | Filed 2026-11-21 (§3.4, the suite during F); critiqued by Sol alone, findings applied (`d1c56e986`); not built |
 | WI-1031 to WI-1035 | The rest of phase 3 | Filed, not drilled | Owe a scope critique when they come up (§3.3 N2); WI-1035 carries §3.4 S4's answer |
@@ -613,7 +614,8 @@ marks rise to those on its merge (§7.2).
 WI ids filed on trunk: WI-1021 to WI-1030 (F-1 to F-10), WI-1031 to
 WI-1037 (the rest of phase 3, and the author-role row), WI-1038 (WI-1019's
 follow-up), WI-1039 (the smoke tier), WI-1040 to WI-1044 (WI-1036's and
-WI-1037's findings) and WI-1045 (F-1's table, §3.5 R2). F-3 (WI-1023) mints
+WI-1037's findings), WI-1045 (F-1's table, §3.5 R2) and WI-1046 (WI-1044's
+finding: SR-243's model names). F-3 (WI-1023) mints
 a successor SR for SR-180's discharge rule, so its launch range includes
 one SR.
 
@@ -654,6 +656,11 @@ stops and asks.
   and commit after a merge or an act, not after every commit.
 - A builder's close-out commit can draw the hook warning that its change
   set "touches neither test-cases nor tests/"; it reads only that commit.
+- This hand-off's question labels (G1 to G3) spell retired stage tags. Cite
+  them in a spec or any other live file as "§3.6, its second question", never
+  as `G2`: `check_vocab --strict` refuses the tag, the commit hook runs it
+  warn-only, and the smoke tier's `test_stage_ladder` fails on it
+  (`1b15d07fb` did this; fixed in the commit after `1b22c9355`).
 
 ## 10. Progress log
 
@@ -783,4 +790,11 @@ Append one line per step taken: the item, what happened, the commit.
   run). All adopted: `planmode` set on five rows, coverage bounds on WI-1040
   and WI-1041, WI-1042's pre-ledger, pairing and completeness rules settled
   with a Trust section and `needs` WI-1022, WI-1045 ordered after F-3 with
-  its cover held to F-2's rule.
+  its cover held to F-2's rule. `1b22c9355`. WI-1043 and WI-1044 building
+  beside F-2.
+- 2026-11-21: WI-1043's builder stopped: `traj_parse._git` is called by one
+  test and re-exported by `gen_trajectory`. Ruled: test-only use is not a
+  caller, and the grep covers code, not records; recorded on the branch as
+  its D-001. WI-1044's builder stopped at a smoke red outside its scope:
+  `1b15d07fb` wrote the retired tag `G2` into WI-1024's spec. Fixed on
+  trunk (§9); WI-1044's SR-243 finding filed as WI-1046.

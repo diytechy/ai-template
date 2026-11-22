@@ -43,7 +43,7 @@ it (revision 20). The SR cell stays for system-boundary dimensions only. A
 schema change adopters inherit.
 
 **The companion cells are warn-first (operator, 2026-11-21, queue-drill
-HANDOFF §3.6 G2).** Round 1 of this row's scope critique (Sol) made
+HANDOFF §3.6, its second question).** Round 1 of this row's scope critique (Sol) made
 `dimensions` and `out_of_domain` required on every LLR that carries
 `constrains`; the operator overruled that part. The `gen_cases` grammar has
 ranges, sets and booleans only, and most `file`, `stdout`, `bytes` and
@@ -97,7 +97,7 @@ contract-body prose into these LLRs.
       `constrains`. A dead id, an empty list, an unparsable companion cell,
       or a companion cell on an LLR without `constrains` is a finding. A
       missing companion cell on an LLR with `constrains` is a warning that
-      never fails `--strict` (operator, G2). Registry headers and templates
+      never fails `--strict` (operator, 2026-11-21). Registry headers and templates
       state the three cells.
 - [ ] A derived check reports each interface that reaches no executable TC
       through an LLR's or SR's `constrains` or a TC's `verifies`; one
