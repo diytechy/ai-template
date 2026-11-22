@@ -7,10 +7,10 @@ reading before starting.
 
 **Where the drill stands.** Waves A and B are merged, and WI-1036 and
 WI-1037 beside F-1. Variant F is filed (WI-1021 to WI-1030), critiqued, and
-its cut approved (§3.4). F-1 (WI-1021) is built on its branch, and the
-operator has ruled its one-component table (§3.5); it goes to review, then
-merges. §3.6 holds three questions for the operator about later F rows;
-none blocks F-1 or F-2.
+its cut approved (§3.4). F-1 (WI-1021) is merged, its one-component table
+ruled by the operator (§3.5). Next: F-2 (WI-1022), already critiqued, in a
+new worktree (§4 step 2). §3.6 holds three questions for the operator about
+later F rows; none blocks F-2.
 
 **The job:** take each drillable work item through scope critique, build,
 review and merge into `refactor_again`, running items in parallel worktrees
@@ -25,18 +25,18 @@ and documentation by Sol at low effort **and** Gemini Argon at low effort
   (`push = "operator"`).
 - Merged: wave A, WI-1013 (`efafa872f`), WI-1014 (`2ea2fd150`) and WI-1017
   (`fd3ece15d`); wave B, WI-1019 (`da78f85ee`); beside F-1, WI-1036
-  (`a0ca15d3f`) and WI-1037 (`b62079378`). Their worktrees and branches are
-  removed. Suites: after wave A on `361270a84`, `8264 passed, 31 skipped`;
-  after wave B on `224ff2c68`, `8264 passed, 31 skipped`; smoke on
-  `78ea4e843`, `3699 passed, 3 skipped`.
-- Open: one worktree, `D:/ai-template-wt-wi1021` on `maint/wi-1021` (F-1),
-  built, closed out and its table ruled (§3.5). Next: its review (§4 step
-  4), then its merge (§7).
+  (`a0ca15d3f`) and WI-1037 (`b62079378`); F-1, WI-1021 (`147fed185`, regen
+  `ed671a026`). Their worktrees and branches are removed; no worktree is
+  open for this drill. Suites: after wave A on `361270a84`, `8264 passed,
+  31 skipped`; after wave B on `224ff2c68`, `8264 passed, 31 skipped`;
+  smoke after F-1 on `ed671a026`, `3714 passed, 3 skipped`. The next
+  unfiltered suite runs after F-3 (§3.4).
 - Acts owed, all to automated adjudication (§3.3 N4; on timing, §3.6 G1):
-  wave A's three chains (§3.1 Q5) and LLR-395's first acceptance (SR-157's
-  chain), listed in `docs/ratify/CURRENT.md`. WI-1038 then re-points TC-428
-  and TC-429, which drift. F-1's acts join them when it merges (its
-  Deliverable lists them).
+  wave A's three chains (§3.1 Q5), LLR-395's first acceptance (SR-157's
+  chain), and F-1's (LLR-067, LLR-199, LLR-373, TC-067, TC-195, TC-435 and
+  TC-436 amended; CMP-006's `notes`; LLR-396, LLR-397, TC-457 to TC-461 and
+  IF-326 new), listed in `docs/ratify/CURRENT.md`. WI-1038 then re-points
+  TC-428 and TC-429, which drift.
 - The operator still owes, outside this drill: the OI-79 remote-ref delete
   and the push.
 
@@ -45,7 +45,7 @@ and documentation by Sol at low effort **and** Gemini Argon at low effort
 | Item | What | Wave | Notes |
 |---|---|---|---|
 | WI-1038 | TC-428 and TC-429 verify LLR-395 once accepted | After LLR-395's acceptance | Filed from WI-1019's build; claimable only once adjudication accepts LLR-395 |
-| WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6, §3.4) | F, after the N6 stop | Filed and critiqued (round 1, Sol and Argon, all findings applied, `a57782d59`). Order by `needs`: 1021; 1022; 1023; then 1024 and 1027 (either order); 1025; then 1026, 1028 and 1030; then 1029. Built side by side where `needs` allows, landing one at a time (plan revision 37). F-1 built and its table ruled (§3.5) |
+| WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6, §3.4) | F, after the N6 stop | Filed and critiqued (round 1, Sol and Argon, all findings applied, `a57782d59`). Order by `needs`: 1021; 1022; 1023; then 1024 and 1027 (either order); 1025; then 1026, 1028 and 1030; then 1029. Built side by side where `needs` allows, landing one at a time (plan revision 37). F-1 merged (`147fed185`) |
 | WI-1016 | A repository can switch off the implementation layer | After F | Re-critiqued once F lands; reverses SR-186, so its amendment is drafted for the operator |
 | WI-1018 | Row text a lane leaves stale is filed, and the first set is brought up to the code | After F-8 | F-8's text migration takes B1, B7 and B9 and likely more; this row then fixes what is left |
 | WI-1045 | `acceptance_record.py`'s landing rules move to a CMP-008 module (F-1's table, §3.5 R2) | After F-1; the critique settles before or after F-3 | Filed, not drilled; owes a scope critique |
@@ -744,3 +744,13 @@ Append one line per step taken: the item, what happened, the commit.
   the spec's Context, and the declaration's batch and PowerShell carriers
   narrowed to Done-when 1's (`::` and `<# #>` were read too), red first,
   `667 passed, 1 skipped` over every importer of `gen_arch_map`.
+- 2026-11-21: WI-1021 (F-1) reviewed. Round 1: Argon APPROVE; Sol three
+  MINORs, two adopted (an undeclared Python module took a same-stem shell
+  file's component on its import edges; LLR-067's `code_symbol` lacked
+  `_classifiable_edges`), one dismissed (a parenthesized module docstring:
+  no file uses one, and the reader fails closed); fixes `d0b624208`,
+  `2207 passed, 2 skipped` over the importers. Round 2 narrow: Sol APPROVE.
+  Merged `147fed185` (the watermark took the higher mark per space; the
+  generated files trunk's, regenerated), regen `ed671a026`. Smoke on
+  `ed671a026`: `3714 passed, 3 skipped` in 172 s, CPU 738.0 s against 540
+  (over, report-only; WI-1039's). Worktree and branch removed.
