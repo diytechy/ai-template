@@ -1086,13 +1086,10 @@ lane commit being replayed.
 - Write UTF-8 only, with LF line endings. The author has left CRLF and
   cp1252 dashes (observed with Terra); normalize before any snapshot. On
   2026-10-10 every author turn (observed with Terra) rewrote whole
-  registries CRLF: count `
-` in each touched file and
+  registries CRLF: count `\r` in each touched file and
   normalize before every commit.
-  Count CR bytes with Python (`open(p, "rb").read().count(b"
-")`): in Git
-  Bash `grep -c $'
-'` loses the pattern and counts every line, which read
+  Count CR bytes with Python (`open(p, "rb").read().count(b"\r")`): in Git
+  Bash `grep -c $'\r'` loses the pattern and counts every line, which read
   as a CRLF rewrite on 2026-10-10 (c) when the files were LF.
 - Re-read every whole cell a splice touches. Spliced sentences have come back
   without a verb, and a deletion the spec dictates has left a list without
