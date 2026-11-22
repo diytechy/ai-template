@@ -1617,29 +1617,176 @@ def test_a_LANDED_forgery_reds_A_REAL_STRICT_INTEGRITY_RUN(scaffold):
     assert "LANDED" in out and "integrity=1" in out, out
 
 
-def test_acceptance_stamp_names_the_commit_that_MOVED_A_STATUS_CELL(tmp_path):
-    """The provenance the re-acceptance brief promises its reader (MAJOR-4).
-    `stamp` moves on ANY snapshot write, including a refresh that absorbs an
-    amendment accepting no new maturity; this one moves only when a maturity cell
-    does. (Since WI-571 a traced-only refresh writes NOTHING, so the write that
-    exercises the distinction is a named amendment, not a traced re-point.)"""
+# --- the last acceptance act, read from the act ledger (WI-1040) -------------
+# The re-acceptance brief's heading names the last acceptance act: the act
+# ledger's newest entry and the commit that added it, found the way the
+# accepted-risk anchor finds an act's commit. It used to name the newest commit
+# whose diff touched a `status =` line, which a new draft also is. Each state
+# of the ledger has its own outcome, and none names a commit that is not the
+# act's.
+
+_LEDGER = "`{}/{}`".format(SNAP.SNAPSHOT_DIR, SNAP.ACTS)
+_PROVENANCE = "_Acceptance provenance: "
+
+
+def _head(run_git):
+    return run_git("rev-parse", "HEAD").stdout.strip()
+
+
+def _heading(root):
+    """The brief's provenance line, as `trace.reaccept_lines` renders it."""
+    trace = load_script("trace")
+    reg = trace.load_registries(root / "docs")
+    lines = trace.reaccept_lines(root, reg.srs, reg.llrs, reg.tcs)
+    (line,) = [line for line in lines if line.startswith(_PROVENANCE)]
+    return line
+
+
+def _add_a_draft(root):
+    """A new `Drafted` SR row appended to the live registry: a status line moves
+    into existence, and nothing is accepted."""
+    path = root / SR_REL
+    path.write_bytes(
+        path.read_bytes()
+        + b'\n[requirement.SR-998]\ntitle = "A new draft"\nsn_refs = ["SN-004"]\n'
+        b'requirement = "The kit shall draft a row."\nrationale = "why"\n'
+        b'acceptance_criteria = "a row is drafted"\npriority = "C"\n'
+        b'verification_method = "Test"\nstatus = "Drafted"\nphase = 1\n'
+    )
+
+
+def test_a_new_draft_after_the_last_act_leaves_the_heading_on_the_act(tmp_path):
+    """The defect the history-reader audit found (class (c) site 1): a row
+    drafted after the last act moved the heading onto its own commit, which
+    accepted nothing. The heading now names the act's commit, before the
+    draft and after it. Commits are matched on 7 characters, the shortest
+    abbreviation git prints, so the old heading reads the same way."""
     root, run_git = _git_tree(tmp_path)
-    seeded = SNAP.acceptance_stamp(root)[0]
-    assert seeded, "the seeding commit wrote every status line there is"
-    # An amendment absorbed under a ref: the record is re-written for the named
-    # registry, but no maturity cell moves.
-    ssid, srow = _first_row_at(root, "accepted")
-    _rewrite(root, SR_REL, srow["Title"], srow["Title"] + " (amended)")
-    SNAP.copy_live(root, accepts={SR_REL: "the sitting"}, reaccepts={ssid})
+    act = _head(run_git)
+    assert act[:7] in _heading(root)
+    _add_a_draft(root)
     run_git("add", "-A")
-    run_git("commit", "-m", "an amendment absorbed under a ref")
-    assert SNAP.stamp(root)[0] != seeded, "the write stamp must follow any write"
-    assert SNAP.acceptance_stamp(root)[0] == seeded, "no status cell moved"
-    # ...and now one does.
-    _rewrite(root, SR_REL, 'status = "Accepted"', 'status = "Drafted"')
+    run_git("commit", "-m", "a new draft, no act")
+    draft = _head(run_git)
+    line = _heading(root)
+    assert act[:7] in line, line
+    assert draft[:7] not in line, line
+
+
+def test_the_heading_names_the_newest_entry_and_the_commit_that_added_it(tmp_path):
+    root, run_git = _git_tree(tmp_path)
+    seed = _head(run_git)
+    entry, commit, reason = SNAP.last_act(root)
+    assert (entry["seq"], commit) == (1, seed)
+    assert reason == (
+        "the last acceptance act is the act ledger's seq 1, dated {}, added by "
+        "commit {}".format(entry["date"], seed[:12])
+    )
+    assert _heading(root) == _PROVENANCE + reason + "._"
+
+
+def test_an_act_not_yet_committed_names_no_commit_until_it_lands(tmp_path):
+    """The act's own commit regenerates the views before it lands, so the
+    newest entry is in the working tree and in no commit yet. The heading
+    gives its date and names no commit, never the act before it."""
+    root, run_git = _git_tree(tmp_path)
+    seed = _head(run_git)
+    sid, row = _first_row_at(root, "accepted")
+    _rewrite(root, SR_REL, row["Title"], row["Title"] + " (re-accepted)")
+    SNAP.copy_live(root, reaccepts={sid})
+    entry, commit, reason = SNAP.last_act(root)
+    assert (entry["seq"], commit) == (2, None)
+    assert reason == (
+        "the last acceptance act is the act ledger's seq 2, dated {}; its commit "
+        "is not in the available history: no commit adds it yet, so the act is "
+        "not committed".format(entry["date"])
+    )
+    assert seed[:12] not in reason
     run_git("add", "-A")
-    run_git("commit", "-m", "a maturity cell moves")
-    assert SNAP.acceptance_stamp(root)[0] not in ("", seeded)
+    run_git("commit", "-m", "the act lands")
+    assert SNAP.last_act(root)[:2] == (entry, _head(run_git))
+
+
+def test_a_shallow_clone_missing_the_acts_commit_says_so_and_names_no_other(
+    tmp_path,
+):
+    """IF-217's limit: a depth-1 clone holds the newest entry but not the
+    commit that added it. The heading gives the entry's recorded date and says
+    its commit is not in the available history."""
+    root, run_git = _git_tree(tmp_path)
+    _add_a_draft(root)
+    run_git("add", "-A")
+    run_git("commit", "-m", "a later commit, no act")
+    clone = tmp_path / "shallow"
+    proc = subprocess.run(
+        ["git", "clone", "-q", "--depth", "1", root.as_uri(), str(clone)],
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, proc.stderr
+    entry, commit, reason = SNAP.last_act(clone)
+    assert (entry["seq"], commit) == (1, None)
+    assert reason == (
+        "the last acceptance act is the act ledger's seq 1, dated {}; its commit "
+        "is not in the available history: this is a shallow clone, and the act "
+        "may lie beyond its window".format(entry["date"])
+    )
+
+
+def test_no_ledger_and_an_empty_ledger_record_no_act(tmp_path):
+    root = _tree(tmp_path)
+    assert SNAP.last_act(root) == (
+        None,
+        None,
+        "no acceptance act is recorded: there is no act ledger {}".format(_LEDGER),
+    )
+    ledger = SNAP.snapshot_root(root) / SNAP.ACTS
+    ledger.parent.mkdir(parents=True)
+    for text in ("", SNAP._ACTS_HEADER):
+        ledger.write_text(text, encoding="utf-8")
+        assert SNAP.last_act(root) == (
+            None,
+            None,
+            "no acceptance act is recorded: the act ledger {} holds no entry".format(
+                _LEDGER
+            ),
+        )
+
+
+def test_a_ledger_off_git_gives_its_date_and_says_git_cannot_read(tmp_path):
+    root = _seeded(tmp_path)
+    entry, commit, reason = SNAP.last_act(root)
+    assert (entry["seq"], commit) == (1, None)
+    assert reason.endswith(
+        "its commit is not in the available history: git cannot read this "
+        "repository's history"
+    ), reason
+
+
+def test_a_malformed_ledger_reads_no_act_rather_than_raising(tmp_path):
+    # Outside the promise (only a hand edit makes one), but the brief still
+    # renders: it says no act can be read and names no commit.
+    root = _seeded(tmp_path)
+    (SNAP.snapshot_root(root) / SNAP.ACTS).write_text("[[act]\n", encoding="utf-8")
+    entry, commit, reason = SNAP.last_act(root)
+    assert (entry, commit) == (None, None)
+    assert reason.startswith(
+        "no acceptance act can be read: the act ledger {} is malformed".format(_LEDGER)
+    ), reason
+
+
+def test_an_undecodable_ledger_reads_malformed_rather_than_raising(tmp_path):
+    # Review round 1 (Sol): bytes that are not UTF-8 raised UnicodeDecodeError
+    # out of the reading, past the malformed outcome. They are a malformed
+    # ledger too: no entry, no commit, and the brief still renders.
+    root = _seeded(tmp_path)
+    ledger = SNAP.snapshot_root(root) / SNAP.ACTS
+    ledger.write_bytes(b"\xff\xfe[[act]]\nseq = 1\n" + ledger.read_bytes())
+    entry, commit, reason = SNAP.last_act(root)
+    assert (entry, commit) == (None, None)
+    assert reason.startswith(
+        "no acceptance act can be read: the act ledger {} is malformed".format(_LEDGER)
+    ), reason
 
 
 def test_the_README_is_prose_and_is_exempt_from_the_mirror(tmp_path):

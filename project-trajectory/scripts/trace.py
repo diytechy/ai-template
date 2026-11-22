@@ -4162,8 +4162,10 @@ def current_acceptance_brief(root):
 # dissolves rather than being guarded against.
 
 
-# The two lines `reaccept_lines` derives from git rather than from the registry.
-# Excluded from the freshness comparison, and named ONCE here so the renderer and
+# The two lines `reaccept_lines` derives from git and the acceptance record rather
+# than from the registry: each moves with the record's own commits, the
+# provenance line on the very commit that lands an act. Excluded from the
+# freshness comparison, and named ONCE here so the renderer and
 # the gate can never disagree about which lines are derived (the renderer's own
 # note points back at this constant).
 _DERIVED_STAMP_PREFIXES = (
@@ -4822,7 +4824,6 @@ def reaccept_lines(root, srs, llrs, tcs):
     """
     model = reaccept_model(root, srs, llrs, tcs)
     srs_by_id = {r.get("SR-ID"): r for r in srs if r.get("SR-ID")}
-    appr_rev, appr_date = baseline_snapshot.acceptance_stamp(root)
     lines = [
         "# Re-acceptance brief — spine rows owing an acceptance",
         "",
@@ -4846,28 +4847,20 @@ def reaccept_lines(root, srs, llrs, tcs):
         ),
         "",
         # TWO DERIVED LINES, AND THEY ANSWER DIFFERENT QUESTIONS (2026-08-20, the
-        # batch review's MAJOR-4). This said "the reviewed commit that last moved
-        # an acceptance" of a stamp that is nothing of the kind: `stamp` is a
-        # `git log` over the snapshot DIRECTORY, so any write moves it — at the
-        # time of the review it named a commit that moved zero acceptances. The
-        # line now says what the stamp IS, and the provenance the reader was
-        # actually being promised is derived beside it, from the only mechanical
-        # trace an acceptance leaves: a status line moving in a snapshotted
-        # registry. Both are EXCLUDED from `acceptance_check`'s comparison
-        # (`_DERIVED_STAMP_PREFIXES`) — a brief that goes stale because its own
-        # stamp moved is a guard that fires on every commit.
+        # batch review's MAJOR-4). `stamp` is a `git log` over the snapshot
+        # DIRECTORY, so any write moves it: it says when each copy was written,
+        # never when an acceptance happened. The provenance the reader is
+        # promised is read beside it from the record the act itself writes, the
+        # act ledger's newest entry and the commit that added it
+        # (`baseline_snapshot.last_act`), never recomputed from a status line
+        # moving, which a new draft also does (WI-1040). Both are EXCLUDED from
+        # `acceptance_check`'s comparison (`_DERIVED_STAMP_PREFIXES`) — a brief
+        # that goes stale because its own stamp moved is a guard that fires on
+        # every commit.
     ]
     lines += _baseline_lines(root) + [
         "",
-        "_Acceptance provenance: {}._".format(
-            "the last commit to move a `Status` cell in a snapshotted registry is"
-            " {} ({}) — the record's maturity cells have not moved since".format(
-                appr_rev, appr_date
-            )
-            if appr_rev
-            else "no commit in this checkout moved a `Status` cell in a"
-            " snapshotted registry (or git cannot say)"
-        ),
+        "_Acceptance provenance: {}._".format(baseline_snapshot.last_act(root)[2]),
         "",
     ]
     # WI-518: rendered here — before the per-SR sections, after the derived

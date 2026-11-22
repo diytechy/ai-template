@@ -1,0 +1,12 @@
+# docs/decisions/maint-wi-1040.toml — delegated calls on the maintenance branch
+# maint/wi-1040 (WI-1040).
+# Format: project-trajectory/decisions.template.toml.
+
+high_risk = []
+
+[decision.D-001]
+decided = "Beyond the four ledger states the Done-when names, the re-acceptance brief's provenance heading reads two more that supported workflows reach, each giving the newest entry's seq and date and naming no commit: an entry no commit adds yet ('no commit adds it yet, so the act is not committed', which an act's own commit reads when it regenerates the views before it lands) and a history git cannot read ('git cannot read this repository's history'). A malformed ledger, outside the promise, reads 'no acceptance act can be read' for the working tree's, or 'its commit cannot be read' for one met on the walk, and never raises. The walk stops at the first commit that added only entries older than the newest, since the ledger only grows (IF-220)."
+alternative = "Read every state the spec does not name as the shallow clone's wording, or let a malformed ledger raise out of the brief; and walk every commit that touched the ledger, about 180 in this repository, before saying an uncommitted entry has no commit."
+reversal_cost = "Low: the clauses live in baseline_snapshot.last_act and _act_commit, the brief prints the clause as given, and acceptance_check sets the line aside by its unchanged prefix."
+why_not_escalated = "The Done-when's rule, give the entry's recorded date and never fall back to another commit, decides each of these states; only the wording and the early stop are the run's, and no spine row states the heading."
+review = ""

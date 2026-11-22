@@ -12118,6 +12118,30 @@ gate is on.
 
 **Kit-owned files — overwrite:** `scripts/baseline_snapshot.py`.
 
+### The re-acceptance brief names the last acceptance act from the act ledger [since 7048e6a6f]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** The brief's `_Acceptance provenance:` line named the newest
+commit whose diff touched a `status =` line in a snapshotted registry, so a
+row drafted after the last act took the line over, and a CSV-carrier
+repository got no answer. It now reads the act ledger,
+`docs/archive/last_accepted/acts.toml`: the newest entry's `seq` and recorded
+date, and the commit that added it, found by the walk the accepted-risk
+anchor already takes. With no ledger, or one with no entry, it says no act is
+recorded. When the entry's commit is not in the readable history (a shallow
+clone, an act not yet committed, no git), it gives the entry's date and names
+no commit. `baseline_snapshot.last_act(root)`, returning `(entry, commit,
+reason)`, replaces `acceptance_stamp`, which is removed. The line keeps its
+prefix, so the brief's freshness check still leaves it out of the comparison.
+
+**What to do.** Nothing is forced. `docs/ratify/CURRENT.md` takes the new
+wording at its next regeneration. A script of your own that called
+`acceptance_stamp` calls `last_act` instead.
+
+**Kit-owned files — overwrite:** `scripts/baseline_snapshot.py`,
+`scripts/trace.py`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

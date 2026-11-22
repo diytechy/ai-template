@@ -87,7 +87,7 @@ Paths are under `project-trajectory/scripts/`.
 | `agent_common.py:1303` | `merge-base <trunk> HEAD` | a | Borderline. `default_base`, the lane's integration base for its evidence ranges; one use of it reads the claimed Done-when there. |
 | `agent_loop.py:2093` | `diff --name-only <impl_range>` | a | The reviewed range's paths, for the anti-gaming tripwires. |
 | `baseline_snapshot.py:609` | `log -1 -- <snapshot copy>` | b | `stamp`: the commit that last wrote a registry's snapshot copy, which only an act writes; advisory. |
-| `baseline_snapshot.py:683` | `log -1 -G<status line> -- <snapshotted registries>` | c | `acceptance_stamp` dates the last acceptance by the last diff touching a status line. See (c) 1. |
+| `baseline_snapshot.py:683` | `log -1 -G<status line> -- <snapshotted registries>` | c | `acceptance_stamp` dates the last acceptance by the last diff touching a status line. See (c) 1. Resolved by WI-1040. |
 | `baseline_snapshot.py:2111` | `log -- docs/requirements/assumptions.toml` | c | Borderline. `_risk_first_written` binds a risk no act names to the first commit holding its current value. See (c) 2. Resolved by WI-1041. |
 | `baseline_snapshot.py:2155` | `log -- docs/archive/last_accepted/acts.toml` | b | `risk_acceptance_act` walks the act ledger's history for each act's commit and reads the copy recorded there; the ledger's header says git holds each act's commit. |
 | `check_docs.py:673` | `log --name-only` | a | Last-change time per path, for the `--stale` doc warning. |
@@ -161,6 +161,11 @@ Paths are under `project-trajectory/scripts/`.
   class (b)).
 - **Its reader:** the re-acceptance brief's heading (`trace.py:4823`);
   advisory. No LLR names the function.
+- **Resolved by WI-1040** (2026-11-21): `acceptance_stamp` is removed. The
+  heading reads `baseline_snapshot.last_act`: the act ledger's newest entry
+  and the commit that added it, found by `risk_acceptance_act`'s walk.
+  When that commit is not in the readable history, the heading names no
+  other commit.
 
 ### (c) 2. `baseline_snapshot.py:2111`, `_risk_first_written`
 
