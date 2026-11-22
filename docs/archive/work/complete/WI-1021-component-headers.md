@@ -236,6 +236,9 @@ copies); `RESYNC_PACK.md` 734,651 -> 737,613 (unbudgeted).
   visible finding, never a wrong component); the operator takes only
   realistic findings.
 
+**Review round 2 (2026-11-21, narrow, over `2e22775b6..d0b624208`):** Sol
+APPROVE, no findings. Code only, so Sol alone (queue-drill HANDOFF §4).
+
 ## Context
 
 Variant F's first row (F-1), filed on trunk on 2026-11-21 after the operator

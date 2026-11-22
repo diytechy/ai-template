@@ -11,6 +11,7 @@ undeclared Python module no longer takes a same-stem file's component on
 its import edges; LLR-067's `code_symbol` gains `_classifiable_edges`), one
 dismissed by the coordinator (a parenthesized module docstring, which no
 file uses and which the reader reports absent).
+Review: round 2, narrow over the fixes, Sol APPROVE (code only, Sol alone).
 
 Built on the maintenance branch `maint/wi-1021` from `1aa6c439a`, with the
 commit hooks on. The record is in the row's Deliverable
