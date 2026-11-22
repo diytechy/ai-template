@@ -42,4 +42,12 @@ the row's Deliverable
 - **Sizes and bytes:** `trace.py` re-stamped down 3844 -> 3835 SLOC;
   `baseline_snapshot.py` 987 SLOC, under the threshold. `RESYNC_PACK.md`
   737,613 -> 738,955 (unbudgeted). No budgeted file was touched.
+- **The merge** (`8539c3124`, trunk at `7048e6a6f`):
+  `risk_acceptance_act` walks `_ledger_commits` and ends as WI-1041 left it,
+  and the RESYNC entry is re-anchored `[since 7048e6a6f]`. The merge's test
+  set: `252 passed in 417.22s (0:06:57)`. `run_menu.py smoke` at the merge:
+  `3714 passed, 3 skipped, 18 warnings in 153.75s (0:02:33)`, CPU budget
+  WARN only. The current-path limit is left to WI-1042, whose spec the
+  coordinator points at `_ledger_commits`.
+  <!-- fig: derived="the totals are those the Deliverable's merge line declares, with its command and revision" -->
 - **Acts owed:** none.

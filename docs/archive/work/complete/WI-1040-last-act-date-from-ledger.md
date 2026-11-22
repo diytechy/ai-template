@@ -22,8 +22,18 @@ specref is cleared at close, as a terminal row's is.
   its outcome, the reading reused, and the limit at the record's move.
 - `ea59f2a83`: the build. The code, the tests, the golden brief, the size
   re-stamp, the RESYNC entry, the decisions record and the regenerated views.
-- The close-out commit after it: this Deliverable, the audit note's site 1
+- `56b1fc405`: the close-out. This Deliverable, the audit note's site 1
   marked resolved, the log fragment, and the move to `complete/`.
+- `8539c3124`: the merge of trunk at `7048e6a6f` (WI-1041, WI-1043,
+  WI-1044). `risk_acceptance_act` walks `_ledger_commits` and ends as
+  WI-1041 left it, unanchored with no fallback. The tests run with
+  `--basetemp D:/rt1040/t` (test_baseline_snapshot, test_accepted_risk,
+  test_trace_briefs, test_intake_held_act, test_module_size_ratchet,
+  test_import_layers, test_complexity_ratchet): `252 passed in 417.22s
+  (0:06:57)`. `run_menu.py smoke` at the merge: `3714 passed, 3 skipped,
+  18 warnings in 153.75s (0:02:33)`, CPU budget WARN only.
+  <!-- fig: cmd="python -m pytest -q -n auto --basetemp D:/rt1040/t <the 7 modules listed>; python project-trajectory/scripts/run_menu.py smoke" rev="8539c3124 (the pytest run on its tree before the commit, smoke at the commit)" -->
+- The records commit after it: these merge lines and the leftover note.
 
 **What landed.** `baseline_snapshot.last_act(root)` returns
 `(entry, commit, reason)`. `entry` is the working tree's newest act-ledger
@@ -70,8 +80,10 @@ move, so the heading is right here. In a repository whose newest act is
 older than its own move of the record, such as one `migrate_vocabulary.py`
 moved with no act taken since, the heading would name the move commit.
 `risk_acceptance_act` has the same limit for an assumption whose only acts
-predate the move. Not built here; the walk is shared, so one change would
-fix both.
+predate the move. **Left over, by the coordinator's ruling:** not fixed
+here. WI-1042 already has to read across the 2026-11-16 move, and the
+coordinator will point its spec at `_ledger_commits`, so one change fixes
+all three readers.
 
 **Ids and rows.** None minted, and no spine row changed: no LLR names
 `acceptance_stamp` or states the heading. `trace.py --root . --bump-ids` was
@@ -124,9 +136,12 @@ and commit. The golden brief (no git, no record) was regenerated with
 `baseline_snapshot.py` went from 965 to 987 SLOC, under the 1000 threshold,
 so it needs no entry. The complexity ratchet is unchanged.
 
-**Byte deltas.** `RESYNC_PACK.md` 737,613 -> 738,955 (unbudgeted). The new
+**Byte deltas.** `RESYNC_PACK.md` 737,613 -> 738,955 (unbudgeted). After
+the merge it is 739,612 on trunk -> 740,954 here: the same +1,342. The new
 entry is "The re-acceptance brief names the last acceptance act from the act
-ledger [since dd8f79e6c]"; nothing is forced, and the kit-owned files are
+ledger", anchored `[since dd8f79e6c]` at the build and re-anchored
+`[since 7048e6a6f]` at the merge, since `check_resync.py` requires the
+change's base. Nothing is forced, and the kit-owned files are
 `scripts/baseline_snapshot.py` and `scripts/trace.py`. No budgeted file was
 touched.
 
