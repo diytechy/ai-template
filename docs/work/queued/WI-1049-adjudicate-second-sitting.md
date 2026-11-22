@@ -65,3 +65,33 @@ authors' and builders' (OpenAI, Anthropic).
       with its finding, and its follow-up is filed or named.
 - [ ] `docs/ratify/CURRENT.md` regenerates with no chain left that this
       sitting judged and accepted.
+
+## Dispositions
+
+The sitting ran on 2026-11-22: Gemini Neon (`gemini-4-neon-high`), 488 s,
+one session. Its verdict (`7598caf5e`, recorded `468c91fd9`):
+
+- **Amendments:** 23 `MEANING+BLESS` (LLR-041, -042, -067, -080, -199,
+  -239, -283, -293, -311, -373; SR-233, SR-243; TC-044, -067, -080, -081,
+  -195, -250, -293, -332, -385, -435, -436), 2 `MEANING` not blessed
+  (LLR-244: the amendment adds the parameter name `homes`; LLR-257: it adds
+  `record_acceptances`, `baseline_snapshot` and a bare `(D3)`). TC-049,
+  TC-409, TC-410, TC-428 and TC-429 changed only their routed `Verifies`
+  cell and were not shown; nor were IF-312 and CMP-006.
+- **First acceptances:** 22 `ACCEPT` (LLR-393 to LLR-398; TC-455, TC-456,
+  TC-458 to TC-467, TC-469 to TC-471, TC-474), 3 `RETURN` (TC-457: LLR-396's
+  unreadable-file clause untested; TC-468: names `copy_live`; TC-475:
+  duplicates TC-428 and TC-429).
+
+**The act's first snapshot was refused** (SR-207), tested read-only through
+`baseline_snapshot.refresh_refusal` before anything was written: LLR-244
+and LLR-257 drift in the design registry the act copies, and the verdict
+did not bless them. The coordinator put the choice to the operator.
+
+**The operator's ruling (2026-11-22, given in the coordinator's session):**
+revert the two unblessed amendments and take the act now. LLR-244's and
+LLR-257's `detail` went back to the text the accepted copy records, in the
+commit that filed WI-1050; with that, the act's first snapshot reads no
+refusal. WI-1050 re-lands both amendments without the code names, answers
+the three returned test cases, and goes to a third sitting with F-3's
+(WI-1023) acts.
