@@ -9,10 +9,10 @@ reading before starting.
 WI-1037 beside F-1. Variant F is filed (WI-1021 to WI-1030), critiqued, and
 its cut approved (§3.4). F-1 (WI-1021) is merged, its one-component table
 ruled by the operator (§3.5). F-2 (WI-1022) is merged, and WI-1040,
-WI-1041, WI-1043, WI-1044 and WI-1046 beside it. Next: the adjudication
-sitting the operator ruled (§3.6's first question), run as §3.7 says, with
-WI-1042 building beside it; then F-3 (WI-1023) from the trunk the sitting
-leaves.
+WI-1041, WI-1043, WI-1044 and WI-1046 beside it. The adjudication sitting
+(WI-1047, §3.7) ran: its verdict is recorded, but its act is refused over
+two amendments it would not bless, so WI-1048 answers the verdict and a
+second sitting follows. Building: F-3 (WI-1023), WI-1042 and WI-1048.
 
 **The job:** take each drillable work item through scope critique, build,
 review and merge into `refactor_again`, running items in parallel worktrees
@@ -50,12 +50,14 @@ adjudication sittings by Gemini Neon through `agy` (operator, 2026-11-21;
 
 | Item | What | Wave | Notes |
 |---|---|---|---|
-| WI-1038 | TC-428 and TC-429 verify LLR-395 once accepted | After LLR-395's acceptance | Filed from WI-1019's build; claimable only once adjudication accepts LLR-395 |
+| WI-1038 | TC-428 and TC-429 verify LLR-395 once accepted | After LLR-395's acceptance | Filed from WI-1019's build; the first sitting returned LLR-395 for having no TC, a circle WI-1048 breaks with a new Drafted TC; WI-1048's Deliverable says whether this row is still needed |
+| WI-1047 | The adjudication sitting (§3.7) | Ran 2026-11-22 | Verdict recorded (`42df09628`): 20 amendments re-acceptable, LLR-080 and LLR-373 not blessed; 13 ACCEPT, 6 RETURN. Act refused (the two unblessed rows drift in the registry it copies); nothing taken. Stays open for the second sitting |
+| WI-1048 | WI-1047's verdict answered | Building on `maint/wi-1048` | LLR-373 and TC-081 corrected; the six returned rows made ready; critiqued (Sol and Hydrogen, all findings applied). Then a second combined sitting over everything owed, for one act |
 | WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6, §3.4) | F, after the N6 stop | Filed and critiqued (round 1, Sol and Argon, all findings applied, `a57782d59`). Order by `needs`: 1021; 1022; 1023; then 1024 and 1027 (either order); 1025; then 1026, 1028 and 1030; then 1029. Built side by side where `needs` allows, landing one at a time (plan revision 37). F-1 merged (`147fed185`), F-2 merged (`b2b0d9476`) |
 | WI-1016 | A repository can switch off the implementation layer | After F | Re-critiqued once F lands; reverses SR-186, so its amendment is drafted for the operator |
 | WI-1018 | Row text a lane leaves stale is filed, and the first set is brought up to the code | After F-8 | F-8's text migration takes B1, B7 and B9 and likely more; this row then fixes what is left |
 | WI-1045 | `acceptance_record.py`'s landing rules move to a CMP-008 module (F-1's table, §3.5 R2) | After F-3 (WI-1023) | Critiqued (Sol and Hydrogen, all findings applied): the order settled after F-3, the cover held to F-2's rule, IF-308's callers named |
-| WI-1042 | The test-first order read from the act ledger | Now (F-2 merged), beside the sitting | Critiqued (Sol and Hydrogen, all findings applied); amends LLR-257, gains a Trust section and settles its pre-ledger rule; needs WI-1022 (IF-220's consumers cell). Its spec now puts the cross-move reading in WI-1040's shared `_ledger_commits` walk, fixing the brief's heading and the accepted-risk reader too |
+| WI-1042 | The test-first order read from the act ledger | Building on `maint/wi-1042` | Critiqued (Sol and Hydrogen, all findings applied); amends LLR-257, gains a Trust section. Its builder stopped: the spec's cross-move reading broke the operator's D3; ruled option 2 (the 2026-11-16 vocabulary move is the record's cut, read at or before its trunk commit under LLR-257), the spec amended on the branch |
 | WI-1039 | The smoke tier back under its CPU budget | Beside F-1 | Filed 2026-11-21 (§3.4, the suite during F); critiqued by Sol alone, findings applied (`d1c56e986`); not built |
 | WI-1031 to WI-1035 | The rest of phase 3 | Filed, not drilled | Owe a scope critique when they come up (§3.3 N2); WI-1035 carries §3.4 S4's answer |
 
@@ -695,6 +697,13 @@ stops and asks.
   and commit after a merge or an act, not after every commit.
 - A builder's close-out commit can draw the hook warning that its change
   set "touches neither test-cases nor tests/"; it reads only that commit.
+- **D3 (operator, 2026-11-11; test-tiers HANDOFF §5):** no core reader for
+  an earlier spelling; formats in git history are cut cleanly. The record
+  before the 2026-11-16 vocabulary move (`2bee2b551`: `last_approved/`, the
+  `approved`/`reattested` keys, `status = "Approved"`) is never read; an
+  acceptance it carries reads as at or before the move's trunk commit
+  (LLR-257). Check D3 before adopting any finding that reads history
+  across that move: WI-1042's critique did, and its builder had to stop.
 - This hand-off's question labels (G1 to G3) spell retired stage tags. Cite
   them in a spec or any other live file as "§3.6, its second question", never
   as `G2`: `check_vocab --strict` refuses the tag, the commit hook runs it
@@ -908,3 +917,28 @@ Append one line per step taken: the item, what happened, the commit.
   hook does not run it); after the commit it reads OK. trace `--strict`:
   interface-findings 0. Regen `24656b1de`; smoke `3717 passed, 3 skipped` in
   106 s, CPU 648.3 s. Worktree and branch removed; no drill worktree open.
+  `6915cde7d`.
+- 2026-11-22: WI-1042 launched; its builder stopped before building, rightly:
+  the spec's cross-move reading (added by the coordinator from the critique
+  and WI-1040's finding) is a reader of an earlier spelling, which the
+  operator's D3 forbids (§9). Ruled option 2: the vocabulary move is the
+  record's cut, every acceptance it carries reads at or before its trunk
+  commit (LLR-257's existing rule), and `_ledger_commits` keeps the current
+  path, so WI-1040's finding was D3 working, not a defect. Spec amended on
+  the branch.
+- 2026-11-22: the adjudication sitting (§3.7). WI-1047 filed `3cd25133c`;
+  brief composed by `adjudicate_brief.compose` (359K characters), verdict
+  path reserved and request bound by the entry point's own functions;
+  Gemini Neon (high) through `agy`, plan mode, one session, 494 s. Verdict
+  `42df09628` (`verdict_refusal` None), recorded `902d218e9`: 19
+  MEANING+BLESS and 1 CLARITY; LLR-080 and LLR-373 MEANING, not blessed (TC-081
+  stale against LLR-080; LLR-373 contradicts LLR-199 and TC-435); 13 ACCEPT;
+  6 RETURN (code names in LLR-393, LLR-394, TC-455, TC-456; TC-463 leaves
+  five LLR-398 clauses unverified; LLR-395 has no TC, the parent-first
+  circle with WI-1038). The derived act's first snapshot refused (SR-207),
+  and nothing was taken. WI-1048 filed `3002931c7` to answer the verdict,
+  critiqued (Sol three findings, Hydrogen APPROVE, all adopted)
+  `2474d7b4f`. F-3 (WI-1023) and WI-1048 launched; WI-1042 rebuilding
+  under the D3 ruling. Kit leftovers noted for filing: the act template
+  names `scripts/intake.py` (the adopter's path); the first-acceptance
+  template says "`APPROVE`" where its grammar reads ACCEPT.
