@@ -57,3 +57,7 @@ the row's Deliverable
 - **Acts owed:** LLR-257's and TC-250's re-acceptance (text amended), and
   the first acceptance of TC-468 to TC-471 (Drafted). Amending TC-250 is
   the builder's call: two of its clauses described the replay.
+- **Review:** round 1, OpenAI Sol (low) over the whole diff and Gemini
+  Hydrogen (low, the Antigravity CLI) over the prose: Hydrogen APPROVE; Sol
+  two MINORs, adopted, fixed in `bc0e4e056`. Round 2 narrow: both
+  `VERDICT: APPROVE findings=0`.

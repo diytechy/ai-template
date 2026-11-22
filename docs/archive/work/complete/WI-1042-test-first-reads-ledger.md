@@ -157,6 +157,20 @@ Drafted and owes nothing.
 
 **Rows to file:** none.
 
+**Review** (the coordinator, 2026-11-22; queue-drill HANDOFF §4 step 4).
+Round 1 over `6915cde7d..18afb666e`, the generated views, the plan and this
+spec's copies withheld and the spec at the tip given whole: OpenAI Sol
+(`gpt-6.1-sol`, low, via `codex exec`) read the whole diff, and Gemini
+Hydrogen (`gemini-4-hydrogen-low`, via the Antigravity CLI) the prose part
+by file reference. Both were told D3 and the cut were ruled, and asked to
+judge the builder's calls (the generalised cut, TC-250's amendment, the
+side-branch ordering, the three unread states). Hydrogen: `VERDICT: APPROVE
+findings=0`. Sol: two MINORs, adopted: the cut dated what it carries before
+validating its own ledger, so an empty or malformed ledger at the cut could
+pass; the log blurred SR-247's own act commit with its trunk arrival. Fixed
+in `bc0e4e056` (red first). Round 2, narrow, over `18afb666e..bc0e4e056`:
+Sol and Hydrogen both `VERDICT: APPROVE findings=0`.
+
 ## Context
 
 Filed on trunk on 2026-11-21 from WI-1036's history-reader audit, class (c)
