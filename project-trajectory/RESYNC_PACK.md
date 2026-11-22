@@ -12079,6 +12079,21 @@ and `hooks/` (each now carries the kit's own `Component:` line),
 **Project-owned files — edit:** each of your own files in the scope above
 gains its `Component:` line.
 
+### Two private git helpers nothing called are deleted [since 1b22c9355]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** `integrate._last_commit_time` and `traj_parse._git` are
+gone. Nothing in the kit called either. `gen_trajectory.py` no longer
+re-exports `_git` from `traj_parse`. No command, check or output changes.
+
+**What to do.** Nothing is forced. If a script of your own imported either
+private name, from `integrate`, `traj_parse` or `gen_trajectory`, it now fails
+to import. Call `git` through `kitlib.git.git_out` instead.
+
+**Kit-owned files — overwrite:** `scripts/integrate.py`,
+`scripts/traj_parse.py`, `scripts/gen_trajectory.py`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
