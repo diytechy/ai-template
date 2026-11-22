@@ -892,6 +892,7 @@ def _gate_repo(
 
 
 def test_a_declared_seam_with_no_body_warns_plain_and_fails_strict(tmp_path):
+    """Implements: TC-474"""
     root = _gate_repo(tmp_path, '"""A.\n\nContracts: IF-001"""\n')
     proc = run_traj(root)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -1027,6 +1028,7 @@ def test_a_refused_header_is_a_finding_and_does_not_disarm_the_other_sources(
 
 
 def test_a_python_file_listed_outside_the_source_root_is_read_as_a_module(tmp_path):
+    """Implements: TC-474"""
     # Review round 1: a Python file `[arch-map] headers` lists outside the
     # source root was read through the comment-header reader, which finds no
     # contract in a docstring, so its body escaped the uniqueness and header
@@ -1052,6 +1054,7 @@ def test_a_python_file_listed_outside_the_source_root_is_read_as_a_module(tmp_pa
 
 
 def test_a_body_with_no_marker_is_refused_not_skipped(tmp_path):
+    """Implements: TC-474"""
     # Review round 1: a file with a `Contract IF-###:` body and no `Contracts:`
     # marker was skipped before its bodies were read, a module and a header
     # file alike, so a second body there escaped uniqueness. The body is read
@@ -1104,6 +1107,7 @@ def test_an_unparseable_listed_python_header_is_unreadable_not_a_crash(tmp_path)
 
 
 def test_a_refused_header_reds_the_cli_under_strict(tmp_path):
+    """Implements: TC-474"""
     # End-to-end through the real `main()` wiring, at the WARN-plain /
     # ERROR-under-`--strict` severity the gate's other three shapes ride.
     root = _gate_repo(
@@ -1162,13 +1166,28 @@ def test_an_unreadable_source_is_still_not_a_finding(tmp_path):
 def test_the_gate_shares_the_interfaces_check_opt_out_and_the_files_mode_vacuity(
     tmp_path,
 ):
+    """The process settings' `[checks] interfaces_check = false` and its
+    legacy one-word file each silence the gate, and a scan with no surface,
+    files mode or an absent source root, is vacuous.
+
+    Implements: TC-474"""
     root = _gate_repo(tmp_path, '"""A.\n\nContracts: IF-001"""\n')
     (root / "docs" / "interfaces-check").write_text("off\n", encoding="utf-8")
     assert check_trajectory.contract_body_findings(root) == []
     (root / "docs" / "interfaces-check").unlink()
     assert check_trajectory.contract_body_findings(root)
+    process = root / "docs" / "process.toml"
+    process.write_text("[checks]\ninterfaces_check = false\n", encoding="utf-8")
+    assert check_trajectory.contract_body_findings(root) == []
+    process.write_text("[checks]\ninterfaces_check = true\n", encoding="utf-8")
+    assert check_trajectory.contract_body_findings(root)
+    process.unlink()
     (root / "docs" / "stack.ini").write_text(
         "[paths]\nsrc = scripts\n[arch-map]\nmode = files\n", encoding="utf-8"
+    )
+    assert check_trajectory.contract_body_findings(root) == []
+    (root / "docs" / "stack.ini").write_text(
+        "[paths]\nsrc = absent\n", encoding="utf-8"
     )
     assert check_trajectory.contract_body_findings(root) == []
 
@@ -2730,7 +2749,8 @@ def test_a_note_only_cell_has_no_part_and_a_tag_on_it_is_a_finding(tmp_path):
 # --- WI-1001: an accepted automated case has a test declaring it --------------
 # A finding prints as `<level> - <TC>: no test declares it`. Each comparison is
 # of the whole list of them, so their number and order are pinned too. TC-428
-# pins the ruling's input table, TC-429 the sequence a case walks.
+# pins the ruling's input table, TC-429 the sequence a case walks; TC-475
+# verifies LLR-395 through both and through a declared test that fails.
 
 OWED_NOTE = "(owed by the tests commit)"
 TAG_MALFORMED_FILE = '"""Module text.\n\nImplements: TC-001, SR-002\n"""\n'
@@ -2773,7 +2793,7 @@ def _write_case_tree(root, rows, text=UNTAGGED_TEST, rel=TAGGED_FILE):
 
 
 def test_the_undeclared_rule_is_vacuous_with_no_tests_root_or_no_registry(tmp_path):
-    """Implements: TC-428"""
+    """Implements: TC-428, TC-475"""
     _write_test_file(tmp_path, TAGGED_FILE, UNTAGGED_TEST)
     no_registry = run_traj(tmp_path, "--strict")
     assert _undeclared(no_registry, "ERROR") == [], no_registry.stderr
@@ -2791,7 +2811,7 @@ def test_the_undeclared_rule_is_vacuous_with_no_tests_root_or_no_registry(tmp_pa
 
 
 def test_an_unparseable_registry_stops_the_run_before_the_undeclared_rule(tmp_path):
-    """Implements: TC-428"""
+    """Implements: TC-428, TC-475"""
     _write_test_file(tmp_path, TAGGED_FILE, UNTAGGED_TEST)
     registry = tmp_path / "docs" / "test" / "test-cases.toml"
     registry.parent.mkdir(parents=True)
@@ -2805,7 +2825,7 @@ def test_an_unparseable_registry_stops_the_run_before_the_undeclared_rule(tmp_pa
 
 
 def test_a_placeholder_row_owes_no_declaration(tmp_path):
-    """Implements: TC-428"""
+    """Implements: TC-428, TC-475"""
     _write_case_tree(tmp_path, [_case_row("TC-000")])
     placeholder_only = run_traj(tmp_path, "--strict")
     assert _undeclared(placeholder_only, "ERROR") == [], placeholder_only.stderr
@@ -2819,7 +2839,7 @@ def test_a_placeholder_row_owes_no_declaration(tmp_path):
 
 
 def test_a_drafted_case_owes_no_declaration_and_its_parts_are_still_held(tmp_path):
-    """Implements: TC-428"""
+    """Implements: TC-428, TC-475"""
     _write_case_tree(tmp_path, [_case_row(status="Drafted")])
     noted = run_traj(tmp_path, "--strict")
     assert _undeclared(noted, "ERROR") == [], noted.stderr
@@ -2838,7 +2858,7 @@ def test_a_drafted_case_owes_no_declaration_and_its_parts_are_still_held(tmp_pat
     ids=["no", "another-word", "absent-column", "blank"],
 )
 def test_a_case_not_automated_owes_no_declaration(tmp_path, automated, carrier):
-    """Implements: TC-428"""
+    """Implements: TC-428, TC-475"""
     if carrier == "toml":
         _write_case_tree(tmp_path, [_case_row(automated=automated)])
     else:
@@ -2867,7 +2887,7 @@ def test_a_case_not_automated_owes_no_declaration(tmp_path, automated, carrier):
 def test_an_eligible_case_is_clean_when_tagged_and_named_when_not(
     tmp_path, status, automated
 ):
-    """Implements: TC-428"""
+    """Implements: TC-428, TC-475"""
     row = _case_row(status=status, automated=automated, evidence=TAGGED_NODE)
     _write_case_tree(tmp_path, [row], TAGGED_TEST)
     tagged = run_traj(tmp_path, "--strict")
@@ -2881,7 +2901,7 @@ def test_an_eligible_case_is_clean_when_tagged_and_named_when_not(
 
 
 def test_a_part_in_an_unreadable_file_adds_no_undeclared_finding(tmp_path):
-    """Implements: TC-428"""
+    """Implements: TC-428, TC-475"""
     # Adequacy witness: a rule blind to the refused set reads both rows below
     # as undeclared, and this test fails in both phases.
     broken = "tests/test_broken.py"
@@ -2913,7 +2933,7 @@ def test_a_part_in_an_unreadable_file_adds_no_undeclared_finding(tmp_path):
 def test_an_eligible_untagged_case_is_named_whatever_its_cell_holds(
     tmp_path, evidence, untagged_parts
 ):
-    """Implements: TC-428"""
+    """Implements: TC-428, TC-475"""
     _write_case_tree(tmp_path, [_case_row(evidence=evidence)])
     proc = run_traj(tmp_path, "--strict")
     assert _undeclared(proc, "ERROR") == [_no_test()], proc.stderr
@@ -2928,7 +2948,7 @@ def test_an_eligible_untagged_case_is_named_whatever_its_cell_holds(
     ids=["misplaced", "malformed"],
 )
 def test_a_refused_tag_declares_nothing(tmp_path, text, shape):
-    """Implements: TC-428"""
+    """Implements: TC-428, TC-475"""
     _write_case_tree(tmp_path, [_case_row(evidence=TAGGED_FILE)], text)
     only = run_traj(tmp_path, "--strict")
     assert len(_tag_finding(only, "ERROR", TAGGED_FILE, 3, shape)) == 1, only.stderr
@@ -2941,8 +2961,28 @@ def test_a_refused_tag_declares_nothing(tmp_path, text, shape):
     assert _undeclared(beside, "ERROR") == [], beside.stderr
 
 
+FAILING_TAGGED_TEST = TAGGED_TEST + "    assert False\n"
+
+
+def test_a_declared_test_that_fails_leaves_its_case_clean(tmp_path):
+    """The rule reads declarations, not test outcomes: the case's one test is
+    validly tagged and fails when run, and the case reads clean.
+
+    Implements: TC-475"""
+    namespace = {}
+    exec(FAILING_TAGGED_TEST, namespace)
+    with pytest.raises(AssertionError):
+        namespace["test_a"]()
+    row = _case_row(evidence=TAGGED_NODE)
+    _write_case_tree(tmp_path, [row], FAILING_TAGGED_TEST)
+    proc = run_traj(tmp_path, "--strict")
+    assert _undeclared(proc, "ERROR") == [], proc.stderr
+    assert _equality_findings(proc, "ERROR") == [], proc.stderr
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
 def test_one_tag_clears_the_part_and_the_declaration_findings(tmp_path):
-    """Implements: TC-428"""
+    """Implements: TC-428, TC-475"""
     _write_case_tree(tmp_path, [_case_row(evidence=TAGGED_NODE)])
     untagged = run_traj(tmp_path, "--strict")
     assert _equality_findings(untagged, "ERROR") == [_no_tag(TAGGED_NODE)], (
@@ -2958,7 +2998,7 @@ def test_one_tag_clears_the_part_and_the_declaration_findings(tmp_path):
 
 
 def test_a_lanes_order_never_meets_the_undeclared_finding(tmp_path):
-    """Implements: TC-429"""
+    """Implements: TC-429, TC-475"""
     _write_case_tree(tmp_path, [_case_row(status="Drafted")])
     intent = run_traj(tmp_path, "--strict")
     assert _undeclared(intent, "ERROR") == [], intent.stderr
@@ -2981,7 +3021,7 @@ def test_a_lanes_order_never_meets_the_undeclared_finding(tmp_path):
 def test_an_accepted_case_with_no_tag_warns_plain_and_errors_strict(
     tmp_path, work_items
 ):
-    """Implements: TC-429"""
+    """Implements: TC-429, TC-475"""
     if work_items:
         write_wis(tmp_path, "WI-001,A,scripts,,,done,Shipped it.\n")
     _write_case_tree(tmp_path, [_case_row()])
@@ -2998,7 +3038,7 @@ def test_an_accepted_case_with_no_tag_warns_plain_and_errors_strict(
 
 
 def test_the_undeclared_finding_on_a_bootstrapped_scaffold(scaffold):
-    """Implements: TC-429"""
+    """Implements: TC-429, TC-475"""
     registry = scaffold / "docs" / "test" / "test-cases.toml"
     template = registry.read_text(encoding="utf-8") + "\n"
 

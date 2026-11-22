@@ -710,6 +710,20 @@ def test_rung_tiers_covers_the_ladder_and_every_input_spine_stage_reads():
     import inspect
 
     assert list(RULES.RUNG_TIERS) == list(RULES.STAGE_ORDER)
+    # The mapping LLR-393 states, rung by rung, by the tiers' names.
+    assert {
+        rung: [code for code, _keyword in tiers]
+        for rung, tiers in RULES.RUNG_TIERS.items()
+    } == {
+        "DevStg-Needs": ["SN", "STK"],
+        "DevStg-Boundary": ["B", "DA", "SUR"],
+        "DevStg-Reqs": ["SR"],
+        "DevStg-Arch": ["CMP"],
+        "DevStg-LLReqs": ["LLR"],
+        "DevStg-Tests": ["TC"],
+        "DevStg-Impl": ["evidence record"],
+        "DevStg-Release": [],
+    }
     named = [tier for tiers in RULES.RUNG_TIERS.values() for tier in tiers]
     keywords = [keyword for _code, keyword in named]
     codes = [code for code, _keyword in named]
