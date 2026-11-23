@@ -1,0 +1,60 @@
++++
+id = "WI-1055"
+title = "adjudicate: F-3's and WI-1050's rows, 24 amendments and 14 first acceptances, in one combined sitting"
+workstream = "process"
+specref = "docs/plans/2026-11-21-queue-drill/HANDOFF.md"
+sr_refs = ["SR-036", "SR-070", "SR-157", "SR-159", "SR-168", "SR-174", "SR-180", "SR-190", "SR-212", "SR-215", "SR-217", "SR-220", "SR-221", "SR-228", "SR-248"]
+needs = []
+buildtier = "medium"
+safety_class = "adjudication"
+brief = "combined"
+adjudicates = ["amendment:CMP-006", "amendment:IF-312", "amendment:LLR-005", "amendment:LLR-153", "amendment:LLR-180", "amendment:LLR-198", "amendment:LLR-199", "amendment:LLR-201", "amendment:LLR-210", "amendment:LLR-217", "amendment:LLR-244", "amendment:LLR-257", "amendment:LLR-263", "amendment:LLR-293", "amendment:SR-180", "amendment:SR-212", "amendment:TC-175", "amendment:TC-195", "amendment:TC-197", "amendment:TC-239", "amendment:TC-258", "amendment:TC-428", "amendment:TC-429", "amendment:TC-460", "first-acceptance:LLR-403", "first-acceptance:LLR-404", "first-acceptance:LLR-405", "first-acceptance:LLR-406", "first-acceptance:LLR-407", "first-acceptance:SR-248", "first-acceptance:TC-457", "first-acceptance:TC-468", "first-acceptance:TC-475", "first-acceptance:TC-480", "first-acceptance:TC-481", "first-acceptance:TC-482", "first-acceptance:TC-483", "first-acceptance:TC-484"]
+priority = 2
++++
+
+## Context
+
+Filed on trunk on 2026-11-22 by the queue drill's coordinator: the third
+automated adjudication sitting (queue-drill HANDOFF §0 step 2), on the
+operator's standing ruling for these sittings (HANDOFF §3.6, its first
+question: "Yes, run through antigravity cli (agy) model neon high"). It
+judges what F-3 (WI-1023) and WI-1050 left owed.
+
+**Scope.** Every row whose accepted text drifts from its recorded copy at
+`867d6361e` (`baseline_snapshot.refresh_ledger`), each as an `amendment:`
+token: F-3's text amendments (LLR-005, -153, -198, -199, -201, -210, -217,
+-244, -263, -293; SR-212; TC-195, -197, -239, -258), TC-460 (accepted by
+WI-1049, then amended by F-3's merge), WI-1050's LLR-257, the SR-180 chain
+F-3 retired (SR-180, LLR-180, TC-175, as removals), and IF-312 and
+CMP-006's `Notes` (off-spine, as at the earlier sittings); TC-428 and
+TC-429's routed `Verifies` change (WI-1050 added LLR-395); and every
+`Drafted` SR, LLR or TC as a `first-acceptance:` token (F-3's SR-248,
+LLR-403 to LLR-407 and TC-480 to TC-484; WI-1050's TC-457, TC-468 and
+TC-475).
+
+**Not in scope: the cell-only rows.** F-3 emptied `Module`, `CodeSymbol` and
+`Component` on every design row; the acceptance brief lists those rows, but
+the three cells are traced, so no row drifts for them. The operator ruled
+that removal "trace cells removed, requirement text unchanged" (2026-11-22,
+WI-1023's Deliverable), and this sitting's act carries that ruling: its
+copy of the design registry drops the cells.
+
+**How it runs** (HANDOFF §3.7; WI-1049's Context and Deliverable). The
+kit's own pieces on trunk with the launch by hand: the brief composed by
+`adjudicate_brief.compose` (through `scripts/coordinator/compose_lane.py`),
+the verdict path reserved and the request bound as the entry point does,
+one Gemini Neon session at high effort through the Antigravity CLI in plan
+mode, its reply kept verbatim as the verdict, `record_outcome`, and the act
+`adjudicate_act.compose_act` derives, its first snapshot tested read-only
+before it is taken. One session, never fanned out (PROCESS.md §6).
+
+## Done-when
+
+- [ ] The verdict is recorded beside its binding under
+      `docs/reviews/wi-1055-adjudicate-third-sitting/`, as the adjudicator
+      returned it, and `record_outcome` reads it recorded.
+- [ ] The act `compose_act` derives is taken, each part in its own commit,
+      the operator's batch ruling named for the design registry's copy; or,
+      if its first snapshot is refused, the choice is put to the operator.
+- [ ] Each MEANING amendment and RETURN row is listed in the Deliverable
+      with its finding, and its follow-up is filed or named.
