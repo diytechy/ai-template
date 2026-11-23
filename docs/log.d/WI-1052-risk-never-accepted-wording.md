@@ -41,3 +41,7 @@ commit hooks on. The record is in the row's Deliverable
   `test-cases.toml` +2,683.
 - **Acts owed:** LLR-239's and LLR-243's amendments (re-acceptance), and the
   first acceptance of TC-500 and TC-501.
+- **Review:** round 1, Hydrogen APPROVE; Sol two MAJORs, one adopted (the
+  two Details name no code) and one dismissed (IF-217's data cell states
+  the call contract by design). Round 2, narrow: Sol and Hydrogen APPROVE.
+  The record is in the Deliverable.

@@ -202,6 +202,21 @@ function, flag or test.
   LLR-243), both `Drafted`.
 - No routed traced change to an `Accepted` row.
 
+**Review** (the coordinator, 2026-11-22; queue-drill HANDOFF §4 step 4).
+Round 1 over `3c33b3783..f5b7d0a9c`, the generated views and this spec's
+copies withheld and the spec at the tip given whole. Each reviewer was told
+to judge every changed row as an adjudication sitting will, and was given
+SR-202's and SR-206's text and a check on the reading's changed contract.
+Gemini Hydrogen (`gemini-4-hydrogen-low`, the Antigravity CLI) read the
+prose: APPROVE, no findings. OpenAI Sol (`gpt-6.1-sol`, low) read the whole
+diff and raised two MAJORs. The first, that LLR-239's and LLR-243's Details
+kept inherited code names, was adopted (above, `5ad71d919`). The second,
+that IF-217's `data` cell names the call and its keys, was dismissed: an
+interface row's data cell states the call contract by design, and IF-217
+is Drafted and off-spine, outside the sittings' first-acceptance scope.
+Round 2, narrow, over `f5b7d0a9c..5ad71d919`: Sol and Hydrogen APPROVE, no
+findings.
+
 ## Context
 
 Filed on trunk on 2026-11-22 by the queue drill's coordinator, from
