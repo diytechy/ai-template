@@ -12332,6 +12332,27 @@ skills under `skills/`.
 (the migration), `docs/requirements/performance-budgets.csv` (`Refs`), and
 your own `docs/runtime-flows.md` where its prose named a design row's module.
 
+### The flat How-SW graph's legend names the component node [since 3c33b3783]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** When no component holds a module, the dashboard's How-SW
+panel draws the flat interface graph, and since interface rows name
+components that graph draws component nodes. Its legend listed only module,
+file and external actor, so a reader met a node colour the key did not
+explain. Both How-SW legends are now built from one table of node-kind words
+in `rendering/traj_render.py` (`SW_NODE_LABEL`, read by `sw_legend`), each
+swatch looked up in `SW_NODE_FILL`, so the flat legend gains a component
+entry in the colour its nodes are drawn with, and its caption names the
+component node too. The containment drill's legend reads byte for byte as
+before.
+
+**What to do.** Nothing is forced: regenerate `PROJECT_STATE.html` and a
+flat How-SW panel shows the fourth entry.
+
+**Kit-owned files — overwrite:** `scripts/rendering/traj_render.py`,
+`scripts/rendering/traj_views.py`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

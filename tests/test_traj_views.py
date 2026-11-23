@@ -192,6 +192,52 @@ def test_how_sw_graph_draws_component_and_party_nodes(tmp_path):
     assert html_of(tmp_path) == first
 
 
+def _flat_kinds_and_legend(gt, root):
+    """The flat How-SW panel's drawn `{(kind, fill)}` and its legend's
+    `[(swatch background, words)]`, rendered in-process as the generator
+    renders it when no component holds a module."""
+    mods = gt.sw_modules(root)
+    assert gt.sw_containment(root, mods) is None  # no component holds a module
+    _tab, panel = gt._sw_panel(mods, gt.sw_graph(root, mods))
+    drawn = set(
+        re.findall(r'<g><title>[^<]*\((\w+)\)</title><rect [^>]*fill="([^"]*)"', panel)
+    )
+    (legend,) = re.findall(r'<div class="legend">(.*?)</div>', panel)
+    entries = re.findall(
+        r'<span><i style="background:([^;"]*)[^"]*"></i>([^<]*)</span>', legend
+    )
+    return drawn, entries
+
+
+def test_the_flat_graph_legend_names_every_node_kind_it_draws(tmp_path, monkeypatch):
+    """With no component holding a module, rows reaching a component, a
+    module, a file and an external party make the flat graph draw all four
+    node kinds, and its legend names each kind it draws, in words opening
+    with the kind's name, beside a swatch of the fill its nodes are drawn
+    with. A kind the palette gains fails here until the fixture draws it, and
+    a changed fill moves the node and its swatch together: the swatch is the
+    node's own fill, not a second copy of it (WI-1054).
+
+    Implements: TC-508"""
+    make_repo(tmp_path)
+    write_arch_src(tmp_path)
+    (tmp_path / "docs" / "requirements" / "interfaces.toml").write_text(
+        if_row("IF-001", "CMP-001", "external:downstream adopter", "cli")
+        + if_row("IF-002", "docs/stack.ini", "src/m", "file"),
+        encoding="utf-8",
+    )
+    gt = load_script("gen_trajectory")
+    drawn, legend = _flat_kinds_and_legend(gt, tmp_path)
+    assert {kind for kind, _fill in drawn} == set(gt.SW_NODE_FILL)
+    for kind, fill in sorted(drawn):
+        named = [w for s, w in legend if s == fill and w.split()[0] == kind]
+        assert named, "the legend omits the {} node ({}): {}".format(kind, fill, legend)
+    monkeypatch.setitem(gt.SW_NODE_FILL, "component", "#0a0b0c")
+    drawn, legend = _flat_kinds_and_legend(gt, tmp_path)
+    assert ("component", "#0a0b0c") in drawn
+    assert ("#0a0b0c", "component") in legend
+
+
 def _drill_wires(sw):
     """`{(from block, to block, title)}` over every How-SW drill layer."""
     wires = set()
