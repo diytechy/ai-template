@@ -103,7 +103,8 @@ A coordinator session resumes with these steps, in this order.
    single-kind sitting needs its own preface (§9). Since WI-1059, the
    derived act names a flip whose parent stays `Drafted` as waiting,
    instead of listing it.
-5. **For the operator:** a push (trunk is ahead of the remote from
+5. **For the operator:** WI-1065's choice (its Context lists (a) to
+   (c)); a push (trunk is ahead of the remote from
    `80d64a5f3`). The builders' scratch folders `D:/rt*` may remain
    (`ls -d D:/rt*`). Later pushes stay the operator's.
 
@@ -195,6 +196,7 @@ adjudication sittings by Gemini Neon through `agy` (operator, 2026-11-21;
 |---|---|---|---|
 | WI-1060 | An act's copy writes only the rows it names (the revert loop's fix) | Building (plan approved with corrections, §0 step 1); one at a time with WI-1045 | Critiqued; the unfiltered suite runs on its branch before the merge; its fifteen amendments go to the seventh sitting |
 | WI-1064 | The parent-first rule reads a child design row's parent link | After WI-1027 | Filed from F-7's plan; owes a scope critique |
+| WI-1065 | The vocabulary migrator's record step in a record holding a row-by-row act | After WI-1060; **owes the operator's choice (a), (b) or (c)** | Filed from WI-1060's review |
 | WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6, §3.4) | F, after the N6 stop | Filed and critiqued (round 1, Sol and Argon, all findings applied, `a57782d59`). Order by `needs`: 1021; 1022; 1023; then 1024 and 1027 (either order); 1025; then 1026, 1028 and 1030; then 1029. Built side by side where `needs` allows, landing one at a time (plan revision 37). F-1 merged (`147fed185`), F-2 merged (`b2b0d9476`), F-3 merged (`4335c1a4d`); next 1024 and 1027 |
 | WI-1016 | A repository can switch off the implementation layer | After F | Re-critiqued once F lands; reverses SR-186, so its amendment is drafted for the operator |
 | WI-1018 | Row text a lane leaves stale is filed, and the first set is brought up to the code | After F-8 | F-8's text migration takes B1, B7 and B9 and likely more; this row then fixes what is left |
