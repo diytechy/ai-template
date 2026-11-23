@@ -12433,7 +12433,7 @@ the command's own line.
 `scripts/coherence.py`, `scripts/arch_inputs.py`, `scripts/trace_text.py`,
 `scripts/traj_parse.py`, `scripts/kitlib/spine.py`.
 
-### A derived act names a first-acceptance flip whose parent stays unaccepted as waiting, instead of listing it [since 50d4d3fbe]
+### A derived act names a first-acceptance flip whose parent stays unaccepted as waiting, instead of listing it [since 8db60ba58]
 
 *(Anchored at the preceding commit: the change lands in the commits after it.)*
 
