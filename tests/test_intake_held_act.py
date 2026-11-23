@@ -262,6 +262,26 @@ def test_a_held_meaning_verdict_mints_one_operator_row_and_one_pending_item(tmp_
     assert {OPEN_ITEMS, rel, trace.WATERMARK} <= set(changed)
 
 
+@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))
+def test_a_held_meaning_ruling_on_a_routed_link_alone_survives_another_act(tmp_path):
+    """The hole a whole-file copy left (WI-1060): SR-001's routed link alone is
+    re-pointed and ruled MEANING on a held rung, while an act on the same
+    registry re-accepts SR-002. That act writes SR-002 and keeps SR-001's
+    recorded link, so SR-001 still differs from its copy and the operator's row
+    is minted; a copy of the whole file had re-anchored the link and settled
+    the row with no operator act."""
+    root, before = _held_repo(tmp_path, extra=_sr002(SR2_ORIGINAL))
+    _write_srs(root, sn_refs="SN-002", extra=_sr002(SR2_AMENDED))
+    _commit(root, "re-point SR-001's link and amend SR-002")
+    SNAP.copy_live(root, reaccepts=frozenset({"SR-002"}))
+    _sit(root, {"SR-001": "MEANING"})
+    after = _commit(root, "SR-002's act, and SR-001 sat")
+    minted, refusal = _mint(root, before, after)
+    assert refusal is None, refusal
+    _rel, _meta, _oi, cells = _one_operator_row(root)
+    assert "SR-001" in _brief(cells) and "SR-002" not in _brief(cells)
+
+
 def test_each_registry_files_its_own_row_and_item(tmp_path):
     """The act is per registry, so one verdict over two registries files two
     items, and each item's command takes its own registry's act."""

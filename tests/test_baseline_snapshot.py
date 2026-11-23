@@ -2494,3 +2494,367 @@ def test_readers_carry_copied_without_loss(tmp_path):
     entries = load_script("gen_open_items")._ledger_entries(root)
     assert "copied" not in entries[0], entries
     assert entries[-1].get("copied") == [SR_REL], entries
+
+
+# --- the row-by-row act (WI-1060; SR-207, LLR-245, TC-240) ----------------------
+# An act used to copy each registry it wrote whole, so it was refused while any
+# row it did not name had drifted, and one unblessed amendment held every
+# blessed one in its registry. It now writes the rows it names and the rows that
+# follow live, and keeps every other drifted row at its recorded text, naming it
+# owed. The record's mirror rules judge the copy at the row (SR-179, LLR-178,
+# TC-173).
+
+
+def _act_or_fail(root, **kwargs):
+    """`copy_live`, its refusal read as the failure of a test that expects the
+    act to land."""
+    try:
+        return SNAP.copy_live(root, **kwargs)
+    except SystemExit as exc:
+        pytest.fail("the act was refused: {}".format(exc))
+
+
+def _copy_of(root, rel):
+    return (SNAP.snapshot_root(root) / rel).read_bytes()
+
+
+@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))
+def test_the_drills_case_records_two_rows_and_keeps_the_unblessed_one(tmp_path):
+    """The queue drill's case (WI-1060 Done-when 4): one registry holds a
+    blessed amendment (A, re-accepted), an unblessed amendment (B) and a row
+    ruled ACCEPT (C, its status moved). The act records A and C from live and
+    leaves B at its recorded text, drifted and owed, named in the summary and
+    the ledger; the mirror rules read the act clean at the commit and after.
+
+    Implements: TC-240
+    """
+    a, b, c = _ids("LLR-ID", 3)
+    seeded = (
+        _block("LLR-ID", a, "Accepted", "Row A")
+        + _block("LLR-ID", b, "Accepted", "Row B")
+        + _block("LLR-ID", c, "Drafted", "Row C")
+    )
+    root, run_git = _git_tree(tmp_path, lambda r: _append(r, LLR_REL, seeded))
+    _rewrite(root, LLR_REL, 'title = "Row A"', 'title = "Row A, amended, blessed"')
+    _rewrite(root, LLR_REL, 'title = "Row B"', 'title = "Row B, amended, unblessed"')
+    run_git("add", "-A")
+    run_git("commit", "-q", "-m", "the amendments, before the act")
+    _accept(root, LLR_REL, "LLR-ID", c, "Row C")
+    proc = _snapshot_cli(root, "--reaccepts", a)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "LEFT OWED: " + b in proc.stdout, proc.stdout
+    live = (root / LLR_REL).read_bytes()
+    assert _copy_of(root, LLR_REL) == live.replace(
+        b'title = "Row B, amended, unblessed"', b'title = "Row B"'
+    )
+    last = _last_act(root)
+    assert (last["accepted"], last["reaccepted"], last.get("kept")) == (
+        [c],
+        [a],
+        [b],
+    ), last
+    recorded = SNAP.rows_for(SNAP.load_all(root), LLR_REL, "LLR-ID")
+    rows = {r["LLR-ID"]: r for r in _SPINE_CARRIER.load(root / LLR_REL, "LLR-ID")}
+    assert [
+        SNAP.is_drifted(LLR_REL, "LLR-ID", rows[r], recorded) for r in (a, b, c)
+    ] == [
+        False,
+        True,
+        False,
+    ]
+    run_git("add", "-A")
+    assert CT.staged_snapshot_findings(root) == []
+    run_git("commit", "-q", "-m", "the act")
+    assert CT.committed_snapshot_findings(root) == []
+
+
+@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))
+@pytest.mark.parametrize("rel,id_col", _TIERS)
+def test_a_drifted_row_outside_the_act_is_KEPT_and_named_owed(tmp_path, rel, id_col):
+    """Row A is accepted while row B of the same tier carries drifted accepted
+    text. The act completes: it writes A, keeps B's recorded bytes and names B
+    as owed, whether the registry is named by a ref or not; naming B with
+    `--reaccepts` records it, and the act's stamp names B.
+
+    Implements: TC-240
+    """
+    a, b = _ids(id_col, 2)
+    seeded = _block(id_col, a, "Drafted", "Row A") + _block(
+        id_col, b, "Accepted", "Row B"
+    )
+    root, _git = _git_tree(tmp_path, lambda r: _append(r, rel, seeded))
+    _accept(root, rel, id_col, a, "Row A")
+    key, _column = _text_key(id_col)
+    _rewrite(root, rel, key + ' = "Row B"', key + ' = "Row B, rewritten unread"')
+    keeps_b = (root / rel).read_bytes().replace(b"Row B, rewritten unread", b"Row B")
+    ref = ["--accepts", Path(rel).name + "=the-sitting"]
+    proc = _snapshot_cli(root, *ref)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "LEFT OWED: " + b in proc.stdout, proc.stdout
+    assert _copy_of(root, rel) == keeps_b
+    assert _last_act(root).get("kept") == [b], _last_act(root)
+    proc = _snapshot_cli(root, *ref, "--reaccepts", b)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert _copy_of(root, rel) == (root / rel).read_bytes()
+    assert "re-accepted: " + b in _last_stamp_line(root), _last_stamp_line(root)
+
+
+@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))
+@pytest.mark.parametrize("rel,accepted_col,drifted_col", _SHARED)
+def test_in_a_SHARED_file_one_tiers_drift_is_kept_by_anothers_acceptance(
+    tmp_path, rel, accepted_col, drifted_col
+):
+    """Tiers sharing one file are rows of one copy: an act accepting a row of
+    one tier writes it and keeps the other tier's drifted row as recorded.
+
+    Implements: TC-240
+    """
+    (a,) = _ids(accepted_col, 1)
+    (b,) = _ids(drifted_col, 1)
+    seeded = _block(accepted_col, a, "Drafted", "Row A") + _block(
+        drifted_col, b, "Accepted", "Row B"
+    )
+    root, _git = _git_tree(tmp_path, lambda r: _append(r, rel, seeded))
+    _accept(root, rel, accepted_col, a, "Row A")
+    key, _column = _text_key(drifted_col)
+    _rewrite(root, rel, key + ' = "Row B"', key + ' = "Row B, rewritten unread"')
+    proc = _snapshot_cli(root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "LEFT OWED: " + b in proc.stdout, proc.stdout
+    assert _copy_of(root, rel) == (root / rel).read_bytes().replace(
+        b"Row B, rewritten unread", b"Row B"
+    )
+
+
+@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))
+def test_SEVEN_kept_rows_are_ALL_named_with_none_cut_off(tmp_path):
+    """The owed list is the work a person goes through; a capped list hides the
+    rows past the cap.
+
+    Implements: TC-240
+    """
+    a, *seven = _ids("SR-ID", 8)
+    seeded = _block("SR-ID", a, "Drafted", "Row A") + "".join(
+        _block("SR-ID", rid, "Accepted", "Row " + rid) for rid in seven
+    )
+    root, _git = _git_tree(tmp_path, lambda r: _append(r, SR_REL, seeded))
+    for rid in seven:
+        _rewrite(root, SR_REL, 'title = "Row {}"'.format(rid), 'title = "Rewritten"')
+    _accept(root, SR_REL, "SR-ID", a, "Row A")
+    proc = _snapshot_cli(root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "LEFT OWED: " + ", ".join(seven) in proc.stdout, proc.stdout
+    assert _last_act(root).get("kept") == seven
+
+
+def _sr_block(rid, status, title, sn_refs="SN-001", phase=1):
+    """One appended requirement row carrying a routed link (`sn_refs`) and a
+    silent trace cell (`phase`)."""
+    return (
+        '\n[requirement.{}]\ntitle = "{}"\nsn_refs = ["{}"]\nphase = {}\n'
+        'status = "{}"\n'.format(rid, title, sn_refs, phase, status)
+    )
+
+
+@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))
+def test_unclaimed_rows_and_silent_trace_cells_follow_live_but_a_routed_link_waits(
+    tmp_path,
+):
+    """The rule for the rows an act does not name: an accepted row whose routed
+    link (`SN-Refs`) moved keeps its recorded bytes; an accepted row whose
+    silent trace cell (`Phase`) alone moved takes them from live; a Drafted
+    row, a de-accepted row and a new Drafted row take their live text, and a
+    Drafted row gone from live leaves.
+
+    Implements: TC-240
+    """
+    a, routed, silent, drafted, deaccepted, gone, new = _ids("SR-ID", 7)
+    seeded = (
+        _sr_block(a, "Drafted", "Row A")
+        + _sr_block(routed, "Accepted", "Routed")
+        + _sr_block(silent, "Accepted", "Silent")
+        + _sr_block(drafted, "Drafted", "Drafted")
+        + _sr_block(deaccepted, "Accepted", "Deaccepted")
+        + _sr_block(gone, "Drafted", "Gone")
+    )
+    root, _git = _git_tree(tmp_path, lambda r: _append(r, SR_REL, seeded))
+    edits = (
+        (
+            _sr_block(routed, "Accepted", "Routed"),
+            _sr_block(routed, "Accepted", "Routed", sn_refs="SN-002"),
+        ),
+        (
+            _sr_block(silent, "Accepted", "Silent"),
+            _sr_block(silent, "Accepted", "Silent", phase=2),
+        ),
+        (
+            _sr_block(drafted, "Drafted", "Drafted"),
+            _sr_block(drafted, "Drafted", "Drafted, reworded"),
+        ),
+        (
+            _sr_block(deaccepted, "Accepted", "Deaccepted"),
+            _sr_block(deaccepted, "Drafted", "Deaccepted, reworded"),
+        ),
+        (_sr_block(gone, "Drafted", "Gone"), ""),
+    )
+    for old, new_text in edits:
+        _rewrite(root, SR_REL, old, new_text)
+    _append(root, SR_REL, _sr_block(new, "Drafted", "New"))
+    _rewrite(
+        root,
+        SR_REL,
+        _sr_block(a, "Drafted", "Row A"),
+        _sr_block(a, "Accepted", "Row A"),
+    )
+    _act_or_fail(root)
+    live = (root / SR_REL).read_bytes()
+    assert _copy_of(root, SR_REL) == live.replace(
+        _sr_block(routed, "Accepted", "Routed", sn_refs="SN-002").encode(),
+        _sr_block(routed, "Accepted", "Routed").encode(),
+    )
+    assert _last_act(root).get("kept") == [routed], _last_act(root)
+
+
+@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))
+def test_a_REMOVED_accepted_row_is_KEPT_until_an_act_retires_it(tmp_path):
+    """Row R, accepted and recorded, is deleted from live while row A is
+    accepted. The act keeps R in the copy, after the row it followed, and names
+    it owed; naming R with `--reaccepts` retires it, and the copy then equals
+    live.
+
+    Implements: TC-240
+    """
+    a, r = _ids("SR-ID", 2)
+    removed = _block("SR-ID", r, "Accepted", "Row R")
+    seeded = _block("SR-ID", a, "Drafted", "Row A") + removed
+    root, _git = _git_tree(tmp_path, lambda root: _append(root, SR_REL, seeded))
+    _accept(root, SR_REL, "SR-ID", a, "Row A")
+    _rewrite(root, SR_REL, removed, "")
+    proc = _snapshot_cli(root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "LEFT OWED: " + r in proc.stdout, proc.stdout
+    assert _copy_of(root, SR_REL) == (root / SR_REL).read_bytes() + removed.encode()
+    proc = _snapshot_cli(root, "--reaccepts", r)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert _copy_of(root, SR_REL) == (root / SR_REL).read_bytes()
+
+
+@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))
+@pytest.mark.parametrize("attempt", ["unnamed-drift", "named-edit", "dropped"])
+def test_each_laundering_attempt_is_refused_at_the_hook_and_on_the_history(
+    tmp_path, attempt
+):
+    """WI-1060 Done-when 3. A faithful act re-accepts A and keeps B, drifted.
+    Each forgery of its copy is refused at the commit (the staged rule the hook
+    runs) and, committed with the hook skipped, on every later check of the
+    history, the finding naming the row: B's drift carried in, A copied with an
+    edit, and B dropped though no act retired it.
+
+    Implements: TC-173
+    """
+    a, b = _ids("SR-ID", 2)
+    seeded = _block("SR-ID", a, "Accepted", "Row A") + _block(
+        "SR-ID", b, "Accepted", "Row B"
+    )
+    root, run_git = _git_tree(tmp_path, lambda r: _append(r, SR_REL, seeded))
+    _rewrite(root, SR_REL, 'title = "Row A"', 'title = "Row A, re-accepted"')
+    _rewrite(root, SR_REL, 'title = "Row B"', 'title = "Row B, unread"')
+    run_git("add", "-A")
+    run_git("commit", "-q", "-m", "the text")
+    _act_or_fail(root, reaccepts={a})
+    record = SNAP.snapshot_root(root)
+    if attempt == "unnamed-drift":
+        (record / SR_REL).write_bytes((root / SR_REL).read_bytes())
+        row, why = b, "did not name"
+    elif attempt == "named-edit":
+        _rewrite(record, SR_REL, "Row A, re-accepted", "Row A, edited in the record")
+        row, why = a, "named by the act"
+    else:
+        _rewrite(record, SR_REL, _block("SR-ID", b, "Accepted", "Row B"), "")
+        row, why = b, "no act retired it"
+    run_git("add", "-A")
+    staged = CT.staged_snapshot_findings(root)
+    assert any(row in f and why in f and "byte-identical" in f for f in staged), staged
+    run_git("commit", "-q", "-m", "the forged act")
+    assert CT.staged_snapshot_findings(root) == []
+    landed = CT.committed_snapshot_findings(root)
+    assert any(row in f and why in f and "LANDED" in f for f in landed), landed
+
+
+@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))
+def test_a_whole_file_copy_with_no_act_entry_is_refused_in_a_row_by_row_record(
+    tmp_path,
+):
+    """Once the record's ledger holds an entry listing kept rows, every write
+    is judged at the row, so a whole-file copy that adds no act entry carries
+    an unnamed row's drift and is refused at the commit and on the history.
+
+    Implements: TC-173
+    """
+    root, run_git = _git_tree(tmp_path)
+    assert "kept" in SNAP.read_acts(root)[-1], SNAP.read_acts(root)
+    sid, row = _first_row_at(root, "accepted")
+    _rewrite(root, SR_REL, row["Title"], row["Title"] + " (unread)")
+    run_git("add", "-A")
+    run_git("commit", "-q", "-m", "the text")
+    (SNAP.snapshot_root(root) / SR_REL).write_bytes((root / SR_REL).read_bytes())
+    run_git("add", "-A")
+    staged = CT.staged_snapshot_findings(root)
+    assert any(sid in f and "did not name" in f for f in staged), staged
+    run_git("commit", "-q", "-m", "a copy no act names")
+    landed = CT.committed_snapshot_findings(root)
+    assert any(sid in f and "LANDED" in f for f in landed), landed
+
+
+def test_a_record_written_before_its_first_row_by_row_act_reads_as_written(tmp_path):
+    """No migration (WI-1060 Done-when 5): a record whose ledger holds no entry
+    listing kept rows was written whole, so a write in it is judged as it was
+    made — byte-identical to live — including a commit adding no act entry
+    that writes a copy equal to live while absorbing drift (the vocabulary
+    migrator's record step).
+
+    Implements: TC-173
+    """
+    root, run_git = _git_tree(tmp_path)
+    ledger = root / _LEDGER_REL
+    legacy = re.sub(r"(?m)^kept = \[[^\]]*\]\n", "", ledger.read_text("utf-8"))
+    ledger.write_bytes(legacy.encode("utf-8"))
+    run_git("add", "-A")
+    run_git("commit", "-q", "--allow-empty", "-m", "a record from the old writer")
+    sid, row = _first_row_at(root, "accepted")
+    _rewrite(root, SR_REL, row["Title"], row["Title"] + " (reworded)")
+    run_git("add", "-A")
+    run_git("commit", "-q", "-m", "the rewording")
+    (SNAP.snapshot_root(root) / SR_REL).write_bytes((root / SR_REL).read_bytes())
+    run_git("add", "-A")
+    assert CT.staged_snapshot_findings(root) == []
+    run_git("commit", "-q", "-m", "the copies absorb the rewording")
+    assert CT.committed_snapshot_findings(root) == []
+
+
+@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))
+def test_the_act_ledger_DELETED_while_the_record_stands_is_refused(tmp_path):
+    """The ledger says which acts were taken and where the row-by-row judgement
+    begins, so removing it while the record stands is refused like removing a
+    copy.
+
+    Implements: TC-173
+    """
+    root, run_git = _git_tree(tmp_path)
+    (SNAP.snapshot_root(root) / SNAP.ACTS).unlink()
+    run_git("add", "-A")
+    found = CT.staged_snapshot_findings(root)
+    assert any("DELETED" in f and SNAP.ACTS in f for f in found), found
+
+
+@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))
+def test_a_commit_adding_an_entry_without_kept_is_refused(tmp_path):
+    """Implements: TC-400"""
+    root, run_git = _git_tree(tmp_path)
+    entry = '\n[[act]]\nseq = 2\ndate = "2026-11-23"\naccepted = []\n'
+    entry += 'reaccepted = ["SR-001"]\ncopied = ["{}"]\n'.format(SR_REL)
+    with (root / _LEDGER_REL).open("ab") as fh:
+        fh.write(entry.encode("utf-8"))
+    run_git("add", "-A")
+    findings = SNAP.added_acts_findings(root)
+    assert _naming(findings, "seq 2") and _naming(findings, "`kept`"), findings
