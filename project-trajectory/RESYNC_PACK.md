@@ -12445,7 +12445,7 @@ rewritten text to the kit's one all-or-nothing writer,
 file beside the registry (`docs/test/.test-cases.toml`), is flushed to disk
 and moved into place by one replace, which is retried a bounded number of
 times while Windows holds the target. When the write fails the registry
-keeps its bytes and the temporary file is removed. The text keeps the line
+keeps its bytes, and the temporary file is removed where it can be. The text keeps the line
 ends it was read with and is written as UTF-8, as before. A registry that
 opens with a byte-order mark now keeps it; the writer used to drop it on
 every regeneration that changed a cell. Two readings that

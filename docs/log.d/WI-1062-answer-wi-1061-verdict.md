@@ -20,7 +20,7 @@ commit hooks on and planning `none`. The record is in the row's Deliverable
   rewrite leaves the registry's bytes as before or fully rewritten, never
   partly written. LLR-406 says the registry is replaced whole: written in
   full beside it, moved in by one step, and a failed move leaves the bytes
-  and no copy. The registry writer in `arch_tags.py` now calls
+  as they were. The registry writer in `arch_tags.py` now calls
   `kitlib.observation.write_atomic` (IF-315, both modules CMP-006) instead
   of writing in place. The text keeps the line ends it was read with, and
   the file is still UTF-8. RESYNC entry added.

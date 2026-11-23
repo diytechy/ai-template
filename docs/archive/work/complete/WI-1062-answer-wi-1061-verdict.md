@@ -58,7 +58,7 @@ its declarations supply a part, so a keyless case no declaration names stays
 keyless and unchanged"; "The registry is then replaced whole by an
 all-or-nothing write: the rewritten registry is written in full beside it
 and moved into its place in one step, and a move that fails leaves the
-registry's bytes as they were and no copy beside it, so an interrupted write
+registry's bytes as they were, so an interrupted write
 leaves the registry as it was or as fully rewritten, never partly written.";
 and the command "reports the cases it changed, a case the test-case registry
 does not hold never among them". The rationale says why the scope, the
@@ -141,8 +141,8 @@ case the registry does not hold adds nothing: the registry's bytes change in
 the stale case's cell alone, and the command names that case alone. The
 keyless case no test file declares stays keyless, the command does not name
 it, and the registry's bytes are unchanged. With the move failing, the
-rewritten registry had been written in full beside the registry, the
-registry's bytes are unchanged and no copy is left beside it."
+rewritten registry had been written in full beside the registry, and the
+registry's bytes are unchanged."
 `trace.py --root . --regen-evidence` printed `trace: evidence regenerated
 for TC-483` and appended the three tests to its cell; that run went through
 the new write, and the registry's diff was that one line.
@@ -163,7 +163,7 @@ verdict named is driven:
 | each case the registry holds; a declaration naming a case it does not hold adds nothing and is not reported | (a) |
 | a run reports the cases it changed | the emptied-cell test, the keyless-case test, (a) |
 | a keyless case gains a key only when its declarations supply a part, and one no declaration names stays keyless and unchanged | the keyless-case test, (b) |
-| replaced whole: written in full beside it, moved in one step; a failed move leaves the bytes and no copy | (c) |
+| replaced whole: written in full beside it, moved in one step; a failed move leaves the bytes | (c) |
 | an interrupted rewrite leaves the bytes as before or as fully rewritten | (c) for before; each writing test for fully rewritten |
 | a run over current cells changes nothing | the evidence-column test, (b) |
 
