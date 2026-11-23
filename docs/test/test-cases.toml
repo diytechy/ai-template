@@ -4480,7 +4480,7 @@ tier = "Smoke"
 expected = "Every carrier yields the component and no problem. Each malformed file yields no component and a problem quoting its line as not a declaration, the file with a malformed line beside an exact one included; each doubled file yields a problem naming two components; each file with its line outside the carrier yields no component and the absent problem; and each file that cannot be read or decoded yields no component and the absent problem, and reading it raises nothing."
 automated = "Yes"
 evidence = "tests/test_component_headers.py::test_each_carrier_declares_through_its_own_comment_syntax; tests/test_component_headers.py::test_a_line_shaped_like_a_declaration_but_not_exact_is_malformed; tests/test_component_headers.py::test_a_malformed_line_beside_an_exact_one_leaves_the_file_undeclared; tests/test_component_headers.py::test_two_declarations_are_doubled_even_naming_one_id; tests/test_component_headers.py::test_a_declaration_outside_the_carrier_declares_nothing; tests/test_component_headers.py::test_a_file_that_cannot_be_read_or_decoded_is_absent"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-458]
@@ -4601,7 +4601,7 @@ tier = "Full"
 expected = "Each acceptance is dated at the commit that added its act's ledger entry: the re-pointing at the re-accepting act, not its text commit; the side-branch act ordered where it reached trunk."
 automated = "Yes"
 evidence = "tests/test_check_test_first.py::test_a_re_pointing_committed_before_its_act_is_dated_at_the_act;tests/test_check_test_first.py::test_an_act_on_a_side_branch_is_ordered_where_it_reached_trunk"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-469]
@@ -4656,7 +4656,7 @@ tier = "Full"
 expected = "The test fails when it is run, and the trajectory check still reads the case clean: no finding that no test declares it, no Evidence equality finding, and exit 0, since the rule reads declarations, not test outcomes."
 automated = "Yes"
 evidence = "tests/test_trajectory_arch.py::test_a_declared_test_that_fails_leaves_its_case_clean"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-480]

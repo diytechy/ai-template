@@ -2984,7 +2984,7 @@ title = "A requirement tier's row carrying a key the tier does not declare is re
 detail = "Reading a need, system-requirement, design-row or test-case registry in its TOML carrier is refused when any row, the example row included, sets a key the tier's declared schema does not name, naming the file, the row and the key, as an explicit empty cell and a nested table already are. A design row declares no file, symbol or component cell. An off-spine tier is not judged by this rule, and the legacy CSV carrier is the migrator's. The approval snapshot's copy is read without the rule: it is the acceptance act's record and keeps a cell the schema has since retired until the next act re-takes it. A revision read from history is read without it too, the stage's before-side and the id sweep included, since a revision before a schema change keeps the cells it retired. Those retired design-row cells stay classed traced, so their removal is a traced change and no accepted text drifts."
 rationale = "A key the schema does not declare is data no reader reads, so a retired cell would linger as a second, unchecked home of a fact; refusing it where the registry is read makes the schema change unrepresentable rather than merely unread."
 test_refs = "TC-481"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [design.LLR-405]
@@ -3011,5 +3011,5 @@ title = "A migration removes the design rows' retired trace cells from an adopte
 detail = "Run over a repository's design-row registry, the migration removes the file, symbol and component cells from every design row in place, a multi-line value included, and keeps every other byte, a prose cell quoting such an assignment included. It re-reads the result and refuses, writing nothing, unless it parses to the same rows less exactly those cells. A check mode reports the count of rows that would change and writes nothing; a registry with none of the cells is left untouched; an absent registry is reported and nothing is written."
 rationale = "An adopter's registry still carries the cells after an upgrade, and the loader refuses them; a mechanical removal that proves it changed nothing else lets the upgrade land without hand-editing every design row."
 test_refs = "TC-484"
-status = "Drafted"
+status = "Accepted"
 phase = 6
