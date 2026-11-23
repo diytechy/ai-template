@@ -6,14 +6,14 @@ _Baseline: `docs/archive/last_accepted` — each registry's copy, named by the c
 
 _Baseline: `docs/requirements/stakeholder-needs.toml` copied 2026-11-16 (db12d3857)._
 _Baseline: `docs/requirements/system-requirements.toml` copied 2026-11-23 (072f93670)._
-_Baseline: `docs/requirements/low-level-requirements.toml` copied 2026-11-23 (072f93670)._
-_Baseline: `docs/test/test-cases.toml` copied 2026-11-23 (072f93670)._
+_Baseline: `docs/requirements/low-level-requirements.toml` copied 2026-11-23 (76192dab6)._
+_Baseline: `docs/test/test-cases.toml` copied 2026-11-23 (76192dab6)._
 _Baseline: `docs/requirements/interfaces.toml` copied 2026-11-20 (0e67ffffb)._
 _Baseline: `docs/requirements/external.toml` copied 2026-11-16 (675f5b7a4)._
 _Baseline: `docs/requirements/components.toml` copied 2026-11-20 (0e67ffffb)._
 _Baseline: `docs/requirements/assumptions.toml` copied 2026-11-20 (46d518b56)._
 
-_Acceptance provenance: the last acceptance act is the act ledger's seq 192, dated 2026-11-23; its commit is not in the available history: no commit adds it yet, so the act is not committed._
+_Acceptance provenance: the last acceptance act is the act ledger's seq 193, dated 2026-11-23; its commit is not in the available history: no commit adds it yet, so the act is not committed._
 
 ## Off-spine census
 
@@ -22,56 +22,4 @@ _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies
 - `docs/requirements/interfaces.toml` — 237 changed, 2 added, 31 removed since the snapshot; ruling(s): WI-1014, WI-1021, WI-1022, WI-1023, WI-1042, WI-1048, WI-1052, WI-1059.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-1021, WI-1022.
 
-
-_No chain on a rung the operator-acceptance dial holds owes an act; every chain in this brief waits for automated adjudication._
-
-## Waiting for automated adjudication
-
-_Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
-
-<details>
-<summary>Waiting for automated adjudication — 1 chain(s): SR-251</summary>
-
-## SR-251 — A test case's evidence parts under the tests root are generated from the test files' declarations
-
-> **Requirement.** When requested, the delivered harness shall rewrite the parts under the declared tests root of the evidence cell of each test case the test-case registry holds as the test files' declarations of that case make them, keeping every other part of the cell as written.
-
-> **Rationale.** Realizes SN-002: a test case's tests were named in two homes, its evidence cell and the tests' own declarations, held equal by a check that asked a person to edit the cell by hand, and a hand-kept trace rots. Generating the test-file half removes the hand edit; the half no declaration can carry, a workflow, an inspection or a review record, stays authored. Generating is not checking: the evidence rule under SR-157 still reports a cell that differs from the declarations, and this row is the writer that brings it current. Only a case the test-case registry holds has a cell to rewrite: a retired case leaves the registry, and a test file still declaring it is the declaration rule's finding under SR-157, not this writer's to repair. A writer that rewrites a registry proves it changed nothing else before it writes, or writes nothing, and it replaces the registry whole, so a write cut short cannot leave half of the old registry and half of the new.
-
-
-### SR SR-251, Drafted — never accepted
-- **AcceptanceCriteria**
-  - before: A tests-root part a declaration names is kept, one no declaration names is removed, and a declared test the cell lacks is added; a part outside the tests root, a note, and a part in a file whose declarations cannot be read stay as written; only those cells of the test-case registry change, and a rewrite that would change anything else is refused with nothing written; a run over cells already current changes nothing; with no test-case registry or no tests root nothing is written and the missing input is reported.
-  - after: A tests-root part a declaration names is kept, one no declaration names is removed, and a declared test the cell lacks is added; a part outside the tests root, a note, and a part in a file whose declarations cannot be read stay as written; a run reports the cases it changed, and a declaration naming a case the test-case registry does not hold adds nothing to the registry and is not reported as changed; only those cells of the test-case registry change, and a rewrite that would change anything else in the registry is refused with nothing written; a rewrite interrupted while it writes leaves the registry's bytes as they were before it or as fully rewritten, never partly written; a run over cells already current changes nothing; with no test-case registry or no tests root nothing is written and the missing input is reported.
-- **Rationale**
-  - before: Realizes SN-002: a test case's tests were named in two homes, its evidence cell and the tests' own declarations, held equal by a check that asked a person to edit the cell by hand, and a hand-kept trace rots. Generating the test-file half removes the hand edit; the half no declaration can carry, a workflow, an inspection or a review record, stays authored. Generating is not checking: the evidence rule under SR-157 still reports a cell that differs from the declarations, and this row is the writer that brings it current. A writer that rewrites a registry in place proves it changed nothing else before it writes, or writes nothing.
-  - after: Realizes SN-002: a test case's tests were named in two homes, its evidence cell and the tests' own declarations, held equal by a check that asked a person to edit the cell by hand, and a hand-kept trace rots. Generating the test-file half removes the hand edit; the half no declaration can carry, a workflow, an inspection or a review record, stays authored. Generating is not checking: the evidence rule under SR-157 still reports a cell that differs from the declarations, and this row is the writer that brings it current. Only a case the test-case registry holds has a cell to rewrite: a retired case leaves the registry, and a test file still declaring it is the declaration rule's finding under SR-157, not this writer's to repair. A writer that rewrites a registry proves it changed nothing else before it writes, or writes nothing, and it replaces the registry whole, so a write cut short cannot leave half of the old registry and half of the new.
-- **Requirement**
-  - before: The delivered harness shall, on request, rewrite the parts of each test case's evidence cell under the declared tests root as the test files' declarations of that case make them, keeping every other part as written.
-  - after: When requested, the delivered harness shall rewrite the parts under the declared tests root of the evidence cell of each test case the test-case registry holds as the test files' declarations of that case make them, keeping every other part of the cell as written.
-
-### LLR LLR-406 — Drafted, never accepted
-_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
-- **LLR-ID**: LLR-406
-- **SR-Refs**: SR-251
-- **Title**: A test case's evidence parts under the tests root are generated from the test files' declarations
-- **Detail**: For each test case the test-case registry holds, the regeneration rewrites the parts of its evidence cell under the declared tests root as the test files' declarations of that case make them, read as the evidence rule reads them: a part a declaration names is kept as written, a parametrized case included; a part no declaration names is removed with its separator; a declared node the cell lacks is appended, joined by a semicolon and a space, in sorted order. Parts outside the tests root, parenthetical notes and parts in a file the declaration reader refused as unreadable are kept verbatim. A declaration naming a case the test-case registry does not hold adds nothing to the registry. A cell that becomes empty loses its key; a case with no evidence key gains one only when its declarations supply a part, so a keyless case no declaration names stays keyless and unchanged. The rewrite moves only those cells, keeps every other byte of the registry, and is refused, writing nothing, unless the result re-reads as the same rows with exactly those cells changed. The registry is then replaced whole by an all-or-nothing write: the rewritten registry is written in full beside it and moved into its place in one step, and a move that fails leaves the registry's bytes as they were, so an interrupted write leaves the registry as it was or as fully rewritten, never partly written. A command writes the regenerated cells and reports the cases it changed, a case the test-case registry does not hold… [277 more chars — read the registry row]
-- **Rationale**: A test case's tests were named in two homes, the cell and the tests' own declarations, held equal by a check that asked a person to edit the cell by hand; generating the test-file half removes the hand edit, while the half no declaration can carry, a workflow, an inspection or a review record, stays authored. Only a case the registry holds has a cell to write into, and a keyless case whose declarations supply nothing is already current. The registry is replaced whole rather than rewritten in place, because a write cut short in place leaves a registry that is neither the old one nor the new.
-- **TestRefs**: TC-483
-- **Status**: Drafted
-- **Phase**: 6
-
-### TC TC-483 — Drafted, never accepted
-_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
-- **TC-ID**: TC-483
-- **Verifies**: SR-251;LLR-406
-- **Level**: Unit
-- **Method**: Generate evidence cells: one holding a tagged part, a part outside the tests root, a tagged parametrized node, and an untagged part followed by a note, with a declared node missing; one naming only a part in an unreadable file; cells already equal to their declarations under each separator; an empty cell with one declaration. Then regenerate, through the regeneration command, a registry whose first case is current and whose second names a removed test, with a prose cell quoting an evidence assignment; regenerate it again; regenerate a registry whose case's only part no declaration names; regenerate a registry whose middle case has one declared test and no evidence key, set among comments and current cases, with a prose cell holding a line that reads as an evidence assignment; regenerate a case whose cell names one declared test and lacks three more, which their file declares out of sorted order and which all sort before the named one; regenerate one whose evidence key is written quoted, so the line rewrite cannot re-read as those cells alone; regenerate a registry whose one case names a removed test while another test file declares a case the registry does not hold; regenerate a registry holding a current case and a case with no evidence key that no test file declares; through the registry writer, regenerate a case naming a removed test with the step that moves the rewritten registry into place made to fail; regenerate a registry that opens with a byte-order mark and holds a … [177 more chars — read the registry row]
-- **Tier**: Smoke
-- **Expected**: The untagged part leaves with its separator, the missing node is appended, and every other part and the note stay as written; the unreadable file's part stays; equal cells come back unchanged; the empty cell gains its declaration. The writer changes the stale case's cell alone and leaves the quoted text and every other byte; the second run changes nothing; the case whose parts all leave loses its evidence key, and the command names it among the cases it changed. The keyless case gains an evidence key naming its declared test, the command names that case alone, and with that key's one line taken out the registry's bytes are as written. The three missing tests are appended after the named one, joined by a semicolon and a space, in sorted order. The quoted-key registry is refused and its bytes are unchanged. The case the registry does not hold adds nothing: the registry's bytes change in the stale case's cell alone, and the command names that case alone. The keyless case no test file declares stays keyless, the command does not name it, and the registry's bytes are unchanged. With the move failing, the rewritten registry had been written in full beside the registry, and the registry's bytes are unchanged. The registry that opens with a byte-order mark keeps it and every other byte, its stale case's cell alone rewritten, and the command names that case alone. Each repository missing an input is told which one, and nothing is written. Every cell of this repository's registry is cu… [6 more chars — read the registry row]
-- **Automated**: Yes
-- **Evidence**: tests/test_llr_trace_cells.py::test_the_evidence_column_is_generated_from_the_tags; tests/test_llr_trace_cells.py::test_a_rewrite_that_does_not_re_read_is_refused_and_writes_nothing; tests/test_llr_trace_cells.py::test_an_emptied_cell_loses_its_key_and_the_command_names_the_cases; tests/test_llr_trace_cells.py::test_with_no_registry_or_no_tests_root_the_regeneration_says_so; tests/test_llr_trace_cells.py::test_a_case_with_no_evidence_key_gains_one_and_no_other_byte_moves; tests/test_llr_trace_cells.py::test_missing_declared_tests_are_appended_in_sorted_order; tests/test_llr_trace_cells.py::test_a_declaration_naming_a_case_the_registry_does_not_hold_adds_nothing; tests/test_llr_trace_cells.py::test_a_failed_replacement_leaves_the_registry_and_no_copy_beside_it; tests/test_llr_trace_cells.py::test_a_keyless_case_no_declaration_names_stays_keyless_and_unchanged; tests/test_llr_trace_cells.py::test_a_registry_opening_with_a_byte_order_mark_keeps_it
-- **Status**: Drafted
-- **Phase**: 6
-
-</details>
+_No spine row differs from its `docs/archive/last_accepted` copy, and no row awaits a first acceptance._
