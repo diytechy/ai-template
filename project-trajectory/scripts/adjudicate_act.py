@@ -102,8 +102,9 @@ entry point consumes.
     None when `rev` carries every act the verdict authorizes in full, else
     the acts still owed there or the derivation's refusal, and
     `bound_brief(root, verdict, rev="HEAD")` the brief class a recorded,
-    actable verdict's binding records, or None. Reads git and the shipped
-    template only; writes nothing.
+    actable verdict's binding records, or None. Reads git, the shipped
+    template and the repository's scripts layout (`agent_brief.scripts_dir`)
+    only; writes nothing.
 """
 
 from __future__ import annotations
@@ -111,6 +112,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import acceptance_record
+import agent_brief
 import baseline_snapshot
 import intake
 import prompts
@@ -451,10 +453,10 @@ def _grouped(owed):
     return acts
 
 
-def _amendment_text(part, rel, wi):
-    """The amendment act's rendered rows and command."""
-    command = "python scripts/intake.py snapshot --reaccepts {}".format(
-        ",".join(part["reaccepts"])
+def _amendment_text(part, rel, wi, scripts):
+    """The amendment act's rendered rows and command, run from `scripts`."""
+    command = "python {}/intake.py snapshot --reaccepts {}".format(
+        scripts, ",".join(part["reaccepts"])
     )
     if part["verdict"]:
         command += " --verdict {}".format(rel)
@@ -474,22 +476,26 @@ def _amendment_text(part, rel, wi):
     )
 
 
-def _acceptance_text(accepts, registries, wi):
-    """The first-acceptance act's rendered rows and command."""
+def _acceptance_text(accepts, registries, wi, scripts):
+    """The first-acceptance act's rendered rows and command, run from
+    `scripts`."""
     rows = ", ".join(
         "{} ({})".format(rid, rel) for rel in sorted(accepts) for rid in accepts[rel]
     )
     return (
         "Flip `Status` from `Drafted` to `Accepted` for exactly these rows: {}.\n"
         "Then run, and commit the flips and the copy together, ending the commit "
-        'with `WI: {}`:\n\n    python scripts/intake.py snapshot --accepts "{}"'.format(
-            rows, wi, registries
+        'with `WI: {}`:\n\n    python {}/intake.py snapshot --accepts "{}"'.format(
+            rows, wi, scripts, registries
         )
     )
 
 
 def act_values(root, verdict, wi, rev="HEAD"):
-    """`({slot: value}, None)` for the act brief, or `(None, reason)`.
+    """`({slot: value}, None)` for the act brief, or `(None, reason)`. Its
+    commands and its `scripts` value name the repository's own scripts
+    directory (`agent_brief.scripts_dir`, the value the reviewer and worker
+    briefs take).
 
     Implements: SR-231, LLR-338"""
     acts, why = owed_acts(root, verdict, rev)
@@ -502,13 +508,15 @@ def act_values(root, verdict, wi, rev="HEAD"):
     amendment = acts.get("amendment")
     accepts = (acts.get("first-acceptance") or {}).get("accepts") or {}
     registries = baseline_snapshot.format_accepts(dict.fromkeys(accepts, wi))
+    scripts = agent_brief.scripts_dir(root)
     return {
         "verdict": rel,
         "wi": wi,
-        "amendment_act": _amendment_text(amendment, rel, wi)
+        "scripts": scripts,
+        "amendment_act": _amendment_text(amendment, rel, wi, scripts)
         if amendment
         else NONE_OWED,
-        "acceptance_act": _acceptance_text(accepts, registries, wi)
+        "acceptance_act": _acceptance_text(accepts, registries, wi, scripts)
         if accepts
         else NONE_OWED,
         "registries": registries or NONE_OWED,

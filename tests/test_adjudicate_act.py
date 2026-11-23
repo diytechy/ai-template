@@ -14,6 +14,7 @@ an in-memory fake would test a reader the module does not have.
 """
 
 import inspect
+import re
 import shlex
 import shutil
 import subprocess
@@ -654,6 +655,39 @@ def test_the_composed_act_brief_names_its_verdict_and_trailer(tmp_path):
     assert VERDICT in text
     assert "WI: {}".format(WI) in text
     assert not act.prompts.slots(text)
+
+
+@pytest.mark.parametrize(
+    "layout,scripts",
+    [
+        ("project-trajectory/scripts/check.py", "project-trajectory/scripts"),
+        ("scripts/check.py", "scripts"),
+    ],
+    ids=["this-repository", "scaffold"],
+)
+def test_the_filled_act_names_the_repositorys_own_scripts_directory(
+    tmp_path, layout, scripts
+):
+    """Implements: TC-368"""
+    # The act brief named `scripts/intake.py`, the scaffold's path, in its
+    # instructions and its commands alike, so an act taken in this repository
+    # exactly as worded failed (WI-1051). It now takes the scripts directory
+    # the reviewer and worker briefs take: every mention of the snapshot
+    # script, instruction or command, names the repository's own.
+    repo = _combined_repo(tmp_path)
+    _write(repo, layout, "")
+    _commit(repo, "the layout's scripts directory")
+    text, why = act.compose_act(repo, VERDICT, WI)
+    assert why is None, why
+    commands = [
+        ln.strip() for ln in text.splitlines() if ln.strip().startswith("python ")
+    ]
+    assert len(commands) == 2, commands
+    for command in commands:
+        assert shlex.split(command)[1] == "{}/intake.py".format(scripts), command
+    prefixes = re.findall(r"([\w./-]*)intake\.py", text)
+    assert len(prefixes) == 4, prefixes
+    assert set(prefixes) == {scripts + "/"}, prefixes
 
 
 def test_a_two_registry_act_says_which_rows_each_accepts_token_covers(tmp_path):

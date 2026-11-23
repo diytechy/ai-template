@@ -235,6 +235,8 @@ def test_the_act_brief_is_a_shipped_prompt_with_strict_slots():
     key = prompts.ADJUDICATE_ACT
     assert prompts.KIT_PROMPTS[key] == "adjudicate-act.template.md"
     text = prompts.load(key)
+    # `scripts` (WI-1051): the directory the act's snapshot script runs from,
+    # the value the reviewer and worker briefs take.
     assert prompts.slots(text) == {
         "verdict",
         "wi",
@@ -242,6 +244,7 @@ def test_the_act_brief_is_a_shipped_prompt_with_strict_slots():
         "acceptance_act",
         "registries",
         "accepts_rows",
+        "scripts",
     }
     values = dict.fromkeys(prompts.slots(text), "x")
     assert not prompts.slots(prompts.fill(key, text, values))

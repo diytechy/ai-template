@@ -103,6 +103,6 @@ Then exactly one machine line:
 
     OUTCOME: ACCEPT|RETURN rows=N
 
-`APPROVE` only when EVERY row you were shown is accepted. Only a row marked `[AWAITING FIRST ACCEPTANCE]` may be ruled `ACCEPT`. Commit the verdict file (an adjudication is a recorded verdict — its one home), ending that commit with the trailer `WI: {wi}` — the coordinator learns a judgement is recorded from that trailer and from nothing else, so a verdict committed without it leaves this row open.
+`ACCEPT` only when EVERY row you were shown is accepted. Only a row marked `[AWAITING FIRST ACCEPTANCE]` may be ruled `ACCEPT`. Commit the verdict file (an adjudication is a recorded verdict — its one home), ending that commit with the trailer `WI: {wi}` — the coordinator learns a judgement is recorded from that trailer and from nothing else, so a verdict committed without it leaves this row open.
 
 Then stop. The sitting ends at that committed verdict: the later act turn flips each row you ruled `ACCEPT` and takes its copy, and a row you RETURNED stays `Drafted`, with its `## Dispositions` follow-up already part of the verdict.
