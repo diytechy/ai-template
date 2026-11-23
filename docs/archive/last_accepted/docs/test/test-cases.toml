@@ -4667,7 +4667,7 @@ tier = "Smoke"
 expected = "The first row is placed at both components and the second at the one its case names; the external owner and the interface-free case place nothing, and the example case is not read. The two unplaced rows are counted and named on one line, and of twelve the line names ten and counts two more. The component view holds each placed row and its requirement in its components, lists the unplaced rows and counts them in its census; the state view shows each placed row's components and the word unplaced for the others. The project's check passes with its row unplaced, its report counting that row as unplaced."
 automated = "Yes"
 evidence = "tests/test_llr_trace_cells.py::test_a_design_row_is_placed_through_the_interfaces_its_cases_name; tests/test_llr_trace_cells.py::test_the_views_show_where_each_design_row_sits; tests/test_trace.py::test_an_unplaced_design_row_changes_no_exit_code"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-481]
@@ -4678,7 +4678,7 @@ tier = "Smoke"
 expected = "Each of the first reads is refused naming the registry file, the row and the key; the declared row and the interface row read, and the snapshot's row and the history tree's row read with their retired cells. The three retired cells are classed traced, and the row's accepted text is the same with and without them, so removing them is no accepted-text change."
 automated = "Yes"
 evidence = "tests/test_llr_trace_cells.py::test_the_loader_refuses_a_key_a_requirement_tier_does_not_declare; tests/test_llr_trace_cells.py::test_every_refusal_names_the_file_the_row_and_the_key; tests/test_llr_trace_cells.py::test_the_retired_design_cells_stay_classed_traced"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-482]
@@ -4689,7 +4689,7 @@ tier = "Smoke"
 expected = "The index maps each declared id to its files, sorted, the header file included and the prose id absent. The listing follows the design rows the index names for the file and leaves out a case verifying only the system requirement; the command prints the linked test file and exits 0 for the stem, and exits 1 for the other, saying no indexed file matches. The undecodable file, the failed read and the missing header add nothing and the rest is indexed as before; with the source root removed the index holds the header's id alone. The build brief's code map lists the declared row's file and marks the undeclared row as having none."
 automated = "Yes"
 evidence = "tests/test_llr_trace_cells.py::test_the_implements_index_feeds_the_module_listing; tests/test_llr_trace_cells.py::test_the_build_brief_marks_a_design_row_no_declaration_names; tests/test_llr_trace_cells.py::test_the_index_reads_past_what_it_cannot_read"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-483]
@@ -4711,7 +4711,7 @@ tier = "Smoke"
 expected = "The reporting run counts one row and writes nothing; the writing run removes exactly the three cells, keeps the quoted text and every other byte, and its result reads under the loader's key rule; the next run counts none and writes nothing; the command exits 0. The CRLF registry is written back byte for byte less the three cells' lines, every line end still CRLF; the literal value is removed whole, and the kept literal cell and every other byte stay as written. The absent registry is reported, nothing is written and the command exits 0; the quoted-key registry is refused naming the registry, its bytes unchanged."
 automated = "Yes"
 evidence = "tests/test_llr_trace_cells.py::test_the_migration_drops_the_three_cells_and_nothing_else; tests/test_llr_trace_cells.py::test_the_migration_drops_a_multi_line_literal_value; tests/test_llr_trace_cells.py::test_the_migration_keeps_crlf_line_ends; tests/test_llr_trace_cells.py::test_a_migration_that_does_not_re_read_is_refused_and_writes_nothing; tests/test_llr_trace_cells.py::test_an_absent_registry_is_reported_and_nothing_is_written"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-504]
@@ -4721,7 +4721,7 @@ method = "Over a repository of two components with two interface rows, state the
 tier = "Full"
 expected = "With the source root scanned, the two bodies are an error, the exit is 1 and no dormant line appears. In files mode, and with the source root absent, each run prints one warning line saying the contract bodies of 2 interface rows were not checked and naming files mode or the absent source root as why, no finding about the second body appears, and the exit is 0. With the interfaces check off, or with no interface row, no dormant line appears and the exit is 0."
 automated = "Yes"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 evidence = "tests/test_trajectory_arch.py::test_with_no_scan_surface_the_body_check_reports_itself_dormant"
 
@@ -4733,7 +4733,7 @@ tier = "Full"
 expected = "In each render, every node kind the graph draws has an entry in the legend beneath it naming that kind in words beside a swatch of the fill that kind's nodes are drawn with, so after the change the component entry's swatch carries the new fill."
 automated = "Yes"
 evidence = "tests/test_traj_views.py::test_the_flat_graph_legend_names_every_node_kind_it_draws"
-status = "Drafted"
+status = "Accepted"
 phase = 3
 
 [test.TC-500]
@@ -4743,7 +4743,7 @@ method = "Driven on real git repositories, the advisory for an assumption whose 
 tier = "Full"
 expected = "The first says the risk has reopened and reads unproven until the risk is accepted again, names the amended text as the trigger, and does not say never accepted. The second and third each say the risk was never accepted and reads unproven until an act accepts it, carry the reader's reason, and say neither reopened nor accepted again. The fourth and fifth each carry the reading's own reason, naming the shallow clone or the act record, and say neither reopened nor never accepted."
 automated = "Yes"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 evidence = "tests/test_accepted_risk.py::test_the_advisory_claims_neither_where_the_record_cannot_be_read_whole; tests/test_accepted_risk.py::test_the_advisory_says_a_risk_an_act_accepted_has_reopened; tests/test_accepted_risk.py::test_the_advisory_says_a_risk_no_act_accepted_was_never_accepted"
 
@@ -4754,7 +4754,7 @@ method = "The release rule called on in-memory rows: a falsified assumption with
 tier = "Smoke"
 expected = "Each fails once, naming the assumption and the requirement. The first says the risk has reopened, names the changed text as the trigger and says it covers nothing until the risk is accepted again, and does not say never accepted. The second says the risk was never accepted and covers nothing until an act accepts it, carries the reading's reason, and says neither reopened nor accepted again. The third and fourth each carry the reading's own reason and say neither reopened nor never accepted."
 automated = "Yes"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 evidence = "tests/test_assumption_rules.py::test_the_release_gate_words_an_unproven_risk_by_why_it_reads_unproven"
 
@@ -4765,6 +4765,6 @@ method = "Run the orphan rules directly over four design rows: an Accepted row v
 tier = "Smoke"
 expected = "The two verified rows are not reported; the unverified Accepted row is reported as having no test case, naming it; the Drafted row is not reported. The project's Drafted row is not reported as lacking a test case and the check passes; Accepted, it is reported as having no test case, naming the row, and the check fails."
 automated = "Yes"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 evidence = "tests/test_llr_trace_cells.py::test_a_design_row_is_discharged_by_a_case_of_any_kind; tests/test_trace.py::test_draft_llr_is_exempt_from_tc_rule"

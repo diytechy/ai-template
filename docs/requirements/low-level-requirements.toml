@@ -2975,7 +2975,7 @@ title = "A design row sits where the interfaces its verifying test cases name ar
 detail = "For each pair of a test case and a design row its verifies cell names, the row is placed at the owner of each interface the same case names, where that owner is a component; an interface owned by an external party places nothing, and a row placed at several components is placed at each. Example rows are not read. A row no case places is unplaced. The generated component view lists each placed row in its components and each unplaced row in its unplaced table, counted in its census; the state view's design-row detail shows a placed row's components and the word unplaced for the rest; and the strict check's report prints one line counting the placed and unplaced rows, naming the first ten unplaced and counting the rest. Being unplaced changes no exit code."
 rationale = "A row that named its component restated by hand a fact the interfaces and the cases verifying it already hold, and the copy drifted when the code moved; deriving it leaves one home. Counting rather than refusing keeps a decomposition whose interface is not yet named legal while keeping the gap visible."
 test_refs = "TC-480"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [design.LLR-404]
@@ -2993,7 +2993,7 @@ title = "The files realizing a design row are read from the code's back-link dec
 detail = "One index maps each spine id to the files holding a back-link declaration, as LLR-204's grammar reads one, that names it, repository-relative and sorted, over the declared source root and the files the scan profile's header list names. It is read as text, so it holds in any language and with no parser, generated on every read and never authored; a row no declaration names is absent from it. With the declared source root absent, the index holds what the listed header files declare; a file that cannot be read as text, its bytes not decoding or its read failing, and a listed header that is not a file contribute nothing while the rest of the index is built. The build brief's code map lists each design row's indexed files and marks a row the index lacks as having none."
 rationale = "The design rows' file and symbol cells pointed down at facts the code's back-links already stated upward, and the two drifted apart, reopening accepted rows when code moved; reading the back-links once, in one place, keeps every reader on one answer."
 test_refs = "TC-482"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [design.LLR-406]
@@ -3020,5 +3020,5 @@ title = "A design row past Drafted is discharged by a test case verifying it, an
 detail = "A design row is discharged when a live test case's verifies cell names it, whatever that case's verification kind. This is what the design tier requires in the cross-row orphan pass LLR-201 places ('an LLR its SR parent and TC'): the pass reports a design row past Drafted that no live case verifies, naming the row, and the strict check fails on it; a Drafted design row that no case verifies is not reported while it stays Drafted."
 rationale = "Binding discharge to a code symbol the row named pointed down at the code, so every rename reopened an accepted row while the code's own back-links already stated the same link upward; the test case verifying the row is the evidence of the row's own kind. A Drafted row is still being written and makes no claim yet, so the rule reaches it when it leaves Drafted. LLR-201 decides where the cross-row rules run and lists this one among them; this row decides what the design tier requires of it."
 test_refs = "TC-485"
-status = "Drafted"
+status = "Accepted"
 phase = 6
