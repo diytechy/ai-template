@@ -187,6 +187,7 @@ import bookkeeping
 import census
 import consolidate
 import hats
+import record_rows
 import rejudge
 import schedule
 import trace
@@ -235,14 +236,10 @@ def normalize_checks_stage(value):
 # The traced cells that ROUTE to adjudication rather than staying silent
 # (§A5.1 for `SN-Refs`/`Verifies`; the WI-388 ruling for LLR `SR-Refs` —
 # recorded at acceptance_record.SPINE_TRACED_CELLS, the cell-split table's
-# home). Keyed per registry so a same-named column elsewhere never rides in.
-ROUTED_TRACED_CELLS = {
-    "docs/requirements/system-requirements.toml": frozenset(
-        {"SN-Refs", "Boundary-Refs"}
-    ),
-    "docs/requirements/low-level-requirements.toml": frozenset({"SR-Refs"}),
-    "docs/test/test-cases.toml": frozenset({"Verifies"}),
-}
+# home). Its home is `record_rows` since WI-1060, because the acceptance
+# record's writer and judge read it too (an act refreshes such a cell only
+# through its row's own act); this mint reads it by its old name.
+ROUTED_TRACED_CELLS = record_rows.ROUTED_TRACED_CELLS
 
 # The disposition row's face: the R3 outcome vocabulary, verbatim in the title
 # so the claiming worker reads its whole authority off the row.
@@ -891,8 +888,9 @@ def _held_act_draft(registry, rows):
     """The operator row and item for `rows` (`{row id: verdict path}`), the rows of
     one `registry` held for the operator's act. The command names no verdict: the
     ledger's verdict marks a session's own CLARITY act, and this act is the
-    operator's. It copies the whole registry, so option (a) states what widens it.
-    The title is the event's identity, so a replay mints nothing.
+    operator's. It writes these rows alone (WI-1060: an act copies the rows it
+    names), so option (a) asks for no other row. The title is the event's
+    identity, so a replay mints nothing.
 
     Implements: SR-174, LLR-153"""
     names, by = ", ".join(sorted(rows)), " and ".join(sorted(set(rows.values())))
@@ -917,9 +915,9 @@ def _held_act_draft(registry, rows):
             "lists the rows as drifted.",
             "options": "- (a) TAKE THE ACT: on trunk, in its own commit after the "
             "text, run `{}`, with <record> naming your record of the act. The act "
-            "copies the whole registry: name beside these rows any other row of it "
-            "unanchored by then, another landing's waiting item included. The ruling "
-            "commit writes the operator row's Done-when or closes it.\n- (b) RETURN THE "
+            "records these rows alone and leaves any other drifted row of the "
+            "registry for its own act. The ruling commit writes the operator row's "
+            "Done-when or closes it.\n- (b) RETURN THE "
             "TEXT: name what is wrong; the rows are reworked and sat again, and the "
             "ruling commit does the same.".format(command),
             "recommendation": "Read the verdict and the live rows: the sitting's own "
@@ -932,8 +930,9 @@ def _held_act_drafts(root, before, after):
     """`(drafts, row ids, refusal)`: one owner row per registry over the rows the
     range's latest accepted rulings hold for the operator's act (MEANING, blessed
     or not, unanchored at `after`, on a rung the dial holds, at the text the
-    verdict bound). A snapshot act copies a whole registry, so its item is the
-    registry's, not a verdict's. A copy that cannot be read refuses the mint.
+    verdict bound). A snapshot act's `--accepts` names one registry, so its item
+    is the registry's, not a verdict's. A copy that cannot be read refuses the
+    mint.
 
     Implements: SR-174, LLR-153"""
     ruled = _latest_rulings(root, before, after)
@@ -3639,20 +3638,20 @@ def _cmd_snapshot(args):
     launder exactly the re-blessing those rows owe (repo-lock D-10's sequencing
     rule, with "stamping hashes" swapped for "copying files").
 
-    THE REFRESH IS AUTHORITY-GATED ROW BY ROW (`baseline_snapshot.
-    refresh_refusal`, 2026-08-20; per row since SR-207). It is the door the
-    adversarial round found standing open: creating the record was guarded and
-    rewriting it was not, so a two-commit path — amend an Accepted row, then
-    refresh — re-blessed the amendment with every check passing. A row whose
-    accepted text drifted from its recorded copy rides a refresh only on its own
-    `Status` flip or when `--reaccepts <ROW-ID>[,<ROW-ID>...]` names it — the
-    re-acceptance a sitting rules without moving the Status; the ids land in
-    the snapshot's prose stamp. `--accepts <registry>=<ref>` NAMES THE ACT: the
-    ref is an operator's citation, recorded into the stamp and validated by nothing,
-    because nothing can, and it copies the ONE registry it names (WI-571; a bare
-    `--accepts` used to mute the gate for the whole tree) — but it clears none
-    of that registry's rows, since a registry-wide pass let one row's acceptance
-    bless another row's unreviewed edit. The values are `;`-joined
+    THE REFRESH WRITES ROW BY ROW (WI-1060; `baseline_snapshot.copy_live`).
+    The door the adversarial round found standing open (2026-08-20) — a
+    two-commit path, amend an Accepted row then refresh, re-blessed the
+    amendment with every check passing — is closed by construction: a row
+    whose accepted text drifted from its recorded copy reaches the record only
+    on its own `Status` flip or when `--reaccepts <ROW-ID>[,<ROW-ID>...]` names
+    it (the re-acceptance a sitting rules without moving the Status; the ids
+    land in the snapshot's prose stamp), and an act leaves every other drifted
+    row at its recorded text and prints it as LEFT OWED. An act that would
+    write nothing over drift is refused, naming the rows that stay owed.
+    `--accepts <registry>=<ref>` NAMES THE ACT: the ref is an operator's
+    citation, recorded into the stamp and validated by nothing, because
+    nothing can, and it writes the ONE registry it names (WI-571) — but it
+    carries none of that registry's drifted rows. The values are `;`-joined
     `REGISTRY=REF` pairs and comma-joined row ids
     (`baseline_snapshot.parse_accepts`, `parse_reaccepts`). Traced-cell
     refreshes (the common case) still need no flag at all. `--verdict <path>`
@@ -3682,8 +3681,9 @@ def _cmd_snapshot(args):
     written = baseline_snapshot.copy_live(
         root, seed=args.seed, accepts=accepts, reaccepts=reaccepts, verdict=verdict
     )
+    kept = baseline_snapshot.read_acts(root)[-1].get("kept", []) if written else []
     summary = baseline_snapshot.act_summary(
-        written, args.seed, accepts, reaccepts, verdict
+        written, args.seed, accepts, reaccepts, verdict, kept
     )
     return _cli_result(None, summary)
 
@@ -3758,15 +3758,18 @@ def main(argv=None):
     )
     adj.set_defaults(func=_cmd_adjudicate)
     # The slot the retired `attest` subcommand reserved, filled. The destination
-    # changed — a whole-file copy, not a ledger line or a digest cell — so the
-    # name changed with it, and there is deliberately no `--rows`: a whole-file
-    # mirror has no row scope to take. `--reaccepts` names rows, but as what the
-    # act BLESSES, never as a narrower copy — the file still moves whole.
+    # changed — a copy, not a ledger line or a digest cell — so the name changed
+    # with it, and there is deliberately no `--rows`: an act's rows are what it
+    # accepts and what `--reaccepts` names, and since WI-1060 the copy writes
+    # exactly those (and the rows that follow live), leaving every other drifted
+    # row at its recorded text.
     snap = sub.add_parser(
         "snapshot",
-        help="copy every spine + acceptance-carrying registry into "
-        "docs/archive/last_accepted/ — the record of WHAT TEXT an acceptance "
-        "blessed. Run it in the same reviewed commit as the Status edits",
+        help="write into docs/archive/last_accepted/ the rows an acceptance act "
+        "names, copied from the live registries — the record of WHAT TEXT an "
+        "acceptance blessed; other drifted rows keep their recorded text and are "
+        "printed as LEFT OWED. Run it in the same reviewed commit as the Status "
+        "edits",
     )
     snap.add_argument(
         "--seed",
@@ -3781,18 +3784,18 @@ def main(argv=None):
         default=None,
         metavar="REGISTRY=REF",
         help="NAME THE ACCEPTANCE ACT this refresh rides, PER REGISTRY: `;`-joined "
-        "`<registry>=<ref>` pairs. A ref copies the ONE registry it names and "
-        "lands in the snapshot's prose stamp; it clears none of that registry's "
-        "drifted rows (name those with --reaccepts)",
+        "`<registry>=<ref>` pairs. A ref writes the ONE registry it names and "
+        "lands in the snapshot's prose stamp; it carries none of that "
+        "registry's drifted rows (name those with --reaccepts)",
     )
     snap.add_argument(
         "--reaccepts",
         default=None,
         metavar="ROW-ID[,ROW-ID...]",
         help="RE-ACCEPT these rows: comma-joined ids whose drifted accepted text "
-        "this act blesses without moving their Status. The refresh is refused "
-        "while any row it would copy has drifted text neither flipped nor named "
-        "here; the ids land in the snapshot's prose stamp",
+        "this act blesses without moving their Status. A drifted row neither "
+        "flipped nor named here keeps its recorded text and is printed as LEFT "
+        "OWED; the ids land in the snapshot's prose stamp",
     )
     snap.add_argument(
         "--verdict",

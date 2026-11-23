@@ -306,11 +306,7 @@ def test_the_pre_commit_hook_runs_the_text_then_act_step():
 
 def test_no_refusal_text_offers_amend_plus_flip(tmp_path):
     blocked = [(SR, {"SR-001": {"Title": ("a", "b")}})]
-    for text in (
-        snap._refusal_text(blocked, {SR}),
-        snap._refusal_text(blocked, set()),
-        tta.TEXT_THEN_ACT_REMEDY,
-    ):
+    for text in (snap._refusal_text(blocked), tta.TEXT_THEN_ACT_REMEDY):
         assert "amend-plus-flip" not in text.lower()
         assert "same tree" not in text and "same commit" not in text
     # The amend-without-flip warn names the two commits, not "in this commit".

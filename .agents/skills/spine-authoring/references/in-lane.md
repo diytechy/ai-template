@@ -79,6 +79,6 @@ Use the same authoring and closure checks, then split acceptance authority:
   the merge slot); the text half is the drift report's (the amendment walk and
   the re-acceptance).
 
-If the snapshot refuses because another accepted row in the registry still
-drifts, leave it unanchored and report the refusal; do not widen the act to
+If the snapshot names another accepted row in the registry as LEFT OWED, its
+text still drifts: leave it unanchored and report it; do not widen the act to
 include text you have not judged (`docs/process.md` §4; amendment brief).

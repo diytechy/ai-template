@@ -809,9 +809,9 @@ commit of its own, move it to trunk's tip
   the act turn reports it owed (exit 1, or exit 2 when nothing else is
   owed), and the verdict is not done. Once the parent's own act lands,
   re-run `act` on the same verdict: it lists the flip.
-- **A return in a sitting holds its whole registry.** A row the sitting
-  would bless is not anchored while another row in the same registry is
-  returned; rework the returns and re-sit them all together. Move each
+- **A return in a sitting no longer holds its registry** (WI-1060): the act
+  records the rows the sitting blessed and leaves a returned row at its
+  recorded text, named LEFT OWED; rework the returns and re-sit them. Move each
   answered verdict's `## Dispositions` under another heading in the lane,
   or the landing sweep mints the rework rows. The rename may precede the act:
   the binding records the brief, kinds and outcome, not the verdict's digest
@@ -974,8 +974,8 @@ commit of its own, move it to trunk's tip
   held-rung row the sitting ruled MEANING arrives minted, as a queued
   operator row citing the act's pending open item, and leaves the amendment
   row; nothing is filed by hand. An amendment row the sweep mints for
-  another row of that registry waits on the same act, since the act copies
-  the whole registry: give it `needs` on that item at the landing.
+  another row of that registry takes its own act: the operator's act
+  records the held rows alone.
 - **Review rollup:** restore `docs/reviews/rollup/` to its trunk version before
   committing the lane. `trunk_step.py --regen` writes it on trunk at landing,
   from the round files the lane brought in.
@@ -1050,8 +1050,8 @@ lane commit being replayed.
   seqs (the skill's §4 latches sittings to avoid them).
 - A lane rebased after its act turn, onto a trunk that moved an accepted
   row's traced cells (`evidence`, `test_refs`), replays its act
-  commits' snapshot copies unchanged, so each no longer equals its live
-  file at that commit. The registry-integrity step reads that as a landed
+  commits' snapshot copies unchanged, so each no longer equals what its
+  act writes from the live file at that commit. The registry-integrity step reads that as a landed
   divergence in the committed history and refuses every later commit, so
   no forward re-anchor clears it. Finish the replay instead: rebuild the
   chain from the first act commit with `git commit-tree`, setting each

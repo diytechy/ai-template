@@ -131,11 +131,12 @@ def test_a_drifted_accepted_need_is_reported_and_briefed_with_its_diff(scaffold)
     )
 
 
-def test_a_drifted_need_refuses_the_snapshot_until_it_is_reaccepted(scaffold):
+def test_a_drifted_need_stays_recorded_until_it_is_reaccepted(scaffold):
     """On a scaffold, through the scaffold's own `intake.py snapshot`: an act
-    naming the needs registry is refused while an accepted need's text moved,
-    naming the need and the cell; `--reaccepts SN-001` re-anchors it, the copy
-    then equals the live file, the act ledger names it, and it owes nothing.
+    naming the needs registry while an accepted need's text moved leaves that
+    need at its recorded text and names it owed (WI-1060); `--reaccepts SN-001`
+    re-anchors it, the copy then equals the live file, the act ledger names it,
+    and it owes nothing.
 
     Implements: TC-269
     """
@@ -153,9 +154,10 @@ def test_a_drifted_need_refuses_the_snapshot_until_it_is_reaccepted(scaffold):
     recorded = (SNAP.snapshot_root(root) / NEEDS_REL).read_bytes()
     ref = ("--accepts", "stakeholder-needs.toml=the sitting")
     proc = _script(root, "intake.py", "snapshot", *ref)
-    assert proc.returncode != 0, proc.stdout + proc.stderr
-    assert "{} SN-001: Why".format(NEEDS_REL) in proc.stderr, proc.stderr
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "LEFT OWED: SN-001" in proc.stdout, proc.stdout
     assert (SNAP.snapshot_root(root) / NEEDS_REL).read_bytes() == recorded
+    assert [row[0] for row in SNAP.needs_owing(root)] == ["SN-001"]
     proc = _script(root, "intake.py", "snapshot", *ref, "--reaccepts", "SN-001")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert (SNAP.snapshot_root(root) / NEEDS_REL).read_bytes() == (

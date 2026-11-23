@@ -214,9 +214,11 @@ than the ones somebody remembered to mark. Blessing an amendment is a reviewed
 commit that re-reads the changed cells and runs `intake.py snapshot --reaccepts
 <ROW-ID>` naming each row read — the adjudicator's act since 2026-09-01, never
 the lane's: the lane amends, the adjudication rules on the amendment and
-re-anchors it in the same commit. The refresh is refused while any row it would
-copy carries drifted accepted text that the act neither flips nor names; an
-`--accepts` ref names the act and its registry but clears no row.
+re-anchors it in the same commit. The act writes into the record only the rows
+it flips or names (and the rows that follow live); any other row with drifted
+accepted text keeps its recorded text and is printed as owed, and an act that
+would write nothing over such drift is refused; an `--accepts` ref names the act
+and its registry but carries no row.
 
 ### 3.3 `Phase` — optional phased delivery
 

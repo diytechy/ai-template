@@ -454,7 +454,7 @@ driving it:
   its own scope; the adjudicator's brief carries the chain.
 - **Independence.** The writer does not judge its own writes. An act is admitted
   only when a recorded verdict judged that act's rows, and the snapshot copies
-  only the registries those rows sit in, so an act cannot seal text nobody
+  only those rows into the record, so an act cannot seal text nobody
   judged. **Independence is established by route, and that is its honest
   bound:** a verdict's binding (`<verdict>.requested`) records `accepted` only
   when the adjudication route writes it, after running the adjudication as its
@@ -471,7 +471,7 @@ driving it:
 | Authors spine rows | Yes — new rows are written `Drafted`, chain links, rationale and evidence cells filled. | No. |
 | Amends spine text | Yes — any cell, on any row, `Accepted` ones included; the row's `Status` is left alone. | No; it RETURNS a row with findings, never rewrites it. |
 | Flips `Status` | **Never on a spine row** (SN/SR/LLR/TC). | Yes, on the rungs the dial releases, backed by its recorded verdict over exactly those rows, in the authoring lane or on trunk. |
-| Writes `docs/archive/last_accepted/` | **Never.** | Yes — in the same commit as the flip, scoped to the registries the act covers. |
+| Writes `docs/archive/last_accepted/` | **Never.** | Yes — in the same commit as the flip, scoped to the rows the act names. |
 | Judges a post-acceptance amendment | No; it records what it changed and why. | Yes — meaning or clarity; its act is a later adjudicator turn taken from the committed verdict, which re-accepts a *meaning* row on a released rung only when the verdict blesses it; on a held rung the row goes to the operator. |
 | Where | Its own lane, beside other lanes. | In the authoring lane, where the act merges with that lane; or as a trunk-side adjudication lane, which runs alone. A verdict may be sat at any time; its act keeps landing order (WI-912). |
 

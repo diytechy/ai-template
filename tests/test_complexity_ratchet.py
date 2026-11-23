@@ -184,28 +184,10 @@ BASELINE = {
     # than one shared helper, so a third follows the established idiom
     # instead of inventing a fourth shape for one caller.
     ("check_trajectory.py", "main"): 24,
-    (
-        "acceptance_record.py",
-        "committed_snapshot_findings",
-    ): 12,  # RE-KEYED, NOT RE-STAMPED, 2026-08-25, WI-521 slice 1: the function
-    # moved VERBATIM from check_trajectory.py to the new acceptance_record.py
-    # sibling and its complexity is unchanged at 12. This file keys on
-    # (scripts-relative path, name), so a module move has to be spelled here or
-    # the census reports the same 12 twice — once as an unbaselined newcomer and
-    # once as a baselined entry that vanished. Nothing was simplified and nothing
-    # was sanctioned; the reason the entry moved is the reason the module did
-    # (docs/log.d/2026-08-25-wi521-slice1-acceptance-record.md).
-    # NEW 2026-08-20, the batch-close iterate pass (ROUND-OPUS CRITICAL-3):
-    # the mirror invariant over COMMITTED state. The 12 is what a per-file mirror
-    # comparison irreducibly costs: two degrade arms (git cannot answer / nothing
-    # under the snapshot root), the README exemption, the batch-length sanity check,
-    # and the three outcomes per file (the copy was deleted in its own writing
-    # commit -> not a mirror question; the live counterpart did not exist -> a
-    # record of text the repo never had; the ids differ -> a LANDED divergence).
-    # Splitting the loop out would move six of those branches into a helper whose
-    # only caller is this function, which the ratchet's own preference reads as
-    # motion rather than simplification; the spec-collection half IS already
-    # extracted (`_snapshot_write_revs`). Reviewed entry, reason in the log.
+    # `acceptance_record.py:committed_snapshot_findings` (12) DELETED 2026-11-23,
+    # WI-1060: the committed mirror rule now hands each copy's judgement to
+    # `record_rows` (`whole_file_faults` for a copy written whole,
+    # `written_problems` for one judged at the row), and falls under the limit.
     # RE-STAMPED DOWN -3 (14 -> 11) 2026-08-23, WI-455: the declared-seam edge
     # walk went out to `_seam_edges` when the consumers side became a list —
     # decomposition rather than the bump the nesting would otherwise have cost.

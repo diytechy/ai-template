@@ -197,6 +197,7 @@ modules = [
   "project-trajectory/scripts/migrate_vocabulary.py",
   "project-trajectory/scripts/plan_coverage.py",
   "project-trajectory/scripts/record_observation.py",
+  "project-trajectory/scripts/record_rows.py",
   "project-trajectory/scripts/retire.py",
   "project-trajectory/scripts/spine_carrier.py",
   "project-trajectory/scripts/spine_rules.py",
