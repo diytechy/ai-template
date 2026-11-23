@@ -1,0 +1,4 @@
+brief = combined
+kinds = amendment;first-acceptance
+outcome = pending
+rows = LLR-338=sha256:fcc2e495e63677ff;TC-368=sha256:46e1353d7da5835c
