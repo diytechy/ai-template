@@ -32,10 +32,10 @@ records it.
 ```
 DevStg-Needs      vision and stakeholder needs in work
 DevStg-Boundary   the frame: what is outside, what crosses, each typed.  ONCE.
-DevStg-Reqs       obligations at the current boundaries.  RECURSES.
+DevStg-Reqs       obligations at the system's boundary.  ONCE.
    ══ DevStg-Reqs ══     Stakeholder · UX · System Engineer
 DevStg-Arch       partition each scope into sub-boundaries.  RECURSES.
-DevStg-LLReqs     the inside of a leaf, bound to a code symbol.  TERMINAL.
+DevStg-LLReqs     design rows, a parent row into children.  ONE RUNG.
 DevStg-Tests      the test set in work
    ══ DevStg-Tests ══    System Engineer · Test Engineer
 DevStg-Impl       implementation in work
@@ -45,8 +45,8 @@ DevStg-Release    nothing in work; release checklist available
 
 A marked boundary is named for the **top rung it certifies**, so "what am I
 signing" is answered by "which rung am I finishing". **The ladder is not
-monotonic** — `DevStg-Reqs` and `DevStg-Arch` oscillate as the decomposition
-descends, and minting a drafted `CMP` row legitimately drops the LIVE reading back
+monotonic** — `DevStg-Arch` and `DevStg-LLReqs` oscillate as the decomposition
+descends (`docs/process.md` §4), and minting a drafted `CMP` row legitimately drops the LIVE reading back
 to `DevStg-Arch`. That is the honest report, not a regression: do not "fix" it by
 editing anything.
 

@@ -262,12 +262,13 @@ copy carries drifted accepted text that the act neither flips nor names; an
 
 ## 4. LLR — Low-Level Requirements
 
-**8 columns.** The decomposition tier: *how* an SR is met. A row names no file, symbol or component (WI-1023): the files realizing it are read up from the code's `Implements:` tags (`arch_inputs.implements_index`), and its placement is derived (§4.2). The loader refuses a row carrying a key the tier does not declare.
+**9 columns.** The decomposition tier: *how* an SR is met. Rows form the requirement tree (WI-1027, `docs/process.md` §4): a top-level row names its SRs in `SR-Refs`; a child names its one parent row in `Parent` instead, and its SRs are read up its chain by the one walk, `kitlib.spine.llr_tree`, which every reader of the SR↔LLR relation takes. A row names no file, symbol or component (WI-1023): the files realizing it are read up from the code's `Implements:` tags (`arch_inputs.implements_index`), and its placement is derived (§4.2). The loader refuses a row carrying a key the tier does not declare.
 
 | Column | Required | Vocabulary / default | Effect |
 |---|---|---|---|
 | `LLR-ID` | ✔ | `LLR-<digits>` | Join key; the same three integrity rules as SR. |
-| `SR-Refs` | ✔ | `;`-joined SR ids | **The canonical SR↔LLR link.** Empty → orphan ("no SR parent"); unknown target → orphan; citing a **superseded** SR → integrity. |
+| `SR-Refs` | ✔ on a top-level row | `;`-joined SR ids | **The canonical SR↔LLR link**, on a top-level row (no `Parent`). Empty there → orphan ("no SR parent"); unknown target → orphan; citing a **superseded** SR → integrity. On a child → orphan ("is a child of … and names SR-Refs"). |
+| `Parent` | ✘ | one LLR id | A child's one parent design row. Not one live design row (missing, an SR or `-000` id, several ids) → orphan; a cycle → orphan for each row on it; a row whose chain breaks there → orphan ("reaches no SR"). Accepted text in the cell split (§12): a re-parent is an amendment of the row. |
 | `Title` | ✔ | free text | Node label. |
 | `Detail` | ✔ | decomposition detail, **not** an SR paraphrase | Accepted prose. |
 | `Rationale` | ✘ | free text | **Deliberately not required** — "a short decomposition row's why IS its parent SR's, so requiring one everywhere would manufacture the restatement the column exists to prevent." Accepted when present. |
@@ -380,8 +381,8 @@ finding. This rule stays when the comparison retires.
 
 A TC may cite an SR *and* an LLR together, so one test discharges both the "SR
 needs a TC" and "LLR needs a TC" rules. `triangle_findings` keeps that honest:
-**when a TC cites both, each cited LLR's `SR-Refs` must intersect the SRs the
-same TC cites.** Citing `LLR-1` beside `SR-2` when `LLR-1` decomposes `SR-1` is
+**when a TC cites both, each cited LLR's SRs (its `SR-Refs`, a child's read up
+its parent chain) must intersect the SRs the same TC cites.** Citing `LLR-1` beside `SR-2` when `LLR-1` decomposes `SR-1` is
 incoherent at any stage — so it joins the **integrity** floor, not the
 gate-scoped orphan set.
 
@@ -396,9 +397,9 @@ gate-scoped orphan set.
 | 3 | every **SR** SN-Ref resolves | ditto | orphan |
 | 4 | every **SR** has an LLR | SR is Drafted **or** `VerificationMethod ∈ {Analysis, Inspection, Vouch}` | orphan |
 | 5 | every **SR** has a TC | SR is Drafted | orphan |
-| 6 | every **LLR** has ≥1 SR parent | — (never) | orphan |
-| 7 | every **LLR** SR-Ref resolves | — | orphan |
-| 8 | every **LLR** has a TC | LLR is Drafted | orphan |
+| 6 | every top-level **LLR** has ≥1 SR parent; a child names none | — (never) | orphan |
+| 7 | every **LLR** SR-Ref resolves; a `Parent` names one live design row, on no cycle, and a chain reaches a top-level row | — (never) | orphan |
+| 8 | every **LLR** has a TC (a parent's own integration TC: its children's do not discharge it) | LLR is Drafted | orphan |
 | 9 | every **TC** verifies something | — | orphan |
 | 10 | every **TC** ref resolves (SR/LLR/IF) | — | orphan |
 | 11 | a **TC** citing only IF ids also names a spine id | — | orphan |
@@ -760,7 +761,7 @@ When an **`Accepted`** spine row is amended, `staged_spine_amendments` in
 | Registry | **Traced** (amend freely) | **Accepted** (opens a re-accept window) |
 |---|---|---|
 | SR | `SN-Refs`, `Boundary-Refs`, `Hat-Refs`, `Phase`, `Aspect`, `Lifecycle`, `DA-Refs` | `Title`, `Requirement`, `Rationale`, `AcceptanceCriteria`, `Permutations`, `Priority`, `VerificationMethod`, `Coincident`, `Form` |
-| LLR | `TestRefs`, `Phase`, `SR-Refs`, `Hat-Refs` (and the retired `Module`, `CodeSymbol`, `Component`, still classed traced for the snapshot and history) | `Title`, `Detail`, `Rationale` |
+| LLR | `TestRefs`, `Phase`, `SR-Refs`, `Hat-Refs` (and the retired `Module`, `CodeSymbol`, `Component`, still classed traced for the snapshot and history) | `Title`, `Detail`, `Rationale`, `Parent` |
 | TC | `Verifies`, `Evidence`, `Automated`, `Phase`, `Assumption-Refs` | `Method`, `Expected`, `Parameters`, `Level`, `Tier`, `Inputs`, `MaxAge`, `Sampling`, `SampleSize`, `AcceptanceRule`, `Trigger`, `Rubric`, `MinWorkItems` |
 | SN | `Stakeholder-Refs`, `Source` | every other need cell (the residual) |
 | IF (off-spine) | `BridgedBy` | every other interface cell, `Coincident` included (the residual) |
@@ -900,7 +901,7 @@ All optional; all vacuous when absent or `-000`-only.
 | `docs/requirements/components.toml` | `CMP-###` | `PartOf`, `SupersededBy`, `Derivation` | Must name real CMP ids. When non-empty, every `Component` tag on IF/PART/ASSET must resolve; a design row carries none, its placement derived from the interfaces its verifying test cases name (`kitlib.spine.llr_placement`). `Knowledge` refs under `docs/knowledge/` are **warn-only**. Each real row holds the partition's derivation record (`Candidates`, `Objective`, `Constraints`, `Scores`, `Selected`, `Ruling`, optional `Override`) or cites, with `Derivation`, the one row holding it (SR-165): `trajectory_arch.derivation_record_findings`, inside `component_findings`, reports an absent, incomplete, malformed or inconsistent record — WARN plain, ERROR under `--strict`, sharing `[checks] components_check` — and recomputes the ranking only for a record with none of the first three. |
 | procurement | `PART-###` | `Component` | membership only |
 | assets | `ASSET-###` | `Component` | membership only |
-| `docs/requirements/hats.toml` — the declared perspectives | hat NAME (`[hat.SECURITY]`; no numeric space, so no `-000` row) | SR/LLR `Hat-Refs` | Resolution is HARD: a `Hat-Refs` naming a hat the roster does not declare joins the `--strict` failure set (class `hat`). Coverage is warn-only FOREVER — one advisory counting rows attributable to no perspective, one naming hats no row is attributable to, and BOTH are suppressed entirely until at least one row fills the cell, so adopting the kit is quiet. Coverage counts **effective** sets (`trace.effective_hats`: a row's own refs unioned with its `SR-Refs` parents'), never cells — an LLR's cell holds only what its own decomposition raised, and copying a parent's hats down is the staleness this derivation exists to forbid. Vacuous with no roster (absence is opt-out for the whole layer); `trace.py` reads NAMES and each hat's `speaks_for`, and `scripts/hats.py` remains the sole validator of roster content. Two more references resolve into the same `hat` class: a hat's optional `speaks_for` (one `STK-##` id, shape-checked by `hats.py`) naming a stakeholder the needs file's list does not declare, vacuous with no list (SR-213); and an assumption's `ObstacleHats` naming a hat the roster does not declare, every name failing when there is no roster (SR-214, `assumption_rules.obstacle_hat_findings`). |
+| `docs/requirements/hats.toml` — the declared perspectives | hat NAME (`[hat.SECURITY]`; no numeric space, so no `-000` row) | SR/LLR `Hat-Refs` | Resolution is HARD: a `Hat-Refs` naming a hat the roster does not declare joins the `--strict` failure set (class `hat`). Coverage is warn-only FOREVER — one advisory counting rows attributable to no perspective, one naming hats no row is attributable to, and BOTH are suppressed entirely until at least one row fills the cell, so adopting the kit is quiet. Coverage counts **effective** sets (`trace.effective_hats`: a row's own refs unioned with its SR parents', a child's read up its parent chain), never cells — an LLR's cell holds only what its own decomposition raised, and copying a parent's hats down is the staleness this derivation exists to forbid. Vacuous with no roster (absence is opt-out for the whole layer); `trace.py` reads NAMES and each hat's `speaks_for`, and `scripts/hats.py` remains the sole validator of roster content. Two more references resolve into the same `hat` class: a hat's optional `speaks_for` (one `STK-##` id, shape-checked by `hats.py`) naming a stakeholder the needs file's list does not declare, vacuous with no list (SR-213); and an assumption's `ObstacleHats` naming a hat the roster does not declare, every name failing when there is no roster (SR-214, `assumption_rules.obstacle_hat_findings`). |
 | repos | `REPO-###` (legacy `MOD-###`) | `DelegatedSRs` | Must name real coordinator SRs; empty is allowed. Cross-repo reconciliation is deferred. |
 
 ---
@@ -991,13 +992,14 @@ tombstone-class deletion (D-4 ruling 2026-08-14b; the log's forwarding entry
 is the map). The CMP registry's own `PartOf`/`SupersededBy` rule is separate
 and still live.
 
-### 12.10 `LLR.SR-Refs` is accepted only by the residual
+### 12.10 An LLR's two parent links are classed differently, by ruling
 
-The code says so explicitly: §A5.1 never named it, and it is "the same shape of
-pointer as the ruled-traced `SN-Refs` / `Verifies`." Flagged in-code as WI-388's
-question rather than a defect — but it means re-pointing an LLR at a different
-parent SR opens a re-accept window while re-pointing an SR at a different SN does
-not.
+`SR-Refs` is traced and ROUTED (WI-388): "the same shape of pointer as the
+ruled-traced `SN-Refs` / `Verifies`", so re-pointing a top-level row at another
+SR opens no re-accept window and the merge's amendment mint routes it to
+adjudication. `Parent` is ACCEPTED (WI-1027, decisions record maint-wi-1027
+D-001): which row a child decomposes is what its detail is read against, so a
+re-parent drifts the row and is judged with its whole text.
 
 ---
 

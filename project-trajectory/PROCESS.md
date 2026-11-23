@@ -100,7 +100,7 @@ only for an independent high-risk review (§6).
 |---|---|---|
 | `SN-###` | Stakeholder Need | — |
 | `SR-###` | System specification | `SN-Refs` |
-| `LLR-###` | Design expectation | `SR-Refs` (+ Detail/Rationale) |
+| `LLR-###` | Design expectation | `SR-Refs` on a top-level row, `Parent` on a child (§4) (+ Detail/Rationale) |
 | `TC-###` | Test Case | `Verifies` (SR/LLR) |
 
 Stable, zero-padded, never reused.
@@ -587,14 +587,15 @@ whose boundary an operator signs are marked:**
 DevStg-Needs      vision and stakeholder needs in work
 DevStg-Boundary   the system's frame: what is outside, what crosses,
                   each crossing typed.  HAPPENS ONCE.
-DevStg-Reqs       the obligations at the current level's boundaries,
-                  system and component alike.  RECURSES.
+DevStg-Reqs       the obligations at the system's boundary.  ONCE PER
+                  BOUNDARY: a sub-scope's obligation is a design row.
    ══ DevStg-Reqs CLEARED ══   Stakeholder, UX, System Engineer
                                → the project enters DevStg-Arch
 DevStg-Arch       partition each scope into sub-boundaries.  RECURSES;
                   exits when no child needs partitioning.
-DevStg-LLReqs     the inside of a leaf, bound to a realization artifact
-                  (a code symbol, or a part source).  TERMINAL.
+DevStg-LLReqs     the design rows, each decomposing an SR or a parent
+                  row, down to rows one realization artifact (code, or
+                  a part source) carries.  RECURSES IN ITS ROWS; ONE RUNG.
 DevStg-Tests      the test set for those obligations in work
    ══ DevStg-Tests CLEARED ══  System Engineer, Test Engineer
                                → the project enters DevStg-Impl
@@ -630,21 +631,26 @@ the system is *not* a party to (`[relationship.REL-###]`). An SR states an
 observable **at** a crossing and cites it (`boundary_refs`); an IF row that
 realizes a crossing ties back to it directionally (§8).
 
-**The boundary happens once; the recursion lives in the two rungs after it.**
-Only the system's own frame comes from the needs and the context; every boundary
-below it is *produced by* a partition, and a partition **is** the next level's
-boundary declaration. So the repeating unit is two steps — state the obligations
-at the current boundaries, then partition them into sub-boundaries — and
-`DevStg-LLReqs` is where it stops: a requirement that still needs allocating to
-sub-parts is a `DevStg-Reqs` requirement for that sub-scope; one that **binds**
-to a realization artifact is an LLR, and that is the floor. **The tier does not
-recurse, the activity does.** Depth is a property of the component tree
-(`PartOf`), never of the requirement tier — which is why the ladder carries no
-depth and adds no sub-rungs.
+**The boundary happens once; the recursion lives below it.** Only the system's
+own frame comes from the needs and the context, and an SR states behaviour at
+that boundary, so only a boundary change moves an SR. Below it two trees
+decompose together: a partition **is** the next level's boundary declaration
+(`DevStg-Arch`, the component tree by `PartOf`), and a design row that still
+needs breaking down for the parts realizing it becomes a **parent** of child
+design rows (`DevStg-LLReqs`, the requirement tree). A child names its one parent
+row in `parent` and carries no `sr_refs`; only a top-level row names its SRs, a
+child's SR is read up its chain, and the links are acyclic. A parent is
+discharged by its children plus its own integration TC, which names the parent
+itself. Every derivation from an SR to its design rows — the orphan and coverage
+rules, the stage, the review test set, the briefs and the views — walks the
+whole tree, so a row two levels down counts wherever a top-level row counts.
+**The rung does not recurse; the rows do.** One `DevStg-LLReqs` rung holds while
+any row of the tree is in work: depth is a property of the two trees, never of
+the ladder, which adds no sub-rungs.
 
 **The ladder is therefore not monotonic**, and that is the truth about iterative
-decomposition rather than a defect in the report: `DevStg-Reqs` and
-`DevStg-Arch` oscillate as the recursion descends. Identifying a sub-component
+decomposition rather than a defect in the report: `DevStg-Arch` and
+`DevStg-LLReqs` oscillate as the decomposition descends. Identifying a sub-component
 mints a drafted `CMP` row, which drops the reported stage back to `DevStg-Arch`
 with nobody deciding to. That is what makes the recursion **self-reporting** — it
 needs no ladder machinery at all. If a monotonic reading is wanted it is a

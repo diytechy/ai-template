@@ -253,6 +253,11 @@ Questions:
 - **A child adds detail.** If the LLR would merely re-word its parent, link
   instead. `trace.py`'s paraphrase advisory is lexical and warns forever; the
   judgement stays yours.
+- **Decompose a design row into child rows, not into a sub-scope SR.** Where
+  the parts realizing a row need it broken down further, the row becomes a
+  parent of child design rows as `docs/process.md` §4 states (the requirement
+  tree); judge each child as any design row, and the parent by its own
+  integration TC.
 - **Replace an unsuitable design; never work around it.** If the parent
   outcome remains sound but an LLR's mechanism, or the way the rows divide the
   design, causes the problem, `docs/process.md` §5's design replacement routes
@@ -265,7 +270,7 @@ Questions:
   replacement.
 - **An LLR's `Hat-Refs` holds only what its OWN decomposition raised — never a
   copy of its parent's.** The row's EFFECTIVE set is derived (own refs unioned
-  with its `SR-Refs` parents'), so an own ref is earned only where the design
+  with its SRs', a child's read up its parent chain), so an own ref is earned only where the design
   row bears a hat **no parent carries**: a platform quirk in the mechanism, a
   keyboard path, an atomicity the requirement never states. Everything else is
   the copy-down the derivation exists to prevent — it turns re-ruling one SR

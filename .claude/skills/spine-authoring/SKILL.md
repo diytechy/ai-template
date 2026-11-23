@@ -32,7 +32,8 @@ decompose don't paraphrase; one decision per row, one home per method; one
 need or requirement cell names a concrete artifact only where its reason cell
 records why that artifact must be constrained; a rationale carries its own
 reason and no citation frame) and §4
-(gates, verification methods). Read the rule there; use this file to decide
+(gates, verification methods, and the requirement tree a design row
+decomposes into). Read the rule there; use this file to decide
 whether your row obeys it.
 
 ## The frame: solution-freedom is tier-relative
