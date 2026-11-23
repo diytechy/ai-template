@@ -287,6 +287,23 @@ LLR-003 to Drafted`, the line WI-1057's act was refused with.
 - *First acceptance, `Drafted`, rewritten:* IF-296 (`data`) and IF-308
   (`data`). No new row.
 
+**Review** (the coordinator, round 1, over `8db60ba58..da3b7b2e3`,
+generated views, the plan and the spec's copies excluded, with the
+sittings' three row checks and SR-231's, SR-232's, LLR-310's and IF-296's
+text beside the diff). Gemini Hydrogen (`gemini-4-hydrogen-low`, through
+`agy`) read the prose part: `VERDICT: APPROVE findings=0`. OpenAI Sol
+(`gpt-6.1-sol`, low) read the whole diff: `VERDICT: CHANGES-REQUESTED
+findings=2`, both MINOR: IF-296's and IF-308's `data` cells name functions
+and parameters. **Both dismissed by the coordinator.** The sittings' no-code-
+names check covers requirement, design-row and test-case cells. Interface
+rows are off-spine, and no sitting judges them. Today's interface `data`
+cells state their call form by convention (both cells already named
+functions, and this row appended in the same style), and variant F's
+interface rows re-cut them. WI-1052's review dismissed the same finding on
+IF-217. The coordinator read the hold's fixpoint, its naming pass and the
+derivation's refusals and found nothing to add. No change after the
+review.
+
 ## Context
 
 Filed on trunk on 2026-11-23 by the queue drill's coordinator, from the

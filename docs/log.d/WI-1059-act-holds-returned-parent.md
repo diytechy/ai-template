@@ -50,3 +50,8 @@ in the row's Deliverable
   <!-- fig: derived="the totals are those the Deliverable's Tests list declares, each with its command and revision" -->
   `trace.py --strict` and `check_trajectory.py --strict` exit 0;
   `run_menu.py smoke` passed (the Deliverable quotes it).
+- **Review:** Hydrogen (low) over the prose: `APPROVE findings=0`. Sol (low)
+  over the whole diff: two MINORs on IF-296's and IF-308's `data` cells
+  naming functions, both dismissed (interface rows are off-spine and state
+  their call form by convention; WI-1052's precedent). No change after the
+  review.
