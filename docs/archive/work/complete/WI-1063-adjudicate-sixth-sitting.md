@@ -2,7 +2,7 @@
 id = "WI-1063"
 title = "adjudicate: WI-1059's two amendments and SR-251's chain as WI-1062 answered it, in one combined sitting"
 workstream = "process"
-specref = "docs/archive/work/complete/WI-1062-answer-wi-1061-verdict.md"
+specref = ""
 sr_refs = ["SR-231", "SR-251"]
 needs = []
 buildtier = "medium"
@@ -11,6 +11,33 @@ brief = "combined"
 adjudicates = ["amendment:LLR-338", "amendment:TC-368", "first-acceptance:LLR-406", "first-acceptance:SR-251", "first-acceptance:TC-483"]
 priority = 2
 +++
+
+## Deliverable
+
+Run on trunk by the queue drill's coordinator on 2026-11-23. The sixth
+combined adjudication sitting judged the five rows its `adjudicates` names
+(Gemini Neon, 237 seconds, one session). Its verdict
+(`docs/reviews/wi-1063-adjudicate-sixth-sitting/001-ADJUDICATE-6a585b4.md`,
+`e10a261cb`) was recorded by `record_outcome` (`f16f4e361`), and the act it
+derives is taken whole. No operator ruling was needed: every amendment was
+blessed, and the act's first snapshot was tested read-only and read no
+refusal.
+
+- **Re-accepted (`76192dab6`), both MEANING+BLESS:** LLR-338 (the derived
+  act's waiting flips, WI-1059) and TC-368.
+- **Accepted (`43f711b6d`):** SR-251, LLR-406 and TC-483, SR-251's chain as
+  WI-1062 answered the fifth sitting, flipped together in one commit, as
+  the parent-first rule allows. LLR-406's flip is taken from this verdict,
+  which judged its current text; the flip once held under WI-1057's verdict
+  was void after the fifth sitting's return.
+- **Returned:** none. No follow-up is owed.
+- **Not shown:** IF-312 and CMP-006 still drift in their off-spine
+  registries, and IF-296 and IF-308 stay `Drafted`; the brief shows no
+  off-spine row.
+
+`compose_act` over this verdict and over WI-1057's now reads no act owed.
+`docs/ratify/CURRENT.md` reads: no spine row differs from its recorded
+copy, and no row awaits a first acceptance.
 
 ## Context
 
@@ -57,12 +84,12 @@ One session, never fanned out (PROCESS.md §6).
 
 ## Done-when
 
-- [ ] The verdict is recorded beside its binding under
+- [x] The verdict is recorded beside its binding under
       `docs/reviews/wi-1063-adjudicate-sixth-sitting/`, as the adjudicator
       returned it, and `record_outcome` reads it recorded.
-- [ ] The act `compose_act` derives is taken, each part in its own commit.
+- [x] The act `compose_act` derives is taken, each part in its own commit.
       If its first snapshot is refused over an unblessed row, the
       operator's standing revert ruling applies (HANDOFF §0 step 2); a
       refusal of another kind goes to the operator.
-- [ ] Each MEANING amendment and RETURN row is listed in the Deliverable
+- [x] Each MEANING amendment and RETURN row is listed in the Deliverable
       with its finding, and its follow-up is filed or named.
