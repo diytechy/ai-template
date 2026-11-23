@@ -133,8 +133,16 @@ reference, the snapshot command's help, the held-act operator item's
 option (a), and the off-spine census note the acceptance brief and the
 open-items page print (it said a re-seed "still blesses the whole tree").
 
-**7. The unfiltered suite** is the coordinator's, on this branch before the
-merge; left unticked.
+**7. The unfiltered suite** ran, by the coordinator, on the merge commit
+itself before trunk moved to it: the branch merged into a temporary branch
+cut from `refactor_again` at `2c98ba67b` (trunk as first parent, as the
+merge lands), regenerated (`39f7b87a4`), then
+`python -m pytest -q -n auto` there: `8357 passed, 31 skipped, 18 warnings
+in 2518.59s (0:41:58)`, no failure. Trunk was then fast-forwarded to that
+exact commit. (A merge in the other direction, trunk into this branch, is
+refused by the staged mirror check, by the old code as by the new: trunk's
+copies, written by the sixth sitting's acts, are not equal to a live file
+carrying this branch's amendments. That is pre-existing, not this row's.)
 
 **Deviations from the approved plan.**
 
@@ -507,5 +515,5 @@ two land one after the other, never side by side.
       only, no code names) and listed in the Deliverable as owed to
       adjudication. Any new row is `Drafted`. A RESYNC entry tells adopters
       what changed and that their records need no migration.
-- [ ] The unfiltered suite passes on the branch before the merge, and its
+- [x] The unfiltered suite passes on the branch before the merge, and its
       summary line is quoted in the Deliverable.
