@@ -6881,8 +6881,9 @@ def main():
     # with no copy in `docs/archive/last_accepted/` recording it — or a copy that
     # reads below it — is an acceptance that never rode a copy. THE MIRROR
     # INVARIANT (§F3 risk 3, which asks for exactly this pair of severities:
-    # *"warn at the staged hook, ERROR on the integrity floor"*): a snapshot file
-    # that is not byte-identical to its live counterpart in the same commit. The
+    # *"warn at the staged hook, ERROR on the integrity floor"*): a snapshot copy
+    # that is not the copy its commit's act writes (WI-1060: the previous copy
+    # with exactly the act's named rows taken from live in that commit). The
     # staged warn is unchanged and still fires in `check_trajectory --staged`;
     # what is new is that it no longer prints past a `|| true`.
     #

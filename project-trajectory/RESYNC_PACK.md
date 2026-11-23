@@ -12468,6 +12468,65 @@ drains once, at its next clear point.
 `scripts/acceptance_record.py`, `prompts/adjudicate-act.template.md`,
 `skills/coordinator-cycle/references/recipes.md`.
 
+### An acceptance act records only the rows it names; a drifted row no longer blocks its registry [since 2ded34460]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** `intake.py snapshot` used to copy each registry it wrote
+whole, and refused the act while any accepted row of that file had drifted
+without the act naming it, so one unblessed amendment held every blessed one
+in its registry. It now writes the record row by row (`scripts/record_rows.py`,
+new). A row the act names — a `Status` moved into acceptance, a row born
+accepted, an id in `--reaccepts`, or a retired row (a named id live no longer
+carries) — is copied byte for byte from live. A row it does not name keeps its
+recorded text while its accepted cells, or its `SN-Refs`, `Boundary-Refs`,
+`SR-Refs` or `Verifies` links, differ from live (or live no longer carries it);
+every other row (one claiming no acceptance, or one whose judged cells are
+unchanged, its other trace cells refreshed) follows live. Rows keep live's
+order with live's bytes around them, so an act that keeps nothing writes the
+live file exactly as before. A kept row no longer refuses the act: the command
+prints it as `LEFT OWED`, the stamp line names it, and the act ledger entry
+lists it in a new field, `kept`. An act that would write nothing over drifted
+accepted text is still refused, naming every row that stays owed. The mirror
+checks (`staged_snapshot_findings` at the hook, `committed_snapshot_findings`
+on the history) now judge a copy at the row once the ledger holds an entry
+carrying `kept`: a commit's copy must equal its parent's copy with exactly the
+rows its act names taken from live, each fault named by its row, and deleting
+`acts.toml` while the record stands is refused. A copy written before your
+first act on this kit is judged as it was written (byte-identical to live), so
+**no record needs migration**. The first `--seed` still copies whole files; a
+re-seed over a standing record is an act over every registry, row by row. A
+registry still on the legacy CSV carrier, or a needs file on its markdown
+carrier, is copied whole as before and refused while a drifted row would be
+kept: convert it with `migrate_carrier.py` to get row-by-row acts.
+`refresh_refusal` now answers only for an act that would write nothing.
+`intake.ROUTED_TRACED_CELLS` moved to `record_rows` and stays importable under
+its old name. The trunk mint now mints a routed link restored between two acts
+(the record no longer re-anchors it through another row's act), and a held
+MEANING ruling on a routed link alone still mints its operator row after
+another act on the same registry.
+
+**What to do.** Nothing is forced; take your next act as before. If you still
+owe the vocabulary migration, run `migrate_vocabulary.py` before your first act
+on this kit: its record step copies whole files and absorbs drift, which the
+checks accept only while the record holds no entry carrying `kept`. A script of
+yours that called `refresh_refusal` to preview an act reads the kept rows from
+the act's output or its ledger entry instead. An act brief or prompt of your own
+that told a session to stop on a refusal naming an unlisted row now meets
+`LEFT OWED` for that row instead. The edit to the act template moves the
+retained-session identity, which hashes the template file's bytes, so a
+retained adjudicator holding an actable class drains once, at its next clear
+point. Your record's `README.md` is prose; refresh it from
+`registries/last-accepted-README.template.md` if you like.
+
+**Kit-owned files — overwrite:** `scripts/record_rows.py` (new),
+`scripts/baseline_snapshot.py`, `scripts/acceptance_record.py`,
+`scripts/intake.py`, `scripts/check_trajectory.py`, `scripts/trace.py`,
+`scripts/kitlib/bootstrap_manifest.py`, `prompts/adjudicate-act.template.md`,
+`skills/coordinator-cycle/references/recipes.md`,
+`skills/spine-authoring/references/in-lane.md`,
+`registries/last-accepted-README.template.md`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
