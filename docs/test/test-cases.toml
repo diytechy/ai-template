@@ -4242,7 +4242,7 @@ status = "Accepted"
 phase = 6
 
 [test.TC-428]
-verifies = ["SR-157"]
+verifies = ["SR-157", "LLR-395"]
 level = "Integration"
 method = "Run the trajectory check over registries and test trees covering each input state of the undeclared-case rule: no registry, no tests root and a registry that does not parse; a placeholder row; a Drafted case holding a note and holding an untagged part; an automated cell reading No, another word, absent and blank; an Accepted and a Founded case, and one whose automated cell is padded and upper-case, each tagged and untagged; a case whose part is in an unreadable file, alone and beside a readable part; an untagged case holding a note, no cell, a whole-file part, a part outside the tests root and an absent path; a misplaced and a malformed tag, alone and beside a valid one; and an untagged part, then tagged."
 tier = "Full"
@@ -4253,7 +4253,7 @@ status = "Accepted"
 phase = 6
 
 [test.TC-429]
-verifies = ["SR-157"]
+verifies = ["SR-157", "LLR-395"]
 level = "Integration"
 method = "Walk one test case through a lane's order, Drafted holding a note, then Drafted and tagged, then Accepted and tagged; then out of order, Accepted before its tag, in plain and strict runs with and without work items, and once tagged; then run the same untagged Accepted case in a bootstrapped scaffold below and at the implementation rung, and once tagged."
 tier = "Full"
@@ -4475,11 +4475,11 @@ phase = 6
 [test.TC-457]
 verifies = ["SR-159", "LLR-396"]
 level = "Unit"
-method = "Write one file per carrier, each declaring the same component: a Python module's docstring, a shell script after its shebang, a macOS command file, a PowerShell script's hash comments, a TOML, an INI and a CSV file, a file with no suffix, a Windows batch file's REM line below echo-off, and a Markdown file's opening comment, and read each. Then read files whose declaring line is malformed in each way (no space, lower case, upper case, trailing words, two ids, a lower-case id), one with a malformed line beside an exact one, two with two declaring lines (two ids, and one id twice), and files whose line sits outside the carrier (a comment below a docstring, a later string, an empty module, a line below the top comment block, Markdown outside the opening comment, the words mid-line, a PowerShell help block, a batch file's double-colon line)."
+method = "Write one file per carrier, each declaring the same component: a Python module's docstring, a shell script after its shebang, a macOS command file, a PowerShell script's hash comments, a TOML, an INI and a CSV file, a file with no suffix, a Windows batch file's REM line below echo-off, and a Markdown file's opening comment, and read each. Then read files whose declaring line is malformed in each way (no space, lower case, upper case, trailing words, two ids, a lower-case id), one with a malformed line beside an exact one, two with two declaring lines (two ids, and one id twice), and files whose line sits outside the carrier (a comment below a docstring, a later string, an empty module, a line below the top comment block, Markdown outside the opening comment, the words mid-line, a PowerShell help block, a batch file's double-colon line). Last, read a path that cannot be read, a directory standing at it, and a file whose bytes cannot be decoded as UTF-8 although it holds an exact declaring line, each once as a Python module and once as a shell script."
 tier = "Smoke"
-expected = "Every carrier yields the component and no problem. Each malformed file yields no component and a problem quoting its line as not a declaration, the file with a malformed line beside an exact one included; each doubled file yields a problem naming two components; each file with its line outside the carrier yields no component and the absent problem."
+expected = "Every carrier yields the component and no problem. Each malformed file yields no component and a problem quoting its line as not a declaration, the file with a malformed line beside an exact one included; each doubled file yields a problem naming two components; each file with its line outside the carrier yields no component and the absent problem; and each file that cannot be read or decoded yields no component and the absent problem, and reading it raises nothing."
 automated = "Yes"
-evidence = "tests/test_component_headers.py::test_each_carrier_declares_through_its_own_comment_syntax; tests/test_component_headers.py::test_a_line_shaped_like_a_declaration_but_not_exact_is_malformed; tests/test_component_headers.py::test_a_malformed_line_beside_an_exact_one_leaves_the_file_undeclared; tests/test_component_headers.py::test_two_declarations_are_doubled_even_naming_one_id; tests/test_component_headers.py::test_a_declaration_outside_the_carrier_declares_nothing"
+evidence = "tests/test_component_headers.py::test_each_carrier_declares_through_its_own_comment_syntax; tests/test_component_headers.py::test_a_line_shaped_like_a_declaration_but_not_exact_is_malformed; tests/test_component_headers.py::test_a_malformed_line_beside_an_exact_one_leaves_the_file_undeclared; tests/test_component_headers.py::test_two_declarations_are_doubled_even_naming_one_id; tests/test_component_headers.py::test_a_declaration_outside_the_carrier_declares_nothing; tests/test_component_headers.py::test_a_file_that_cannot_be_read_or_decoded_is_absent"
 status = "Drafted"
 phase = 6
 
@@ -4596,7 +4596,7 @@ phase = 6
 [test.TC-468]
 verifies = ["SR-217", "LLR-257"]
 level = "Integration"
-method = "Driven on real git repositories whose acts are taken with copy_live. A test case re-pointed at a requirement in a text commit before the requirement's code lands, and re-accepted by an act after it, is reported late at the act. An act made on a side branch before the code landed on trunk, merged after it, is placed at the merge and reported late, naming the act's own commit."
+method = "Driven on real git repositories in which each acceptance act is taken as the kit takes one: the registries' copies are written into the acceptance record and the act's entry is appended to its ledger, in the act's own commit. A test case re-pointed at a requirement in a text commit before the requirement's code lands, and re-accepted by an act after it, is reported late at the act. An act made on a side branch before the code landed on trunk, merged after it, is placed at the merge and reported late, naming the act's own commit."
 tier = "Full"
 expected = "Each acceptance is dated at the commit that added its act's ledger entry: the re-pointing at the re-accepting act, not its text commit; the side-branch act ordered where it reached trunk."
 automated = "Yes"
@@ -4651,11 +4651,11 @@ phase = 6
 [test.TC-475]
 verifies = ["SR-157", "LLR-395"]
 level = "Integration"
-method = "Run the trajectory check over registries and test trees covering each input state of the undeclared-case rule: no registry, no tests root and a registry that does not parse; a placeholder row; a Drafted case holding a note and holding an untagged part; an automated cell reading No, another word, absent and blank; an Accepted and a Founded case, and one whose automated cell is padded and upper-case, each tagged and untagged; a case whose one tagged test fails when it is run; a case whose part is in an unreadable file, alone and beside a readable part; an untagged case holding a note, no cell, a whole-file part, a part outside the tests root and an absent path; a misplaced and a malformed tag, alone and beside a valid one; and an untagged part, then tagged. Then walk one case through a lane's order, Drafted holding a note, then Drafted and tagged, then Accepted and tagged; then out of order, Accepted before its tag, in plain and strict runs with and without work items, and once tagged; then run the same untagged Accepted case in a bootstrapped scaffold below and at the implementation rung, and once tagged."
+method = "Write one Accepted automated test case and one test that validly declares it and fails when it is run; run that test and see it fail, then run the trajectory check under strict checking over the registry and the test file."
 tier = "Full"
-expected = "Absent inputs are vacuous, and a registry that does not parse stops the run with its parse error and no such finding; a placeholder row, a Drafted case and a case not automated owe no declaration, while a Drafted case's parts are still held equal; an eligible tagged case is clean, and so is one whose tagged test fails; a part in an unreadable file adds only that file's finding; every other eligible untagged case reads that no test declares it, whatever its cell holds; a refused tag declares nothing; and one tag clears both the part's finding and the case's. A lane's order reads no finding at any step; an Accepted case with no tag warns with exit 0 in a plain run and errors with exit 1 under strict checking until it is tagged; and a newly created project warns and exits 0 at DevStg-Tests, fails at DevStg-Impl, and is clean once the case is tagged."
+expected = "The test fails when it is run, and the trajectory check still reads the case clean: no finding that no test declares it, no Evidence equality finding, and exit 0, since the rule reads declarations, not test outcomes."
 automated = "Yes"
-evidence = "tests/test_trajectory_arch.py::test_the_undeclared_rule_is_vacuous_with_no_tests_root_or_no_registry; tests/test_trajectory_arch.py::test_an_unparseable_registry_stops_the_run_before_the_undeclared_rule; tests/test_trajectory_arch.py::test_a_placeholder_row_owes_no_declaration; tests/test_trajectory_arch.py::test_a_drafted_case_owes_no_declaration_and_its_parts_are_still_held; tests/test_trajectory_arch.py::test_a_case_not_automated_owes_no_declaration; tests/test_trajectory_arch.py::test_an_eligible_case_is_clean_when_tagged_and_named_when_not; tests/test_trajectory_arch.py::test_a_declared_test_that_fails_leaves_its_case_clean; tests/test_trajectory_arch.py::test_a_part_in_an_unreadable_file_adds_no_undeclared_finding; tests/test_trajectory_arch.py::test_an_eligible_untagged_case_is_named_whatever_its_cell_holds; tests/test_trajectory_arch.py::test_a_refused_tag_declares_nothing; tests/test_trajectory_arch.py::test_one_tag_clears_the_part_and_the_declaration_findings; tests/test_trajectory_arch.py::test_a_lanes_order_never_meets_the_undeclared_finding; tests/test_trajectory_arch.py::test_an_accepted_case_with_no_tag_warns_plain_and_errors_strict; tests/test_trajectory_arch.py::test_the_undeclared_finding_on_a_bootstrapped_scaffold"
+evidence = "tests/test_trajectory_arch.py::test_a_declared_test_that_fails_leaves_its_case_clean"
 status = "Drafted"
 phase = 6
 
