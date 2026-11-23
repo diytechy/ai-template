@@ -52,7 +52,7 @@ A new coordinator session starts with these steps, in this order.
    name (the sittings refuse to bless one) and that a new row states one
    obligation and has every clause tested, the two things the third
    sitting returned F-3's rows for.
-4. **Kit leftovers, filed and critiqued (`a8e55cb1e`), not built:** WI-1051
+4. **Kit leftovers, filed and critiqued (`a8e55cb1e`); WI-1053 and WI-1054 merged, WI-1051 and WI-1052 building (§10):** WI-1051
    (the act template's `scripts/intake.py` and the first-acceptance
    template's "`APPROVE`"), WI-1052 (an unproven risk no act accepted reads
    "has reopened"), WI-1053 (files mode: the one-body check reports itself
@@ -135,7 +135,7 @@ adjudication sittings by Gemini Neon through `agy` (operator, 2026-11-21;
 | Item | What | Wave | Notes |
 |---|---|---|---|
 | WI-1056 | WI-1055's verdict answered: five reverted amendments re-landed under an amended SR-221, SR-248's chain repaired | Next (§0 step 1); before the fourth sitting | Filed `7b342d8b9`; critiqued, kept one row |
-| WI-1051 to WI-1054 | Kit leftovers from this drill (§0 step 4) | Any time | Filed and critiqued (`a8e55cb1e`); not built |
+| WI-1051 to WI-1054 | Kit leftovers from this drill (§0 step 4) | Beside WI-1056, before the fourth sitting | WI-1053 merged `4cb091e79`, WI-1054 merged `b486b1ea1`; WI-1051 and WI-1052 building |
 | WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6, §3.4) | F, after the N6 stop | Filed and critiqued (round 1, Sol and Argon, all findings applied, `a57782d59`). Order by `needs`: 1021; 1022; 1023; then 1024 and 1027 (either order); 1025; then 1026, 1028 and 1030; then 1029. Built side by side where `needs` allows, landing one at a time (plan revision 37). F-1 merged (`147fed185`), F-2 merged (`b2b0d9476`), F-3 merged (`4335c1a4d`); next 1024 and 1027 |
 | WI-1016 | A repository can switch off the implementation layer | After F | Re-critiqued once F lands; reverses SR-186, so its amendment is drafted for the operator |
 | WI-1018 | Row text a lane leaves stale is filed, and the first set is brought up to the code | After F-8 | F-8's text migration takes B1, B7 and B9 and likely more; this row then fixes what is left |
@@ -1144,3 +1144,25 @@ Append one line per step taken: the item, what happened, the commit.
   `planmode = "single"` (Sol's choice over Hydrogen's `none`): the plan
   settles SR-248's split and LLR-406's SR. Record in
   `docs/reviews/2026-11-22-scope-critiques/WI-1056.md`.
+- 2026-11-22 (third session): WI-1056's plan (`9548c30c1` on its branch)
+  approved with two corrections. SR-221's and LLR-263's titles say "file",
+  since a re-acceptance is per row. LLR-405 cites LLR-204's grammar rather
+  than restating it. SR-248 splits into SR-248 (discharge), SR-249
+  (placement) and SR-250 (the back-link reading); LLR-406 moves under a
+  new SR-251 (generation); LLR-403's discharge clause goes to a new LLR-408
+  (TC-485). Ranges: SR 249 to 252, LLR 408 to 412, TC 485 to 495. The
+  leftovers launched beside it from `3c33b3783`, so their amendments ride
+  the fourth sitting (ranges LLR 413 to 420, TC 496 to 511). WI-1053
+  needed no code: TC-504 pins the existing dormant report and LLR-398
+  states it. Review: Hydrogen APPROVE, Sol one MINOR dismissed (generated
+  evidence). Merged `4cb091e79`, regen `af357a570`, smoke `3724 passed,
+  3 skipped`. WI-1054 (TC-508 under SR-052 and LLR-113; flat legend names
+  the component node) was reviewed in two rounds: round 1 Hydrogen APPROVE,
+  Sol one MINOR adopted (TC-508's Expected narrowed to one invariant);
+  round 2 Hydrogen APPROVE, Sol one MINOR fixed in the record. Merged
+  `b486b1ea1` (watermark TC 508; TC-504 and TC-508 both kept), regen
+  `b247dc55b`, smoke `3724 passed, 3 skipped`. TC-508 sits in phase 3, so
+  `check_trajectory` warns that the closed phase 3 took new content until
+  the fourth sitting accepts it. New scratch folders for the operator:
+  `D:/rt1053`, `D:/rt1054`. IF-231's notes (Drafted) still describe the
+  reach as through the owner's design rows only: a candidate for WI-1018.
