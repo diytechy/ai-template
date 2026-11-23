@@ -1331,6 +1331,74 @@ def test_an_accepted_risk_reads_covered_or_unproven_and_never_evidenced(rules):
     assert rules.accepted_risk_state(_da(), None, []) == (None, [])
 
 
+# --- TC-501: the release gate words an unproven risk by why it reads unproven --
+# Each view is shaped as the act reader writes one: an act that accepted the
+# risk, the assumption's text differing now; no anchoring act in a record read
+# whole; and no anchoring act because the record could not be read whole.
+
+RISKY = _da(Status="Accepted", Standing="falsified", AcceptedRisk="Ship it.")
+REOPENED_VIEW = {
+    "act": "a" * 40,
+    "reason": "the acceptance act aaaaaaaaaaaa accepted its risk",
+    "assumption": dict(RISKY, Assumption="A reviewer skims the brief."),
+    "srs": [],
+    "needs": {},
+    "known": [],
+}
+NEVER_REASON = (
+    "no acceptance act names DA-001, so its accepted risk is unanchored; accept "
+    "it in an acceptance act that names DA-001"
+)
+NEVER_VIEW = {"act": None, "reason": NEVER_REASON, "unaccepted": True}
+UNREAD_VIEW = {
+    "act": None,
+    "reason": "history too shallow to find the acceptance act accepting DA-001's "
+    "risk: this is a shallow clone, and the act may lie beyond its window; fetch "
+    "the full history",
+    "unaccepted": False,
+}
+
+
+def _release_line(rules, view):
+    """The one release failure for RISKY, its risk read from `view` by the
+    accepted-risk rule, as the gate's step composes it."""
+    risks = {"DA-001": rules.accepted_risk_state(RISKY, view, [])}
+    lines = _released(rules, [RISKY], risks)
+    assert len(lines) == 1 and "DA-001" in lines[0] and "SR-001" in lines[0], lines
+    return lines[0]
+
+
+def test_the_release_gate_words_an_unproven_risk_by_why_it_reads_unproven(rules):
+    """Only a risk an act accepted can have reopened. Read from an act whose
+    assumption text differs now, the failure says the risk has reopened and
+    covers nothing until accepted again, naming the trigger. Read with no
+    anchoring act from a record read whole, it says the risk was never
+    accepted and that an act accepting it is what covers it, claiming no
+    reopening. Read with no anchoring act because the record could not be read
+    whole, or from no view at all, it carries the reading's own reason and
+    claims neither.
+
+    Implements: TC-501
+    """
+    reopened = _release_line(rules, REOPENED_VIEW)
+    assert "has reopened" in reopened, reopened
+    assert "covers nothing until the risk is accepted again" in reopened, reopened
+    assert "Assumption changed since the act aaaaaaaaaaaa" in reopened, reopened
+    assert "never accepted" not in reopened, reopened
+
+    never = _release_line(rules, NEVER_VIEW)
+    assert "never accepted" in never, never
+    assert "covers nothing until an act accepts it" in never, never
+    assert NEVER_REASON in never, never
+    assert "reopen" not in never and "accepted again" not in never, never
+
+    for view in (UNREAD_VIEW, None):
+        unread = _release_line(rules, view)
+        (reason,) = rules.accepted_risk_state(RISKY, view, [])[1]
+        assert reason in unread, (reason, unread)
+        assert "reopen" not in unread and "never accepted" not in unread, unread
+
+
 # --- TC-235's chain: what the brief shows for an assumption (SR-203) -----------
 
 

@@ -480,3 +480,127 @@ def test_the_checker_reports_a_reopened_risk_naming_its_trigger(repo):
     ]
     assert len(lines) == 1, proc.stdout + proc.stderr
     assert "unproven" in lines[0] and "SN-002" in lines[0], lines[0]
+
+
+# --- TC-500: the advisory words an unproven risk by why it reads unproven ---------
+# Composed as the checker composes it: the act reader's view, read from real
+# history, handed to the advisory rule beside the rows and records on disk.
+
+RISK_LINE = (
+    'accepted_risk = "No reviewer population to sample yet; proceeding on the '
+    "operator's say-so.\"\n"
+)
+
+
+def _advisory(root):
+    """The one advisory for DA-001's accepted risk, with the act reader's view
+    it was read from."""
+    (da,) = CARRIER.load(root / DA_REL, "DA-ID", keep_examples=False)
+    tcs = CARRIER.load(root / TC_REL, "TC-ID", keep_examples=False)
+    needs = CARRIER.load_needs(root / NEEDS_REL)
+    view = SNAP.risk_acceptance_view(root, "DA-001")
+    lines = RULES.accepted_risk_advisories(
+        [da], tcs, needs, OBS.read_records(root), {"DA-001": view}
+    )
+    assert len(lines) == 1 and "DA-001" in lines[0], lines
+    return lines[0], view
+
+
+def _drafted_repo(tmp_path, assumptions=ASSUMPTIONS):
+    """A repository holding the rows, DA-001 drafted, committed and in no act."""
+    root = tmp_path / "repo"
+    root.mkdir(parents=True)
+    for rel, text in dict(FILES, **{DA_REL: assumptions}).items():
+        (root / rel).parent.mkdir(parents=True, exist_ok=True)
+        (root / rel).write_text(text.lstrip("\n"), encoding="utf-8")
+    _git(root, "init", "-q")
+    pin_autocrlf(root)
+    _git(root, "config", "user.email", "test@example.com")
+    _git(root, "config", "user.name", "Test")
+    _commit(root, "draft the assumption")
+    return root
+
+
+def test_the_advisory_says_a_risk_an_act_accepted_has_reopened(repo):
+    """A risk an act accepted, then undone by a change to the assumption's own
+    text: the advisory says it has reopened and reads unproven until accepted
+    again, naming the trigger.
+
+    Implements: TC-500
+    """
+    root, _act = repo
+    _edit(root, DA_REL, "reads the brief", "reads the whole brief")
+    _commit(root, "amend DA-001")
+    line, _view = _advisory(root)
+    assert "has reopened" in line, line
+    assert "unproven until the risk is accepted again" in line, line
+    assert "DA-001's Assumption changed" in line, line
+    assert "never accepted" not in line, line
+
+
+def test_the_advisory_says_a_risk_no_act_accepted_was_never_accepted(tmp_path):
+    """With the history and every act ledger on it read whole, no act there
+    accepted the risk, either because no act names the assumption or because
+    the acts naming it recorded no risk: the advisory says the risk was never
+    accepted and that an act accepting it is what clears it, and claims no
+    reopening.
+
+    Implements: TC-500
+    """
+    root = _drafted_repo(tmp_path)
+    SNAP.copy_live(root, seed=True)
+    _commit(root, "an act accepting the needs and requirements, not DA-001")
+    line, view = _advisory(root)
+    assert view["act"] is None and view["unaccepted"] is True, view
+    assert "never accepted" in line, line
+    assert "unproven until an act accepts it" in line, line
+    assert view["reason"] in line and "unanchored" in line, line
+    assert "reopen" not in line and "accepted again" not in line, line
+
+    assert RISK_LINE in ASSUMPTIONS, "fixture: the risk line moved"
+    named = _drafted_repo(
+        tmp_path / "named",
+        ASSUMPTIONS.replace(RISK_LINE, "").replace('"Drafted"', '"Accepted"'),
+    )
+    SNAP.copy_live(named, seed=True)
+    _commit(named, "accept DA-001 with no accepted risk")
+    _edit(named, DA_REL, 'status = "Accepted"\n', 'status = "Accepted"\n' + RISK_LINE)
+    _commit(named, "write the accepted risk after the act")
+    line, view = _advisory(named)
+    assert view["act"] is None and view["unaccepted"] is True, view
+    assert "recorded no accepted risk" in view["reason"], view
+    assert "never accepted" in line, line
+    assert "unproven until an act accepts it" in line, line
+    assert view["reason"] in line, line
+    assert "reopen" not in line and "accepted again" not in line, line
+
+
+def test_the_advisory_claims_neither_where_the_record_cannot_be_read_whole(
+    repo, tmp_path
+):
+    """A shallow clone whose window lacks the act, and a malformed act ledger
+    in the history, each leave the record unread whole: the advisory states the
+    reading's own reason and claims neither a reopening nor a risk never
+    accepted.
+
+    Implements: TC-500
+    """
+    root, _act = repo
+    _edit(root, NOTES_REL, "What the reviewer is shown.", "What the reviewer sees.")
+    _commit(root, "a later, unrelated commit")
+    clone = tmp_path / "shallow"
+    _git(tmp_path, "clone", "-q", "--depth", "1", root.as_uri(), str(clone))
+    line, view = _advisory(clone)
+    assert view["act"] is None and view["unaccepted"] is False, view
+    (reason,) = _state(clone)[1]
+    assert "shallow" in reason and reason in line, (reason, line)
+    assert "reopen" not in line and "never accepted" not in line, line
+
+    _reaccept(root)
+    _edit(root, "{}/{}".format(SNAP.SNAPSHOT_DIR, SNAP.ACTS), "seq = 2", "seq = 1")
+    _commit(root, "renumber the ledger by hand")
+    line, view = _advisory(root)
+    assert view["act"] is None and view["unaccepted"] is False, view
+    (reason,) = _state(root)[1]
+    assert SNAP.ACTS in reason and reason in line, (reason, line)
+    assert "reopen" not in line and "never accepted" not in line, line

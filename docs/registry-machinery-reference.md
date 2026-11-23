@@ -351,9 +351,11 @@ undeclared or automated case, or expires later than `MaxAge` days after its
 observation is an **integrity** finding naming the file
 (`assumption_rules.observation_record_findings`); a leading-dot file is never
 read. Where the frame declares a crossing, the records feed two advisories:
-the falsification worklist, and an accepted risk reopened since the act that
-accepted it (SR-201, SR-202). An assumption carries no evidence level: a
-passing record raises nothing, and only a person sets `Standing`.
+the falsification worklist, and an accepted risk that reads unproven, worded
+by why: reopened since the act that accepted it, never accepted by any act,
+or with no act accepting it readable (SR-201, SR-202). An assumption carries
+no evidence level: a passing record raises nothing, and only a person sets
+`Standing`.
 
 **Test-file tags name a case from the test side.** A test file names the cases
 it runs on the `Implements:` line; `PROCESS.md` §3 states the rule.
