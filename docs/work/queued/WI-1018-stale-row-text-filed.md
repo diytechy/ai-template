@@ -36,6 +36,9 @@ B1, B7 and B9's symbol leave the set. Its review found one more stale row it did
 not amend: SR-221 (`Accepted`) still says "for a module a design row names",
 though design rows now name no module; the files realizing a row are read
 from the code's back-links. It joins the first set.
+(Moved to WI-1056 the same day: the third adjudication sitting made SR-221's
+amendment a blocker for LLR-263, so WI-1056 amends it and this row does
+not.)
 
 ## Done-when
 

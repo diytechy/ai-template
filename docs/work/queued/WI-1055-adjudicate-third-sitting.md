@@ -58,3 +58,29 @@ before it is taken. One session, never fanned out (PROCESS.md §6).
       if its first snapshot is refused, the choice is put to the operator.
 - [ ] Each MEANING amendment and RETURN row is listed in the Deliverable
       with its finding, and its follow-up is filed or named.
+
+## The verdict and the operator's ruling
+
+The sitting ran on 2026-11-22: Gemini Neon (`gemini-4-neon-high`), 444 s,
+one session. Its verdict (`0c5440672`, recorded `8e08b3029`):
+
+- **Amendments:** 14 `MEANING+BLESS` (LLR-005, -153, -199, -201, -210,
+  -217, -257, -293; the SR-180 chain's removal, SR-180, LLR-180, TC-175;
+  TC-195, -197, -460), 1 `CLARITY` (LLR-198), 5 `MEANING` not blessed
+  (LLR-244 and TC-239 against SR-212; SR-212 itself; LLR-263 and TC-258
+  against the unamended SR-221). TC-428 and TC-429 changed only their
+  routed `Verifies` cell and were not shown; nor were IF-312 and CMP-006.
+- **First acceptances:** 5 `ACCEPT` (LLR-404, LLR-407, TC-457, TC-468,
+  TC-475), 9 `RETURN` (SR-248, LLR-403, LLR-405, LLR-406, TC-480 to TC-484).
+
+**The act's first snapshot was refused** (SR-207), tested read-only before
+anything was written: the five unblessed rows drift in all three registries
+the act copies. The coordinator put the choice to the operator.
+
+**The operator's ruling (2026-11-22, given in the coordinator's session):**
+revert the five unblessed amendments and take the act now. Their accepted
+cells (LLR-244's `detail`, LLR-263's `detail` and `rationale`, SR-212's
+`acceptance_criteria`, TC-239's `method`, TC-258's `expected` and `method`)
+went back to the recorded text in the commit that filed WI-1056; with that,
+the act's first snapshot reads no refusal. WI-1056 re-lands them, answers
+the nine returned rows, and amends SR-221, for a fourth sitting.
