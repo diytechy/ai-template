@@ -196,6 +196,10 @@ def test_a_companion_cell_that_does_not_parse_or_constrains_nothing_fails(
             out_of_domain="It is refused. Nothing is written.",
         ),
         "LLR-005": _llr(constrains=["IF-001"], out_of_domain="No full stop"),
+        "LLR-008": _llr(
+            constrains=["IF-001"], out_of_domain="Refused. nothing changes."
+        ),
+        "LLR-009": _llr(constrains=["IF-001"], out_of_domain="Refused at 2.5 MB."),
         "LLR-006": _llr(dimensions="a=bool"),
         "LLR-007": _llr(out_of_domain="Refused."),
     }
@@ -209,6 +213,8 @@ def test_a_companion_cell_that_does_not_parse_or_constrains_nothing_fails(
     assert "unknown strategy: sometimes" in out
     assert "LLR-004 OutOfDomain is not one sentence" in out
     assert "LLR-005 OutOfDomain is not one sentence" in out
+    assert "LLR-008 OutOfDomain is not one sentence" in out
+    assert "LLR-009 OutOfDomain" not in out
     assert "LLR-006 carries Dimensions but constrains no interface" in out
     assert "LLR-007 carries OutOfDomain but constrains no interface" in out
     assert "LLR-001 Dimensions" not in out and "LLR-001 OutOfDomain" not in out
@@ -351,12 +357,16 @@ def test_each_interface_reaches_a_run_case_through_a_constraining_row_or_a_namin
         "LLR-003": _llr(sr_refs=["SR-002"]),
         "LLR-004": _llr(constrains=["IF-006"]),
     }
-    srs = {"SR-001": SR, "SR-002": dict(SR, constrains=["IF-002"])}
+    srs = {
+        "SR-001": SR,
+        "SR-002": dict(SR, constrains=["IF-002"]),
+        "SR-003": dict(SR, verification_method="Inspection"),
+    }
     tcs = {
         "TC-001": _tc(["SR-001", "LLR-001"]),
         "TC-002": _tc(["SR-002", "LLR-003"]),
         "TC-003": _tc(["SR-001", "LLR-002", "IF-003"]),
-        "TC-004": _tc(["SR-001", "IF-004"], automated="No"),
+        "TC-004": _tc(["SR-003", "IF-004"], automated="No"),
         "TC-005": _tc(["SR-001", "LLR-004"], automated="No"),
     }
     _project(tmp_path, llrs, tcs, ifs=ifs, srs=srs)
@@ -367,7 +377,7 @@ def test_each_interface_reaches_a_run_case_through_a_constraining_row_or_a_namin
     reach = spine.interface_reach(ifs_, srs_, llrs_, tcs_)
     assert reach["IF-001"] == (["LLR-001"], ["TC-001"])
     assert reach["IF-002"] == (["SR-002"], ["TC-002"])
-    assert reach["IF-003"] == (["LLR-002"], ["TC-003"])
+    assert reach["IF-003"] == (["LLR-002", "SR-001"], ["TC-001", "TC-003", "TC-005"])
     assert reach["IF-005"] == ([], [])
     assert coherence.interface_coverage(srs_, llrs_, tcs_, ifs_) == {
         "IF-001": "design row",
@@ -393,6 +403,25 @@ def test_each_interface_reaches_a_run_case_through_a_constraining_row_or_a_namin
         "interface coverage: 2 interface(s) are reached by observation cases "
         "alone: IF-004, IF-006."
     ) in out
+
+
+def test_a_requirement_a_naming_case_verifies_brings_its_run_cases_into_the_reach(
+    tmp_path,
+):
+    """Implements: TC-531"""
+    # An observation case names IF-001 beside the requirement it verifies; a
+    # case the harness runs verifies that requirement, so the interface is
+    # reached through a naming case, not by observation alone.
+    tcs = {
+        "TC-001": _tc(["SR-001", "LLR-001"]),
+        "TC-002": _tc(["SR-001", "IF-001"], automated="No"),
+    }
+    _project(tmp_path, {"LLR-001": _llr()}, tcs)
+    srs_, llrs_ = _rows(tmp_path, SR_REL, "SR-ID"), _rows(tmp_path, LLR_REL, "LLR-ID")
+    tcs_, ifs_ = _rows(tmp_path, TC_REL, "TC-ID"), _rows(tmp_path, IF_REL, "IF-ID")
+    reach = spine.interface_reach(ifs_, srs_, llrs_, tcs_)
+    assert reach["IF-001"] == (["SR-001"], ["TC-001", "TC-002"])
+    assert coherence.interface_coverage(srs_, llrs_, tcs_, ifs_)["IF-001"] == "case"
 
 
 def test_the_interface_check_opt_out_silences_coverage(tmp_path, monkeypatch, capsys):

@@ -477,8 +477,10 @@ def status_criterion_findings(srs, scope):
 # what the rows it verifies already constrain. Joins across rows, so they live
 # here; `trace.analyze` decides each one's severity.
 
-# One sentence: one line, ending in a full stop, with no sentence ending inside.
-_INTERIOR_SENTENCE_END = re.compile(r"[.!?]\s+[A-Z]")
+# One sentence: one line, ending in a full stop, with no sentence ending inside,
+# which is a full stop, question mark or exclamation mark followed by a space
+# and more text, whatever its case.
+_INTERIOR_SENTENCE_END = re.compile(r"[.!?]\s+\S")
 
 
 def _one_sentence(text):

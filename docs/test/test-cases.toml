@@ -4783,9 +4783,9 @@ phase = 6
 [test.TC-528]
 verifies = ["SR-157", "LLR-418"]
 level = "Integration"
-method = "Run the strict check over design rows that constrain an interface and carry a dimensions cell that parses, one of an unknown dimension type, one naming a strategy outside the grammar's three, an out-of-domain cell of two sentences and one with no full stop, and over rows constraining nothing that carry either cell; and parse eight grammar strings, accepted and refused, through the cell's parser and the case generator's."
+method = "Run the strict check over design rows that constrain an interface and carry a dimensions cell that parses, one of an unknown dimension type, one naming a strategy outside the grammar's three, out-of-domain cells of two sentences, of two sentences the second opening in lower case, and with no full stop, one stating a decimal number, and over rows constraining nothing that carry either cell; and parse eight grammar strings, accepted and refused, through the cell's parser and the case generator's."
 tier = "Smoke"
-expected = "Each malformed cell, and each companion cell on a row constraining nothing, is a finding naming its row and cell, and the check exits 1, while the well-formed row draws none; the two parsers accept the same strings with the same result and refuse the same strings with the same message."
+expected = "Each malformed cell, and each companion cell on a row constraining nothing, is a finding naming its row and cell, and the check exits 1, while the well-formed row and the one stating a decimal number draw none; the two parsers accept the same strings with the same result and refuse the same strings with the same message."
 automated = "Yes"
 evidence = "tests/test_constrains.py::test_a_companion_cell_that_does_not_parse_or_constrains_nothing_fails; tests/test_constrains.py::test_the_cell_and_the_generator_read_one_grammar"
 status = "Drafted"
@@ -4816,11 +4816,11 @@ phase = 6
 [test.TC-531]
 verifies = ["SR-157", "LLR-421"]
 level = "Integration"
-method = "Derive the reach and the route of six interfaces: one a design row constrains, one a requirement constrains whose design row a case verifies, one a case names beside the row it verifies, one only an observation case names, one no row or case reaches, and one that only a design row verified by an observation case constrains; then run the strict check over the project, again with the interface-check opt-out set, and over a project with no interface row."
+method = "Derive the reach and the route of six interfaces: one a design row constrains, one a requirement constrains whose design row a case verifies, one a case names beside the row it verifies, one only an observation case names, one no row or case reaches, and one that only a design row verified by an observation case constrains; then derive the reach of an interface only an observation case names beside a requirement a run case verifies; then run the strict check over the project, again with the interface-check opt-out set, and over a project with no interface row."
 tier = "Smoke"
-expected = "Each interface's reach holds its constraining or observed rows and the cases verifying them; the routes are design row, requirement, case, observation, unreached and observation; the count line reads one, one, one, two and one; the unreached interface and the two observation-only interfaces are each named on their own line; the check exits 0; the opted-out run and the project with no interface row print no coverage line."
+expected = "Each interface's reach holds its constraining or observed rows and the cases verifying them; the routes are design row, requirement, case, observation, unreached and observation; the count line reads one, one, one, two and one; the unreached interface and the two observation-only interfaces are each named on their own line; the interface the observation case names beside a requirement a run case verifies is reached through that case; the check exits 0; the opted-out run and the project with no interface row print no coverage line."
 automated = "Yes"
-evidence = "tests/test_constrains.py::test_each_interface_reaches_a_run_case_through_a_constraining_row_or_a_naming_case; tests/test_constrains.py::test_the_interface_check_opt_out_silences_coverage"
+evidence = "tests/test_constrains.py::test_each_interface_reaches_a_run_case_through_a_constraining_row_or_a_naming_case; tests/test_constrains.py::test_the_interface_check_opt_out_silences_coverage; tests/test_constrains.py::test_a_requirement_a_naming_case_verifies_brings_its_run_cases_into_the_reach"
 status = "Drafted"
 phase = 6
 
@@ -4838,10 +4838,21 @@ phase = 6
 [test.TC-533]
 verifies = ["SR-229", "LLR-423"]
 level = "Unit"
-method = "Run a guarded claim whose environment names the lease holder's session under the agent tool's session variable, and again under another variable name; resolve a guard command's repository root with a root given, with only the project-root variable set, and with neither."
+method = "Run a guarded claim whose environment names the lease holder's session under the agent tool's session variable, and again under another variable name."
 tier = "Smoke"
-expected = "The claim under the tool's variable passes and the one under another name reads its caller as unknown; the root is the one given, else the variable's, else the working directory."
+expected = "The claim under the tool's variable passes and the one under another name reads its caller as unknown."
 automated = "Yes"
-evidence = "tests/test_coordinator_guard.py::test_the_guard_reads_its_caller_and_root_from_the_agent_tools_environment"
+evidence = "tests/test_coordinator_guard.py::test_the_guard_reads_its_caller_from_the_agent_tools_session_variable"
+status = "Drafted"
+phase = 6
+
+[test.TC-534]
+verifies = ["SR-230", "LLR-424"]
+level = "Unit"
+method = "Resolve a guard command's repository root with a root given, with only the agent tool's project-root variable set, and with neither."
+tier = "Smoke"
+expected = "The root is the one given, else the variable's, else the working directory."
+automated = "Yes"
+evidence = "tests/test_coordinator_guard.py::test_a_guard_command_reads_its_root_from_the_agent_tools_project_variable"
 status = "Drafted"
 phase = 6

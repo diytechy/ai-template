@@ -1027,9 +1027,9 @@ def interface_reach(ifs, srs, llrs, tcs):
     """`{IF id: (rows, cases)}` for each live interface: its BLAST RADIUS, the
     one home of the derivation the pointer rules name. `rows` are the design
     rows and requirements whose `Constrains` cell names it and the design rows
-    a test case naming it verifies (observed at it, per pair, as placement
-    reads it); `cases` are the test cases naming it and every case verifying
-    one of those rows, a requirement's cases including those of the design
+    and requirements a test case naming it verifies (observed at it, per pair);
+    `cases` are the test cases naming it and every case verifying one of those
+    rows, a constraining requirement's cases including those of the design
     rows under it (`llrs_under`, the SR-to-LLR walk's one home). Both sorted.
     The `-000` example rows are not read, on any tier.
 
@@ -1044,9 +1044,10 @@ def interface_reach(ifs, srs, llrs, tcs):
     rows = {i: set() for i in _row_ids(_real_rows(ifs, "IF-ID"), "IF-ID") if i}
     for col, tier in (("SR-ID", srs), ("LLR-ID", llrs)):
         _add_constraining(rows, tier, col)
+    walk = {iid: {r for r in rows[iid] if r.startswith("SR-")} for iid in rows}
     cases, verifying = _naming_cases(rows, _real_rows(tcs, "TC-ID"))
     for iid, reached in rows.items():
-        cases[iid] |= _verifying_cases(reached, llrs, verifying)
+        cases[iid] |= _verifying_cases(reached, llrs, verifying, walk[iid])
     return {iid: (sorted(rows[iid]), sorted(cases[iid])) for iid in sorted(rows)}
 
 
@@ -1070,8 +1071,8 @@ def _add_constraining(rows, tier, col):
 
 def _naming_cases(rows, tcs):
     """`(cases, verifying)`: per interface of `rows`, the cases naming it,
-    each such case's design rows added to `rows` (observed at it); and
-    `{row id: {TC ids}}` over every case."""
+    each such case's design rows and requirements added to `rows` (observed
+    at it); and `{row id: {TC ids}}` over every case."""
     cases = {iid: set() for iid in rows}
     verifying = {}
     for t in tcs:
@@ -1080,20 +1081,22 @@ def _naming_cases(rows, tcs):
             verifying.setdefault(x, set()).add(tid)
         for iid in (x for x in cited if x in rows):
             cases[iid].add(tid)
-            rows[iid].update(x for x in cited if x.startswith("LLR-"))
+            rows[iid].update(x for x in cited if x.startswith(("LLR-", "SR-")))
     return cases, verifying
 
 
-def _verifying_cases(reached, llrs, verifying):
+def _verifying_cases(reached, llrs, verifying, walk):
     """The cases (`verifying`, `{row id: {TC ids}}`) verifying the rows
-    `reached`, a requirement's including those of the design rows under it:
-    `interface_reach`'s last step."""
+    `reached`, a requirement in `walk` (one constraining the interface)
+    including those of the design rows under it: `interface_reach`'s last
+    step. A requirement only observed at the interface brings its own cases,
+    not its design rows'."""
     out = set()
     for rid in reached:
         out |= verifying.get(rid, set())
-        if rid.startswith("SR-"):
-            for row in llrs_under([rid], llrs):
-                out |= verifying.get(str(row.get("LLR-ID")).strip(), set())
+    for rid in walk:
+        for row in llrs_under([rid], llrs):
+            out |= verifying.get(str(row.get("LLR-ID")).strip(), set())
     return out
 
 

@@ -419,14 +419,18 @@ def test_a_claim_names_its_caller_by_claude_code_session_id(root, tx):
     assert "unknown" in guard.claim_refusal(root, env={"CLAUDE_SESSION_ID": COORD})
 
 
-def test_the_guard_reads_its_caller_and_root_from_the_agent_tools_environment(
-    root, tx, tmp_path, monkeypatch
-):
+def test_the_guard_reads_its_caller_from_the_agent_tools_session_variable(root, tx):
     """Implements: TC-533"""
     # The caller: the agent tool's own session variable, and no other name.
     held(root, tx)
     assert guard.claim_refusal(root, env={"CLAUDE_CODE_SESSION_ID": COORD}) is None
     assert "unknown" in guard.claim_refusal(root, env={"SESSION_ID": COORD})
+
+
+def test_a_guard_command_reads_its_root_from_the_agent_tools_project_variable(
+    tmp_path, monkeypatch
+):
+    """Implements: TC-534"""
     # The root: the one given, else the tool's project-root variable, else the
     # working directory.
     given, project, cwd = (tmp_path / n for n in ("given", "project", "cwd"))

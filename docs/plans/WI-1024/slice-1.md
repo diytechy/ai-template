@@ -109,12 +109,12 @@ unchanged except where a clause no test drove was cut (named in the line).
 | IF-012, IF-149 | exit-code, file | LLR-039 | amended `detail` | one file per row with links and indexes and the specification pin: TC-042 `test_bundle_generates_typed_linked_concepts`; deterministic, stale after a registry edit, current after regeneration: `test_generation_is_deterministic_and_check_gates_staleness`; writes-if-changed, prune, extra file: `test_write_mode_prunes_and_check_flags_extras`; guides: `test_process_guides_emit_with_derived_summaries`, `test_process_guides_skip_absent_docs`, `test_process_guides_absent_on_vacuous_scaffold`; opt-out: `test_opt_out_silences`; example rows only: `test_placeholder_only_scaffold_is_vacuous`. Cut, no test drove them: the duplicated-loaders clause (a retired rule), the legacy sentinel file, "a missing bundle file" and "a document edit". |
 | IF-014 | bytes | LLR-010 | amended `detail` | harness passes out of the box: TC-010 `tests/test_bootstrap.py`; the toolchain open item, its queued placeholder and the marks: `tests/test_profile.py::test_the_scaffolded_oi3_is_filed_with_its_queued_placeholder` |
 | IF-017 | stdout | LLR-024 | link | grammar and case set: TC-024 `tests/test_gen_cases.py` (pairwise, boundary corners, interior points, the TOML and CSV forms) |
-| IF-018 | file | LLR-033 | link | the checklist and its budgets section: TC-033 `test_release_checklist_lists_perf_budgets` |
-| IF-019 | file | LLR-025 | link | the index from the skills' frontmatter: TC-025 `tests/test_skills_index.py` (`test_index_row_count_matches_skill_dirs`, `test_every_skill_frontmatter_is_valid`); "a drifted index is detectable" has no named test in that file (file-level evidence only) |
-| IF-029 | file | LLR-013 | amended `detail` | malformed fails: TC-013 `test_missing_section_fails`, `test_diagram_without_ids_fails`, `test_unknown_id_fails`; conformant passes: `test_real_flow_with_known_ids_passes`; the default document: `test_fresh_scaffold_template_section_passes`. Cut, no test drove it: the re-homing sentence |
+| IF-018 | file | LLR-033 | amended `detail` (round 1) | the checklist and its budgets section: TC-033 `test_release_checklist_lists_perf_budgets` |
+| IF-019 | file | LLR-025 | amended `detail` (round 1) | the index from the skills' frontmatter: TC-025 `tests/test_skills_index.py` (`test_index_row_count_matches_skill_dirs`, `test_every_skill_frontmatter_is_valid`); "a drifted index is detectable" has no named test in that file (file-level evidence only) |
+| IF-029 | file | LLR-013 | amended `detail` | malformed fails: TC-013 `test_missing_section_fails`, `test_diagram_without_ids_fails`, `test_unknown_id_fails`; conformant passes: `test_real_flow_with_known_ids_passes`; the default document: `test_fresh_scaffold_template_section_passes`. Cut, no test drove it: the re-homing sentence. Round 1: the document is named in contract terms |
 | IF-030 | file | LLR-012 | amended `detail` | dead link: TC-012 `test_broken_file_link_fails`, `test_broken_anchor_fails`; vision tag: `test_missing_vision_tag_fails`; clean set: `test_clean_scaffold_passes`; built-in step from DevStg-Reqs: `test_harness_runs_doc_navigability_at_g1`, `test_harness_wires_stale_into_doc_navigability`; orphans: `test_orphan_warns_by_default_and_fails_when_strict`; the allowlist: `test_declared_class_suppresses_expected_orphan`; staleness only warns: `test_staleness_prints_hint_not_warn` |
 | IF-032 | git | LLR-017 | link | staged diff: TC-017 `test_staged_key_and_token_shapes`; message: `test_message_mode_scans_a_commit_message_file`; range: `test_range_mode_catches_history_and_messages`; independent of the privacy toggle: `test_secrets_floor_runs_with_privacy_off` |
-| IF-035 | file | LLR-279 | amended `detail` | the copy: TC-289 `test_a_multi_file_skill_materializes_whole_and_passes_the_drift_check`; the inventory: `test_the_delivery_inventory_lists_a_skills_companion_file` |
+| IF-035 | file | LLR-279 | amended `detail`, `rationale` (round 1) | the copy: TC-289 `test_a_multi_file_skill_materializes_whole_and_passes_the_drift_check`; the inventory: `test_the_delivery_inventory_lists_a_skills_companion_file` |
 | IF-036 | bytes | LLR-022 | link | drift and match: TC-022 `test_drift_warns_and_strict_fails`, `test_matching_copy_is_ok` |
 | IF-039 | bytes | LLR-171 | amended `detail` | non-Python scaffold passes the integrity and schema checks: TC-165 `test_every_profile_permutation_scaffolds_and_passes`; the token scan: `tests/test_language_neutral_scheme.py` |
 | IF-041 | cli | LLR-026 | amended `detail`, `rationale` | prompt on standard input and the no-wedge invariant: TC-026 `tests/test_agent_loop.py`; the tree kill, idle deadline, interruption, uncontainable child, the 10 s bound, an unopenable member, an ordinary launch error: TC-026 and TC-374 `test_session_stdin` and `test_kitlib_winjob` tests by name. The Codex last-message capture is driven only at file level |
@@ -122,18 +122,21 @@ unchanged except where a clause no test drove was cut (named in the line).
 | IF-074 | file | LLR-118 | amended `detail` | each section and its order: TC-123 `tests/test_gen_open_items.py`, `test_open_item_queue.py`, `test_a_claimed_citer_is_a_card_and_on_the_blocked_list`, the verdict audit tests; the assumption cards: TC-448 `tests/test_open_items_assumptions.py` tests by name |
 | IF-088 | call | LLR-198 | amended `detail`, `rationale` | the typed model: TC-194 `test_the_typed_model_kinds_every_pending_item`; cards less the pause: `test_operator_cards_is_pending_items_minus_the_pause`; the block: `test_the_block_renders_exactly_the_model`; three readers: `test_the_dispatcher_reads_the_model_not_the_render_facade`, `test_the_operator_surface_reads_the_model_not_the_render_facade`; the former names: `test_facade_reexports_pending_compatibility_names`; the pause: `test_pause_projection_is_deterministic`, `test_malformed_pause_still_projects_fail_closed` |
 | IF-139, IF-140 | exit-code, file | LLR-199 | re-cut (section 4) | TC-195 tests by name, and `test_a_design_row_sits_where_the_interface_it_constrains_is_owned` (new) |
-| IF-164 | file | LLR-124 | amended `detail` | regenerated on the trunk and stale-checked: TC-060 `tests/test_trunk_step.py`, `tests/test_gen_trajectory.py` (file level) |
+| IF-164 | file | LLR-124 | amended `detail` | regenerated on the trunk and stale-checked: TC-060 `tests/test_trunk_step.py`, `tests/test_gen_trajectory.py` (file level). Round 1: the status page named in contract terms |
 | IF-227 | call | LLR-258 | amended `detail` | each clause: TC-251 `tests/test_traj_views.py` (file level) |
 | IF-254 | exit-code | LLR-281 | amended `detail`, `rationale` | under the floor refused by name and at the floor passing, after the index is written: TC-291 `test_check_refuses_a_description_under_the_floor`. "Called first" cut (no test drives the order) |
-| IF-277 | env | LLR-423 (new) | new, Drafted | the session variable and no other: TC-533 `test_the_guard_reads_its_caller_and_root_from_the_agent_tools_environment`; the root given, else the variable, else the working directory: the same test |
+| IF-277 | env | LLR-423 (new), LLR-424 (new, round 1) | new, Drafted | LLR-423, the caller by the session variable and no other: TC-533 `test_the_guard_reads_its_caller_from_the_agent_tools_session_variable`; LLR-424, the root given, else the project-root variable, else the working directory: TC-534 `test_a_guard_command_reads_its_root_from_the_agent_tools_project_variable` |
 | IF-292, IF-293 | cli, exit-code | LLR-320 | amended `detail` | report first, offers only at a terminal, menu input kept, exit by the handed interpreter, standalone check read-only: TC-343 `tests/test_run_devsetup.py` tests by name |
 
 Why LLR-423 is new rather than LLR-300 amended: LLR-300 (4,556 characters,
 about 25 clauses and many code names) names the session variable inside its
 claim-refusal clause, and nothing states the root default. Linking it would
 have meant rewriting the whole coordinator-guard row under rule 1 for one
-interface. LLR-423 states the reading of both variables. LLR-300's clause
-overlaps it and could cite it when that row is next amended (section 6).
+interface. After review round 1, LLR-423 states the caller identification
+alone and LLR-424 (under SR-230) the root reading, both IF-277's form.
+LLR-300's session-identification clause overlaps LLR-423 and stays untouched
+in this slice; it is recorded in section 7 as a candidate for WI-1018's
+stale-text list.
 
 **By channel** (the warn-first line at the tip; every pair is "without"):
 
@@ -142,7 +145,7 @@ overlaps it and could cite it when that row is next amended (section 6).
 | bytes | 3 | 0 | 3 |
 | call | 2 | 0 | 2 |
 | cli | 3 | 0 | 3 |
-| env | 1 | 0 | 1 |
+| env | 2 | 0 | 2 |
 | exit-code | 6 | 0 | 6 |
 | file | 9 | 0 | 9 |
 | git | 1 | 0 | 1 |
@@ -155,7 +158,7 @@ LLR-281 (a description under or at the floor), LLR-320 (the handed
 interpreter and a terminal) and LLR-024 (the strategy and output form). Each
 needs a test of its out-of-domain behaviour before both cells can be written.
 
-The tip's lines: `placement: 131 design row(s) placed, 232 unplaced`;
+The tip's lines (after round 1): `placement: 131 design row(s) placed, 233 unplaced`;
 `interface coverage: 239 interface(s): 27 through a constraining design row,
 0 through a constraining requirement, 118 through a naming test case, 0 by
 observation alone, 94 unreached`; no repeated name is reported.
@@ -181,9 +184,9 @@ cell; "routed" marks the `constrains` cell, a routed traced change:
 | LLR-017 | none | `constrains` IF-032 |
 | LLR-022 | none | `constrains` IF-036 |
 | LLR-024 | none | `constrains` IF-017 |
-| LLR-025 | none | `constrains` IF-019 |
+| LLR-025 | `detail` | `constrains` IF-019 |
 | LLR-026 | `detail`, `rationale` | `constrains` IF-041 |
-| LLR-033 | none | `constrains` IF-018 |
+| LLR-033 | `detail` | `constrains` IF-018 |
 | LLR-039 | `detail` | `constrains` IF-012, IF-149 |
 | LLR-047 | `detail`, `rationale` | `constrains` IF-048, IF-157, IF-158 |
 | LLR-118 | `detail` | `constrains` IF-074 |
@@ -194,7 +197,7 @@ cell; "routed" marks the `constrains` cell, a routed traced change:
 | LLR-199 | `detail`, `rationale` | `constrains` IF-139, IF-140 |
 | LLR-244 | `detail` | none |
 | LLR-258 | `detail` | `constrains` IF-227 |
-| LLR-279 | `detail` | `constrains` IF-035 |
+| LLR-279 | `detail`, `rationale` | `constrains` IF-035 |
 | LLR-281 | `detail`, `rationale` | `constrains` IF-254 |
 | LLR-320 | `detail` | `constrains` IF-292, IF-293 |
 | LLR-403 | `title`, `detail`, `rationale` | none |
@@ -204,19 +207,20 @@ cell; "routed" marks the `constrains` cell, a routed traced change:
 | TC-480 | `method`, `expected` | none (`evidence` regenerated) |
 
 27 rows: 23 design rows, 2 requirements, 2 test cases; 21 routed `constrains`
-changes, 5 of them on rows whose text did not change (LLR-017, LLR-022,
-LLR-024, LLR-025, LLR-033). TC-466's `evidence` gained a test (traced, not
+changes, 3 of them on rows whose text did not change (LLR-017, LLR-022,
+LLR-024). TC-466's `evidence` gained a test (traced, not
 routed): no act owed.
 
 **New `Drafted` rows owed a first acceptance:** LLR-417, LLR-418, LLR-419,
-LLR-420, LLR-423; TC-527, TC-528, TC-529, TC-530, TC-533. Ten rows.
+LLR-420, LLR-423, LLR-424; TC-527, TC-528, TC-529, TC-530, TC-533, TC-534.
+Twelve rows.
 
 **Held out of sitting A (D11):** LLR-421, LLR-422, TC-531 and TC-532 stay
 `Drafted` until slice 5, when their warn-first sentence becomes the strict one.
 
-Sitting A's total: 37 rows. Ids: LLR-417 to LLR-423 and TC-527 to TC-533,
-watermark raised to LLR 423 and TC 533; the population used one LLR and one
-TC id, so LLR-424 up (56) and TC-534 up (26) remain.
+Sitting A's total: 39 rows. Ids: LLR-417 to LLR-424 and TC-527 to TC-534,
+watermark raised to LLR 424 and TC 534; the population used two LLR and two
+TC ids, so LLR-425 up (55) and TC-535 up (25) remain.
 
 ## 6. For the coordinator, before slice 2
 
@@ -237,3 +241,60 @@ TC id, so LLR-424 up (56) and TC-534 up (26) remain.
    should, or leave the counts as the evidence for the later strictness call.
 4. **LLR-300's overlap with LLR-423** (the session variable) is left for that
    row's next amendment.
+
+## 7. Review record
+
+**Round 1** (over `bba30552f..1a057240e`): Hydrogen APPROVE; Sol
+CHANGES-REQUESTED, six MINORs, all adopted by the coordinator and fixed in one
+commit:
+
+1. The reach left out the requirements a naming test case verifies, so a run
+   case verifying such a requirement dropped out of the interface's reach.
+   Fixed: a requirement a naming case verifies is observed at the interface
+   and brings its own cases (a constraining requirement still brings its
+   design rows' cases too). Red first:
+   `test_a_requirement_a_naming_case_verifies_brings_its_run_cases_into_the_reach`
+   (TC-531); LLR-421's text and TC-531's method and expected follow; the
+   coverage test's observation-only interface now cites an Inspection
+   requirement no run case verifies.
+2. The one-sentence rule passed "Refused. nothing changes." Fixed: a full
+   stop, question mark or exclamation mark followed by a space and more text,
+   in any case, is a sentence end; a decimal number stays one sentence. Red
+   first: the case added to
+   `test_a_companion_cell_that_does_not_parse_or_constrains_nothing_fails`
+   (TC-528); LLR-418's text and TC-528's method and expected follow.
+3. LLR-013, LLR-124 and LLR-279 named files: now the project's authored
+   runtime-flows document, the status page and the skill's entry document
+   (LLR-279's rationale too). The same class in the two link-only rows this
+   slice touched, LLR-025 (the skills index, the skill's entry document) and
+   LLR-033 (the release checklist), was rewritten with them, so those two
+   rows now amend `detail` as well.
+4. LLR-423 stated two obligations. Now it states the caller identification
+   alone; the root reading, which IF-277's form carries (its project-root
+   variable), is LLR-424 under SR-230 with TC-534, and both constrain IF-277.
+   LLR-300 is untouched.
+
+Red-before: `3 failed, 16 passed in 6.41s` (the two new cases and the
+coverage test's changed expectation); after the fixes `19 passed in 6.17s`.
+
+**The coordinator's rulings with the round:** the four questions of section 6
+wait for sitting A's verdict, except the first: keep the large-row pattern,
+a new focused `Drafted` row stating one obligation instead of scrubbing a
+large multi-clause row, and record each overlap it leaves.
+
+**Overlap recorded for WI-1018's stale-text list:** LLR-300's clause that the
+claim refusal "identifies the claimant by the session id the agent CLI
+exports to its tool processes (CLAUDE_CODE_SESSION_ID)" restates LLR-423; a
+later sitting or row consolidates it (LLR-300 citing LLR-423 or dropping the
+clause).
+
+**Round 1's tests:** the 32 test modules importing `kitlib.spine` or
+`coherence` directly, with the touched test modules, the ratchets, the sync
+test, the golden report and the stage test: `1078 passed, 1 skipped, 18
+warnings in 443.30s (0:07:23)`. `trace.py --root . --strict` exit 0
+(`Traceability: SN=31 SR=141 LLR=364 TC=435 orphans=0 integrity=0 ...`);
+`check_trajectory: clean (1060 work item(s), 932 done (88%), 37 cancelled,
+graph acyclic).`; `run_menu.py smoke`, once, exit 0: `3788 passed, 3 skipped,
+18 warnings in 269.06s (0:04:29)` (`smoke budget: CPU 758.5 s vs 540 s
+cpu-seconds; wall 270.2 s vs 600 s wall-seconds; ... -> OVER`, a warning, the
+known re-tier WI-1039). The views were regenerated before the commit.

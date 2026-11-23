@@ -102,7 +102,7 @@ constrains = ["IF-030"]
 [design.LLR-013]
 sr_refs = ["SR-158"]
 title = "Flow-doc contract checker"
-detail = "Validates an authored runtime-flow document against its structural contract: a malformed flow fails and a conformant document passes. Its input is the authored runtime-flow document, docs/runtime-flows.md by default."
+detail = "Validates an authored runtime-flow document against its structural contract: a malformed flow fails and a conformant document passes. Its default input is the project's authored runtime-flows document."
 test_refs = "(see TC-013)"
 status = "Accepted"
 phase = 1
@@ -195,7 +195,7 @@ constrains = ["IF-017"]
 [design.LLR-025]
 sr_refs = ["SR-112"]
 title = "Skills index generator"
-detail = "Reads each SKILL.md applicability frontmatter and regenerates skills/INDEX.csv. The regenerated INDEX.csv reflects the current SKILL.md frontmatter, and a drifted index is detectable."
+detail = "Reads each skill's applicability front matter from its entry document and regenerates the skills index from it. The regenerated index reflects the current front matter, and a drifted index is detectable."
 test_refs = "(see TC-025)"
 status = "Accepted"
 phase = 1
@@ -262,7 +262,7 @@ phase = 1
 [design.LLR-033]
 sr_refs = ["SR-033"]
 title = "Release checklist generator"
-detail = """Emits docs/release-checklist.md, including a Performance-budgets section listing each warn-tier PB (id + allocation) read from the budgets registry."""
+detail = "Emits the release checklist, including a performance-budgets section listing each warn-tier budget's id and allocation, read from the budgets registry."
 test_refs = "(see TC-033)"
 status = "Accepted"
 phase = 1
@@ -921,7 +921,7 @@ phase = 4
 [design.LLR-124]
 sr_refs = ["SR-170"]
 title = "Generated status + run-state"
-detail = "The generated block of docs/status.md is maintained by the trunk lane only: the trunk step's regeneration writes it after the stage derivation, whose derived stage is its input, and the status freshness gate byte-compares it on the trunk while work branches skip it. The snapshot is an output of the kit in operation, read by the person (EXT-006) across B-09; a work branch never commits the artifact."
+detail = "The generated block of the status page is maintained by the trunk lane only: the trunk step's regeneration writes it after the stage derivation, whose derived stage is its input, and the status freshness gate byte-compares it on the trunk while work branches skip it. The snapshot is an output of the kit in operation, read by the person (EXT-006) across B-09; a work branch never commits the artifact."
 rationale = """Split from the retirement row: removing the old pointer and generating the surfaces that replace it are separable, and the second is what keeps the replacement from rotting the same way."""
 test_refs = "(see TC)"
 status = "Accepted"
@@ -2174,8 +2174,8 @@ phase = 6
 [design.LLR-279]
 sr_refs = ["SR-112"]
 title = "A skill materializes as its whole directory"
-detail = "A skill's copy names every file under its directory, each paired with its destination at the same relative path under the agent's skills directory, so the unit a skill materializes as is its directory rather than its SKILL.md. The agent layer's write-once copy for the chosen agents copies those pairs, and the delivered-package inventory lists the same pairs as the skill's conditional deliveries, so the scaffold copy and the inventory read one statement of what a skill ships."
-rationale = """The fan-out drift check compares the whole file set of a skill against its source, so a first copy of the SKILL.md alone is drifted from the moment it is written: the skill arrives without the file it cites, and the check fails until a refresh repairs it. Stating the unit once, and having the copy and the inventory both read it, keeps the scaffold, the refresh and the drift check agreeing on one file set; a directory walk written into each caller was the alternative, and it would let the two lists disagree."""
+detail = "A skill's copy names every file under its directory, each paired with its destination at the same relative path under the agent's skills directory, so the unit a skill materializes as is its directory rather than its entry document. The agent layer's write-once copy for the chosen agents copies those pairs, and the delivered-package inventory lists the same pairs as the skill's conditional deliveries, so the scaffold copy and the inventory read one statement of what a skill ships."
+rationale = "The fan-out drift check compares the whole file set of a skill against its source, so a first copy of the entry document alone is drifted from the moment it is written: the skill arrives without the file it cites, and the check fails until a refresh repairs it. Stating the unit once, and having the copy and the inventory both read it, keeps the scaffold, the refresh and the drift check agreeing on one file set; a directory walk written into each caller was the alternative, and it would let the two lists disagree."
 test_refs = "(see TC-289)"
 status = "Accepted"
 phase = 1
@@ -3056,7 +3056,7 @@ phase = 6
 [design.LLR-418]
 sr_refs = ["SR-157"]
 title = "A design row's input-set and out-of-domain cells parse, and sit only beside a constrains cell"
-detail = "A design row carrying a constrains cell may carry a dimensions cell, one string in the permutation grammar of ranges, sets and booleans with an optional combination strategy, and an out-of-domain cell, one sentence saying what the interface does with an input outside those dimensions. A dimensions cell the grammar does not parse or whose strategy is not one of the grammar's three, an out-of-domain cell that is not one line ending in a full stop with no sentence ending inside, and either cell on a design row with no constrains cell are each a finding that fails the strict check, naming the row and the cell. The cell is parsed by the parser the case generator uses, so the two accept and refuse the same strings."
+detail = "A design row carrying a constrains cell may carry a dimensions cell, one string in the permutation grammar of ranges, sets and booleans with an optional combination strategy, and an out-of-domain cell, one sentence saying what the interface does with an input outside those dimensions. A dimensions cell the grammar does not parse or whose strategy is not one of the grammar's three, an out-of-domain cell that is not one line ending in a full stop with no full stop, question mark or exclamation mark followed by a space inside, and either cell on a design row with no constrains cell are each a finding that fails the strict check, naming the row and the cell. The cell is parsed by the parser the case generator uses, so the two accept and refuse the same strings."
 rationale = "One grammar with one parser means an input set the generator can expand is exactly one the check accepts."
 test_refs = "TC-528"
 status = "Drafted"
@@ -3083,7 +3083,7 @@ phase = 6
 [design.LLR-421]
 sr_refs = ["SR-157"]
 title = "An interface whose reach through the rows constraining it and the cases naming it holds no executable test case is reported"
-detail = "An interface's reach is the design rows and system requirements whose constrains cell names it, the design rows a test case naming it verifies, and every test case naming it or verifying one of those rows, a requirement's cases including those of the design rows decomposing it. Each live interface whose reach holds no test case the harness runs, an observation case being one it does not run, is named on one warning line, and those whose reach holds observation cases alone are named on a line of their own. A count line gives the interfaces reached through a constraining design row, through a constraining requirement, through a naming test case alone, by observation alone, and not at all. The process settings' interface-check opt-out silences the report, and with no live interface row it is empty. The report does not change the strict check's exit code."
+detail = "An interface's reach is the design rows and system requirements whose constrains cell names it, the design rows and requirements a test case naming it verifies, and every test case naming it or verifying one of those rows, a constraining requirement's cases including those of the design rows decomposing it. Each live interface whose reach holds no test case the harness runs, an observation case being one it does not run, is named on one warning line, and those whose reach holds observation cases alone are named on a line of their own. A count line gives the interfaces reached through a constraining design row, through a constraining requirement, through a naming test case alone, by observation alone, and not at all. The process settings' interface-check opt-out silences the report, and with no live interface row it is empty. The report does not change the strict check's exit code."
 rationale = "Every interface is pointed at by a requirement stating its behaviour or by a test case observing it, and reaches a test the harness runs that way; reporting the reach before it fails lets the population land first."
 test_refs = "TC-531"
 status = "Drafted"
@@ -3100,10 +3100,20 @@ phase = 6
 
 [design.LLR-423]
 sr_refs = ["SR-229"]
-title = "The coordinator guard reads its caller and its repository root from the agent tool's environment"
-detail = "The coordinator guard identifies a claim's caller by the session-identity variable the agent command-line tool exports to its tool processes, and a variable under any other name identifies no one. A guard command acts on the repository root it is given, else on the project-root variable the agent tool sets for a hook process, else on the working directory."
-rationale = "The tool's documentation is not ours to write, so our reading of its environment is stated where the guard depends on it."
+title = "The coordinator guard identifies a claim's caller by the agent tool's session variable"
+detail = "The coordinator guard identifies a claim's caller by the session-identity variable the agent command-line tool exports to its tool processes; a variable under any other name identifies no one."
+rationale = "The tool's documentation is not ours to write, so our reading of the variable naming the caller is stated where the guard depends on it."
 test_refs = "TC-533"
+status = "Drafted"
+phase = 6
+constrains = ["IF-277"]
+
+[design.LLR-424]
+sr_refs = ["SR-230"]
+title = "A coordinator guard command acts on the repository root the agent tool names for its hook processes"
+detail = "A coordinator guard command acts on the repository root it is given, else on the project-root variable the agent command-line tool sets for its hook processes, else on the working directory."
+rationale = "A hook process is started by the tool, not from the repository, so the tool's project-root variable is how the guard finds the declared repository; the tool's documentation is not ours to write."
+test_refs = "TC-534"
 status = "Drafted"
 phase = 6
 constrains = ["IF-277"]

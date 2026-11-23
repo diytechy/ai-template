@@ -30,7 +30,7 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 20 chain(s): SR-010, SR-026, SR-032, SR-035, SR-046, SR-049, SR-070, SR-112, SR-157, SR-158, SR-168, SR-170, SR-178, SR-211, SR-212, SR-218, SR-224, SR-229, SR-238, SR-249</summary>
+<summary>Waiting for automated adjudication — 22 chain(s): SR-010, SR-026, SR-032, SR-033, SR-035, SR-046, SR-049, SR-070, SR-112, SR-157, SR-158, SR-168, SR-170, SR-178, SR-211, SR-212, SR-218, SR-224, SR-229, SR-230, SR-238, SR-249</summary>
 
 ## SR-010 — Scaffold passes out of the box
 
@@ -85,6 +85,23 @@ _traced — routes to adjudication_
 - **Constrains**
   - before: (empty)
   - after: IF-292;IF-293
+
+## SR-033 — Release checklist generation
+
+> **Requirement.** The delivered release-checklist generator shall emit the release-gate checklist, including the warn-tier performance budgets that never fail a gate and differentiable assumption confirmations.
+
+> **Rationale.** Realizes SN-004 — the release gate has a generated checklist surfacing the budgets a human must tick off, because a warn-tier budget that never fails a gate is read by nobody unless something puts it in front of a reader. No wider than what the charter actually asks: the charter asks what happens when a budget is exceeded, and for a warn-tier budget the mechanical answer is "nothing" — so this row is this project's ANSWER to the charter's question, not an obligation the charter imposes. The charter prescribes neither a checklist nor a human tick-off, and the derivation stated here must not be read as though it did. The assumptions section realizes SN-043 at the same gate: a premise can only be shown false by someone looking for its falsifier, so the checklist puts each active accepted assumption, and any with no falsifier, in front of the person signing, marked apart from the requirement checks.
+
+
+### LLR LLR-033
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: Emits docs/release-checklist.md, including a Performance-budgets section listing each warn-tier PB (id + allocation) read from the budgets registry.
+  - after: Emits the release checklist, including a performance-budgets section listing each warn-tier budget's id and allocation, read from the budgets registry.
+_traced — routes to adjudication_
+- **Constrains**
+  - before: (empty)
+  - after: IF-018
 
 ## SR-035 — No language-specific token in the shipped scheme
 
@@ -198,6 +215,11 @@ _traced — routes to adjudication_
 
 
 ### LLR LLR-025
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: Reads each SKILL.md applicability frontmatter and regenerates skills/INDEX.csv. The regenerated INDEX.csv reflects the current SKILL.md frontmatter, and a drifted index is detectable.
+  - after: Reads each skill's applicability front matter from its entry document and regenerates the skills index from it. The regenerated index reflects the current front matter, and a drifted index is detectable.
+_traced — routes to adjudication_
 - **Constrains**
   - before: (empty)
   - after: IF-019
@@ -206,7 +228,10 @@ _traced — routes to adjudication_
 _accepted — re-acceptance owed_
 - **Detail**
   - before: skill_copies(skill_dir, name, spec) names the files under a skill's directory, paired with their destinations at the same relative path under the agent's skills directory, so the unit a skill materializes as is its directory rather than its SKILL.md. materialize_agent_layer copies those pairs write-once for the chosen agents, and delivery_inventory lists the same pairs as the skill's conditional deliveries, so the scaffold copy and the delivered-package inventory read one statement of what a skill ships.
-  - after: A skill's copy names every file under its directory, each paired with its destination at the same relative path under the agent's skills directory, so the unit a skill materializes as is its directory rather than its SKILL.md. The agent layer's write-once copy for the chosen agents copies those pairs, and the delivered-package inventory lists the same pairs as the skill's conditional deliveries, so the scaffold copy and the inventory read one statement of what a skill ships.
+  - after: A skill's copy names every file under its directory, each paired with its destination at the same relative path under the agent's skills directory, so the unit a skill materializes as is its directory rather than its entry document. The agent layer's write-once copy for the chosen agents copies those pairs, and the delivered-package inventory lists the same pairs as the skill's conditional deliveries, so the scaffold copy and the inventory read one statement of what a skill ships.
+- **Rationale**
+  - before: The fan-out drift check compares the whole file set of a skill against its source, so a first copy of the SKILL.md alone is drifted from the moment it is written: the skill arrives without the file it cites, and the check fails until a refresh repairs it. Stating the unit once, and having the copy and the inventory both read it, keeps the scaffold, the refresh and the drift check agreeing on one file set; a directory walk written into each caller was the alternative, and it would let the two lists disagree.
+  - after: The fan-out drift check compares the whole file set of a skill against its source, so a first copy of the entry document alone is drifted from the moment it is written: the skill arrives without the file it cites, and the check fails until a refresh repairs it. Stating the unit once, and having the copy and the inventory both read it, keeps the scaffold, the refresh and the drift check agreeing on one file set; a directory walk written into each caller was the alternative, and it would let the two lists disagree.
 _traced — routes to adjudication_
 - **Constrains**
   - before: (empty)
@@ -233,7 +258,7 @@ _traced — routes to adjudication_
 - **LLR-ID**: LLR-418
 - **SR-Refs**: SR-157
 - **Title**: A design row's input-set and out-of-domain cells parse, and sit only beside a constrains cell
-- **Detail**: A design row carrying a constrains cell may carry a dimensions cell, one string in the permutation grammar of ranges, sets and booleans with an optional combination strategy, and an out-of-domain cell, one sentence saying what the interface does with an input outside those dimensions. A dimensions cell the grammar does not parse or whose strategy is not one of the grammar's three, an out-of-domain cell that is not one line ending in a full stop with no sentence ending inside, and either cell on a design row with no constrains cell are each a finding that fails the strict check, naming the row and the cell. The cell is parsed by the parser the case generator uses, so the two accept and refuse the same strings.
+- **Detail**: A design row carrying a constrains cell may carry a dimensions cell, one string in the permutation grammar of ranges, sets and booleans with an optional combination strategy, and an out-of-domain cell, one sentence saying what the interface does with an input outside those dimensions. A dimensions cell the grammar does not parse or whose strategy is not one of the grammar's three, an out-of-domain cell that is not one line ending in a full stop with no full stop, question mark or exclamation mark followed by a space inside, and either cell on a design row with no constrains cell are each a finding that fails the strict check, naming the row and the cell. The cell is parsed by the parser the case generator uses, so the two accept and refuse the same strings.
 - **Rationale**: One grammar with one parser means an input set the generator can expand is exactly one the check accepts.
 - **TestRefs**: TC-528
 - **Status**: Drafted
@@ -253,7 +278,7 @@ _traced — routes to adjudication_
 - **LLR-ID**: LLR-421
 - **SR-Refs**: SR-157
 - **Title**: An interface whose reach through the rows constraining it and the cases naming it holds no executable test case is reported
-- **Detail**: An interface's reach is the design rows and system requirements whose constrains cell names it, the design rows a test case naming it verifies, and every test case naming it or verifying one of those rows, a requirement's cases including those of the design rows decomposing it. Each live interface whose reach holds no test case the harness runs, an observation case being one it does not run, is named on one warning line, and those whose reach holds observation cases alone are named on a line of their own. A count line gives the interfaces reached through a constraining design row, through a constraining requirement, through a naming test case alone, by observation alone, and not at all. The process settings' interface-check opt-out silences the report, and with no live interface row it is empty. The report does not change the strict check's exit code.
+- **Detail**: An interface's reach is the design rows and system requirements whose constrains cell names it, the design rows and requirements a test case naming it verifies, and every test case naming it or verifying one of those rows, a constraining requirement's cases including those of the design rows decomposing it. Each live interface whose reach holds no test case the harness runs, an observation case being one it does not run, is named on one warning line, and those whose reach holds observation cases alone are named on a line of their own. A count line gives the interfaces reached through a constraining design row, through a constraining requirement, through a naming test case alone, by observation alone, and not at all. The process settings' interface-check opt-out silences the report, and with no live interface row it is empty. The report does not change the strict check's exit code.
 - **Rationale**: Every interface is pointed at by a requirement stating its behaviour or by a test case observing it, and reaches a test the harness runs that way; reporting the reach before it fails lets the population land first.
 - **TestRefs**: TC-531
 - **Status**: Drafted
@@ -285,9 +310,9 @@ _traced — routes to adjudication_
 - **TC-ID**: TC-528
 - **Verifies**: SR-157;LLR-418
 - **Level**: Integration
-- **Method**: Run the strict check over design rows that constrain an interface and carry a dimensions cell that parses, one of an unknown dimension type, one naming a strategy outside the grammar's three, an out-of-domain cell of two sentences and one with no full stop, and over rows constraining nothing that carry either cell; and parse eight grammar strings, accepted and refused, through the cell's parser and the case generator's.
+- **Method**: Run the strict check over design rows that constrain an interface and carry a dimensions cell that parses, one of an unknown dimension type, one naming a strategy outside the grammar's three, out-of-domain cells of two sentences, of two sentences the second opening in lower case, and with no full stop, one stating a decimal number, and over rows constraining nothing that carry either cell; and parse eight grammar strings, accepted and refused, through the cell's parser and the case generator's.
 - **Tier**: Smoke
-- **Expected**: Each malformed cell, and each companion cell on a row constraining nothing, is a finding naming its row and cell, and the check exits 1, while the well-formed row draws none; the two parsers accept the same strings with the same result and refuse the same strings with the same message.
+- **Expected**: Each malformed cell, and each companion cell on a row constraining nothing, is a finding naming its row and cell, and the check exits 1, while the well-formed row and the one stating a decimal number draw none; the two parsers accept the same strings with the same result and refuse the same strings with the same message.
 - **Automated**: Yes
 - **Evidence**: tests/test_constrains.py::test_a_companion_cell_that_does_not_parse_or_constrains_nothing_fails; tests/test_constrains.py::test_the_cell_and_the_generator_read_one_grammar
 - **Status**: Drafted
@@ -309,11 +334,11 @@ _traced — routes to adjudication_
 - **TC-ID**: TC-531
 - **Verifies**: SR-157;LLR-421
 - **Level**: Integration
-- **Method**: Derive the reach and the route of six interfaces: one a design row constrains, one a requirement constrains whose design row a case verifies, one a case names beside the row it verifies, one only an observation case names, one no row or case reaches, and one that only a design row verified by an observation case constrains; then run the strict check over the project, again with the interface-check opt-out set, and over a project with no interface row.
+- **Method**: Derive the reach and the route of six interfaces: one a design row constrains, one a requirement constrains whose design row a case verifies, one a case names beside the row it verifies, one only an observation case names, one no row or case reaches, and one that only a design row verified by an observation case constrains; then derive the reach of an interface only an observation case names beside a requirement a run case verifies; then run the strict check over the project, again with the interface-check opt-out set, and over a project with no interface row.
 - **Tier**: Smoke
-- **Expected**: Each interface's reach holds its constraining or observed rows and the cases verifying them; the routes are design row, requirement, case, observation, unreached and observation; the count line reads one, one, one, two and one; the unreached interface and the two observation-only interfaces are each named on their own line; the check exits 0; the opted-out run and the project with no interface row print no coverage line.
+- **Expected**: Each interface's reach holds its constraining or observed rows and the cases verifying them; the routes are design row, requirement, case, observation, unreached and observation; the count line reads one, one, one, two and one; the unreached interface and the two observation-only interfaces are each named on their own line; the interface the observation case names beside a requirement a run case verifies is reached through that case; the check exits 0; the opted-out run and the project with no interface row print no coverage line.
 - **Automated**: Yes
-- **Evidence**: tests/test_constrains.py::test_each_interface_reaches_a_run_case_through_a_constraining_row_or_a_naming_case; tests/test_constrains.py::test_the_interface_check_opt_out_silences_coverage
+- **Evidence**: tests/test_constrains.py::test_each_interface_reaches_a_run_case_through_a_constraining_row_or_a_naming_case; tests/test_constrains.py::test_the_interface_check_opt_out_silences_coverage; tests/test_constrains.py::test_a_requirement_a_naming_case_verifies_brings_its_run_cases_into_the_reach
 - **Status**: Drafted
 - **Phase**: 6
 
@@ -350,7 +375,7 @@ _traced — routes to adjudication_
 _accepted — re-acceptance owed_
 - **Detail**
   - before: Validates an authored runtime-flow doc against its structural contract; a malformed flow fails. A conformant doc passes. Bound to its input surface: the authored runtime-flow doc is docs/runtime-flows.md. The recorded dependency is on the authored-flow surface as a class, not on any one file, so re-homing the flows re-points the default --doc rather than standing the obligation down.
-  - after: Validates an authored runtime-flow document against its structural contract: a malformed flow fails and a conformant document passes. Its input is the authored runtime-flow document, docs/runtime-flows.md by default.
+  - after: Validates an authored runtime-flow document against its structural contract: a malformed flow fails and a conformant document passes. Its default input is the project's authored runtime-flows document.
 _traced — routes to adjudication_
 - **Constrains**
   - before: (empty)
@@ -387,7 +412,7 @@ _traced — routes to adjudication_
 _accepted — re-acceptance owed_
 - **Detail**
   - before: docs/status.md's generated block is maintained by the trunk lane only: trunk_step --regen runs gen_trajectory --status after derive_stage (the derived stage is its input), and the status-map freshness gate byte-compares it on the trunk while work branches skip (SS5.2). (docs/run-state and its four-valued dispatcher outcome retired with the dispatcher at Phase 5.) The snapshot is an output of the kit in operation, read by the person (EXT-006) across B-09; a work branch never commits the artifact.
-  - after: The generated block of docs/status.md is maintained by the trunk lane only: the trunk step's regeneration writes it after the stage derivation, whose derived stage is its input, and the status freshness gate byte-compares it on the trunk while work branches skip it. The snapshot is an output of the kit in operation, read by the person (EXT-006) across B-09; a work branch never commits the artifact.
+  - after: The generated block of the status page is maintained by the trunk lane only: the trunk step's regeneration writes it after the stage derivation, whose derived stage is its input, and the status freshness gate byte-compares it on the trunk while work branches skip it. The snapshot is an output of the kit in operation, read by the person (EXT-006) across B-09; a work branch never commits the artifact.
 _traced — routes to adjudication_
 - **Constrains**
   - before: (empty)
@@ -503,9 +528,9 @@ _traced — routes to adjudication_
 ### LLR LLR-423 — ADDED since the snapshot, Drafted — never accepted
 - **LLR-ID**: LLR-423
 - **SR-Refs**: SR-229
-- **Title**: The coordinator guard reads its caller and its repository root from the agent tool's environment
-- **Detail**: The coordinator guard identifies a claim's caller by the session-identity variable the agent command-line tool exports to its tool processes, and a variable under any other name identifies no one. A guard command acts on the repository root it is given, else on the project-root variable the agent tool sets for a hook process, else on the working directory.
-- **Rationale**: The tool's documentation is not ours to write, so our reading of its environment is stated where the guard depends on it.
+- **Title**: The coordinator guard identifies a claim's caller by the agent tool's session variable
+- **Detail**: The coordinator guard identifies a claim's caller by the session-identity variable the agent command-line tool exports to its tool processes; a variable under any other name identifies no one.
+- **Rationale**: The tool's documentation is not ours to write, so our reading of the variable naming the caller is stated where the guard depends on it.
 - **TestRefs**: TC-533
 - **Status**: Drafted
 - **Phase**: 6
@@ -515,11 +540,41 @@ _traced — routes to adjudication_
 - **TC-ID**: TC-533
 - **Verifies**: SR-229;LLR-423
 - **Level**: Unit
-- **Method**: Run a guarded claim whose environment names the lease holder's session under the agent tool's session variable, and again under another variable name; resolve a guard command's repository root with a root given, with only the project-root variable set, and with neither.
+- **Method**: Run a guarded claim whose environment names the lease holder's session under the agent tool's session variable, and again under another variable name.
 - **Tier**: Smoke
-- **Expected**: The claim under the tool's variable passes and the one under another name reads its caller as unknown; the root is the one given, else the variable's, else the working directory.
+- **Expected**: The claim under the tool's variable passes and the one under another name reads its caller as unknown.
 - **Automated**: Yes
-- **Evidence**: tests/test_coordinator_guard.py::test_the_guard_reads_its_caller_and_root_from_the_agent_tools_environment
+- **Evidence**: tests/test_coordinator_guard.py::test_the_guard_reads_its_caller_from_the_agent_tools_session_variable
+- **Status**: Drafted
+- **Phase**: 6
+
+## SR-230 — Coordinator successor at session exit outside a blackout pause
+
+> **Requirement.** Where the declared coordinator context guard is enabled, when the coordinator lease holder that has requested a relaunch from its handoff ends its session outside an armed blackout window, the delivered coordination support shall start exactly one successor session from that handoff; inside the window it cancels the pending request and leave resumption to the operator.
+
+> **Rationale.** A DERIVED requirement, and labelled so. SN-027 asks that claiming drain what is already in flight and that a crash at any lifecycle boundary recover without double-assignment; it does not name a coordinating session handing over to its successor, so this obligation arrives through the integrity lens rather than through the need's text. That lens asks what the next reader finds when a holder is gone: a close-out that loses its handoff strands the next coordinator, and one that can launch twice creates competing claim authority. An atomic, owned request consumed once was chosen over treating every session-end event as a relaunch because clear and resume do not end the coordinator and a failed launch must remain recoverable. Fed back to the need: SN-027's acceptance could name an orderly handover of the coordinating role as part of a drain; until it does, this row is derived and says so.
+
+
+### LLR LLR-424 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-424
+- **SR-Refs**: SR-230
+- **Title**: A coordinator guard command acts on the repository root the agent tool names for its hook processes
+- **Detail**: A coordinator guard command acts on the repository root it is given, else on the project-root variable the agent command-line tool sets for its hook processes, else on the working directory.
+- **Rationale**: A hook process is started by the tool, not from the repository, so the tool's project-root variable is how the guard finds the declared repository; the tool's documentation is not ours to write.
+- **TestRefs**: TC-534
+- **Status**: Drafted
+- **Phase**: 6
+- **Constrains**: IF-277
+
+### TC TC-534 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-534
+- **Verifies**: SR-230;LLR-424
+- **Level**: Unit
+- **Method**: Resolve a guard command's repository root with a root given, with only the agent tool's project-root variable set, and with neither.
+- **Tier**: Smoke
+- **Expected**: The root is the one given, else the variable's, else the working directory.
+- **Automated**: Yes
+- **Evidence**: tests/test_coordinator_guard.py::test_a_guard_command_reads_its_root_from_the_agent_tools_project_variable
 - **Status**: Drafted
 - **Phase**: 6
 
