@@ -152,6 +152,26 @@ def test_a_declaration_outside_the_carrier_declares_nothing(tmp_path):
         assert component is None and "declares no component" in problem, name
 
 
+def test_a_file_that_cannot_be_read_or_decoded_is_absent(tmp_path):
+    """A path that cannot be read (a directory stands at it) and a file whose
+    bytes are not UTF-8, each once as a Python module and once as a shell
+    script, read as absent and raise nothing. Each undecodable file holds an
+    exact declaring line, so only the failed decode leaves it undeclared.
+
+    Implements: TC-457"""
+    for name in ("unreadable.py", "unreadable.sh"):
+        (tmp_path / name).mkdir()
+    undecodable = {
+        "undecodable.py": b'"""A module.\n\nComponent: CMP-002\n\xff\xfe\n"""\n',
+        "undecodable.sh": b"#!/bin/sh\n# Component: CMP-002\n# \xff\xfe\n",
+    }
+    for name, data in undecodable.items():
+        (tmp_path / name).write_bytes(data)
+    for name in ("unreadable.py", "unreadable.sh", *undecodable):
+        component, problem = gen_arch_map.file_component(tmp_path / name)
+        assert component is None and "declares no component" in problem, name
+
+
 # --- the scope and the census (LLR-397) ----------------------------------------
 
 
