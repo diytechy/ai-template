@@ -37,3 +37,7 @@ commit hooks on. The record is in the row's Deliverable
   `low-level-requirements.toml` +861, `test-cases.toml` +1,335.
 - **Acts owed:** LLR-398's amendment (Detail, Rationale), its `test_refs`
   traced change, and TC-504's first acceptance.
+- **Review:** round 1, Hydrogen APPROVE; Sol one MINOR, dismissed
+  (TC-504's generated `evidence` cell names its test by definition; the
+  no-code-names rule covers prose cells). The record is in the
+  Deliverable.

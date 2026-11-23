@@ -149,6 +149,19 @@ pins exists. Each mutation below, reverted before any commit, turned it red
 - `contract_body_findings`' docstring still says only "Vacuous where there
   is no surface"; it does not point at the companion report.
 
+**Review** (the coordinator, 2026-11-22; queue-drill HANDOFF §4 step 4).
+Round 1 over `3c33b3783..2696ec3c7`, the generated views and this spec's
+copies withheld and the spec at the tip given whole. Each reviewer was told
+to judge every changed row as an adjudication sitting will (no code name,
+nothing past the parent SR, one obligation with every clause tested), and
+was given SR-159's text. Gemini Hydrogen (`gemini-4-hydrogen-low`, the
+Antigravity CLI) read the prose: APPROVE, no findings. OpenAI Sol
+(`gpt-6.1-sol`, low) read the whole diff: one MINOR, dismissed. It said
+TC-504's `evidence` names a test file and function. That cell is generated
+from the test files' tags (`trace.py --regen-evidence`), so it holds test
+node ids by definition, and the rule the sittings apply covers the prose
+cells (the same finding was dismissed at WI-1050's review).
+
 ## Context
 
 Filed on trunk on 2026-11-22 by the queue drill's coordinator, from
