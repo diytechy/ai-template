@@ -56,3 +56,7 @@ holds the per-item record, the approval and the acts owed.
 - Deferred open items: none — the row's one operator decision (SR-207's
   amendment) is shown to the operator by the coordinator, and every amended row
   goes to the next sitting as an owed act.
+- **Review:** round 1 Hydrogen APPROVE; Sol (code and docs halves) two
+  MINORs adopted (a row's acting reviewer read at the row; the README's
+  deletion rule), four dismissed (the migrator's record step is WI-1065).
+  Round 2, narrow: Sol and Hydrogen APPROVE.

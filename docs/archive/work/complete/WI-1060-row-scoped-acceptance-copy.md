@@ -343,6 +343,14 @@ a code half and a docs half. The coordinator's rulings:
   removes a whole registry.
 - Dismissed, Sol docs MINOR: IF-220's notes name code. Interface rows are
   off-spine and state their form by convention (WI-1052's precedent).
+
+Round 2 (narrow, over `cd88d3c13..fa96bd909`, the round's findings and the
+coordinator's rulings prepended): OpenAI Sol (`gpt-6.1-sol`, low) and Gemini
+Hydrogen (`gemini-4-hydrogen-low`, through `agy`) both `VERDICT: APPROVE
+findings=0`. The follow-up for the migrator's record step is WI-1065,
+filed on trunk for the operator's choice. The plan was approved by the
+coordinator on 2026-11-23 with four corrections, as the operator required
+for this row ("Read and approve its plan before any build").
 - Noted by both halves: the unfiltered-suite item is unticked. The
   coordinator runs it next.
 
