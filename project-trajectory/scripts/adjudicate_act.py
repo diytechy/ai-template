@@ -157,6 +157,12 @@ NONE_OWED = "none owed"
 NO_ACT = "no act"
 # The act a re-accept of a row absent from the committed registries is.
 RETIRE = "retire"
+# The status an act's flip gives a row. `_findings` sets it on in-memory copies
+# only, to ask the parent-first rule about the tree the act would leave; this
+# module writes no registry (IF-296: it "writes nothing"), so it is not the
+# acceptance-cell writer OI-30 D3's guard (`tests/test_acceptance_level.py`)
+# exists to catch.
+FLIPPED_STATUS = "Accepted"
 
 
 def _verdict_rel(root, verdict):
@@ -364,13 +370,13 @@ def _odd(rid, status, equal):
 
 def _findings(tiers, accepted):
     """The parent-first rule's findings over `tiers` with every row whose id
-    is in `accepted` read as `Accepted`: the commit hook's question about the
-    tree an act taking those flips would leave.
+    is in `accepted` read as flipped (`FLIPPED_STATUS`, on a copy): the commit
+    hook's question about the tree an act taking those flips would leave.
 
     Implements: SR-231, LLR-338"""
     after = {
         label: [
-            dict(row, Status="Accepted")
+            dict(row, Status=FLIPPED_STATUS)
             if str(row.get(label + "-ID") or "").strip() in accepted
             else row
             for row in rows
