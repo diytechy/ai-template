@@ -415,6 +415,63 @@ def test_an_emptied_cell_loses_its_key_and_the_command_names_the_cases(
     )
 
 
+def test_a_case_with_no_evidence_key_gains_one_and_no_other_byte_moves(
+    tmp_path, capsys, monkeypatch
+):
+    """Implements: TC-483"""
+    # The keyless case sits mid-registry, after a comment and a current case,
+    # with a prose cell holding a line that reads like an evidence key, and a
+    # closing comment and a current case after it. The writer gives it its key,
+    # and taking that one line back out leaves the registry's bytes as written.
+    _write(tmp_path, "docs/stack.ini", "[paths]\nsrc = src\ntests = tests\n")
+    for n, name in enumerate("abc", 1):
+        _write(tmp_path, f"tests/test_{name}.py", f'"""Implements: TC-00{n}"""\n')
+    before = (
+        "# Test cases, kept by hand.\n\n"
+        '[test.TC-001]\nverifies = ["LLR-001"]\nevidence = "tests/test_a.py"\n\n'
+        '[test.TC-002]\nverifies = ["LLR-001"]\n'
+        'method = """\nevidence = "tests/test_x.py"\n"""\n'
+        'status = "Drafted"\n'
+        "# the case's closing comment\n\n"
+        '[test.TC-003]\nverifies = ["LLR-001"]\nevidence = "tests/test_c.py"\n'
+    )
+    reg = _write(tmp_path, TC_REL, before)
+    assert _main(monkeypatch, "--root", tmp_path, "--regen-evidence") == 0
+    assert capsys.readouterr().out.splitlines() == [
+        "trace: evidence regenerated for TC-002"
+    ]
+    after = reg.read_bytes().decode("utf-8")
+    assert tomllib.loads(after)["test"]["TC-002"]["evidence"] == "tests/test_b.py"
+    key = 'evidence = "tests/test_b.py"\n'
+    assert after.count(key) == 1
+    assert after.replace(key, "", 1) == before
+
+
+def test_missing_declared_tests_are_appended_in_sorted_order(tmp_path, monkeypatch):
+    """Implements: TC-483"""
+    # Three tests declare the case in a file that defines them out of sorted
+    # order, and the cell names only a part that sorts after them. They are
+    # appended after it, joined by a semicolon and a space, in sorted order.
+    _write(tmp_path, "docs/stack.ini", "[paths]\nsrc = src\ntests = tests\n")
+    _write(tmp_path, "tests/test_z.py", '"""Implements: TC-001"""\n')
+    _write(
+        tmp_path,
+        "tests/test_m.py",
+        "".join(f'def test_{n}():\n    """Implements: TC-001"""\n\n\n' for n in "cab"),
+    )
+    reg = _write(
+        tmp_path,
+        TC_REL,
+        '[test.TC-001]\nverifies = ["LLR-001"]\nevidence = "tests/test_z.py"\n',
+    )
+    assert _main(monkeypatch, "--root", tmp_path, "--regen-evidence") == 0
+    assert reg.read_text(encoding="utf-8") == (
+        '[test.TC-001]\nverifies = ["LLR-001"]\n'
+        'evidence = "tests/test_z.py; tests/test_m.py::test_a; '
+        'tests/test_m.py::test_b; tests/test_m.py::test_c"\n'
+    )
+
+
 def test_a_rewrite_that_does_not_re_read_is_refused_and_writes_nothing(
     tmp_path, monkeypatch
 ):
