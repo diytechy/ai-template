@@ -34,3 +34,7 @@ commit hooks on. The record is in the row's Deliverable
   traced change to an `Accepted` row. Until that act, phase 3 reads
   DevStg-Tests live and `check_trajectory` warns that a `[3]-[DevStg-<rung>]`
   work item is due (advisory; the coordinator's call).
+- **Review:** round 1, Hydrogen APPROVE; Sol one MINOR, adopted (TC-508's
+  Expected narrowed to one invariant; the spec's `sr_refs` gain SR-052).
+  Round 2, narrow: Hydrogen APPROVE; Sol one MINOR, fixed with the record.
+  The record is in the Deliverable.

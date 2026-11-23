@@ -95,7 +95,8 @@ design row was minted. LLR-113's `test_refs` keeps its pointer
 `(see TC-118)`; TC-508 links through its `verifies` cell. The new table's
 `Implements: SR-052, LLR-113` tag sits in `traj_render.py`, already
 LLR-113's one tagged file, so the row's realizing files do not change. The
-frontmatter's `sr_refs` still reads SR-169, as filed.
+frontmatter's `sr_refs` names SR-169, as filed, and SR-052, which TC-508
+verifies (added at the review).
 
 Its phase is 3, LLR-113's and TC-118's. A `Drafted` case verifying SR-052, a
 phase-3 requirement, moves phase 3's live stage from DevStg-Impl to
@@ -162,6 +163,21 @@ call; no work-item id is in this lane's range.
 - The drill's component swatch states `var(--surface)` and `var(--border)`
   a second time beside its block's own `fill` and `stroke`. They are theme
   tokens, not a colour, and the drill is outside this row.
+
+**Review** (the coordinator, 2026-11-22; queue-drill HANDOFF §4 step 4).
+Round 1 over `3c33b3783..a81de7b38`, the generated views and this spec's
+copies withheld and the spec at the tip given whole. Each reviewer was told
+to judge every changed row as an adjudication sitting will (no code name,
+nothing past the parent SR, one obligation with every clause tested), and
+was given SR-052's, LLR-113's and SR-169's text. Gemini Hydrogen
+(`gemini-4-hydrogen-low`, the Antigravity CLI) read the prose: APPROVE, no
+findings. OpenAI Sol (`gpt-6.1-sol`, low) read the whole diff: one MINOR,
+adopted. TC-508's Expected stated three things, one of them (the graph
+draws all four kinds) past SR-052. It now states one invariant, with the
+four-kind fixture left in its Method (`c02970f35`). The same commit adds
+SR-052 to the spec's `sr_refs`. Round 2, narrow, over
+`a81de7b38..c02970f35`: Hydrogen APPROVE; Sol one MINOR, fixed with this
+record (the Deliverable still said `sr_refs` read SR-169 alone).
 
 ## Context
 
