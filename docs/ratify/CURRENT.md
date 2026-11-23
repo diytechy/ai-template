@@ -34,27 +34,18 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 
 ## SR-251 — A test case's evidence parts under the tests root are generated from the test files' declarations
 
-> **Requirement.** The delivered harness shall, on request, rewrite the parts of each test case's evidence cell under the declared tests root as the test files' declarations of that case make them, keeping every other part as written.
+> **Requirement.** When requested, the delivered harness shall rewrite the parts of each test case's evidence cell under the declared tests root as the test files' declarations of that case make them, keeping every other part of the cell as written.
 
 > **Rationale.** Realizes SN-002: a test case's tests were named in two homes, its evidence cell and the tests' own declarations, held equal by a check that asked a person to edit the cell by hand, and a hand-kept trace rots. Generating the test-file half removes the hand edit; the half no declaration can carry, a workflow, an inspection or a review record, stays authored. Generating is not checking: the evidence rule under SR-157 still reports a cell that differs from the declarations, and this row is the writer that brings it current. A writer that rewrites a registry in place proves it changed nothing else before it writes, or writes nothing.
 
 
-### SR SR-251 — Drafted, never accepted
-_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
-- **SR-ID**: SR-251
-- **Title**: A test case's evidence parts under the tests root are generated from the test files' declarations
-- **SN-Refs**: SN-002
-- **Boundary-Refs**: B-09
-- **Hat-Refs**: INTEGRITY-RECOVERABILITY
-- **Requirement**: The delivered harness shall, on request, rewrite the parts of each test case's evidence cell under the declared tests root as the test files' declarations of that case make them, keeping every other part as written.
-- **Rationale**: Realizes SN-002: a test case's tests were named in two homes, its evidence cell and the tests' own declarations, held equal by a check that asked a person to edit the cell by hand, and a hand-kept trace rots. Generating the test-file half removes the hand edit; the half no declaration can carry, a workflow, an inspection or a review record, stays authored. Generating is not checking: the evidence rule under SR-157 still reports a cell that differs from the declarations, and this row is the writer that brings it current. A writer that rewrites a registry in place proves it changed nothing else before it writes, or writes nothing.
-- **AcceptanceCriteria**: A tests-root part a declaration names is kept, one no declaration names is removed, and a declared test the cell lacks is added; a part outside the tests root, a note, and a part in a file whose declarations cannot be read stay as written; only those cells of the test-case registry change, and a rewrite that would change anything else is refused with nothing written; a run over cells already current changes nothing; with no test-case registry or no tests root nothing is written and the missing input is reported.
-- **Priority**: M
-- **VerificationMethod**: Test
-- **Status**: Drafted
-- **Phase**: 6
-- **Coincident**: The need asks for a chain mechanically verified, not hand-maintained; a test case's evidence written from the test files' own declarations is that trace as the reviewer reads it.
-- **Aspect**: trajectory
+### SR SR-251, Drafted — never accepted
+- **AcceptanceCriteria**
+  - before: A tests-root part a declaration names is kept, one no declaration names is removed, and a declared test the cell lacks is added; a part outside the tests root, a note, and a part in a file whose declarations cannot be read stay as written; only those cells of the test-case registry change, and a rewrite that would change anything else is refused with nothing written; a run over cells already current changes nothing; with no test-case registry or no tests root nothing is written and the missing input is reported.
+  - after: A tests-root part a declaration names is kept, one no declaration names is removed, and a declared test the cell lacks is added; a part outside the tests root, a note, and a part in a file whose declarations cannot be read stay as written; only those cells of the test-case registry change, and a rewrite that would change anything else in the registry is refused with nothing written; a run over cells already current changes nothing; with no test-case registry or no tests root nothing is written and the missing input is reported.
+- **Requirement**
+  - before: The delivered harness shall, on request, rewrite the parts of each test case's evidence cell under the declared tests root as the test files' declarations of that case make them, keeping every other part as written.
+  - after: When requested, the delivered harness shall rewrite the parts of each test case's evidence cell under the declared tests root as the test files' declarations of that case make them, keeping every other part of the cell as written.
 
 ### LLR LLR-406 — Drafted, never accepted
 _No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
@@ -67,17 +58,15 @@ _No cell differs from the accepted snapshot; this row owes because its own `Stat
 - **Status**: Drafted
 - **Phase**: 6
 
-### TC TC-483 — Drafted, never accepted
-_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
-- **TC-ID**: TC-483
-- **Verifies**: SR-251;LLR-406
-- **Level**: Unit
-- **Method**: Generate evidence cells: one holding a tagged part, a part outside the tests root, a tagged parametrized node, and an untagged part followed by a note, with a declared node missing; one naming only a part in an unreadable file; cells already equal to their declarations under each separator; an empty cell with one declaration. Then regenerate, through the regeneration command, a registry whose first case is current and whose second names a removed test, with a prose cell quoting an evidence assignment; regenerate it again; regenerate a registry whose case's only part no declaration names; regenerate one whose evidence key is written quoted, so the line rewrite cannot re-read as those cells alone; run the command over a repository with no test-case registry and one with no tests root; and regenerate this repository's own registry.
-- **Tier**: Smoke
-- **Expected**: The untagged part leaves with its separator, the missing node is appended, and every other part and the note stay as written; the unreadable file's part stays; equal cells come back unchanged; the empty cell gains its declaration. The writer changes the stale case's cell alone, leaves the quoted text and every other byte, and the command names the case it changed; the second run changes nothing; the case whose parts all leave loses its evidence key. The quoted-key registry is refused and its bytes are unchanged. Each repository missing an input is told which one, nothing is written and the command exits 0. Every cell of this repository's registry is current.
-- **Automated**: Yes
-- **Evidence**: tests/test_llr_trace_cells.py::test_the_evidence_column_is_generated_from_the_tags; tests/test_llr_trace_cells.py::test_a_rewrite_that_does_not_re_read_is_refused_and_writes_nothing; tests/test_llr_trace_cells.py::test_an_emptied_cell_loses_its_key_and_the_command_names_the_cases; tests/test_llr_trace_cells.py::test_with_no_registry_or_no_tests_root_the_regeneration_says_so
-- **Status**: Drafted
-- **Phase**: 6
+### TC TC-483, Drafted — never accepted
+- **Expected**
+  - before: The untagged part leaves with its separator, the missing node is appended, and every other part and the note stay as written; the unreadable file's part stays; equal cells come back unchanged; the empty cell gains its declaration. The writer changes the stale case's cell alone, leaves the quoted text and every other byte, and the command names the case it changed; the second run changes nothing; the case whose parts all leave loses its evidence key. The quoted-key registry is refused and its bytes are unchanged. Each repository missing an input is told which one, nothing is written and the command exits 0. Every cell of this repository's registry is current.
+  - after: The untagged part leaves with its separator, the missing node is appended, and every other part and the note stay as written; the unreadable file's part stays; equal cells come back unchanged; the empty cell gains its declaration. The writer changes the stale case's cell alone and leaves the quoted text and every other byte; the second run changes nothing; the case whose parts all leave loses its evidence key, and the command names it among the cases it changed. The keyless case gains an evidence key naming its declared test, the command names that case alone, and with that key's one line taken out the registry's bytes are as written. The three missing tests are appended after the named one, joined by a semicolon and a space, in sorted order. The quoted-key registry is refused and its bytes are unchanged. Each repository missing an input is told which one, and nothing is written. Every cell of this repository's registry is current.
+- **Method**
+  - before: Generate evidence cells: one holding a tagged part, a part outside the tests root, a tagged parametrized node, and an untagged part followed by a note, with a declared node missing; one naming only a part in an unreadable file; cells already equal to their declarations under each separator; an empty cell with one declaration. Then regenerate, through the regeneration command, a registry whose first case is current and whose second names a removed test, with a prose cell quoting an evidence assignment; regenerate it again; regenerate a registry whose case's only part no declaration names; regenerate one whose evidence key is written quoted, so the line rewrite cannot re-read as those cells alone; run the command over a repository with no test-case registry and one with no tests root; and regenerate this repository's own registry.
+  - after: Generate evidence cells: one holding a tagged part, a part outside the tests root, a tagged parametrized node, and an untagged part followed by a note, with a declared node missing; one naming only a part in an unreadable file; cells already equal to their declarations under each separator; an empty cell with one declaration. Then regenerate, through the regeneration command, a registry whose first case is current and whose second names a removed test, with a prose cell quoting an evidence assignment; regenerate it again; regenerate a registry whose case's only part no declaration names; regenerate a registry whose middle case has one declared test and no evidence key, set among comments and current cases, with a prose cell holding a line that reads as an evidence assignment; regenerate a case whose cell names one declared test and lacks three more, which their file declares out of sorted order and which all sort before the named one; regenerate one whose evidence key is written quoted, so the line rewrite cannot re-read as those cells alone; run the command over a repository with no test-case registry and one with no tests root; and regenerate this repository's own registry.
+- **Evidence**
+  - before: tests/test_llr_trace_cells.py::test_the_evidence_column_is_generated_from_the_tags; tests/test_llr_trace_cells.py::test_a_rewrite_that_does_not_re_read_is_refused_and_writes_nothing; tests/test_llr_trace_cells.py::test_an_emptied_cell_loses_its_key_and_the_command_names_the_cases; tests/test_llr_trace_cells.py::test_with_no_registry_or_no_tests_root_the_regeneration_says_so
+  - after: tests/test_llr_trace_cells.py::test_the_evidence_column_is_generated_from_the_tags; tests/test_llr_trace_cells.py::test_a_rewrite_that_does_not_re_read_is_refused_and_writes_nothing; tests/test_llr_trace_cells.py::test_an_emptied_cell_loses_its_key_and_the_command_names_the_cases; tests/test_llr_trace_cells.py::test_with_no_registry_or_no_tests_root_the_regeneration_says_so; tests/test_llr_trace_cells.py::test_a_case_with_no_evidence_key_gains_one_and_no_other_byte_moves; tests/test_llr_trace_cells.py::test_missing_declared_tests_are_appended_in_sorted_order
 
 </details>
