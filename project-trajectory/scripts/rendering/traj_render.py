@@ -379,6 +379,33 @@ SW_NODE_FILL = {
     "component": "#44403c",  # stone — the neutral container badge (10.27:1 on #fff)
 }
 
+# The words naming each How-SW node kind in a legend, in legend order (WI-1054).
+# Both How-SW legends are built from this one table by `sw_legend`, each swatch
+# looked up in SW_NODE_FILL: the flat graph's legend had been written out by
+# hand, so the component node that graph learned to draw (WI-1022) went
+# unexplained beneath it.
+# Implements: SR-052, LLR-113
+SW_NODE_LABEL = {
+    "component": "component",
+    "module": "module",
+    "file": "file (shared-contract hub)",
+    "external": "external actor",
+}
+
+
+def sw_legend(component_swatch=None):
+    """The How-SW node-kind legend's entries: one `<span>` per SW_NODE_LABEL
+    kind, its swatch that kind's SW_NODE_FILL background. The drill draws a
+    component as a surface-filled container rather than in its fill, so it
+    passes that container's swatch style as `component_swatch`."""
+    styles = {kind: "background:" + fill for kind, fill in SW_NODE_FILL.items()}
+    if component_swatch:
+        styles["component"] = component_swatch
+    return "".join(
+        '<span><i style="{}"></i>{}</span>'.format(styles[kind], words)
+        for kind, words in SW_NODE_LABEL.items()
+    )
+
 
 # A stable, sorted-order palette for the per-phase accent (grouping-primary
 # encoding). Deterministic: the i-th sorted phase label takes the i-th color.

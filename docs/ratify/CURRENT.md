@@ -30,7 +30,7 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 5 chain(s): SR-036, SR-157, SR-159, SR-221, SR-248</summary>
+<summary>Waiting for automated adjudication — 6 chain(s): SR-036, SR-052, SR-157, SR-159, SR-221, SR-248</summary>
 
 ## SR-036 — Deliberate re-sync integration
 
@@ -51,6 +51,25 @@ _No cell differs from the accepted snapshot; this row owes because its own `Stat
 - **Evidence**: tests/test_llr_trace_cells.py::test_the_migration_drops_the_three_cells_and_nothing_else; tests/test_llr_trace_cells.py::test_the_migration_drops_a_multi_line_literal_value; tests/test_llr_trace_cells.py::test_the_migration_keeps_crlf_line_ends
 - **Status**: Drafted
 - **Phase**: 6
+
+## SR-052 — Dashboard accessibility (rubric-adjudicated)
+
+> **Requirement.** The state view the delivered generators produce shall be operable and readable without a pointer or full color perception: every interactive element (tabs, expandable blocks, SVG nodes with detail panels) is keyboard-reachable and carries an accessible name (title/aria/visible text); no information is encoded by color alone (status/phase/type encodings carry a text or shape cue); text keeps readable contrast against its fill.
+
+> **Rationale.** Realizes SN-024 and SN-023 — an accessibility standard left unstated silently reads as no standard at all, so the obligation is stated here even though its clauses were not measurable when the row was written. They since became so, one clause at a time, which is why this row's method is mechanical: the thresholds are the child rows' and the acceptance is their chain. Keyboard operability, an accessible name per element, colour never the only channel, and a readable contrast floor are the charter's own subject, and no other lens in the roster names a measurable perceptual threshold — the UX pair reaches robustness (it does not overflow), never legibility. That dependency is CLOSED: the ACCESSIBILITY charter is ruled `always`, so the lens this row derives from is put to every decomposition — and it had already reached this row once SN-023 carried the `a11y` tag, which is why the gap is narrower than the unmeasurable-clauses opening suggests.
+
+
+### TC TC-508 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-508
+- **Verifies**: SR-052;LLR-113
+- **Level**: Unit
+- **Method**: Render the flat interface graph of a repository in which no component holds a module, over interface rows whose endpoints make it draw a component, a module, a file and an external-party node; then render it again with the component kind's declared fill changed.
+- **Tier**: Full
+- **Expected**: In each render, every node kind the graph draws has an entry in the legend beneath it naming that kind in words beside a swatch of the fill that kind's nodes are drawn with, so after the change the component entry's swatch carries the new fill.
+- **Automated**: Yes
+- **Evidence**: tests/test_traj_views.py::test_the_flat_graph_legend_names_every_node_kind_it_draws
+- **Status**: Drafted
+- **Phase**: 3
 
 ## SR-157 — Spine and work-registry rules fail the harness verdict
 

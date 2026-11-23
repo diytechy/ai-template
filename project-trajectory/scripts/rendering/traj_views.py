@@ -46,6 +46,7 @@ from .traj_render import (
     _svg_role,
     _svg_wrap,
     esc,
+    sw_legend,
     tab_button,
     tab_panel_open,
 )
@@ -589,8 +590,9 @@ def _sw_node(raw, module_norm):
 def sw_graph(root, mods):
     """The How-SW interface graph as one plain SVG string, or None when no IF
     seams are declared (the panel then keeps the bare module table — the organized
-    graph is *earned* by declaring seams). Nodes are the arch-map modules plus the
-    files / external actors the seams reference; edges are producer->consumer
+    graph is *earned* by declaring seams). Nodes are the components, arch-map
+    modules, files and external actors the seams reference (`_sw_node`'s four
+    kinds, each one `sw_legend` entry); edges are producer->consumer
     IF-### seams labeled by id. Reuses the shared layered pipeline
     (`_layered_layout`), so producers sit left of consumers and crossings are
     reduced. Byte-deterministic: sorted inputs, fixed
@@ -956,16 +958,9 @@ def sw_containment(root, mods):
         )
     )
     # U3: node-kind legend (the fills were "explained nowhere" in the How tab) —
-    # built from the shared SW_NODE_FILL so it stays in lock-step with the blocks.
-    legend = (
-        '<span><i style="background:var(--surface);border:1px solid '
-        'var(--border)"></i>component</span>'
-        '<span><i style="background:{module}"></i>module</span>'
-        '<span><i style="background:{file}"></i>file (shared-contract hub)</span>'
-        '<span><i style="background:{external}"></i>external actor</span>'.format(
-            **SW_NODE_FILL
-        )
-    )
+    # built from the shared SW_NODE_FILL so it stays in lock-step with the blocks;
+    # a component block here is a surface-filled container, so its swatch is too.
+    legend = sw_legend("background:var(--surface);border:1px solid var(--border)")
     # U3: a #sw-detail aside wired click/focus-for-detail, mirroring the When drill.
     # Self-contained (its own embedded data + controller), so a no-CMP repo that never
     # appends this panel stays byte-identical. sort_keys -> byte-deterministic.
@@ -1302,9 +1297,10 @@ def _sw_panel(mods, graph=None):
         graph_block = (
             '<p class="cap">Declared <code>IF-###</code> interface seams '
             "(process.md §8): each arrow is a directed seam "
-            "(producer&nbsp;→&nbsp;consumer) labeled by id; module, file "
-            "(shared-contract hub) and external-actor nodes are styled distinctly. "
-            'A module with no seam is a "connectivity undeclared" gap.</p>\n'
+            "(producer&nbsp;→&nbsp;consumer) labeled by id; component, module, "
+            "file (shared-contract hub) and external-actor nodes are styled "
+            'distinctly. A module with no seam is a "connectivity undeclared" '
+            "gap.</p>\n"
             + SCROLL_CUE
             + '<div class="view" {}>{}</div>\n'.format(
                 _hscroll("Interface-seam graph, horizontally scrollable"), graph
@@ -1312,14 +1308,9 @@ def _sw_panel(mods, graph=None):
             # A3 (WI-313): the flat seam graph encodes node KIND by fill, and it
             # rendered with no legend — the containment drill earned one in the
             # 048/U3 round; this fallback never did. Same shared `.legend`
-            # component; component containers never render here, so three entries.
-            + (
-                '<div class="legend">'
-                '<span><i style="background:{module}"></i>module</span>'
-                '<span><i style="background:{file}"></i>file (shared-contract hub)</span>'
-                '<span><i style="background:{external}"></i>external actor</span>'
-                "</div>\n"
-            ).format(**SW_NODE_FILL)
+            # component, every kind's swatch its node's own fill: since WI-1022 a
+            # row names components, so component nodes draw here too (WI-1054).
+            + '<div class="legend">{}</div>\n'.format(sw_legend())
         )
     panel = (
         tab_panel_open("sw")
