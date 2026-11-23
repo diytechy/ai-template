@@ -119,6 +119,15 @@ which did not change.
   refuses it, naming the slot, until the override adds it. That is the rule
   a reviewer override already lives under.
 
+**Review** (the coordinator, 2026-11-22; queue-drill HANDOFF §4 step 4).
+Round 1 over `3c33b3783..345522e9a`, the generated views and this spec's
+copies withheld and the spec at the tip given whole. OpenAI Sol
+(`gpt-6.1-sol`, low) read the whole diff, and Gemini Hydrogen
+(`gemini-4-hydrogen-low`, the Antigravity CLI) the prose: the two
+templates, the catalogue, the re-sync entry and the log fragment. Both
+APPROVE, no findings. LLR-338's accepted Detail still says "APPROVE"; it
+goes to WI-1018's list of stale row text, not to this row.
+
 ## Context
 
 Filed on trunk on 2026-11-22 by the queue drill's coordinator, from the two

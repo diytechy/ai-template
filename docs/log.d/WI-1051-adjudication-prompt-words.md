@@ -39,3 +39,5 @@ commit hooks on. The record is in the row's Deliverable
   `{scripts}`, or the strict fill refuses it naming the slot.
 - **Left open:** LLR-338's accepted Detail still says "APPROVE" for a first
   acceptance; amending it is outside this row.
+- **Review:** round 1, Sol and Hydrogen APPROVE, no findings. The record
+  is in the Deliverable.
