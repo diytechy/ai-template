@@ -91,12 +91,14 @@ try:
     from kitlib import config as kitconfig
     from kitlib import git as kitgit
     from kitlib import ladder as kitladder
+    from kitlib import spine as kitspine
     from kitlib import stage as kitstage
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from kitlib import config as kitconfig
     from kitlib import git as kitgit
     from kitlib import ladder as kitladder
+    from kitlib import spine as kitspine
     from kitlib import stage as kitstage
 
 STAGE_FILE = kitstage.STAGE_FILE
@@ -124,7 +126,20 @@ def _phase_label(row):
     return (row.get("Phase") or "").strip() or "(default)"
 
 
-def _phase_groups(srs, llrs, tcs, da_srs=None):
+def _design_srs(llrs, srs_of):
+    """`{LLR id as the row spells it: [SR ids]}` for the design rows `llrs`:
+    the requirement tree's up map `srs_of`, or the walk over `llrs` when it is
+    None (`kitlib.spine.llr_tree`), so a child's SRs are read up its chain.
+
+    Implements: SR-157, SR-049, LLR-481"""
+    srs_of = kitspine.llr_tree(llrs).srs_of if srs_of is None else srs_of
+    return {
+        row.get("LLR-ID") or "": srs_of.get(str(row.get("LLR-ID") or "").strip(), [])
+        for row in llrs
+    }
+
+
+def _phase_groups(srs, llrs, tcs, da_srs=None, srs_of=None):
     """`{phase-label: (srs, llrs, tcs)}` — the rows each phase's stage is derived
     from.
 
@@ -143,7 +158,13 @@ def _phase_groups(srs, llrs, tcs, da_srs=None):
     argument relies on it, as a case citing several requirements already can.
     `None` places a TC by `Verifies` alone.
 
-    Implements: SR-197, LLR-230"""
+    A DESIGN ROW'S SRS ARE THE REQUIREMENT TREE'S (`kitlib.spine.llr_tree`): a
+    child's are read up its parent chain, so it lands in its requirement's
+    phase. `srs_of` is that up map; the settled reading hands in the one walked
+    over the live rows, so a settled child under a Drafted parent keeps its
+    phase. `None` walks `llrs`.
+
+    Implements: SR-197, LLR-230, SR-157, SR-049, LLR-481"""
     by_phase = {}
     sr_phase = {}
     for row in srs:
@@ -151,10 +172,9 @@ def _phase_groups(srs, llrs, tcs, da_srs=None):
         sr_phase[row["SR-ID"]] = label
         by_phase.setdefault(label, ([], [], []))[0].append(row)
 
-    llr_srs = {}
+    llr_srs = _design_srs(llrs, srs_of)
     for row in llrs:
-        cited = spine_rules.refs(row.get("SR-Refs"))
-        llr_srs[row.get("LLR-ID") or ""] = cited
+        cited = llr_srs[row.get("LLR-ID") or ""]
         for label in {sr_phase[s] for s in cited if s in sr_phase}:
             by_phase.setdefault(label, ([], [], []))[1].append(row)
 
@@ -214,6 +234,7 @@ def _stage_map(spine, settled, evidence_passed=False):
     # before they existed carries none of them, and reads as an empty tier.
     tiers = {key: spine.get(key, []) for key in _FIRST_ACCEPTANCE_TIERS}
     live_labels = set(_phase_groups(srs, llrs, tcs))
+    srs_of = kitspine.llr_tree(llrs).srs_of
 
     if settled:
         srs = [r for r in srs if not spine_rules.is_drafted(r)]
@@ -244,7 +265,9 @@ def _stage_map(spine, settled, evidence_passed=False):
         evidence_passed=evidence_passed,
     )
     overall = spine_rules.spine_stage(srs, llrs, tcs, **frame)
-    groups = _phase_groups(srs, llrs, tcs, assumption_rules.da_citing_srs(srs))
+    groups = _phase_groups(
+        srs, llrs, tcs, assumption_rules.da_citing_srs(srs), srs_of=srs_of
+    )
     per_phase = {}
     for label in sorted(live_labels):
         group = groups.get(label)
@@ -337,7 +360,7 @@ def read(root):
 # Implements: SR-197, LLR-230
 _ATTRIBUTED_ROWS = (
     ("SR-ID", "srs", ("Status", "SN-Refs", "VerificationMethod")),
-    ("LLR-ID", "llrs", ("Status", "SR-Refs")),
+    ("LLR-ID", "llrs", ("Status", "SR-Refs", "Parent")),
     ("TC-ID", "tcs", ("Status", "Verifies", "Assumption-Refs")),
     ("B-ID", "bifs", ("Status",)),
     ("CMP-ID", "cmps", ("Status", "Standing")),

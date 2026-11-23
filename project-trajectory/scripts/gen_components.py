@@ -206,13 +206,16 @@ def _add_members(view, srs, llrs, placement):
     A row placed at a component nothing declares is NOT invented here as a
     section: the interface naming that owner is trace.py's finding, and a view
     that materialized the id would hide it behind a plausible-looking heading.
+    A child design row reaches the requirements its parent chain does
+    (`kitlib.spine.llr_tree`).
 
     Implements: SR-070, LLR-199, LLR-403"""
     sr_by_id = {r["SR-ID"]: r for r in srs}
+    srs_of = _kitspine.llr_tree(llrs).srs_of
     sr_components = {}
     for row in llrs:
-        hats = tr.effective_hats(row, sr_by_id)
-        parents = [x for x in refs(row.get("SR-Refs")) if x in sr_by_id]
+        hats = tr.effective_hats(row, sr_by_id, srs_of)
+        parents = [x for x in srs_of.get(row["LLR-ID"], ()) if x in sr_by_id]
         for cid in placement.get(row["LLR-ID"], ()):
             if cid not in view:
                 continue

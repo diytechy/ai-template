@@ -289,8 +289,10 @@ def _implemented_ids(root):
         return set()
     reg = tr.load_registries(Path(root) / "docs")
     claimed = set(srs)
+    # A child design row's SRs are read up its parent chain (WI-1027).
+    srs_of = tr._spine.llr_tree(reg.llrs).srs_of
     for row in reg.llrs:
-        owner = ac._refs(row.get("SR-Refs"))
+        owner = srs_of.get((row.get("LLR-ID") or "").strip(), [])
         if owner and all(o in srs for o in owner):
             claimed.add((row.get("LLR-ID") or "").strip())
     claimed.discard("")

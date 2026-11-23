@@ -1086,23 +1086,22 @@ def _candidate_specs(root, ids):
 
 
 def _cited_spine(root, scope, by_id):
-    """The SR ids the cluster cites, plus the LLR ids hanging under them.
+    """The SR ids the cluster cites, plus the LLR ids below them.
 
-    Read off the rows' own `SR-Refs` cells and the LLR registry's `SR-Refs` —
-    the same join `intake._code_map_lines` makes — so `{spine}` shows the
-    requirement text a contradiction would be against, at both tiers."""
+    Read off the rows' own `SR-Refs` cells and the requirement tree
+    (`kitlib.spine.llrs_under`) — the same join the context block makes — so
+    `{spine}` shows the requirement text a contradiction would be against, at
+    both tiers.
+
+    Implements: SR-157, SR-049, LLR-481"""
     srs = set()
     for wid in scope:
         cell = (by_id.get(wid) or {}).get("SR-Refs") or ""
         srs |= set(_kitspine.refs(cell))
-    wanted = set(srs)
-    for llr in spine_carrier.load(
+    llrs = spine_carrier.load(
         Path(root) / "docs/requirements/low-level-requirements.toml", "LLR-ID"
-    ):
-        owned = set(_kitspine.refs(llr.get("SR-Refs")))
-        if srs & owned and (llr.get("LLR-ID") or "").strip():
-            wanted.add(llr["LLR-ID"].strip())
-    return wanted
+    )
+    return set(srs) | {llr["LLR-ID"].strip() for llr in _kitspine.llrs_under(srs, llrs)}
 
 
 def _other_open_rows(rows, scope):

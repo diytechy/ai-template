@@ -132,7 +132,7 @@ import gen_arch_map
 import spine_carrier
 from kitlib.config import process_check_text, utf8_console
 from kitlib.git import git_out
-from kitlib.spine import STATUS_VALUES, is_accepted, is_founded, refs
+from kitlib.spine import STATUS_VALUES, is_accepted, is_founded, llr_tree, refs
 
 START_KEY = "test_first_since"
 
@@ -326,10 +326,14 @@ def _record_first(first, registry, befores, after, at):
 
 def _associations(tests, design):
     """`{(test case id, requirement id): test-case row}` for every test case
-    and each requirement it names, directly or through a design row whose
-    `SR-Refs` names it, in one commit's rows. An id no design row carries
-    stands for itself, so a requirement named directly is its own key."""
-    owners = {lid: refs(row.get("SR-Refs")) for lid, row in design.items()}
+    and each requirement it names, directly or through a design row below it
+    in that commit's requirement tree (`SR-Refs` on a top-level row, a child's
+    read up its parent chain). An id no design row carries stands for itself,
+    so a requirement named directly is its own key.
+
+    Implements: SR-217, LLR-257"""
+    srs_of = llr_tree(design.values()).srs_of
+    owners = {lid: srs_of.get(lid, []) for lid in design}
     return {
         (tid, rid): row
         for tid, row in tests.items()
@@ -553,8 +557,9 @@ def _members(root, rev):
     design_rows = acceptance_record.rows_at(root, rev, *DESIGN_ROWS)
     test_rows = acceptance_record.rows_at(root, rev, *TEST_CASES)
     tip = Tip({}, {}, set(), set(), set(_associations(test_rows, design_rows)))
-    for lid, row in design_rows.items():
-        for sr in refs(row.get("SR-Refs")):
+    srs_of = llr_tree(design_rows.values()).srs_of
+    for lid in design_rows:
+        for sr in srs_of.get(lid, ()):
             tip.design.setdefault(sr, []).append(lid)
     for tid, row in test_rows.items():
         for vid in refs(row.get("Verifies")):

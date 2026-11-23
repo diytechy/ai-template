@@ -341,7 +341,10 @@ BASELINE = {
     # extracted text layer. Flat and table-driven — the branches are the RULES, so
     # collapsing them would hide which rule fired from the message a reader acts on.
     ("trace_text.py", "form_findings"): 14,
-    ("trace.py", "mermaid_graph"): 17,
+    # RE-STAMPED DOWN -2 (17 -> 15) 2026-11-23, WI-1027: a design row's edges
+    # into the graph moved out to `_design_up_edges`, which draws a child's
+    # from its parent row.
+    ("trace.py", "mermaid_graph"): 15,
     # 28 -> 27: the L-3 accept bucketing removed a nested scan (re-stamped
     # downward per the ratchet's improvement rule).
     # 27 -> 24, WI-1023: the design row's `Module`/`Component` meta line left
@@ -379,7 +382,10 @@ BASELINE = {
     # chains the dial releases — and one renderer is what keeps a chain reading
     # the same in both. Both functions sit under the threshold, so the entry
     # goes rather than being re-stamped, per this file's rule.
-    ("trace.py", "render_report"): 17,
+    # RE-STAMPED DOWN -1 (17 -> 16) 2026-11-23, WI-1027: the SR -> LLR -> TC
+    # matrix moved out into `matrix_lines`, which reads every design row below
+    # a requirement through the requirement tree's walk.
+    ("trace.py", "render_report"): 16,
     # 2026-08-15, the interface rework step 7 (Q3, operator-ruled): the carriage
     # graph's three rules in one pass — resolve, acyclic, depth-bounded. The
     # branches ARE the distinct findings a reader acts on (unknown carrier,

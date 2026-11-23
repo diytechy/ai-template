@@ -21,7 +21,7 @@ from .traj_graph import (
     flat_graph,
     route_graph,
 )
-from traj_parse import WORKSTREAM_LABELS, _sn_rows, _spine, placed_llrs
+from traj_parse import WORKSTREAM_LABELS, _sn_rows, _spine, placed_llrs, tree_llrs
 from traj_parse import spine_carrier as _carrier
 
 
@@ -35,6 +35,8 @@ from .traj_render import (
     SW_NODE_FILL,
     TIER_COL,
     TIER_FILL,
+    icicle_columns,
+    icicle_offsets,
     NODE_TYPE_PX,
     _arrow_markers,
     _drill_layer_svg,
@@ -89,7 +91,8 @@ SR_TIER = TierSpec(
 # A design row's meta is where it sits: its derived placement (a row names no
 # module or component since WI-1023), carried on the row as `Placed` by
 # `traj_parse.placed_llrs` so the shared loop reads one column like the SR arm.
-LLR_TIER = TierSpec("LLR-ID", "llr", "Detail", "Placed", "Placed", "SR-Refs")
+# It hangs from `Up` (`traj_parse.tree_llrs`): its SR, or a child's parent row.
+LLR_TIER = TierSpec("LLR-ID", "llr", "Detail", "Placed", "Placed", "Up")
 
 
 def _add_tier_rows(rows, spec, parent_ids, add, link):
@@ -156,7 +159,9 @@ def arch_icicle(root):
 
     srs, llrs, tcs = _spine(root)
     sr_ids = _add_tier_rows(srs, SR_TIER, sn_ids, add, link)
-    llr_ids = _add_tier_rows(placed_llrs(root, llrs, tcs), LLR_TIER, sr_ids, add, link)
+    rows, depth = tree_llrs(placed_llrs(root, llrs, tcs))
+    ids = {r["LLR-ID"].strip() for r in rows}
+    llr_ids = _add_tier_rows(rows, LLR_TIER, sr_ids | ids, add, link)
 
     for r in tcs:
         tid = r["TC-ID"].strip()
@@ -176,14 +181,16 @@ def arch_icicle(root):
             link(parent, tid)
 
     # The next three walks (wt/collect/draw) recurse over `kids`, and unlike the
-    # work-item DAG this tree's depth is capped at 4 by construction: `link()` is
-    # only ever called SN->SR, SR->LLR, LLR->TC, SR->TC (see the tiers above), so
-    # no input — pathological or not — can deepen it past the SN->SR->LLR->TC
-    # spine. They therefore need no iterative rewrite or depth guard, unlike
-    # `_dag_ranks` / `check_trajectory._cycles` which walk the unbounded WI chain.
+    # work-item DAG this tree's depth is bounded by construction: `link()` is
+    # only ever called SN->SR, SR->LLR, LLR->LLR, LLR->TC, SR->TC, and the
+    # LLR->LLR links are the requirement tree's walk, which never links a cycle,
+    # so the depth is the tree's depth plus four. They therefore need no
+    # iterative rewrite or depth guard, unlike `_dag_ranks` /
+    # `check_trajectory._cycles` which walk the unbounded WI chain.
     # Kept recursive so this block stays a faithful port
     # of the proven gilbert icicle; if that port is ever hardened upstream (for a
     # deeper tree there), mirror it — here it is provably safe.
+    offset, deep = icicle_offsets(tier, depth)
     weight = {}
 
     def wt(nid):
@@ -213,7 +220,7 @@ def arch_icicle(root):
     def draw(nid, y, cells):
         h = weight[nid] * ICICLE_UNIT
         t = tier[nid]
-        x = TIER_COL[t] * (col_w + gap)
+        x = (TIER_COL[t] + offset.get(nid, 0)) * (col_w + gap)
         cx, cy = x + col_w / 2, y + h / 2
         title = (details[nid]["title"] or "").strip()
         txt = ""
@@ -262,13 +269,13 @@ def arch_icicle(root):
         for s in root_ids:
             draw(s, y, cells)
             y += weight[s] * ICICLE_UNIT
-        width = 4 * col_w + 3 * gap
+        width = (4 + deep) * col_w + (3 + deep) * gap
         heads = "".join(
             '<text class="lane-head" x="{:.0f}" y="-8" '
             'text-anchor="middle">{}</text>'.format(
-                TIER_COL[t] * (col_w + gap) + col_w / 2, t.upper()
+                c * (col_w + gap) + col_w / 2, label
             )
-            for t in ("sn", "sr", "llr", "tc")
+            for c, label in icicle_columns(deep)
         )
         body = heads + "".join(cells)
         return (

@@ -1,0 +1,8 @@
+high_risk = []
+
+[decision.D-001]
+decided = "A design row's `Parent` cell is accepted text in the acceptance record's cell split, named in the design registry's accepted half beside `Title`, `Detail` and `Rationale`; it is neither traced nor a routed traced cell. A re-parent of an accepted row is therefore an amendment of that row: the row drifts from its recorded copy, every drift reader and the operator page show it, the derived stage drops until it is re-accepted, the verdict's judged-text identity binds the parent, and the merge's amendment mint routes it to adjudication. Planned as D1 in docs/plans/WI-1027/plan.md (section 1) and approved by the coordinator with the plan."
+alternative = "Class it traced and routed, as `SR-Refs` is (the WI-388 ruling's shape): a re-parent would not drift the row, and only the merge's amendment mint would route it to a sitting."
+reversal_cost = "One commit moving `Parent` from SPINE_ACCEPTED_CELLS to SPINE_TRACED_CELLS and the routed table, plus re-cutting the two accepted rows that enumerate the routed cells (LLR-153, and LLR-245 as WI-1060 rewrites it) and the test that pins the class."
+why_not_escalated = "A design call no spine row states: no row lists a column's class (the split's membership lives in code and the reference doc's table). Accepted is the stricter class, since any change to the cell goes to a sitting with the row's whole text, and it re-cuts no accepted row; the routed alternative would re-cut LLR-153 and LLR-245. The coordinator approved it with the plan and asked for this entry."
+review = ""

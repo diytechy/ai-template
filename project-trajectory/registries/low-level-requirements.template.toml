@@ -13,8 +13,14 @@
 # refused when the registry is read: a design row carries no `module`,
 # `code_symbol` or `component` (scripts/migrate_carrier.py --llr-trace-cells
 # removes them from an older registry).
+#
+# A design row decomposes an SR or another design row (process.md §4, the
+# requirement tree): a TOP-LEVEL row names its SRs in `sr_refs` and no
+# `parent`; a CHILD names its one parent design row in `parent` and carries no
+# `sr_refs`. The example row below shows both keys only because it is the schema.
 [design.LLR-000]
 sr_refs = ["SR-000"]
+parent = "LLR-000"  # OPTIONAL. A child row's ONE parent design row, in place of sr_refs: its SRs are read up its parent chain, and only a top-level row names them. Omit it on a top-level row. A parent is discharged by its own integration test case beside its children's, whose cases do not discharge it.
 hat_refs = ["SECURITY"]  # OPTIONAL. The declared perspective(s) in docs/requirements/hats.toml raised AT THIS DESIGN DECOMPOSITION - by roster NAME, and a real shipped one so this row resolves when copied. NEVER a copy of the parent SR's cell: a row's EFFECTIVE set is DERIVED (this row's own refs, unioned with its SR parents'), so re-ruling one requirement propagates to every child on the next read and corrects no LLR cell at all. Copying down instead would turn one re-ruling into a sweep over every child - the hand-maintenance this design exists to escape, moved one tier down and multiplied. An ABSENT cell means NOT RECORDED, never "no perspective reached this row".
 title = "EXAMPLE - delete on first real entry"
 detail = """Decomposition/implementation detail — NOT a paraphrase of the SR (reference it by id). The observable obligation: inputs, outcome, refusal boundary. Name no file, symbol or component: the code points up to this row with an `Implements:` tag, and where the row sits is derived from the interfaces its verifying test cases name."""

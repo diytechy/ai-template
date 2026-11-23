@@ -556,13 +556,12 @@ def _context_block(root, wi_row, rows):
         and r.get("Status") in _OPEN
         and srs & set(_split(r.get("SR-Refs")))
     }
-    llrs = [
-        r
-        for r in spine_carrier.load(
+    llrs = _spine.llrs_under(
+        srs,
+        spine_carrier.load(
             root / "docs/requirements/low-level-requirements.toml", "LLR-ID"
-        )
-        if srs & set(_split(r.get("SR-Refs")))
-    ]
+        ),
+    )
     placement = _placement(root)
     comps = {c for r in llrs for c in placement.get(r.get("LLR-ID"), ())}
     sections = [

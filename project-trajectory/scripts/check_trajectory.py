@@ -2369,11 +2369,10 @@ def _placed_sr_components(root, components):
         spine_carrier.load(root / IF_CSV, "IF-ID"),
     )
     out = {}
-    for r in spine_carrier.load(root / LLR_CSV, "LLR-ID"):
-        placed = set(placement.get((r.get("LLR-ID") or "").strip(), ())) & set(
-            components
-        )
-        for sr in _split_refs(r.get("SR-Refs") or "") if placed else ():
+    srs_of = _kitspine.llr_tree(spine_carrier.load(root / LLR_CSV, "LLR-ID")).srs_of
+    for lid, srs in srs_of.items():  # a child's SRs are read up its chain
+        placed = set(placement.get(lid, ())) & set(components)
+        for sr in srs if placed else ():
             out.setdefault(sr, set()).update(placed)
     return out
 

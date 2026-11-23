@@ -248,6 +248,31 @@ def links(label, ids, target_dir):
     ]
 
 
+def _children_by_parent(llrs):
+    """`{design row id: [the ids of the rows naming it as their parent]}`, as
+    the registry authors the requirement tree's links."""
+    out = {}
+    for r in llrs:
+        for parent in split_refs(r.get("Parent", "")):
+            out.setdefault(parent, []).append(r["LLR-ID"].strip())
+    return out
+
+
+def _llr_tree_links(row, children):
+    """A design row's links in the requirement tree: up, a child's one parent
+    row or a top-level row's SRs, as the registry authors them; down, the rows
+    naming it as their parent."""
+    parent = split_refs(row.get("Parent", ""))
+    up = (
+        links("Decomposes", parent, "low-level-requirements")
+        if parent
+        else links(
+            "Decomposes", split_refs(row.get("SR-Refs", "")), "system-requirements"
+        )
+    )
+    return up + links("Decomposed by", children, "low-level-requirements")
+
+
 def field(label, value, fmt="{}"):
     """One optional labelled body section, or nothing when the cell is empty.
 
@@ -393,6 +418,7 @@ def emit(root):
         return {}
 
     sr_of_sn, llr_of_sr, tc_of = {}, {}, {}
+    llr_of_llr = _children_by_parent(llrs)
     for r in srs:
         for sn in split_refs(r.get("SN-Refs", "")):
             sr_of_sn.setdefault(sn, []).append(r["SR-ID"].strip())
@@ -466,9 +492,7 @@ def emit(root):
         # No `**Code.**` line: a design row names no file or symbol since
         # WI-1023, and the bundle exports what the registries say; the files
         # realizing a row are the code's `Implements:` tags.
-        body += links(
-            "Decomposes", split_refs(r.get("SR-Refs", "")), "system-requirements"
-        )
+        body += _llr_tree_links(r, llr_of_llr.get(cid, []))
         body += links("Verified by", tc_of.get(cid, []), "test-cases")
         out["low-level-requirements/{}.md".format(cid)] = concept(
             "low-level-requirements",

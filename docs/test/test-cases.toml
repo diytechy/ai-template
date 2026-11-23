@@ -4768,3 +4768,91 @@ automated = "Yes"
 status = "Accepted"
 phase = 6
 evidence = "tests/test_llr_trace_cells.py::test_a_design_row_is_discharged_by_a_case_of_any_kind; tests/test_trace.py::test_draft_llr_is_exempt_from_tc_rule"
+
+[test.TC-560]
+verifies = ["SR-157", "LLR-480"]
+level = "Unit"
+method = "Run the orphan pass and the strict check over a three-level tree of design rows beside one row of each fault: a top-level row naming no system requirement, a child naming one, a parent cell naming a missing row, one naming a system requirement, one naming two rows, a cycle of two rows and a cycle of one, and a row below the missing parent; once with the faulty rows Drafted and once Accepted. Run the required-field check over a child and a top-level row that each name no system requirement. Load a design registry whose rows carry parent cells."
+tier = "Smoke"
+expected = "The well-formed tree produces no report. Each faulty row is reported once, naming the row and its fault, at both statuses, and the strict check fails: each row on a cycle names the cycle's rows, and the row below the missing parent names the row where its chain breaks. The required-field check reports the top-level row and not the child. The registry loads."
+automated = "Yes"
+status = "Drafted"
+phase = 6
+evidence = "tests/test_requirement_tree.py::test_a_design_registry_whose_rows_carry_a_parent_loads; tests/test_requirement_tree.py::test_a_row_below_a_missing_parent_names_where_its_chain_breaks; tests/test_requirement_tree.py::test_a_well_formed_tree_is_silent; tests/test_requirement_tree.py::test_each_fault_is_reported_once_at_either_status; tests/test_requirement_tree.py::test_each_row_on_a_two_row_cycle_names_the_cycle; tests/test_requirement_tree.py::test_the_required_field_check_asks_sr_refs_of_a_top_level_row_only; tests/test_requirement_tree.py::test_the_strict_check_fails_on_a_fault"
+
+[test.TC-561]
+verifies = ["SR-157", "SR-049", "LLR-481"]
+level = "Unit"
+method = "Call the walk over design rows listed out of tree order: a top-level row under one requirement with a child and a grandchild, a second requirement's top-level row, a child whose parent is missing, a cycle of two rows, a row below the cycle, a cycle of one row and a row naming two parents."
+tier = "Smoke"
+expected = "Down from the first requirement: the top-level row, the child and the grandchild, each once, in registry order; down from the top-level row: the child and the grandchild; up from the grandchild: the first requirement; up from the row below the missing parent, from each row on or below a cycle and from the row naming two parents: none. Every call returns."
+automated = "Yes"
+status = "Drafted"
+phase = 6
+evidence = "tests/test_requirement_tree.py::test_a_missing_parent_or_a_cycle_reaches_no_requirement_and_the_walk_returns; tests/test_requirement_tree.py::test_a_one_row_cycle_and_a_row_naming_two_parents_are_broken_too; tests/test_requirement_tree.py::test_llrs_under_keeps_its_rows_and_reaches_the_grandchild; tests/test_requirement_tree.py::test_the_walk_goes_down_from_a_design_row_to_its_descendants; tests/test_requirement_tree.py::test_the_walk_goes_down_from_a_requirement_to_every_row_below_it_once; tests/test_requirement_tree.py::test_the_walk_goes_up_from_a_grandchild_to_its_chains_requirement"
+
+[test.TC-562]
+verifies = ["SR-168", "LLR-482"]
+level = "Unit"
+method = "Render the state view's requirement decomposition over a three-level tree with one test case under each design row, and over the same requirements with every design row top-level."
+tier = "Smoke"
+expected = "The child is drawn inside the top-level row's span one column further in, and the grandchild inside the child's one column further again; the test-case column follows the grandchild's. With every row top-level the decomposition has one design column, followed by the test-case column."
+automated = "Yes"
+status = "Drafted"
+phase = 6
+evidence = "tests/test_requirement_tree.py::test_a_spine_with_no_child_keeps_one_design_column; tests/test_requirement_tree.py::test_the_spine_view_draws_each_child_one_column_further_in"
+
+[test.TC-563]
+verifies = ["SR-241", "LLR-367"]
+level = "Unit"
+method = "Derive the review test set for one requirement over a three-level tree whose grandchild's test case is tagged, then with the grandchild's test case removed, then with the grandchild's test case the only one."
+tier = "Smoke"
+expected = "The grandchild's tagged test file is in the set and no gap is reported; without its test case the grandchild is named as a gap; verified through the grandchild alone, the requirement is not a gap while the two rows above the grandchild are."
+automated = "Yes"
+status = "Drafted"
+phase = 6
+evidence = "tests/test_review_set_walk.py::test_a_grandchilds_tagged_file_is_in_the_set; tests/test_review_set_walk.py::test_an_sr_verified_only_through_a_grandchild_has_no_gap; tests/test_review_set_walk.py::test_an_untested_grandchild_is_a_gap"
+
+[test.TC-564]
+verifies = ["SR-212", "LLR-244"]
+level = "Unit"
+method = "Run the architecture arm over an interface-form requirement whose only design row realized in a boundary interface's body file is a grandchild of a top-level row naming the requirement; once with the source scanned, and once unscanned with the grandchild placed in the interface's owner component; then with the interface bridged by no assumption the requirement cites."
+tier = "Smoke"
+expected = "In both readings the interface reaches the requirement, which is judged against it as one reached through a top-level row is: bridged, it passes; unbridged, it fails naming the requirement and the interface."
+automated = "Yes"
+status = "Drafted"
+phase = 6
+evidence = "tests/test_assumption_rules.py::test_a_boundary_interface_reaches_a_requirement_through_a_grandchild; tests/test_assumption_rules.py::test_a_requirement_reached_through_a_grandchild_is_judged_as_through_a_top_row"
+
+[test.TC-565]
+verifies = ["SR-217", "LLR-257"]
+level = "Unit"
+method = "Pair the test cases with the requirements over one copy of the registries in which a test case names only the grandchild of a top-level row naming a requirement."
+tier = "Smoke"
+expected = "The test case is paired with that requirement."
+automated = "Yes"
+status = "Drafted"
+phase = 6
+evidence = "tests/test_requirement_tree.py::test_a_case_naming_only_a_grandchild_is_paired_with_its_chains_requirement"
+
+[test.TC-566]
+verifies = ["SR-248", "LLR-408"]
+level = "Unit"
+method = "Run the orphan rules over a parent design row past Drafted whose child and grandchild each have a test case and which no test case names; again with a test case naming the parent; again with the parent Drafted and named by none; and over an Accepted grandchild no test case verifies. Run the strict check over the first."
+tier = "Smoke"
+expected = "The parent no case names is reported as having no test case, naming it, though its descendants are verified, and the strict check fails; named by a case it is not reported; Drafted it is not reported; the unverified Accepted grandchild is reported as having no test case."
+automated = "Yes"
+status = "Drafted"
+phase = 6
+evidence = "tests/test_requirement_tree.py::test_a_parent_named_by_its_own_case_or_drafted_is_not_reported; tests/test_requirement_tree.py::test_a_parent_no_case_names_is_reported_though_its_descendants_are_verified; tests/test_requirement_tree.py::test_an_unverified_accepted_grandchild_is_reported; tests/test_requirement_tree.py::test_the_strict_check_fails_on_an_undischarged_parent"
+
+[test.TC-567]
+verifies = ["SR-157", "SR-049", "LLR-481"]
+level = "Unit"
+method = "Over the three-level tree with one test case per row, run the checker's orphan pass; its triangle rule over a test case citing the grandchild beside each requirement; its paraphrase advisory over a grandchild echoing the first requirement; its perspective coverage with a perspective only on the first requirement; and its report's outline, matrix and graph. Group the rows into phases and derive the per-phase stage with the two requirements in two phases, with every row settled and then with the grandchild Drafted; and group the settled rows under a Drafted top-level row by the chain read over every row."
+tier = "Smoke"
+expected = "No row of the tree is reported as missing a system requirement; the case citing the grandchild beside the first requirement is coherent and beside the second is reported; the grandchild's echo is reported against the first requirement; its effective perspectives include the first requirement's; the outline nests the grandchild under the child under the top-level row, the matrix lists all three under the first requirement, and the graph draws each parent link. The grandchild falls in the first requirement's phase; Drafted, it holds that phase's live reading at the design-row rung, and the phase's settled reading equals the reading with it settled; the settled child and grandchild under a Drafted top-level row keep the first requirement's phase."
+automated = "Yes"
+status = "Drafted"
+phase = 6
+evidence = "tests/test_requirement_tree.py::test_a_drafted_grandchild_holds_its_phases_live_reading; tests/test_requirement_tree.py::test_a_grandchilds_effective_perspectives_include_its_chains_requirements; tests/test_requirement_tree.py::test_the_graph_draws_each_parent_link; tests/test_requirement_tree.py::test_the_matrix_lists_every_row_below_a_requirement; tests/test_requirement_tree.py::test_the_outline_nests_the_grandchild_under_the_child_under_the_top_row; tests/test_requirement_tree.py::test_the_paraphrase_advisory_compares_a_grandchild_with_its_chains_requirement; tests/test_requirement_tree.py::test_the_stage_places_a_grandchild_in_its_requirements_phase; tests/test_requirement_tree.py::test_the_triangle_rule_reads_a_grandchilds_requirement_up_its_chain; tests/test_requirement_tree.py::test_the_settled_grouping_reads_the_walk_over_the_live_rows"

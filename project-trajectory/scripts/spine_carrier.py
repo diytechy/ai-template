@@ -338,6 +338,9 @@ SPINE_COLUMN = {
     # eight live rationale cells is NOT a second id space, and resolves nowhere.
     "hat_refs": "Hat-Refs",
     "sr_refs": "SR-Refs",
+    # WI-1027: a child design row's one parent design row, in place of its
+    # `sr_refs` (kitlib.spine.llr_tree reads the tree).
+    "parent": "Parent",
     "verifies": "Verifies",
     "requirement": "Requirement",
     "rationale": "Rationale",

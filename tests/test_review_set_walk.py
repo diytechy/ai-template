@@ -166,3 +166,49 @@ def test_each_gap_is_named(llrs, tcs, gap):
     """Implements: TC-414"""
     gaps = _scope(["SR-001"], llrs, tcs, {"TC-001": [TEST_A]})[2]
     assert [str(item) for item in gaps] == [gap]
+
+
+# --- the requirement tree (WI-1027): a grandchild counts as a top-level row ---
+
+TEST_C = "tests/test_c.py"
+
+
+def _tree_llrs():
+    return [
+        _llr("LLR-001", "SR-001"),
+        {"LLR-ID": "LLR-002", "Parent": "LLR-001"},
+        {"LLR-ID": "LLR-003", "Parent": "LLR-002"},
+    ]
+
+
+def _tree_tcs():
+    return [
+        _tc("TC-001", "SR-001;LLR-001", TEST_A),
+        _tc("TC-002", "LLR-002", TEST_B),
+        _tc("TC-003", "LLR-003", TEST_C),
+    ]
+
+
+def test_a_grandchilds_tagged_file_is_in_the_set():
+    """Implements: TC-563"""
+    tags = {"TC-001": [TEST_A], "TC-002": [TEST_B], "TC-003": [TEST_C]}
+    files, _listed, gaps = _scope(["SR-001"], _tree_llrs(), _tree_tcs(), tags)
+    assert files == [TEST_A, TEST_B, TEST_C]
+    assert gaps == []
+
+
+def test_an_untested_grandchild_is_a_gap():
+    """Implements: TC-563"""
+    tags = {"TC-001": [TEST_A], "TC-002": [TEST_B]}
+    gaps = _scope(["SR-001"], _tree_llrs(), _tree_tcs()[:2], tags)[2]
+    assert [str(item) for item in gaps] == ["LLR-003: no test case verifies it"]
+
+
+def test_an_sr_verified_only_through_a_grandchild_has_no_gap():
+    """Implements: TC-563"""
+    tcs = [_tc("TC-003", "LLR-003", TEST_C)]
+    gaps = _scope(["SR-001"], _tree_llrs(), tcs, {"TC-003": [TEST_C]})[2]
+    assert [str(item) for item in gaps] == [
+        "LLR-001: no test case verifies it",
+        "LLR-002: no test case verifies it",
+    ]

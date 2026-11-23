@@ -52,6 +52,7 @@ try:
         is_drafted,
         is_founded,
         llr_exempt,
+        llr_tree,
         phase_num,
         refs,
         sn_cited_ids,
@@ -66,6 +67,7 @@ except ImportError:  # pragma: no cover - in-process fallback
         is_drafted,
         is_founded,
         llr_exempt,
+        llr_tree,
         phase_num,
         refs,
         sn_cited_ids,
@@ -167,25 +169,72 @@ def _sr_orphan_findings(srs, llr_sr_refs, tc_refs, sn_ids):
     return out
 
 
-def _llr_orphan_findings(llrs, sr_ids, tc_refs):
+def _broken_finding(lid, broken):
+    """The one line for a design row whose parent chain is broken (`llr_tree`'s
+    `broken` entry), naming the row and where the chain breaks.
+
+    Implements: SR-157, LLR-480"""
+    kind, at, detail = broken
+    if kind == "missing":
+        return f"LLR {lid} names parent {detail}, which is no live design row"
+    if kind == "several":
+        return f"LLR {lid} names {len(detail)} parents ({', '.join(detail)})"
+    if kind == "cycle":
+        return f"LLR {lid} is on a parent cycle ({' -> '.join(detail + detail[:1])})"
+    return f"LLR {lid} reaches no SR: its parent chain breaks at {at}"
+
+
+def _llr_parentage_findings(r, sr_ids, tree):
+    """One design row's parentage, as ``[(at_fault_id, finding), ...]``: a
+    top-level row names at least one live SR; a child names none, its SRs read
+    up a chain that ends at a top-level row (`kitlib.spine.llr_tree`).
+
+    Implements: SR-157, LLR-480"""
+    lid = r["LLR-ID"]
+    own = refs(r.get("SR-Refs"))
+    if not refs(r.get("Parent")):
+        if not own:
+            return [(lid, f"LLR {lid} has no SR parent")]
+        return [
+            (lid, f"LLR {lid} references unknown {p}") for p in own if p not in sr_ids
+        ]
+    out = []
+    if own:
+        parent = tree.parent_of.get(lid, refs(r.get("Parent"))[0])
+        out.append(
+            (
+                lid,
+                f"LLR {lid} is a child of {parent} and names SR-Refs ({', '.join(own)})"
+                " - a child's SRs are read up its parent chain; remove them",
+            )
+        )
+    if lid in tree.broken:
+        out.append((lid, _broken_finding(lid, tree.broken[lid])))
+    return out
+
+
+def _llr_orphan_findings(llrs, sr_ids, tc_refs, tree):
     """The LLR tier's rules, as ``[(at_fault_id, finding), ...]``. Its no-test
     rule is a design row's discharge: any live case naming the row in
     `Verifies` discharges it, whatever its kind, and a Drafted row owes none.
+    A parent row is discharged the same way, by a case naming it: its
+    children's cases name the children.
 
     Implements: SR-248, LLR-408"""
+    parents = set(tree.parent_of.values())
     out = []
     for r in llrs:
         lid = r["LLR-ID"]
-        parents = refs(r.get("SR-Refs"))
-        if not parents:
-            out.append((lid, f"LLR {lid} has no SR parent"))
-        for p in parents:
-            if p not in sr_ids:
-                out.append((lid, f"LLR {lid} references unknown {p}"))
+        out += _llr_parentage_findings(r, sr_ids, tree)
         # A Drafted LLR is exempt from the child-completeness (no TC) rule, like a
         # Drafted SR — its SR parent + id integrity still apply (derived-gate §3).
         if not is_drafted(r) and lid not in tc_refs:
-            out.append((lid, f"LLR {lid} has no test (TC)"))
+            note = (
+                " - a parent: its children's test cases do not discharge it"
+                if lid in parents
+                else ""
+            )
+            out.append((lid, f"LLR {lid} has no test (TC){note}"))
     return out
 
 
@@ -208,8 +257,9 @@ def spine_orphan_findings(
     srs, llrs, tcs, ifs, sr_ids, llr_ids, sn_ids, sn_draft, da_ids=frozenset()
 ):
     """The child-completeness and parent-resolution rules over the four spine
-    tiers: an SR with no LLR / no TC / no SN, an LLR with no SR parent / no TC,
-    a TC citing an id that does not exist, and an SN nothing cites. Pure.
+    tiers: an SR with no LLR / no TC / no SN, an LLR with no SR parent / no TC
+    or a broken place in the requirement tree (`_llr_parentage_findings`), a
+    TC citing an id that does not exist, and an SN nothing cites. Pure.
 
     Returns `(findings, at-fault ids)` — the id set is what the rendered views
     (outline / graph / HTML) flag, so they mark the same nodes the text lists.
@@ -231,7 +281,7 @@ def spine_orphan_findings(
     tc_refs = {x for r in tcs for x in refs(r.get("Verifies"))}
     pairs = (
         _sr_orphan_findings(srs, llr_sr_refs, tc_refs, sn_ids)
-        + _llr_orphan_findings(llrs, sr_ids, tc_refs)
+        + _llr_orphan_findings(llrs, sr_ids, tc_refs, llr_tree(llrs))
         + tc_citation_findings(tcs, sr_ids | llr_ids, ifs, da_ids)
         + _sn_orphan_findings(sn_ids, sn_cited_ids(srs), sn_draft)
     )

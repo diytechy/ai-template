@@ -471,8 +471,11 @@ SPINE_ACCEPTED_CELLS = {
             "Form",
         }
     ),
+    # `Parent` (WI-1027) joins by name: which row a child decomposes is what
+    # its detail is read against, so a re-parent is an amendment of the row
+    # (decisions record maint-wi-1027 D-001).
     "docs/requirements/low-level-requirements.toml": frozenset(
-        {"Title", "Detail", "Rationale"}
+        {"Title", "Detail", "Rationale", "Parent"}
     ),
     "docs/test/test-cases.toml": frozenset(
         {

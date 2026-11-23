@@ -103,7 +103,7 @@ import schedule
 import spec_move
 import spine_carrier
 from kitlib import registry as kitregistry
-from kitlib.spine import is_example, refs, split_pred_edges
+from kitlib.spine import is_example, llrs_under, refs, split_pred_edges
 
 WORK = "docs/work"
 #: Terminal history's home since WI-504 — the archive half of the one registry
@@ -525,12 +525,11 @@ def touched_modules(root, row, llrs=None, body="", index=None):
 
 
 def _llr_modules(srs, llrs, index):
-    """The basenames of the files the index names for every LLR row owned by
-    one of `srs`."""
+    """The basenames of the files the index names for every LLR row below one
+    of `srs` in the requirement tree (`kitlib.spine.llrs_under`)."""
     return {
         Path(path).name
-        for llr in llrs
-        if srs & set(refs(llr.get("SR-Refs")))
+        for llr in llrs_under(srs, llrs)
         for path in index.get((llr.get("LLR-ID") or "").strip(), ())
     }
 
