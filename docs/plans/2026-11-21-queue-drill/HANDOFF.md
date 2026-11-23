@@ -20,8 +20,9 @@ LLR-406's flip under them. **Start at §0.**
 
 A new coordinator session starts with these steps, in this order.
 
-1. **WI-1058 and WI-1059, filed `a6d447b76`, owe scope critiques** (§4 step
-   1; Sol and Hydrogen).
+1. **WI-1058, WI-1059 and WI-1060 owe scope critiques** (§4 step 1; Sol
+   and Hydrogen). The first two were filed `a6d447b76`, and WI-1060 just
+   after (see step 4).
    - WI-1058 answers the fourth sitting's two returns: SR-251's event
      trigger fronted in EARS form, and TC-483's two gaps (key insertion
      through the registry writer, multi-node sorted append). It goes before
@@ -29,7 +30,7 @@ A new coordinator session starts with these steps, in this order.
    - WI-1059 is a kit fix the fourth act met: the derived act listed
      LLR-406's flip under its returned parent SR-251, which the hook's
      parent-first step refuses. It may build beside WI-1058.
-   Then build, review, merge (§4, §7).
+   Then build WI-1058 and WI-1059, review and merge (§4, §7).
 2. **The fifth adjudication sitting**, once WI-1058 lands. Run it as
    WI-1057 ran (its Context and Deliverable; §3.7). The scope is computed
    as before (`<scratch>/sit/scope.py` prints `refresh_ledger`'s drifted
@@ -62,46 +63,33 @@ A new coordinator session starts with these steps, in this order.
    and that a child must not exceed or contradict its parent. The third
    sitting returned rows for each of these; the fourth, where every builder
    was so briefed, blessed every amendment.
-4. **The long-term fix for the revert loop, open with the operator**
-   (2026-11-23). One unblessed drifted row blocks every blessed row of its
-   registry, because SR-207 refuses the whole-file copy. Two designs are on
-   the table:
-   - a row-scoped copy: an act writes only the rows it names, which
-     touches SR-207 and the two mirror rules;
-   - multi-verdict carry-forward: rows an earlier recorded verdict blessed,
-     digest unchanged, are left out of the next sitting and joined into one
-     whole-file act.
-   The coordinator recommends the row-scoped copy. PROCESS.md lets a lane
-   land with amendments still owed ("its merge is REFUSED for any act no
-   accepted verdict ... backs"; a MEANING row "and a first draft ...
-   neither holds a lane"), and a held rung's acceptance is the operator's,
-   taken later. So drift from several landings sharing one registry on
-   trunk is the kit's normal state, not only this drill's. Carry-forward
-   removes the re-judging but keeps that coupling: blessed rows, and new
-   rows waiting to flip, wait for every sibling in the file. The
-   row-scoped copy also makes carry-forward unnecessary, since blessed rows
-   anchor at once and drop out of the next sitting. Its cost is real:
-   - SR-207 is amended, which is the operator's act.
-   - The mirror rules become "the record is the previous record with
-     exactly the act's named rows taken from live", a rule an act cannot
-     launder past.
-   - The rewrite is a surgical TOML rewrite with re-read proof, the pattern
-     the evidence regeneration and the trace-cell migration already use.
-   - A rule is needed for other rows' traced cells.
-   No data migrates downstream: existing records already satisfy the new
-   rule. Not filed yet; the operator rules whether to file it. Until then,
-   the standing revert ruling (step 2) keeps the sittings moving.
-   - Not filed: the commit hook does not run `check_docs`; IF-231's notes
-     still describe the reach as through the owner's design rows only; and
-     LLR-338's accepted Detail still says "APPROVE". The last two are for
-     WI-1018's list.
-5. **For the operator:**
-   - Delete the builders' scratch folders `D:/rt1023`, `D:/rt1040`,
-     `D:/rt1042`, `D:/rt1048`, `D:/rt1050`, `D:/rt1051`, `D:/rt1053`,
-     `D:/rt1054` and `D:/review-tmp`. The harness blocks the coordinator
-     from removing them, and every link inside them points within the
-     folder.
-   - The push, as before.
+4. **WI-1060, the long-term fix for the revert loop, filed on the
+   operator's ruling** (2026-11-23, given in the coordinator's session:
+   "Yes please file the row-scoped copy as a work item"). An act's copy
+   writes only the rows the act names. Today one unblessed drifted row
+   blocks every blessed row of its registry, because SR-207 refuses the
+   whole-file copy. The operator chose this over multi-verdict
+   carry-forward. The row's Context gives the reasoning: PROCESS.md lets
+   lanes land with owed drift, so drift from several landings sharing one
+   registry is normal, and carry-forward would keep the coupling.
+   - It owes a scope critique (step 1) and plans first
+     (`planmode = "single"`).
+   - It amends accepted rows: SR-179, LLR-178, SR-207, LLR-245, and others
+     it finds. Show SR-207's amendment to the operator.
+   - It runs the unfiltered suite before landing.
+   - It lands one at a time with WI-1045, which reworks the same file.
+     Build it beside F-4 and F-7 (step 3) or straight after the fifth
+     sitting.
+   - Until it lands, the standing revert ruling (step 2) keeps the sittings
+     moving.
+   - Not filed, for WI-1018's list: IF-231's notes still describe the reach
+     as through the owner's design rows only, and LLR-338's accepted Detail
+     still says "APPROVE". The commit hook not running `check_docs` is
+     unfiled too.
+5. **For the operator:** nothing outstanding. Trunk was pushed through
+   `80d64a5f3` (2026-11-23). The operator is deleting the builders' scratch
+   folders (`D:/rt*`, `D:/review-tmp`); `ls -d D:/rt* D:/review-tmp` shows
+   whether any remain. Later pushes stay the operator's.
 
 Scratch tools (in the third session's scratchpad,
 `C:/Users/Peter/AppData/Local/Temp/claude/9919beaa12ed540b/4465fec8-b451-4926-9610-287878fcceff/scratchpad`,
@@ -166,7 +154,8 @@ adjudication sittings by Gemini Neon through `agy` (operator, 2026-11-21;
   returned). LLR-406's flip is held under WI-1057's verdict until SR-251 is
   accepted. IF-312 and CMP-006 still drift in their off-spine registries
   (no sitting has been shown them).
-- The operator still owes, outside this drill: the push. OI-79 is closed
+- The operator pushed trunk through `80d64a5f3` (2026-11-23); later pushes
+  stay the operator's. OI-79 is closed
   (operator, 2026-11-22): its remote-ref delete is done (`git ls-remote
   origin`: no `wi508-architectural-remap-HELD-for-owner-verdict` branch; the
   tag `wi508-record-2026-08-30` at `fa3c99c4` is there), and its row's
@@ -178,6 +167,7 @@ adjudication sittings by Gemini Neon through `agy` (operator, 2026-11-21;
 |---|---|---|---|
 | WI-1058 | WI-1057's verdict answered: SR-251's EARS trigger, TC-483's two gaps | Next (§0 step 1); before the fifth sitting | Filed `a6d447b76`; owes a scope critique |
 | WI-1059 | A derived act holds back a flip whose parent stays Drafted | Beside WI-1058 | Filed `a6d447b76`; owes a scope critique |
+| WI-1060 | An act's copy writes only the rows it names (the revert loop's fix) | After the fifth sitting, or beside F-4 and F-7; one at a time with WI-1045 | Filed on the operator's ruling; owes a scope critique; runs the unfiltered suite |
 | WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6, §3.4) | F, after the N6 stop | Filed and critiqued (round 1, Sol and Argon, all findings applied, `a57782d59`). Order by `needs`: 1021; 1022; 1023; then 1024 and 1027 (either order); 1025; then 1026, 1028 and 1030; then 1029. Built side by side where `needs` allows, landing one at a time (plan revision 37). F-1 merged (`147fed185`), F-2 merged (`b2b0d9476`), F-3 merged (`4335c1a4d`); next 1024 and 1027 |
 | WI-1016 | A repository can switch off the implementation layer | After F | Re-critiqued once F lands; reverses SR-186, so its amendment is drafted for the operator |
 | WI-1018 | Row text a lane leaves stale is filed, and the first set is brought up to the code | After F-8 | F-8's text migration takes B1, B7 and B9 and likely more; this row then fixes what is left |
@@ -804,7 +794,8 @@ WI-1050 mints no ids; the leftovers get their ranges at launch.
 Third session ranges: WI-1056 SR 249 to 252, LLR 408 to 412, TC 485 to 495
 (used SR-249 to SR-251, LLR-408, TC-485); WI-1051 to WI-1054 LLR 413 to
 420 (none used) and TC 496 to 511 (used TC-500, TC-501, TC-504, TC-508).
-Marks on trunk at `a6d447b76`: SR 251, LLR 408, TC 508, IF 326, WI 1059.
+Marks on trunk at `a6d447b76`: SR 251, LLR 408, TC 508, IF 326, WI 1059;
+WI-1060 filed after.
 
 WI-1019 used LLR-395 only; its TC range went unused and passes to WI-1021,
 which used LLR-396 and LLR-397, TC-457 to TC-461 and IF-326; the rest of its
@@ -1246,3 +1237,6 @@ Append one line per step taken: the item, what happened, the commit.
   derivation gap) filed. Every drill worktree removed, `wi1048` included.
   The operator gave a standing revert ruling (§0 step 2) and asked which
   long-term fix is right (§0 step 4).
+- 2026-11-23 (third session, end): the operator pushed through `80d64a5f3`
+  and ruled the row-scoped copy filed: WI-1060. `docs/status.md`'s resume
+  note now points at §0.
