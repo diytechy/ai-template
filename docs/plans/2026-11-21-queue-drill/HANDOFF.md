@@ -24,8 +24,9 @@ A new coordinator session starts with these steps, in this order.
    SR-212, TC-239, TC-258; their amended text is at `8e08b3029`) under an
    amended SR-221, and repairs F-3's SR-248 chain (SR-248 split; LLR-403,
    LLR-405, LLR-406 and TC-480 to TC-484 as the verdict's findings say).
-   Filed `7b342d8b9`; it owes a scope critique (§4 step 1; Sol and
-   Hydrogen), which may split it. Then build, review, merge (§4, §7).
+   Filed `7b342d8b9`; critiqued (Sol and Hydrogen, all findings adopted,
+   kept one row, `planmode = "single"`). Then build, review, merge (§4,
+   §7).
 2. **The fourth adjudication sitting**, once WI-1056 lands. File a combined
    row over every row whose accepted text drifts then
    (`baseline_snapshot.refresh_ledger`), every routed traced change, and
@@ -133,7 +134,7 @@ adjudication sittings by Gemini Neon through `agy` (operator, 2026-11-21;
 
 | Item | What | Wave | Notes |
 |---|---|---|---|
-| WI-1056 | WI-1055's verdict answered: five reverted amendments re-landed under an amended SR-221, SR-248's chain repaired | Next (§0 step 1); before the fourth sitting | Filed `7b342d8b9`; owes a scope critique |
+| WI-1056 | WI-1055's verdict answered: five reverted amendments re-landed under an amended SR-221, SR-248's chain repaired | Next (§0 step 1); before the fourth sitting | Filed `7b342d8b9`; critiqued, kept one row |
 | WI-1051 to WI-1054 | Kit leftovers from this drill (§0 step 4) | Any time | Filed and critiqued (`a8e55cb1e`); not built |
 | WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6, §3.4) | F, after the N6 stop | Filed and critiqued (round 1, Sol and Argon, all findings applied, `a57782d59`). Order by `needs`: 1021; 1022; 1023; then 1024 and 1027 (either order); 1025; then 1026, 1028 and 1030; then 1029. Built side by side where `needs` allows, landing one at a time (plan revision 37). F-1 merged (`147fed185`), F-2 merged (`b2b0d9476`), F-3 merged (`4335c1a4d`); next 1024 and 1027 |
 | WI-1016 | A repository can switch off the implementation layer | After F | Re-critiqued once F lands; reverses SR-186, so its amendment is drafted for the operator |
@@ -1136,3 +1137,10 @@ Append one line per step taken: the item, what happened, the commit.
   re-acceptance `b86518820` (the copy drops the retired cells: the batch
   ruling), first acceptance `fe8db46b2`; `compose_act`: no act owed.
   `CURRENT.md` waits on four chains. WI-1055 closed.
+- 2026-11-22 (third session): WI-1056 critiqued (Sol CHANGES-REQUESTED
+  findings=3, Hydrogen CHANGES-REQUESTED findings=2; every finding
+  adopted). The Done-when now says the tests are the row's and nothing is
+  deferred. The Context says why the chains stay one row.
+  `planmode = "single"` (Sol's choice over Hydrogen's `none`): the plan
+  settles SR-248's split and LLR-406's SR. Record in
+  `docs/reviews/2026-11-22-scope-critiques/WI-1056.md`.

@@ -6,6 +6,7 @@ specref = "docs/reviews/wi-1055-adjudicate-third-sitting/001-ADJUDICATE-982063e.
 sr_refs = ["SR-036", "SR-157", "SR-212", "SR-221", "SR-248"]
 needs = []
 buildtier = "medium"
+planmode = "single"
 safety_class = "ordinary"
 priority = 2
 +++
@@ -28,6 +29,22 @@ sitting read went back to the recorded text: LLR-244's `detail`, LLR-263's
 and TC-258's `expected` and `method`. The amended text this row re-lands is
 at `8e08b3029` (`git show 8e08b3029:<registry>`). Until it merges, those
 rows describe the code as it was before F-3 (and, for LLR-244, before F-2).
+
+**Why one row.** The repairs could land apart, but they stay together and
+land as one branch before the fourth sitting (decided at the scope
+critique). They answer one verdict, and the sitting judges each chain
+whole, so a partial landing would return to it as drift beside unanswered
+findings. The chains also cross. SR-221's listing reads the back-link
+index LLR-405 states, and TC-482 verifies both LLR-405 and LLR-263.
+LLR-244's reach goes through the same index and through LLR-403's
+placement where no source is scanned. Splitting the rows would put one
+fact's wording on two branches.
+
+**Planning.** `planmode = "single"`: the plan settles two choices before
+any edit. First, how SR-248 splits, with each successor's id from the
+launch range. Second, which SR states generation for LLR-406: an existing
+row, or a new one from the range. It also names each test-case repair's
+tests.
 
 The findings, quoted from the verdict:
 
@@ -97,7 +114,8 @@ WI-1018 drops it.
       rows placed in the interface's owner component), and LLR-244's
       `detail` is re-landed from `8e08b3029` consistent with it. TC-239's
       method is re-landed and it verifies both clauses the verdict names,
-      with a test for each. Text only on the three `Accepted` rows.
+      with a test for each. On the three `Accepted` rows only the text
+      changes, never the status; the tests are this row's to write.
 - [ ] SR-221 (`Accepted`) is amended so the listing is for a file, read by
       joining the back-link index with the test-case registry, not "for a
       module a design row names ... derived from the registries"; LLR-263's
@@ -121,5 +139,11 @@ WI-1018 drops it.
 - [ ] TC-481 covers the symbol and component cells, the need tier, the file
       named in the refusal, and the retired cells' traced classing; TC-484
       covers the absent-registry report and the re-read refusal.
+- [ ] Every coverage gap the verdict names on TC-239 and TC-480 to TC-484
+      is closed on this branch by an automated test carrying that case's
+      tag, and the evidence is regenerated from the tags. A test for new
+      or newly stated behaviour is shown failing before the code that
+      passes it. A list cut instead (LLR-403's consumers) cuts the row's
+      text to match. Nothing is deferred to another row.
 - [ ] No row text this branch writes names a code file, function or symbol.
       The Deliverable lists every act owed for adjudication.
