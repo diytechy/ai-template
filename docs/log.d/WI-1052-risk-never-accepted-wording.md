@@ -25,7 +25,10 @@ commit hooks on. The record is in the row's Deliverable
   cover, in the same three cases, where it said "the triggers that reopened
   its risk". New TC-500 (the advisory, real git) and TC-501 (the gate,
   in-memory), Drafted. SR-202, SR-206, TC-234 and TC-238 checked, unchanged.
-  IF-217's `data` (Drafted) lists the new key.
+  IF-217's `data` (Drafted) lists the new key. After review round 1 (Sol
+  MAJOR, adopted), both amended Details also name no code: the function
+  names, the harness script and the step name they inherited are restated
+  in contract terms, meaning unchanged.
 - **Tests:** the 46 modules importing the two changed scripts or holding the
   touched cases' tests, with the whole-tree and RESYNC readers:
   `1702 passed, 2 skipped in 2462.25s (0:41:02)`. `trace.py --strict`:

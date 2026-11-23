@@ -27,6 +27,8 @@ IF-217's contract state the choices.
   the regenerated evidence and the regenerated views. The hook passed.
 - The commit after it: the close-out, this Deliverable, the move to
   `complete/` and the log fragment.
+- The commit after that: review round 1's finding answered, LLR-239's and
+  LLR-243's Details restated without code names, and the regenerated views.
 
 **How the three cases are told apart.** The Done-when asked for the wording
 to follow what the reading already returns. It returned the state and one
@@ -99,9 +101,9 @@ the kit writes them.
   accepted and reads unproven until an act accepts it; and where they could
   not be read whole, as in a shallow clone or with a malformed act record,
   it states the reason and says neither that the risk reopened nor that the
-  assumption's risk was never accepted." No code name is added; the row's
-  existing names are untouched. Within SR-202: no reading changes, and the
-  reopened case keeps SR-202's "until the risk is accepted again".
+  assumption's risk was never accepted." Within SR-202: no reading changes,
+  and the reopened case keeps SR-202's "until the risk is accepted again".
+  After review round 1 the Detail names no code either (see below).
 - **LLR-243** (Accepted, Detail only, so it drifts): "either that it
   records no accepted risk or the triggers that reopened its risk" said
   every uncovered risk is named by its reopening triggers, which the new
@@ -112,7 +114,25 @@ the kit writes them.
   and covers nothing until an act accepts it; or, where no act accepting it
   could be read, the reading's reason alone, saying neither." Within
   SR-206, whose acceptance criteria already ask the failure to name "why it
-  is not covered". No code name is added.
+  is not covered". After review round 1 the Detail names no code either.
+- **Review round 1's finding** (Sol MAJOR, adopted by the coordinator): the
+  two amended Details still carried code names inherited from their
+  accepted text. Each is rewritten in contract terms, clause for clause,
+  with its meaning unchanged and no clause added or dropped; both rows are
+  re-accepted at the sitting anyway, so this costs no extra act. LLR-239:
+  "risk_acceptance_act(root, da_id) is the latest commit" now reads "An
+  assumption's acceptance anchor is the latest commit"; "it walks no
+  history" reads "the anchor's reader walks no history"; and
+  "accepted_risk_state compares" reads "The accepted-risk reading
+  compares". LLR-243: "release_gate_findings(das, srs, risks) fails" reads
+  "The release gate fails"; "covered by accepted_risk_state" reads "covered
+  by the accepted-risk reading"; and "check.py gains a built-in step
+  `assumption-evidence` at the DevStg-Release threshold" reads "The harness
+  gains a built-in step at the DevStg-Release threshold". The registry
+  column `accepted_risk` and the stage token stay. Sol's second MAJOR
+  (IF-217's `data` cell naming the call and its keys) was dismissed: an
+  interface row's data cell states the call contract by design, and IF-217
+  is Drafted and off-spine.
 - Checked, unchanged: **SR-202** (its reopening is the act-accepted case,
   worded as before); **SR-206** ("why it is not covered"); **TC-234**
   ("A shallow clone missing the acceptance act reads unproven with the
