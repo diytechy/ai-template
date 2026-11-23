@@ -59,6 +59,21 @@ compared tier holds) is inconsistent and refuses the whole derivation, naming
 the row: it is never counted as taken. "Equal" compares the whole parsed row, Status included,
 which is what makes a flip committed without its copy read as inconsistent.
 
+A FLIP WAITS WHILE ITS PARENT STAYS UNACCEPTED (WI-1059). An owed
+first-acceptance flip waits when a parent the parent-first rule reads for it
+(`kitlib.spine.parent_first_findings`, the commit hook's own question) would
+not be accepted after the act: neither accepted at the revision nor flipped by
+a flip of the act that does not itself wait, so a flip under a waiting parent
+waits too. The rows are read by the hook's own reader
+(`acceptance_record.parent_first_tiers`), and one of its registries that cannot
+be read or does not parse refuses the whole derivation, naming it. A waiting
+flip stays OWED: the brief names it, with each parent it waits on, and never
+lists it; the later-act derivation reports it marked; a verdict whose every
+remaining act waits is refused, naming each; and once each parent is accepted,
+the same verdict's act lists it. So the act lists only flips the hook admits,
+and a wrong wait leaves a flip owed and reported, never lost. ("Waits", not
+"held": held names the rung below.)
+
 A HELD CLARITY ACT IS BOUND TO THE TEXT ITS VERDICT JUDGED. The binding beside
 the verdict records the digest of each judged row's accepted text
 (`kitlib.sitting.recorded_identities`); a re-accept owed on a held rung is
@@ -86,11 +101,19 @@ entry point consumes.
     "first-acceptance": {"accepts": {registry: [ids]}}}` in that order, each
     part present only when something is owed there, the amendment part also
     carrying `"retires": [ids]`, the re-accepted ids absent from the committed
-    registries, only when one is owed, or `(None, reason)` for
+    registries, only when one is owed, and the first-acceptance part
+    `"waiting": {id: [(parent, status)]}`, the owed flips that wait on an
+    unaccepted parent (never in `accepts`, which is empty only when every
+    flip waits beside an owed amendment), only when one waits, or
+    `(None, reason)` for
     a verdict that is not committed at `rev`, has no binding there, records
     a pending or failed outcome, is not valid against its binding, is of a
-    class that owes no act, owes no act, or judged a row whose committed
-    state is inconsistent (named), or a held CLARITY row whose accepted text
+    class that owes no act, owes no act, owes no act that can be taken
+    because every flip it still owes waits (each named with its parents),
+    or judged a row whose committed
+    state is inconsistent (named), a parent-first registry that cannot be
+    read or does not parse at `rev` (named) while a flip is owed,
+    or a held CLARITY row whose accepted text
     differs from the identity the verdict's binding records for it - the
     binding has no identity cell, a malformed one, does not name the row, or
     names another digest (the row, the bound digest and the committed digest
@@ -100,7 +123,8 @@ entry point consumes.
     filled from them at HEAD, an operator override under `ADJUDICATE-ACT`
     winning, or `(None, reason)`; `left_owed(root, verdict, rev="HEAD")` is
     None when `rev` carries every act the verdict authorizes in full, else
-    the acts still owed there or the derivation's refusal, and
+    the acts still owed there, each waiting flip marked `waiting on` its
+    parents, or the derivation's refusal, and
     `bound_brief(root, verdict, rev="HEAD")` the brief class a recorded,
     actable verdict's binding records, or None. Reads git, the shipped
     template and the repository's scripts layout (`agent_brief.scripts_dir`)
@@ -338,19 +362,89 @@ def _odd(rid, status, equal):
     )
 
 
+def _findings(tiers, accepted):
+    """The parent-first rule's findings over `tiers` with every row whose id
+    is in `accepted` read as `Accepted`: the commit hook's question about the
+    tree an act taking those flips would leave.
+
+    Implements: SR-231, LLR-338"""
+    after = {
+        label: [
+            dict(row, Status="Accepted")
+            if str(row.get(label + "-ID") or "").strip() in accepted
+            else row
+            for row in rows
+        ]
+        for label, rows in tiers.items()
+    }
+    return kspine.parent_first_findings(after)
+
+
+def _waiting(tiers, flips):
+    """`{flip: [(parent, status)]}`, in `flips`' order, for each owed
+    first-acceptance flip that waits: a parent the parent-first rule reads for
+    it is neither accepted in `tiers` nor flipped by a flip that does not wait.
+
+    A fixpoint from every flip taken: each pass drops the flips the rule's
+    findings name as accepted children, until a pass drops none. Each pass
+    that does not stop shrinks a finite set, so it ends; the set it ends on is
+    the largest whose flips leave the rule nothing to find, which is why a
+    flip under a waiting parent waits too. Each waiting flip is then named
+    with every parent it waits on, read with it alone added to that set.
+
+    Implements: SR-231, LLR-338"""
+    taken = set(flips)
+    while True:
+        late = taken & {entry[0] for entry in _findings(tiers, taken)}
+        if not late:
+            break
+        taken -= late
+    return {
+        rid: [
+            (parent, status)
+            for child, _status, parent, status in _findings(tiers, taken | {rid})
+            if child == rid
+        ]
+        for rid in flips
+        if rid not in taken
+    }
+
+
+def _waits(root, rev, rel, owed):
+    """`(waiting, None)` for the `owed` acts of the verdict at `rel` judged at
+    the commit `rev` (`_waiting`'s map, empty when no flip is owed), or
+    `(None, reason)` when a registry the parent-first rule reads fails there.
+    The rows are read by the commit hook's own reader, so the act lists a
+    flip only where the hook would judge the same rows.
+
+    Implements: SR-231, LLR-338"""
+    flips = [rid for act, rid, _held in owed if act == "accept"]
+    if not flips:
+        return {}, None
+    tiers, failures = acceptance_record.parent_first_tiers(root, rev + ":")
+    if failures:
+        return None, (
+            "the verdict {}'s flips cannot be judged against the parent-first "
+            "rule at {}: {}".format(rel, rev, "; ".join(failures))
+        )
+    return _waiting(tiers, flips), None
+
+
 def _derive(root, verdict, rev):
-    """`(rel, authorized, owed, None)` for the verdict at `verdict` judged at
-    the commit `rev`, or `(rel, None, None, reason)` when it is refused: not
-    recorded there, of a class that owes no act, or a judged row in a state
-    no act explains.
+    """`(rel, authorized, owed, waiting, None)` for the verdict at `verdict`
+    judged at the commit `rev`, or `(rel, None, None, None, reason)` when it
+    is refused: not recorded there, of a class that owes no act, a judged row
+    in a state no act explains, or a parent-first registry that fails to read.
+    A waiting flip stays in `owed`; `waiting` names it (`_waits`).
 
     Implements: SR-231, SR-232, LLR-338"""
     rel = _verdict_rel(root, verdict)
     if not rel:
-        return None, None, None, "the verdict {} lies outside {}".format(verdict, root)
+        refusal = "the verdict {} lies outside {}".format(verdict, root)
+        return None, None, None, None, refusal
     found, why = _recorded_verdict(root, rev, rel)
     if found is None:
-        return rel, None, None, why
+        return rel, None, None, None, why
     rows, authorized, owed = _Rows(root, rev), [], []
     judged = _authorized(found[1], kauthority.dial_at(root, rev))
     bound = (None, None)
@@ -359,13 +453,17 @@ def _derive(root, verdict, rev):
     for act, rid, held in judged:
         state, why = _state(rows, act, rid, held, bound)
         if state is None:
-            return rel, None, None, "the verdict {} judged a row {}".format(rel, why)
+            refusal = "the verdict {} judged a row {}".format(rel, why)
+            return rel, None, None, None, refusal
         if state == NO_ACT:
             continue
         authorized.append((act, rid, held))
         if state in ("owed", RETIRE):
             owed.append((RETIRE if state == RETIRE else act, rid, held))
-    return rel, authorized, owed, None
+    waiting, why = _waits(root, rev, rel, owed)
+    if why:
+        return rel, None, None, None, why
+    return rel, authorized, owed, waiting, None
 
 
 def owed_acts(root, verdict, rev="HEAD"):
@@ -374,7 +472,7 @@ def owed_acts(root, verdict, rev="HEAD"):
     docstring's partition and refusals).
 
     Implements: SR-231, SR-232, LLR-338"""
-    rel, authorized, owed, why = _derive(root, verdict, rev)
+    rel, authorized, owed, waiting, why = _derive(root, verdict, rev)
     if why:
         return None, why
     if any(act == "accept" for act, _rid, _held in owed) and not _recorded(root, rev):
@@ -389,29 +487,58 @@ def owed_acts(root, verdict, rev="HEAD"):
             if authorized
             else "it authorizes none",
         )
-    return _grouped(owed), None
+    if all(rid in waiting for _act, rid, _held in owed):
+        return None, (
+            "the verdict {} owes no act that can be taken at {}: every flip it "
+            "still owes waits on a parent that is not accepted, and a later act "
+            "lists each once its parent is accepted: {}".format(
+                rel, rev, "; ".join(_waiting_lines(waiting))
+            )
+        )
+    return _grouped(owed, waiting), None
 
 
 def left_owed(root, verdict, rev="HEAD"):
     """None when the commit `rev` carries in full every act the verdict at
-    `verdict` authorizes; else why not: the acts still owed there, named, or
-    the derivation's refusal. What the act turn asks after its call.
+    `verdict` authorizes; else why not: the acts still owed there, named, a
+    waiting flip marked with each parent it waits on, or the derivation's
+    refusal. What the act turn asks after its call.
 
     Implements: SR-231, SR-232, LLR-338"""
-    _rel, _authorized, owed, why = _derive(root, verdict, rev)
+    _rel, _authorized, owed, waiting, why = _derive(root, verdict, rev)
     if why:
         return why
     if not owed:
         return None
-    parts = _grouped(owed)
+    parts = _grouped(owed, waiting)
     named = []
     if "amendment" in parts:
         named.append("re-accept " + ", ".join(parts["amendment"]["reaccepts"]))
-    for rel, ids in sorted(
-        parts.get("first-acceptance", {}).get("accepts", {}).items()
-    ):
+    first = parts.get("first-acceptance", {})
+    for rel, ids in sorted(first.get("accepts", {}).items()):
         named.append("flip {} ({})".format(", ".join(ids), rel))
+    named += ["flip " + line for line in _waiting_lines(first.get("waiting", {}))]
     return "; ".join(named)
+
+
+def _waiting_lines(waiting):
+    """One line per waiting flip: `<row> (<registry>) waiting on <parent>
+    (<status>)[, ...]`, a missing status reading `no status` as the
+    parent-first line reads it. The brief, the refusal and the later-act
+    report all write a waiting flip this way.
+
+    Implements: SR-231, LLR-338"""
+    return [
+        "{} ({}) waiting on {}".format(
+            rid,
+            _tier(rid)[0],
+            ", ".join(
+                "{} ({})".format(parent, status or "no status")
+                for parent, status in parents
+            ),
+        )
+        for rid, parents in waiting.items()
+    ]
 
 
 def bound_brief(root, verdict, rev="HEAD"):
@@ -432,8 +559,10 @@ def _recorded(root, rev):
     return (kind or "").strip() == "tree"
 
 
-def _grouped(owed):
-    """The owed rows as `owed_acts`' `acts` mapping, amendment first."""
+def _grouped(owed, waiting):
+    """The owed rows as `owed_acts`' `acts` mapping, amendment first; a
+    flip `waiting` names is in the first-acceptance part's `waiting`, never in
+    its `accepts`."""
     acts = {}
     amendment = [entry for entry in owed if entry[0] != "accept"]
     if amendment:
@@ -444,13 +573,26 @@ def _grouped(owed):
         retires = [rid for act, rid, _held in amendment if act == RETIRE]
         if retires:
             acts["amendment"]["retires"] = retires
-    accepts = {}
-    for act, rid, _held in owed:
-        if act == "accept":
-            accepts.setdefault(_tier(rid)[0], []).append(rid)
-    if accepts:
-        acts["first-acceptance"] = {"accepts": accepts}
+    flips = [rid for act, rid, _held in owed if act == "accept"]
+    if flips:
+        acts["first-acceptance"] = _first_acceptance(flips, waiting)
     return acts
+
+
+def _first_acceptance(flips, waiting):
+    """The first-acceptance part over the owed `flips`: `accepts`, the flips
+    the act lists by registry (empty only when every flip waits), and
+    `waiting`, present only when a flip waits.
+
+    Implements: SR-231, LLR-338"""
+    accepts = {}
+    for rid in flips:
+        if rid not in waiting:
+            accepts.setdefault(_tier(rid)[0], []).append(rid)
+    part = {"accepts": accepts}
+    if waiting:
+        part["waiting"] = waiting
+    return part
 
 
 def _amendment_text(part, rel, wi, scripts):
@@ -473,6 +615,31 @@ def _amendment_text(part, rel, wi, scripts):
     return (
         "{}Run, then commit the copy it writes, ending the commit with "
         "`WI: {}`:\n\n    {}".format(rows, wi, command)
+    )
+
+
+def _acceptance_part(part, registries, wi, scripts):
+    """The first-acceptance part's rendered text: the listed flips and their
+    command (or that no flip can be taken in this act), then each waiting
+    flip, named with the parents it waits on and never listed.
+
+    Implements: SR-231, LLR-338"""
+    accepts, waiting = part["accepts"], part.get("waiting")
+    text = (
+        _acceptance_text(accepts, registries, wi, scripts)
+        if accepts
+        else "No flip can be taken in this act."
+    )
+    if not waiting:
+        return text
+    return (
+        "{}\n\nNot in this act: each row below is owed a flip under this "
+        "verdict, but a parent it cites is not accepted and this act does not "
+        "accept it, so the parent-first rule would refuse the flip. Leave its "
+        "`Status` at `Drafted` and leave it out of the command; a later act "
+        "lists it once each parent it waits on is accepted.\n\n{}".format(
+            text, "\n".join("    - " + line for line in _waiting_lines(waiting))
+        )
     )
 
 
@@ -505,8 +672,8 @@ def act_values(root, verdict, wi, rev="HEAD"):
     wi = str(wi or "").strip()
     if not wi:
         return None, "no work item was named for the act's commit trailer"
-    amendment = acts.get("amendment")
-    accepts = (acts.get("first-acceptance") or {}).get("accepts") or {}
+    amendment, first = acts.get("amendment"), acts.get("first-acceptance")
+    accepts = (first or {}).get("accepts") or {}
     registries = baseline_snapshot.format_accepts(dict.fromkeys(accepts, wi))
     scripts = agent_brief.scripts_dir(root)
     return {
@@ -516,8 +683,8 @@ def act_values(root, verdict, wi, rev="HEAD"):
         "amendment_act": _amendment_text(amendment, rel, wi, scripts)
         if amendment
         else NONE_OWED,
-        "acceptance_act": _acceptance_text(accepts, registries, wi, scripts)
-        if accepts
+        "acceptance_act": _acceptance_part(first, registries, wi, scripts)
+        if first
         else NONE_OWED,
         "registries": registries or NONE_OWED,
         "accepts_rows": "\n".join(

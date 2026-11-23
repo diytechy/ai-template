@@ -2245,17 +2245,19 @@ def commit_ruling_sync_lines(root, rev):
 
 
 # The parent-first rule's registries: the four spine tiers of the acceptance-act
-# set (the need, requirement, design and test tiers), read by `_tree_tiers`.
+# set (the need, requirement, design and test tiers), read by `parent_first_tiers`.
 PARENT_FIRST_CSVS = tuple(
     (path, col) for path, col in ACCEPTANCE_ACT_CSVS if col in SPINE_TABLE
 )
 
 
-def _tree_tiers(root, prefix):
+def parent_first_tiers(root, prefix):
     """`({label: rows}, failures)` of the parent-first registries at the tree
     `prefix`: each tier from the first carrier the tree lists, an absent
     registry no rows, and one `"<path> cannot be read"` or `"<path> does not
-    parse"` failure per registry that fails.
+    parse"` failure per registry that fails. Public because the act
+    derivation (`adjudicate_act`, WI-1059) judges the flips it lists over the
+    same rows this judgement reads.
 
     Implements: SR-246, LLR-358"""
     tiers, failures = {}, []
@@ -2299,7 +2301,7 @@ def _parent_statuses(root, base):
     its registries cannot be read or does not parse.
 
     Implements: SR-246, LLR-358"""
-    tiers, failures = _tree_tiers(root, base + ":")
+    tiers, failures = parent_first_tiers(root, base + ":")
     if failures:
         return None
     return {
@@ -2330,7 +2332,7 @@ def parent_first_lines(root, bases, head=None):
         touched = touched or bool(names)
     if not touched:
         return []
-    tiers, failures = _tree_tiers(root, ":" if head is None else head + ":")
+    tiers, failures = parent_first_tiers(root, ":" if head is None else head + ":")
     if failures:
         return [
             "{}: {} in {}, so whether it leaves an accepted row under an "

@@ -748,11 +748,14 @@ commit of its own, move it to trunk's tip
      the verdict's class, else fresh. It writes no verdict and no binding.
   3. Read the exit code:
      - 0: every act the verdict authorizes is committed;
-     - 1: the call failed, an act is still owed (printed), or the call wrote
+     - 1: the call failed, an act is still owed (printed; a flip that waits
+       on an unaccepted parent is marked `waiting on` it), or the call wrote
        under `docs/reviews/`;
      - 2: refused before launch: not a lane, uncommitted changes (named), a
        verdict not recorded at HEAD, one that owes no act (a re-run after a
-       completed act), or a judged row in a state no act explains (named);
+       completed act), one whose every remaining act is a flip waiting on an
+       unaccepted parent (each named), or a judged row in a state no act
+       explains (named);
      - 7: as for `adjudicate`.
   4. An act that stopped between its flip and its snapshot leaves the flip
      uncommitted, and the next `act` refuses the lane as dirty. Discard the
@@ -799,9 +802,13 @@ commit of its own, move it to trunk's tip
 - **Accept a parent with its children, never after them** (WI-850):
   the pre-commit `parent-first` step and the slot's third lane-commit
   rider refuse a commit that leaves an accepted row under an
-  unaccepted parent where either status moved, so an act that flips a
-  child whose parent is still Drafted is refused; sit the parent in
-  the same combined sitting, or first.
+  unaccepted parent where either status moved; sit the parent in
+  the same combined sitting, or first. A sitting that accepts a child
+  and returns its parent leaves the child's flip WAITING (WI-1059): the
+  act brief names it with the parent it waits on and does not list it,
+  the act turn reports it owed (exit 1, or exit 2 when nothing else is
+  owed), and the verdict is not done. Once the parent's own act lands,
+  re-run `act` on the same verdict: it lists the flip.
 - **A return in a sitting holds its whole registry.** A row the sitting
   would bless is not anchored while another row in the same registry is
   returned; rework the returns and re-sit them all together. Move each

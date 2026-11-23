@@ -449,6 +449,30 @@ def test_the_act_turn_reports_success_only_when_no_listed_act_is_left(
     assert "act: owed after the call:" in out and "LLR-002" in out, out
 
 
+def test_an_act_turn_that_leaves_a_waiting_flip_owes_it_and_does_not_read_complete(
+    tmp_path, launched, capsys
+):
+    """Implements: TC-368"""
+    # WI-1059: LLR-003's parent SR-002 is returned, so its flip waits. The
+    # stub takes the act exactly as listed (LLR-002 alone); the waiting flip
+    # is still owed, reported with its parent, and the turn is not complete.
+    _primary, lane = _lane(tmp_path)
+    taa._append(lane, taa.SRS, taa.SR_DRAFT)
+    taa._append(lane, taa.LLRS, taa.NEW_LLR + taa.LLR_UNDER_DRAFT)
+    _commit(lane, "draft LLR-002, and SR-002 with LLR-003 under it")
+    taa._verdict(lane, taa.WAITING, "first-acceptance")
+    assert _act(launched, lane) == 1
+    out = capsys.readouterr().out
+    assert "act: owed after the call: flip " + taa.LLR_003_WAITS in out, out
+    assert "act: complete" not in out, out
+    rows = {
+        ln.split(",")[0]: ln
+        for ln in _git(lane, "show", "HEAD:" + taa.LLRS).splitlines()
+    }
+    assert ",Accepted," in rows["LLR-002"], rows
+    assert ",Drafted," in rows["LLR-003"], rows
+
+
 def test_an_act_turn_that_writes_under_docs_reviews_does_not_succeed(
     tmp_path, launched, capsys
 ):

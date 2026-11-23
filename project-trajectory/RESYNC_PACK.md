@@ -12433,6 +12433,41 @@ the command's own line.
 `scripts/coherence.py`, `scripts/arch_inputs.py`, `scripts/trace_text.py`,
 `scripts/traj_parse.py`, `scripts/kitlib/spine.py`.
 
+### A derived act names a first-acceptance flip whose parent stays unaccepted as waiting, instead of listing it [since 50d4d3fbe]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** The act a committed verdict authorizes
+(`scripts/adjudicate_act.py`) listed every ACCEPT row's flip, even one whose
+parent the same sitting returned, and the pre-commit `parent-first` step then
+refused the act taken as listed. Such a flip now WAITS: a flip whose parent
+(as the parent-first rule reads parents) would still not be accepted after the
+act is left out of the `--accepts` command and named in the act brief's
+first-acceptance part under `Not in this act`, with each parent it waits on; a
+flip under a waiting parent waits too. It stays owed: `coordinator_adjudicate.py
+act` prints it after the call as `flip <row> (<registry>) waiting on <parent>
+(<status>)` and exits 1, and a verdict whose every remaining act is a waiting
+flip is refused before launch (exit 2), naming each. Once the parent's own act
+lands, the same verdict's act lists the flip. The derivation reads the parent
+rows through the hook's own reader, now public as
+`acceptance_record.parent_first_tiers` (it was the private `_tree_tiers`), and
+refuses, naming the file, when one of those registries cannot be read or does
+not parse while a flip is owed. `owed_acts` gains a `waiting` key in its
+first-acceptance part. The act template's operator notes say so; its
+instruction text, its slots and its catalogue digest are unchanged.
+
+**What to do.** Nothing is forced. An operator override of `ADJUDICATE-ACT`
+needs no change: the waiting rows are rendered into the existing
+`{acceptance_act}` slot. A script of yours that called
+`acceptance_record._tree_tiers` calls `parent_first_tiers`. The edit to the
+act template's notes moves the retained-session identity, which hashes the
+template file's bytes, so a retained adjudicator holding an actable class
+drains once, at its next clear point.
+
+**Kit-owned files — overwrite:** `scripts/adjudicate_act.py`,
+`scripts/acceptance_record.py`, `prompts/adjudicate-act.template.md`,
+`skills/coordinator-cycle/references/recipes.md`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
