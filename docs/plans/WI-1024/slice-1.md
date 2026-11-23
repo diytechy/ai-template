@@ -298,3 +298,8 @@ graph acyclic).`; `run_menu.py smoke`, once, exit 0: `3788 passed, 3 skipped,
 18 warnings in 269.06s (0:04:29)` (`smoke budget: CPU 758.5 s vs 540 s
 cpu-seconds; wall 270.2 s vs 600 s wall-seconds; ... -> OVER`, a warning, the
 known re-tier WI-1039). The views were regenerated before the commit.
+
+Round 2 (narrow, over `1a057240e..690824531`, round 1's findings and the
+coordinator's rulings prepended): OpenAI Sol (`gpt-6.1-sol`, low) and Gemini
+Hydrogen (`gemini-4-hydrogen-low`, through `agy`) both `VERDICT: APPROVE
+findings=0`. Slice 1 is ready to merge.
