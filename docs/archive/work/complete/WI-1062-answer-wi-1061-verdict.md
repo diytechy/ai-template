@@ -309,6 +309,22 @@ close-out, `project-trajectory/RESYNC_PACK.md` 758,126 -> 759,566 (+1,440).
 **Owed to the next sitting:** the first acceptances of SR-251, LLR-406 and
 TC-483, the chain whole.
 
+**Review** (the coordinator, over `3db0c6823..977c7d49f`, generated views
+excluded, with the sittings' three row checks and SR-251's, SR-199's and
+LLR-234's text beside the diff). Before it, the coordinator had the builder
+keep a leading byte-order mark (`977c7d49f`), since LLR-406's "keeps every
+other byte" was otherwise false for such a file. Round 1: Gemini Hydrogen
+(`gemini-4-hydrogen-low`, through `agy`) over the prose, `VERDICT: APPROVE
+findings=0`; OpenAI Sol (`gpt-6.1-sol`, low) over the whole diff, `VERDICT:
+CHANGES-REQUESTED findings=1`, MINOR: LLR-406's "a move that fails leaves
+... no copy beside it" overstated the reused writer, whose clean-up
+suppresses a failed deletion. Adopted by the coordinator (`cccf4026e`):
+LLR-406, TC-483's expected, the RESYNC entry and this closing prose now
+promise the registry's bytes as they were, which is what SR-251 asks; the
+test still checks the clean-up in the normal case. Round 2, narrow, over
+`977c7d49f..cccf4026e`: Sol and Hydrogen both `VERDICT: APPROVE
+findings=0`.
+
 **Left as found:**
 
 - trace's advisory that SR-251 declares no `form`, as WI-1058 left it.

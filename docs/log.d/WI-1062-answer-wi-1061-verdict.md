@@ -56,3 +56,6 @@ commit hooks on and planning `none`. The record is in the row's Deliverable
   <!-- fig: derived="the totals are those the Deliverable's item 6 declares, each with its command and revision" -->
 - **Owed to the next sitting:** the first acceptances of SR-251, LLR-406
   and TC-483.
+- **Review:** round 1 Hydrogen APPROVE, Sol one MINOR (the failed move's
+  temporary-file promise was unbounded), adopted in `cccf4026e`; round 2,
+  narrow, Sol and Hydrogen APPROVE.
