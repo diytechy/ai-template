@@ -1365,7 +1365,7 @@ def placement_line(llrs, tcs, ifs):
     or unplaced, the first `_PLACEMENT_SHOWN` unplaced ids named. Informational:
     an unplaced row is counted, never refused, and the line joins no exit code.
 
-    Implements: SR-248, LLR-403
+    Implements: SR-249, LLR-403
     """
     placement = _spine.llr_placement(tcs, ifs)
     unplaced = _spine.unplaced_llrs(llrs, placement)

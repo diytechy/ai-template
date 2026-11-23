@@ -1470,7 +1470,7 @@ boundary_refs = ["B-09"]
 hat_refs = ["TEST-ENGINEER"]
 requirement = "Where the assumption gate is enabled, the delivered harness shall fail, for each system requirement of interface form, the boundary gate when the requirement is not recorded as coincident and names a crossing on which no assumption it cites lands, and the architecture gate when no boundary interface reaches it or a reaching boundary interface neither records it as coincident nor bridges it by an assumption the requirement also cites."
 rationale = """A requirement meant to be met at an interface is not testable until that interface exists and its reading is either the outcome or carried by an assumption the requirement itself relies on. The frame's crossings are the first such interfaces: they are accepted with the frame at the boundary rung, before any interface row exists, and an assumption already names the crossing it lands on, so the requirement is judged against them there. Judging it again at the architecture rung, against the boundary interfaces that realize the crossings, keeps interfaces after the requirements they answer. Minting interface rows to match a count would produce seams with no contract behind them, so the check reports the gap rather than inventing the seam."""
-acceptance_criteria = "At the boundary rung, a requirement of interface form recorded as coincident passes, and any other fails the boundary gate once for each declared crossing its boundary references name on which no assumption it cites lands, naming the requirement and that crossing; a crossing the frame does not declare is not judged here. At the architecture rung, a requirement of interface form reached, through the modules its design rows name, by at least one boundary interface, every such interface coincident or bridged by an assumption the requirement cites, passes; one reached by none fails the architecture gate naming the requirement and stating that no boundary interface reaches it; each reaching interface bridged only by assumptions the requirement does not cite fails it naming the requirement and that interface, however many other reaching interfaces pass; requirements of the other two forms are out of scope; with the gate disabled the same conditions are advisory."
+acceptance_criteria = "At the boundary rung, a requirement of interface form recorded as coincident passes, and any other fails the boundary gate once for each declared crossing its boundary references name on which no assumption it cites lands, naming the requirement and that crossing; a crossing the frame does not declare is not judged here. At the architecture rung, a boundary interface reaches the requirements of the design rows realized in the one file stating its contract body, the files realizing a design row being those its back-link declarations are in, and an interface whose contract body no file states reaches none; where no source is scanned, an interface instead reaches the requirements of the design rows placed in its owner component. A requirement of interface form reached by at least one boundary interface, every such interface coincident or bridged by an assumption the requirement cites, passes; one reached by none fails the architecture gate naming the requirement and stating that no boundary interface reaches it; each reaching interface bridged only by assumptions the requirement does not cite fails it naming the requirement and that interface, however many other reaching interfaces pass; requirements of the other two forms are out of scope; with the gate disabled the same conditions are advisory."
 priority = "S"
 verification_method = "Test"
 status = "Accepted"
@@ -1589,18 +1589,18 @@ phase = 5
 da_refs = ["DA-015"]
 
 [requirement.SR-221]
-title = "A builder changing a module can list the tests the spine links to it"
+title = "A builder changing a file can list the tests the spine links to it"
 sn_refs = ["SN-012"]
 boundary_refs = ["B-09"]
 hat_refs = ["PERFORMANCE", "TEST-ENGINEER"]
-requirement = "The delivered harness shall list, for a module a design row names, the test files the requirement spine links to it through the design rows naming it, the test cases verifying those rows and those cases' evidence, derived from the registries with no hand-kept map."
-rationale = """A DERIVED requirement: SN-012 asks that small changes stay cheap and does not name a test listing, so this obligation arrives through two lenses rather than through the need's text. The performance lens prices operator time: a builder iterating on one module either reruns the whole suite, minutes each time, or guesses which tests matter. The test-engineer lens names what the guess costs: tests picked by file name are a fraction of those exercising a module, because cases are named for the behaviour they drive and driven suites for the script they run, so a pass from them has not examined what the module's design rows claim. The spine already records which tests carry each design row's evidence, so the listing reads it. It is an inner loop only: the commit checks still runs before every commit, and making a module-scoped subset the checks were considered and rejected, since a change that breaks another module through a shared import would then commit with its checks passing."""
-acceptance_criteria = "For a module a design row names, the listing names every test file under the declared test root that the evidence of a test case verifying one of its design rows cites, files not named for the module included, and no other file; a name matching no declared module and one matching several are each refused with a distinct outcome, the latter naming the candidates; the listing reads the registries of the repository it is pointed at; the commit checks are unchanged by it."
+requirement = "The delivered harness shall list, for a file whose back-link declarations name a design row, the test files the requirement spine links to it through those design rows, the test cases verifying them and those cases' evidence, with no hand-kept map."
+rationale = """A DERIVED requirement: SN-012 asks that small changes stay cheap and does not name a test listing, so this obligation arrives through two lenses rather than through the need's text. The performance lens prices operator time: a builder iterating on one file either reruns the whole suite, minutes each time, or guesses which tests matter. The test-engineer lens names what the guess costs: tests picked by file name are a fraction of those exercising a file, because cases are named for the behaviour they drive and driven suites for the script they run, so a pass from them has not examined what the file's design rows claim. The code's back-link declarations already say which design rows a file realizes, and the spine records which tests carry each design row's evidence, so the listing joins the two and keeps no map of its own. It is an inner loop only: the commit checks still run before every commit, and making a file-scoped subset the checks was considered and rejected, since a change that breaks another file through a shared import would then commit with its checks passing."""
+acceptance_criteria = "For a file whose back-link declarations name a design row, the listing names every test file under the declared test root that the evidence of a test case verifying one of those design rows cites, files not named for it included, and no other file; a name matching no such file and one matching several are each refused with a distinct outcome, the latter naming the candidates; the listing reads the test-case registry and stack profile of the docs directory it is pointed at and the back-link declarations of the repository holding that directory; the commit checks are unchanged by it."
 priority = "S"
 verification_method = "Test"
 status = "Accepted"
 phase = 6
-coincident = """The need asks for small changes staying cheap; the tests the spine links to a module, listed from the registries with no hand-kept map, are what a builder needs before changing it."""
+coincident = """The need asks for small changes staying cheap; the tests the spine links to a file, listed through the code's own back-links and the registries with no hand-kept map, are what a builder needs before changing it."""
 
 [requirement.SR-223]
 title = "A guarded session receives the guardrails payload vendored for its model"
@@ -1991,16 +1991,61 @@ aspect = "process"
 da_refs = ["DA-014"]
 
 [requirement.SR-248]
-title = "A design row is discharged by the evidence of its kind, and where it sits is derived"
-sn_refs = ["SN-002", "SN-003"]
+title = "A design row past Drafted is discharged by a test case verifying it"
+sn_refs = ["SN-002"]
 boundary_refs = ["B-09"]
 hat_refs = ["TEST-ENGINEER"]
-requirement = "The delivered harness shall report as undischarged a design-tier row past its Drafted status that no test case verifies, and shall derive the components a design-tier row sits in from the interfaces its verifying test cases name, listing and counting a row placed in none rather than refusing it."
-rationale = "Realizes SN-002: the chain from need to test is trustworthy because it is mechanically verified, and its bottom rung is the claim a design row makes that it is delivered. That claim is discharged by the evidence of the row's own kind: a test case verifying it, executable through its declared tests or an inspection, analysis or attestation through its declared evidence. A row that constrains an interface is also discharged through that interface's realization once the registries record which rows constrain which interface; until they do, the test-case relation is the whole rule. A row still Drafted is being written and makes no such claim yet, so the rule reaches it once it leaves Drafted. Binding discharge to a code symbol the row names pointed down at the code, so every rename reopened an accepted row while the code's own back-links already stated the same link upward.\n\nRealizes SN-003 in the row's altitude. Where a row sits follows from what it is verified at: the interfaces its verifying cases name, each owned by a component, so placement is derived and never restated on the row. A row placed nowhere is a decomposition whose interface is not yet named, which is legal and visible, so it is counted and listed rather than refused.\n\nStated so it cannot be read in: nothing here obliges source code to carry a back-link naming the row it implements. A back-link is encouraged, read where present, and never demanded."
-acceptance_criteria = "A design row verified by at least one live test case, of any verification kind, is discharged; one past Drafted that none verifies is reported by the orphan rules naming the row, and a Drafted row that none verifies is not reported while it stays Drafted. A design row is placed at the owner component of each interface that a test case verifying it names, once per component; an interface owned by an external party places nothing; a row placed at several components is placed at each. A row placed nowhere is listed and counted by the generated component view and counted by the strict check's report, and its being unplaced never fails a check. No design row states its component, its files or its symbols; the files realizing it are read from the back-links in the code, and a row no back-link names is simply absent from that reading."
+requirement = "The delivered harness shall report as undischarged each design-tier row past its Drafted status that no live test case verifies."
+rationale = "Realizes SN-002: the chain from need to test is trustworthy because it is mechanically verified, and its bottom rung is the claim a design row makes that it is delivered. That claim is discharged by the evidence of the row's own kind: a test case verifying it, executable through its declared tests or an inspection, analysis or attestation through its declared evidence. A row still Drafted is being written and makes no such claim yet, so the rule reaches it once it leaves Drafted. Binding discharge to a code symbol the row names pointed down at the code, so every rename reopened an accepted row while the code's own back-links already stated the same link upward. Where a design row sits and which files realize it are obligations of their own (SR-249, SR-250)."
+acceptance_criteria = "A design row that at least one live test case verifies, of any verification kind, is discharged and is not reported; one past Drafted that none verifies is reported by the orphan rules naming the row, and the strict check exits nonzero for it; a Drafted row that none verifies is not reported while it stays Drafted."
 priority = "M"
 verification_method = "Test"
 status = "Drafted"
 phase = 6
 coincident = "The needs ask for a chain verified rather than asserted; a design row reported undischarged when no test case verifies it is that verification's verdict."
+aspect = "trajectory"
+
+[requirement.SR-249]
+title = "Where a design row sits is derived from the interfaces its verifying test cases name"
+sn_refs = ["SN-002", "SN-023"]
+boundary_refs = ["B-09"]
+hat_refs = ["MAINTAINER"]
+requirement = "The delivered harness shall derive the components each design-tier row sits in from the interfaces its verifying test cases name, counting a row placed in none as unplaced rather than refusing it."
+rationale = "Realizes SN-002 and SN-023. Where a row sits follows from what it is verified at: the interfaces its verifying cases name, each owned by a component, so placement is derived and never restated on the row. A row that named its component restated by hand a fact the interfaces and the cases verifying it already hold, and the copy drifted when the code moved; deriving it leaves one home. A row placed nowhere is a decomposition whose interface is not yet named, which is legal and visible, so it is counted and listed rather than refused, and the views a reviewer reads to see how the parts connect show it as unplaced."
+acceptance_criteria = "A design row is placed at the owner component of each interface that a test case verifying it names, once per component; an interface owned by an external party places nothing, and a row placed at several components is placed at each. The generated component view lists each placed row in its components and each unplaced row in its unplaced table, the state view shows each design row's components or that it is unplaced, and the strict check's report counts the placed and the unplaced rows; a row's being unplaced changes no check's exit code."
+priority = "M"
+verification_method = "Test"
+status = "Drafted"
+phase = 6
+coincident = "The needs ask for a chain verified rather than asserted and a view of how the parts connect; each design row shown at the components its verifying cases' interfaces are owned by, derived rather than restated, with an unplaced row counted in view, is that view as the reviewer reads it."
+aspect = "trajectory"
+
+[requirement.SR-250]
+title = "The files realizing a design row are read from the code's back-link declarations"
+sn_refs = ["SN-002", "SN-003"]
+boundary_refs = ["B-09"]
+hat_refs = ["MAINTAINER"]
+requirement = "The delivered harness shall take the files realizing each design-tier row only from the back-link declarations on the declared source surface."
+rationale = "Realizes SN-002: a trace read from the code that carries it cannot drift from it, where a design row's file and symbol cells pointed down at facts the code's back-links already stated upward, and the two drifted apart, reopening accepted rows when code moved. Realizes SN-003: the declarations are read as text, so the reading holds in any language and needs no parser. Nothing here obliges source code to carry a back-link naming the row it implements: a back-link is read where present, and a row no declaration names is realized by no file in this reading."
+acceptance_criteria = "A file on the declared source surface whose back-link declaration names a design row is read as realizing that row, and a mention of the row's id that is not a declaration is not; a row no declaration names is read as realized by no file; an absent source root, or a file that cannot be read as text, contributes no file and the rest of the surface is still read."
+priority = "M"
+verification_method = "Test"
+status = "Drafted"
+phase = 6
+coincident = "The needs ask for a chain verified rather than hand-maintained and a process that holds on any stack; the files a design row is realized in, read as text from declarations the code itself carries, with no copy kept on the row, is that link as a reader receives it."
+aspect = "trajectory"
+
+[requirement.SR-251]
+title = "A test case's evidence parts under the tests root are generated from the test files' declarations"
+sn_refs = ["SN-002"]
+boundary_refs = ["B-09"]
+hat_refs = ["INTEGRITY-RECOVERABILITY"]
+requirement = "The delivered harness shall, on request, rewrite the parts of each test case's evidence cell under the declared tests root as the test files' declarations of that case make them, keeping every other part as written."
+rationale = "Realizes SN-002: a test case's tests were named in two homes, its evidence cell and the tests' own declarations, held equal by a check that asked a person to edit the cell by hand, and a hand-kept trace rots. Generating the test-file half removes the hand edit; the half no declaration can carry, a workflow, an inspection or a review record, stays authored. Generating is not checking: the evidence rule under SR-157 still reports a cell that differs from the declarations, and this row is the writer that brings it current. A writer that rewrites a registry in place proves it changed nothing else before it writes, or writes nothing."
+acceptance_criteria = "A tests-root part a declaration names is kept, one no declaration names is removed, and a declared test the cell lacks is added; a part outside the tests root, a note, and a part in a file whose declarations cannot be read stay as written; only those cells of the test-case registry change, and a rewrite that would change anything else is refused with nothing written; a run over cells already current changes nothing; with no test-case registry or no tests root nothing is written and the missing input is reported."
+priority = "M"
+verification_method = "Test"
+status = "Drafted"
+phase = 6
+coincident = "The need asks for a chain mechanically verified, not hand-maintained; a test case's evidence written from the test files' own declarations is that trace as the reviewer reads it."
 aspect = "trajectory"

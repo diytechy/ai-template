@@ -83,7 +83,9 @@ from arch_interfaces import (
     unchecked_contract_rows,
 )
 from arch_tags import (
+    evidence_input_missing,
     evidence_regen,
+    evidence_regen_report,
     generated_evidence,
     tc_tag_findings,
     write_evidence,
@@ -253,7 +255,9 @@ __all__ = (
     "if_tc_allow_parse_findings",
     "tc_tag_findings",
     "generated_evidence",
+    "evidence_input_missing",
     "evidence_regen",
+    "evidence_regen_report",
     "write_evidence",
     "implements_index",
     "load_cmps",

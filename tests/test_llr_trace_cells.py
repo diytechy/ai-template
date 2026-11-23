@@ -14,13 +14,19 @@ In-process: synthetic registries under `tmp_path`, plus the live test-case
 registry read as data, so the module rides the per-commit smoke tier.
 """
 
+import shutil
 import sys
+import tomllib
+from pathlib import Path
 
 import pytest
 from conftest import ROOT, load_script
 from kitlib import spine
 
 spine_carrier = load_script("spine_carrier")
+acceptance_record = load_script("acceptance_record")
+coherence = load_script("coherence")
+intake = load_script("intake")
 baseline_snapshot = load_script("baseline_snapshot")
 spine_rules = load_script("spine_rules")
 arch_inputs = load_script("arch_inputs")
@@ -84,6 +90,79 @@ def test_a_design_row_is_placed_through_the_interfaces_its_cases_name():
     assert view["CMP-002"]["llr_refs"] == {"LLR-001"}
     assert view["CMP-002"]["sr_refs"] == {"SR-001"}
     assert unplaced["llr_refs"] == ["LLR-003", "LLR-004"]
+    # Of twelve unplaced rows the line names the first ten and counts the rest.
+    many = [{"LLR-ID": "LLR-{:03d}".format(n)} for n in range(10, 22)]
+    line = trace.placement_line(many, tcs, ifs)
+    assert line.startswith("placement: 0 design row(s) placed, 12 unplaced (LLR-010, ")
+    assert "LLR-019, +2 more)" in line and "LLR-020" not in line, line
+
+
+VIEW_REGISTRIES = {
+    "docs/requirements/components.toml": (
+        '[component.CMP-001]\nname = "one"\ncategory = "software"\nstatus = "Accepted"\n'
+        '\n[component.CMP-002]\nname = "two"\ncategory = "software"\n'
+        'status = "Accepted"\n'
+    ),
+    "docs/requirements/system-requirements.toml": (
+        '[requirement.SR-001]\ntitle = "t"\nstatus = "Accepted"\n'
+    ),
+    "docs/requirements/low-level-requirements.toml": "".join(
+        '[design.LLR-00{}]\nsr_refs = ["SR-001"]\ntitle = "t{}"\nstatus = "Accepted"\n\n'.format(
+            n, n
+        )
+        for n in (1, 2, 3)
+    ),
+    "docs/requirements/interfaces.toml": (
+        '[interface.IF-001]\nowner = "CMP-001"\nconsumers = ["CMP-001"]\n'
+        'channel = "call"\n\n[interface.IF-002]\nowner = "CMP-002"\n'
+        'consumers = ["CMP-002"]\nchannel = "call"\n'
+    ),
+    "docs/test/test-cases.toml": (
+        '[test.TC-001]\nverifies = ["LLR-001", "IF-001", "IF-002"]\n\n'
+        '[test.TC-002]\nverifies = ["LLR-002", "IF-001"]\n\n'
+        '[test.TC-003]\nverifies = ["LLR-003"]\n'
+    ),
+}
+
+
+def test_the_views_show_where_each_design_row_sits(tmp_path):
+    """Implements: TC-480"""
+    for rel, text in VIEW_REGISTRIES.items():
+        _write(tmp_path, rel, text)
+    # The component view, rendered: the unplaced row listed and counted.
+    doc = tomllib.loads(gen_components.render(tmp_path))
+    assert doc["unplaced"]["llr_refs"] == ["LLR-003"]
+    assert doc["derived"]["design_rows_unplaced"] == 1
+    # The state view's design-row detail: each row's components, or unplaced.
+    _svg, details, _desc = load_script("gen_trajectory").arch_icicle(tmp_path)
+    assert details["LLR-001"]["meta"] == "Placed: CMP-001, CMP-002"
+    assert details["LLR-002"]["meta"] == "Placed: CMP-001"
+    assert details["LLR-003"]["meta"] == "Placed: unplaced"
+
+
+def test_a_design_row_is_discharged_by_a_case_of_any_kind():
+    """Implements: TC-485"""
+    srs = [{"SR-ID": "SR-001", "Status": "Accepted"}]
+    llrs = [
+        {"LLR-ID": "LLR-001", "SR-Refs": "SR-001", "Status": "Accepted"},
+        {"LLR-ID": "LLR-002", "SR-Refs": "SR-001", "Status": "Accepted"},
+        {"LLR-ID": "LLR-003", "SR-Refs": "SR-001", "Status": "Accepted"},
+        {"LLR-ID": "LLR-004", "SR-Refs": "SR-001", "Status": "Drafted"},
+    ]
+    tcs = [
+        # An automated case, and an inspection a person carries out.
+        {"TC-ID": "TC-001", "Verifies": "SR-001; LLR-001", "Automated": "Yes"},
+        {"TC-ID": "TC-002", "Verifies": "LLR-002", "Automated": "No"},
+    ]
+    findings, at_fault = coherence.spine_orphan_findings(
+        srs, llrs, tcs, [], {"SR-001"}, {r["LLR-ID"] for r in llrs}, set(), set()
+    )
+    # Either kind discharges its row; the Drafted row owes no case yet.
+    assert [f for f in findings if f.startswith("LLR ")] == [
+        "LLR LLR-003 has no test (TC)"
+    ]
+    assert "LLR-003" in at_fault
+    assert not {"LLR-001", "LLR-002", "LLR-004"} & at_fault
 
 
 LLR_ROW = '[design.LLR-001]\nsr_refs = ["SR-001"]\ntitle = "t"\nstatus = "Drafted"\n'
@@ -94,8 +173,10 @@ def test_the_loader_refuses_a_key_a_requirement_tier_does_not_declare(tmp_path):
     reg = _write(tmp_path, LLR_REL, LLR_ROW + 'module = "src/a.py"\n')
     with pytest.raises(SystemExit) as exc:
         spine_carrier.load(reg, "LLR-ID")
-    assert "LLR-001" in str(exc.value) and "`module`" in str(exc.value)
-    # Every requirement tier, the example row included.
+    why = str(exc.value)
+    assert str(reg) in why and "LLR-001" in why and "`module`" in why
+    # Every requirement tier, the example row included; each refusal names
+    # the registry file, the row and the key.
     sr = _write(
         tmp_path,
         "docs/requirements/system-requirements.toml",
@@ -103,12 +184,15 @@ def test_the_loader_refuses_a_key_a_requirement_tier_does_not_declare(tmp_path):
     )
     with pytest.raises(SystemExit) as exc:
         spine_carrier.load(sr, "SR-ID")
-    assert "SR-000" in str(exc.value) and "`owner`" in str(exc.value)
+    why = str(exc.value)
+    assert str(sr) in why and "SR-000" in why and "`owner`" in why
     tc = _write(
         tmp_path, TC_REL, '[test.TC-001]\nverifies = ["LLR-001"]\nmodule = "x"\n'
     )
-    with pytest.raises(SystemExit):
+    with pytest.raises(SystemExit) as exc:
         spine_carrier.load(tc, "TC-ID")
+    why = str(exc.value)
+    assert str(tc) in why and "TC-001" in why and "`module`" in why
     # A declared row loads; an off-spine tier is not judged here.
     assert spine_carrier.load(_write(tmp_path, LLR_REL, LLR_ROW), "LLR-ID")
     ifs = _write(
@@ -130,6 +214,38 @@ def test_the_loader_refuses_a_key_a_requirement_tier_does_not_declare(tmp_path):
     spine = spine_rules.load_spine(hist / "docs", declared=False)
     assert spine["llrs"][0]["Module"] == "src/a.py"
     assert ("LLR", 1) in trace.live_ids(hist)
+
+
+def test_every_refusal_names_the_file_the_row_and_the_key(tmp_path):
+    """Implements: TC-481"""
+    # Each of the three retired design-row cells, not the file cell alone.
+    for key in ("module", "code_symbol", "component"):
+        reg = _write(tmp_path, LLR_REL, LLR_ROW + '{} = "x"\n'.format(key))
+        with pytest.raises(SystemExit) as exc:
+            spine_carrier.load(reg, "LLR-ID")
+        why = str(exc.value)
+        assert str(reg) in why and "LLR-001" in why and "`{}`".format(key) in why
+    # The need tier too, its example row included.
+    sn = _write(
+        tmp_path,
+        "docs/requirements/stakeholder-needs.toml",
+        '[need.SN-000]\nneed = "n"\nowner = "STK-01"\n',
+    )
+    with pytest.raises(SystemExit) as exc:
+        spine_carrier.load(sn, "SN-ID")
+    why = str(exc.value)
+    assert str(sn) in why and "SN-000" in why and "`owner`" in why
+
+
+def test_the_retired_design_cells_stay_classed_traced():
+    """Implements: TC-481"""
+    # Removing them is a traced change: the accepted text does not move.
+    for column in ("Module", "CodeSymbol", "Component"):
+        assert acceptance_record.spine_cell_class(LLR_REL, column) == "traced"
+    row = {"LLR-ID": "LLR-001", "SR-Refs": "SR-001", "Title": "t", "Detail": "d"}
+    old = dict(row, Module="src/a.py", CodeSymbol="run", Component="CMP-001")
+    digest = acceptance_record.accepted_text_digest
+    assert digest(LLR_REL, "LLR-ID", old) == digest(LLR_REL, "LLR-ID", row)
 
 
 def test_the_implements_index_feeds_the_module_listing(tmp_path, capsys, monkeypatch):
@@ -181,6 +297,52 @@ def test_the_implements_index_feeds_the_module_listing(tmp_path, capsys, monkeyp
     assert "no file an Implements: tag" in capsys.readouterr().err
 
 
+def test_the_index_reads_past_what_it_cannot_read(tmp_path, monkeypatch):
+    """Implements: TC-482"""
+    _write(
+        tmp_path,
+        "docs/stack.ini",
+        "[paths]\nsrc = src\n[arch-map]\nheaders = docs/reg.toml docs/gone.toml\n",
+    )
+    _write(tmp_path, "src/pay.py", "# Implements: LLR-001\n")
+    _write(tmp_path, "docs/reg.toml", "# Implements: LLR-003\n")
+    # Bytes that do not decode, a read that fails, and a listed header that is
+    # not there add nothing; the rest is indexed.
+    (tmp_path / "src" / "latin.py").write_bytes(b"# Implements: LLR-007 \xff\xfe\n")
+    _write(tmp_path, "src/locked.py", "# Implements: LLR-008\n")
+    read_text = Path.read_text
+
+    def refusing(path, *args, **kwargs):
+        if path.name == "locked.py":
+            raise OSError("locked")
+        return read_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", refusing)
+    assert arch_inputs.implements_index(tmp_path) == {
+        "LLR-001": ["src/pay.py"],
+        "LLR-003": ["docs/reg.toml"],
+    }
+    # With the source root gone, the listed header's declarations remain.
+    shutil.rmtree(tmp_path / "src")
+    assert arch_inputs.implements_index(tmp_path) == {"LLR-003": ["docs/reg.toml"]}
+
+
+def test_the_build_brief_marks_a_design_row_no_declaration_names(tmp_path):
+    """Implements: TC-482"""
+    _write(tmp_path, "docs/stack.ini", "[paths]\nsrc = src\n")
+    _write(tmp_path, "src/pay.py", "# Implements: LLR-001\n")
+    _write(
+        tmp_path,
+        LLR_REL,
+        LLR_ROW + '\n[design.LLR-002]\nsr_refs = ["SR-001"]\ntitle = "u"\n'
+        'status = "Drafted"\n',
+    )
+    text = intake.context_block(tmp_path, {"WI-ID": "WI-001", "SR-Refs": "SR-001"}, [])
+    lines = text.splitlines()
+    assert [ln for ln in lines if ln.startswith("- LLR-001 [src/pay.py]")], text
+    assert [ln for ln in lines if ln.startswith("- LLR-002 [no Implements: tag]")], text
+
+
 def test_the_evidence_column_is_generated_from_the_tags(tmp_path, monkeypatch):
     """Implements: TC-483"""
     gen = arch_tags.generated_evidence
@@ -226,6 +388,77 @@ def test_the_evidence_column_is_generated_from_the_tags(tmp_path, monkeypatch):
     assert arch_tags.evidence_regen(tmp_path, "tests") == {}
     # This repository's generated cells equal today's on every row.
     assert arch_tags.evidence_regen(ROOT, "tests") == {}
+
+
+def test_an_emptied_cell_loses_its_key_and_the_command_names_the_cases(
+    tmp_path, capsys, monkeypatch
+):
+    """Implements: TC-483"""
+    _write(tmp_path, "docs/stack.ini", "[paths]\nsrc = src\ntests = tests\n")
+    _write(tmp_path, "tests/test_b.py", '"""Implements: TC-002"""\n')
+    reg = _write(
+        tmp_path,
+        TC_REL,
+        '[test.TC-001]\nverifies = ["LLR-001"]\nevidence = "tests/test_gone.py"\n'
+        'status = "Drafted"\n\n'
+        '[test.TC-002]\nverifies = ["LLR-001"]\nstatus = "Drafted"\n',
+    )
+    assert _main(monkeypatch, "--root", tmp_path, "--regen-evidence") == 0
+    assert capsys.readouterr().out.splitlines() == [
+        "trace: evidence regenerated for TC-001, TC-002"
+    ]
+    # TC-001's only part leaves, and its key with it; TC-002 gains one.
+    assert reg.read_text(encoding="utf-8") == (
+        '[test.TC-001]\nverifies = ["LLR-001"]\nstatus = "Drafted"\n\n'
+        '[test.TC-002]\nverifies = ["LLR-001"]\nstatus = "Drafted"\n'
+        'evidence = "tests/test_b.py"\n'
+    )
+
+
+def test_a_rewrite_that_does_not_re_read_is_refused_and_writes_nothing(
+    tmp_path, monkeypatch
+):
+    """Implements: TC-483"""
+    # A quoted key reads as the same cell, but the line rewrite cannot see it:
+    # it adds a second key, the result does not re-read, and nothing is written.
+    _write(tmp_path, "docs/stack.ini", "[paths]\nsrc = src\ntests = tests\n")
+    _write(tmp_path, "tests/test_b.py", '"""Implements: TC-001"""\n')
+    reg = _write(
+        tmp_path,
+        TC_REL,
+        '[test.TC-001]\nverifies = ["LLR-001"]\n"evidence" = "tests/test_gone.py"\n',
+    )
+    before = reg.read_bytes()
+    code = _main(monkeypatch, "--root", tmp_path, "--regen-evidence")
+    assert "REFUSED" in str(code) and "nothing written" in str(code), code
+    assert reg.read_bytes() == before
+
+
+def test_with_no_registry_or_no_tests_root_the_regeneration_says_so(
+    tmp_path, capsys, monkeypatch
+):
+    """Implements: TC-483"""
+    # No test-case registry: nothing is read or written, and the command names
+    # the missing input rather than calling every cell current.
+    _write(tmp_path, "docs/stack.ini", "[paths]\nsrc = src\ntests = tests\n")
+    _write(tmp_path, "tests/test_a.py", '"""Implements: TC-001"""\n')
+    assert _main(monkeypatch, "--root", tmp_path, "--regen-evidence") == 0
+    out = capsys.readouterr().out
+    assert "no test-case registry" in out and "current" not in out, out
+    assert not (tmp_path / TC_REL).exists()
+    # No tests root: the registry stays byte for byte, and the command says so.
+    other = tmp_path / "other"
+    _write(other, "docs/stack.ini", "[paths]\nsrc = src\ntests = spec\n")
+    reg = _write(
+        other,
+        TC_REL,
+        '[test.TC-001]\nverifies = ["LLR-001"]\nevidence = "spec/test_a.py"\n',
+    )
+    before = reg.read_bytes()
+    assert _main(monkeypatch, "--root", other, "--regen-evidence") == 0
+    out = capsys.readouterr().out
+    assert "no tests root" in out and "spec" in out and "current" not in out, out
+    assert reg.read_bytes() == before
 
 
 def test_the_migration_drops_the_three_cells_and_nothing_else(tmp_path):
@@ -333,3 +566,26 @@ def test_the_migration_drops_a_multi_line_literal_value(tmp_path):
     report, written = migrate_carrier.drop_llr_trace_cells(tmp_path, write=True)
     assert written == [reg] and reg.read_bytes() == after.encode("utf-8")
     assert report[0].endswith("1 row(s) lose module, code_symbol and component")
+
+
+def test_an_absent_registry_is_reported_and_nothing_is_written(tmp_path, capsys):
+    """Implements: TC-484"""
+    report, written = migrate_carrier.drop_llr_trace_cells(tmp_path, write=True)
+    assert written == []
+    assert report == ["{}: absent, nothing to migrate".format(LLR_REL)]
+    assert migrate_carrier.main(["--root", str(tmp_path), "--llr-trace-cells"]) == 0
+    assert "absent, nothing to migrate" in capsys.readouterr().out
+    assert not (tmp_path / LLR_REL).exists()
+
+
+def test_a_migration_that_does_not_re_read_is_refused_and_writes_nothing(tmp_path):
+    """Implements: TC-484"""
+    # A quoted key reads as the file cell, but the line remover cannot see it:
+    # the rewrite keeps the cell, does not re-read as the rows less the three
+    # cells, and nothing is written.
+    reg = _write(tmp_path, LLR_REL, LLR_ROW + '"module" = "src/a.py"\n')
+    before = reg.read_bytes()
+    with pytest.raises(SystemExit) as exc:
+        migrate_carrier.drop_llr_trace_cells(tmp_path, write=True)
+    assert "REFUSED" in str(exc.value) and str(reg) in str(exc.value)
+    assert reg.read_bytes() == before

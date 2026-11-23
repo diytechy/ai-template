@@ -22,10 +22,10 @@
 [derived]
 components = 4
 design_rows = 138
-design_rows_unplaced = 236
+design_rows_unplaced = 237
 seam_rows = 239
 requirements_placed = 73
-requirements_unplaced = 65
+requirements_unplaced = 68
 seams_unplaced = 0
 
 [component_view.CMP-006]
@@ -1034,6 +1034,9 @@ sr_refs = [
   "SR-242",
   "SR-245",
   "SR-248",
+  "SR-249",
+  "SR-250",
+  "SR-251",
 ]
 llr_refs = [
   "LLR-001",
@@ -1272,5 +1275,6 @@ llr_refs = [
   "LLR-405",
   "LLR-406",
   "LLR-407",
+  "LLR-408",
 ]
 seam_refs = []

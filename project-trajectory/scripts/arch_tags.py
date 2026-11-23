@@ -170,7 +170,7 @@ def generated_evidence(cell, tagged, tests_dir, refused=()):
     sorted. Every other part, every note and every part in a refused file stays
     verbatim. The identity whenever the parts equal the tags.
 
-    Implements: SR-157, LLR-406"""
+    Implements: SR-251, LLR-406"""
     prefix = _tests_prefix(tests_dir)
     cell = cell or ""
     present, drops = set(), []
@@ -195,15 +195,28 @@ def generated_evidence(cell, tagged, tests_dir, refused=()):
     return "; ".join(([kept] if kept else []) + added)
 
 
+def evidence_input_missing(root, tests_dir):
+    """What the evidence regeneration has nothing to read from, as a phrase
+    naming it (`no test-case registry at ...`, `no tests root at ...`), or `""`
+    when both inputs are there. The one test of both: `evidence_regen` reads
+    nothing without them, and the regeneration command reports the phrase
+    rather than calling every cell current.
+
+    Implements: SR-251, LLR-406"""
+    if spine_carrier.resolve(Path(root) / TC_CSV) is None:
+        return "no test-case registry at {}".format(TC_CSV)
+    if not (Path(root) / tests_dir).is_dir():
+        return "no tests root at {}".format(tests_dir)
+    return ""
+
+
 def evidence_regen(root, tests_dir):
     """`{TC id: (before, after)}` for each live test case whose `Evidence`
     cell the tags would change (`generated_evidence`), `{}` when every cell is
-    current, with no test-case registry, or with no tests root.
+    current, or when an input is missing (`evidence_input_missing`).
 
-    Implements: SR-157, LLR-406"""
-    if gen_arch_map is None or spine_carrier.resolve(root / TC_CSV) is None:
-        return {}
-    if not (root / tests_dir).is_dir():
+    Implements: SR-251, LLR-406"""
+    if gen_arch_map is None or evidence_input_missing(root, tests_dir):
         return {}
     rows = spine_carrier.load(root / TC_CSV, "TC-ID", False)
     live = {(r.get("TC-ID") or "").strip() for r in rows}
@@ -261,7 +274,7 @@ def write_evidence(root, tests_dir):
     re-read and refused, writing nothing, unless it parses to the same rows
     with exactly those cells changed.
 
-    Implements: SR-157, LLR-406"""
+    Implements: SR-251, LLR-406"""
     changed = evidence_regen(root, tests_dir)
     if not changed:
         return []
@@ -299,3 +312,19 @@ def write_evidence(root, tests_dir):
         )
     path.write_text(text, encoding="utf-8", newline="")
     return sorted(changed)
+
+
+def evidence_regen_report(root, tests_dir):
+    """Regenerate the evidence column (`write_evidence`) and say what happened,
+    as the one line the regeneration command prints: the cases written, that
+    every cell is current, or, with an input missing (`evidence_input_missing`),
+    that nothing was regenerated or written and which input it lacks.
+
+    Implements: SR-251, LLR-406"""
+    missing = evidence_input_missing(root, tests_dir)
+    if missing:
+        return "nothing regenerated - {}; nothing written".format(missing)
+    written = write_evidence(root, tests_dir)
+    if not written:
+        return "every evidence cell is current"
+    return "evidence regenerated for {}".format(", ".join(written))

@@ -567,6 +567,50 @@ def test_the_arch_arm_is_advisory_with_the_gate_off(scaffold):
     _judged(proc, "ADVISORY", ARCH_FAILURES, ("SR-001", "SR-002", "SR-006", "SR-007"))
 
 
+# Reach where an interface has no contract body, and where no source is
+# scanned. IF-020 is a boundary interface whose body no file states, bridged
+# only by DA-009, which SR-020 does not cite. TC-020 places LLR-020, SR-020's
+# design row, in CMP-001 through the internal IF-021 that CMP-001 owns, and the
+# row's file carries its back-link but states no contract body.
+
+NO_BODY = {
+    NEEDS_REL: NEEDS,
+    FRAME_REL: FRAME,
+    SR_REL: _requirement("SR-020", form="interface", da=["DA-001"]),
+    LLR_REL: _design("LLR-020", "SR-020"),
+    IF_REL: _interface("IF-020", "CMP-001", bridged=["DA-009"])
+    + '\n[interface.IF-021]\nowner = "CMP-001"\nrequestors = '
+    '["CMP-001"]\nchannel = "call"\ndata = "x"\nversion = "v1"\n'
+    'status = "Accepted"\n',
+    DA_REL: _assumption("DA-001") + _assumption("DA-009"),
+    TC_REL: '[test.TC-020]\nverifies = ["LLR-020", "IF-021"]\nstatus = "Drafted"\n',
+    "src/zeta.py": '"""A module.\n\nImplements: LLR-020\n"""\n',
+}
+
+
+def test_an_interface_with_no_contract_body_reaches_nothing(scaffold):
+    root = _project(scaffold, NO_BODY, gate=True)
+    proc = _step(root, "interface-allocation")
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    # IF-020 would fail SR-020 if it reached it; with no body it reaches none.
+    _judged(proc, "FAIL", {"SR-020": ("no boundary interface reaches it",)}, ())
+    assert not _findings(proc, "FAIL", "IF-020")
+
+
+def test_with_no_source_scanned_an_interface_reaches_through_its_owner(scaffold):
+    root = _project(scaffold, NO_BODY, gate=True)
+    ini = root / "docs" / "stack.ini"
+    text = ini.read_text(encoding="utf-8")
+    assert "mode = symbols" in text, text
+    ini.write_text(text.replace("mode = symbols", "mode = files"), encoding="utf-8")
+    proc = _step(root, "interface-allocation")
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    # LLR-020 sits in CMP-001, IF-020's owner, so IF-020 reaches SR-020, and
+    # fails it, bridged only by an assumption SR-020 does not cite.
+    _judged(proc, "FAIL", {"SR-020": ("IF-020",)}, ())
+    assert not _findings(proc, "FAIL", "no boundary interface reaches it")
+
+
 def test_the_boundary_arm_fails_each_crossing_neither_coincident_nor_bridged(scaffold):
     root = _project(scaffold, CROSSING, gate=True)
     proc = _step(root, "crossing-allocation")

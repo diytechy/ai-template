@@ -171,7 +171,7 @@ def placed_llrs(root, llrs, tcs):
     `tcs` verifying it name, or `unplaced`. The state view's design-row detail
     reads it; a row names no component since WI-1023.
 
-    Implements: SR-248, LLR-403"""
+    Implements: SR-249, LLR-403"""
     ifs = spine_carrier.load(root / "docs/requirements/interfaces.toml", "IF-ID")
     where = _kitspine.llr_placement(tcs, ifs)
     return [

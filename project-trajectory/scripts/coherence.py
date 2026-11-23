@@ -168,7 +168,11 @@ def _sr_orphan_findings(srs, llr_sr_refs, tc_refs, sn_ids):
 
 
 def _llr_orphan_findings(llrs, sr_ids, tc_refs):
-    """The LLR tier's rules, as ``[(at_fault_id, finding), ...]``."""
+    """The LLR tier's rules, as ``[(at_fault_id, finding), ...]``. Its no-test
+    rule is a design row's discharge: any live case naming the row in
+    `Verifies` discharges it, whatever its kind, and a Drafted row owes none.
+
+    Implements: SR-248, LLR-408"""
     out = []
     for r in llrs:
         lid = r["LLR-ID"]

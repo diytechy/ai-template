@@ -783,8 +783,18 @@ LLR-002,SR-001,Drafted sub-part,src/demo,addfast,"A not-yet-tested decomposition
 """
 
 
-def test_draft_llr_is_exempt_from_tc_rule(scaffold):
+def test_an_unplaced_design_row_changes_no_exit_code(scaffold):
     """Implements: TC-480"""
+    # The minimal project's one design row is verified by a case naming no
+    # interface, so it sits nowhere: counted on the report, and the check passes.
+    make_minimal_project(scaffold)
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "placement: 0 design row(s) placed, 1 unplaced (LLR-001)" in proc.stdout
+
+
+def test_draft_llr_is_exempt_from_tc_rule(scaffold):
+    """Implements: TC-485"""
     make_minimal_project(scaffold)
     llrs = scaffold / "docs" / "requirements" / "low-level-requirements.csv"
     llrs.write_text(DRAFT_LLRS, encoding="utf-8")

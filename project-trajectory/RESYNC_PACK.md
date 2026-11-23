@@ -12405,6 +12405,34 @@ an accepted risk no acceptance act names says.
 **Kit-owned files — overwrite:** `scripts/assumption_rules.py`,
 `scripts/baseline_snapshot.py`.
 
+### The evidence regeneration names a missing registry or tests root instead of calling every cell current [since 3c33b3783]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** With no test-case registry, or no declared tests root
+(`[paths] tests`), `trace.py --regen-evidence` printed "every evidence cell
+is current" though it had read nothing. It now names the missing input,
+`trace: nothing regenerated - no test-case registry at
+docs/test/test-cases.toml; nothing written` or `... - no tests root at
+<dir>; nothing written`, writes nothing and still exits 0. The command's
+report line is built beside the writer (`arch_tags.evidence_regen_report`,
+re-exported by `check_trajectory`, which no longer re-exports
+`write_evidence`). The `Implements:` back-links on the placement, back-link
+index and evidence code moved to the requirements the kit's own spine now
+files them under, and the orphan pass's design-row rule gained one; those
+are docstring lines.
+
+**What to do.** Nothing is forced. A script that matched the old line on a
+repository with no registry or no tests root matches the new one instead; a
+script of yours that called `check_trajectory.write_evidence` calls
+`arch_tags.write_evidence`, or `check_trajectory.evidence_regen_report` for
+the command's own line.
+
+**Kit-owned files — overwrite:** `scripts/trace.py`, `scripts/arch_tags.py`,
+`scripts/trajectory_arch.py`, `scripts/check_trajectory.py`,
+`scripts/coherence.py`, `scripts/arch_inputs.py`, `scripts/trace_text.py`,
+`scripts/traj_parse.py`, `scripts/kitlib/spine.py`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
