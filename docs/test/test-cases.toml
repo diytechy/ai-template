@@ -4713,3 +4713,14 @@ automated = "Yes"
 evidence = "tests/test_llr_trace_cells.py::test_the_migration_drops_the_three_cells_and_nothing_else; tests/test_llr_trace_cells.py::test_the_migration_drops_a_multi_line_literal_value; tests/test_llr_trace_cells.py::test_the_migration_keeps_crlf_line_ends"
 status = "Drafted"
 phase = 6
+
+[test.TC-504]
+verifies = ["SR-159", "LLR-398"]
+level = "Integration"
+method = "Over a repository of two components with two interface rows, state the first interface's body in its owner's module and again in a configuration file of the same component that the scan profile's header list names. Run the trajectory check under strict checking with the source root scanned; then, plain and under strict checking, with the scan profile in files mode and with the source root pointed at a directory that does not exist. In files mode, run it under strict checking once more with the interfaces check turned off in the process settings, and once with it on and the interface registry emptied."
+tier = "Full"
+expected = "With the source root scanned, the two bodies are an error, the exit is 1 and no dormant line appears. In files mode, and with the source root absent, each run prints one warning line saying the contract bodies of 2 interface rows were not checked and naming files mode or the absent source root as why, no finding about the second body appears, and the exit is 0. With the interfaces check off, or with no interface row, no dormant line appears and the exit is 0."
+automated = "Yes"
+status = "Drafted"
+phase = 6
+evidence = "tests/test_trajectory_arch.py::test_with_no_scan_surface_the_body_check_reports_itself_dormant"
