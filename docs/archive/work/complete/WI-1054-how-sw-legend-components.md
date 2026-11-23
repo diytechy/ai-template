@@ -2,7 +2,7 @@
 id = "WI-1054"
 title = "The flat How-SW graph's legend names the component nodes it draws"
 workstream = "scripts"
-sr_refs = ["SR-169"]
+sr_refs = ["SR-169", "SR-052"]
 needs = []
 specref = ""
 buildtier = "medium"

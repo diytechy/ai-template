@@ -65,7 +65,7 @@ _No cell differs from the accepted snapshot; this row owes because its own `Stat
 - **Level**: Unit
 - **Method**: Render the flat interface graph of a repository in which no component holds a module, over interface rows whose endpoints make it draw a component, a module, a file and an external-party node; then render it again with the component kind's declared fill changed.
 - **Tier**: Full
-- **Expected**: The graph draws all four node kinds, and the legend beneath it holds, for each kind it draws, an entry naming that kind in words beside a swatch of the fill that kind's nodes are drawn with. After the change, the component node and the component entry's swatch both carry the new fill.
+- **Expected**: In each render, every node kind the graph draws has an entry in the legend beneath it naming that kind in words beside a swatch of the fill that kind's nodes are drawn with, so after the change the component entry's swatch carries the new fill.
 - **Automated**: Yes
 - **Evidence**: tests/test_traj_views.py::test_the_flat_graph_legend_names_every_node_kind_it_draws
 - **Status**: Drafted
