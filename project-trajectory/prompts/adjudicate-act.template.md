@@ -40,6 +40,12 @@
                         APPROVE row and no other, or `none owed`.
        {accepts_rows}  which rows each of those tokens covers, or
                         `none owed`.
+       {scripts}        the directory the snapshot script runs from: `scripts`
+                        in a scaffolded repository, the kit's own
+                        `project-trajectory/scripts` in the kit master
+                        (`agent_brief.scripts_dir`, the value the reviewer and
+                        worker briefs take). The commands in the two act parts
+                        name the same directory.
 
      WHAT IS DELIBERATELY ABSENT: any judging question and any verdict path
      to write. The judgement is recorded already; this turn writes nothing
@@ -62,8 +68,8 @@ The first-acceptance act's `--accepts` value is `{registries}`. Its `;`-joined t
 
 How to take each part:
 
-- THE AMENDMENT ACT comes first. Leave every row's `Status` at `Accepted` and every registry cell byte-exact, run its one `python scripts/intake.py snapshot --reaccepts ...` command exactly as listed (with `--verdict` where it is listed), and commit the copy it writes. Never widen `--reaccepts` to a row that is not listed: re-accepting text no verdict ruled is the laundering the snapshot's refusal exists to stop.
-- THE FIRST-ACCEPTANCE ACT comes second. Move each listed row's `Status` from `Drafted` to `Accepted`, and change nothing else in any registry: every other cell of every row stays byte-exact. Then run its one `python scripts/intake.py snapshot --accepts "..."` command exactly as listed, and commit the flips and the copy together as one commit. KEEP THE QUOTES: the value joins registries with `;`, which every shell reads as a command separator, so an unquoted value spanning two registries snapshots only the first and runs the second as a command.
+- THE AMENDMENT ACT comes first. Leave every row's `Status` at `Accepted` and every registry cell byte-exact, run its one `python {scripts}/intake.py snapshot --reaccepts ...` command exactly as listed (with `--verdict` where it is listed), and commit the copy it writes. Never widen `--reaccepts` to a row that is not listed: re-accepting text no verdict ruled is the laundering the snapshot's refusal exists to stop.
+- THE FIRST-ACCEPTANCE ACT comes second. Move each listed row's `Status` from `Drafted` to `Accepted`, and change nothing else in any registry: every other cell of every row stays byte-exact. Then run its one `python {scripts}/intake.py snapshot --accepts "..."` command exactly as listed, and commit the flips and the copy together as one commit. KEEP THE QUOTES: the value joins registries with `;`, which every shell reads as a command separator, so an unquoted value spanning two registries snapshots only the first and runs the second as a command.
 - A part listed as `none owed` is already taken, or was never owed. Skip it.
 
 If the snapshot REFUSES, naming a row that is not listed, that row is an accepted one whose text drifted from its recorded copy: an amendment another verdict owes. Do not add it to `--reaccepts` and do not edit it. Stop there: commit nothing further, and report the refusal. The coordinator discards what the refusal left uncommitted and takes the case from there.

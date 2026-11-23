@@ -176,10 +176,13 @@ def _stream(sid="S"):
 
 
 def _commands(prompt):
+    # The act names the lane's own scripts directory (WI-1051): a lane laid
+    # out like this repository gets `project-trajectory/scripts`, a scaffold
+    # `scripts`, so the stub finds a command by the script it runs.
     return [
         shlex.split(line.strip())
         for line in prompt.splitlines()
-        if line.strip().startswith("python scripts/intake.py snapshot")
+        if re.match(r"python (\S+/)?intake\.py snapshot ", line.strip())
     ]
 
 

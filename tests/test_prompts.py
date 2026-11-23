@@ -30,6 +30,7 @@ driven in test_prompts_driven.py.
 Implements: TC-157
 """
 
+import operator
 import re
 
 import pytest
@@ -39,7 +40,9 @@ pr = load_script("prompts")
 plan_briefs = load_script("plan_briefs")
 review_brief = load_script("review_brief")
 amendment_brief = load_script("amendment_brief")
+adjudicate_brief = load_script("adjudicate_brief")
 wi_convert = load_script("wi_convert")
+from kitlib import sitting as ksitting  # noqa: E402  (scripts/ is on the path)
 
 
 # --- the catalogue ------------------------------------------------------------
@@ -1412,6 +1415,103 @@ def test_every_judging_brief_ends_in_one_machine_typed_verdict_line(key):
     hits = MACHINE_LINE.findall(text)
     assert len(hits) == 1, "{}: expected exactly one machine line, found {}".format(
         key, len(hits)
+    )
+
+
+# Every brief whose verdict closes on one machine line, with the grammar its
+# reader holds that line to: each adjudication class's own (`VERDICT_GRAMMAR`,
+# which takes a sitting kind's from `kitlib.sitting.GRAMMAR`), and the review
+# line the reviewer and critique verdicts are filed by. The dispute brief asks
+# for one ruling line per finding instead, read by its own parser.
+VERDICT_GRAMMARS = [
+    (key, adjudicate_brief.VERDICT_GRAMMAR[brief])
+    for brief, key in sorted(adjudicate_brief.BRIEF_PROMPTS.items())
+    if brief in adjudicate_brief.VERDICT_GRAMMAR
+] + [(pr.REVIEWER, ksitting.REVIEW), (pr.CRITIQUE, ksitting.REVIEW)]
+_SPAN = re.compile(r"`([^`]+)`")
+_ROW_TAGS = re.compile(r"-\s*\[([A-Z][A-Z+|-]*)\]")
+_VERDICT_WORD = re.compile(r"[A-Z][A-Z-]*[A-Z]")
+
+
+def _spans(text):
+    """Every inline code span of `text`, paired one line at a time, a run of
+    three or more backticks (a fence named in prose) dropped first."""
+    out = []
+    for line in text.splitlines():
+        out.extend(_SPAN.findall(re.sub(r"`{3,}", " ", line)))
+    return out
+
+
+def _machine_forms(text, keyword):
+    """`(own lines, quoted)`: each `keyword:` machine line `text` writes out on
+    a line of its own, and each it quotes inline."""
+    head = keyword + ":"
+    own = [ln.strip() for ln in text.splitlines() if ln.strip().startswith(head)]
+    quoted = [s.strip() for s in _spans(text) if s.strip().startswith(head)]
+    return own, quoted
+
+
+def _form_refusal(form, grammar, fits):
+    """Why one machine-line form's labels or fields do not `fits` its
+    grammar's (`operator.eq` for a line written out whole, `operator.le` for
+    one quoted inline), or None."""
+    keyword, labels, fields = grammar
+    tokens = form[len(keyword) + 1 :].split()
+    asked = set(tokens[0].split("|")) if tokens else set()
+    named = {t.partition("=")[0] for t in tokens[1:] if "=" in t}
+    if not fits(asked, set(labels)):
+        return "`{}` offers {}, its grammar reads {}".format(
+            form, sorted(asked), "|".join(labels)
+        )
+    if not fits(named, set(fields)):
+        return "`{}` names {}, its grammar reads {}".format(
+            form, sorted(named), ", ".join(fields)
+        )
+    return None
+
+
+def _row_tags(text):
+    """Every tag of a `- [A|B] ...` row line `text` lays out, written out or
+    quoted inline."""
+    groups = [g for source in [text] + _spans(text) for g in _ROW_TAGS.findall(source)]
+    return {tag for group in groups for tag in group.split("|")}
+
+
+def test_every_brief_is_paired_with_the_grammar_its_verdict_is_read_by():
+    keys = [key for key, _grammar in VERDICT_GRAMMARS]
+    assert len(keys) == len(set(keys)), keys
+    assert pr.ADJUDICATE_FIRST_ACCEPTANCE in keys and pr.ADJUDICATE_COMBINED in keys
+
+
+@pytest.mark.parametrize(
+    "key,grammar", VERDICT_GRAMMARS, ids=[key for key, _g in VERDICT_GRAMMARS]
+)
+def test_every_machine_line_word_a_brief_asks_for_is_one_its_grammar_reads(
+    key, grammar
+):
+    # WI-1051: the first-acceptance brief asked for `APPROVE` when every row is
+    # accepted, a word its grammar refuses (`OUTCOME: ACCEPT|RETURN`), and two
+    # sittings had to correct it in a preface. So the words a brief asks for
+    # are read against the grammar its verdict is parsed with. The machine
+    # line it writes out on a line of its own offers exactly the grammar's
+    # labels and fields; one it quotes inline (`OUTCOME: ACCEPT rows=N`) names
+    # only labels and fields the grammar reads. A verdict word quoted in its
+    # prose is one of those labels, the keyword, or a tag of a row line the
+    # brief itself lays out (`- [ACCEPT|RETURN] ...`, `- [BLOCKER|MAJOR|MINOR]
+    # ...`).
+    keyword, labels, _fields = grammar
+    text = pr.load(key)
+    own_lines, quoted = _machine_forms(text, keyword)
+    assert own_lines, "{}: writes out no `{}:` machine line".format(key, keyword)
+    refusals = [_form_refusal(form, grammar, operator.eq) for form in own_lines]
+    refusals += [_form_refusal(form, grammar, operator.le) for form in quoted]
+    assert not any(refusals), "{}: {}".format(key, "; ".join(filter(None, refusals)))
+    admitted = set(labels) | _row_tags(text) | {keyword}
+    stray = sorted({w for w in _spans(text) if _VERDICT_WORD.fullmatch(w)} - admitted)
+    assert not stray, (
+        "{}: asks for {}, which its grammar ({}: {}) does not read".format(
+            key, ", ".join(stray), keyword, "|".join(labels)
+        )
     )
 
 

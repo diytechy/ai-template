@@ -12353,6 +12353,31 @@ flat How-SW panel shows the fourth entry.
 **Kit-owned files — overwrite:** `scripts/rendering/traj_render.py`,
 `scripts/rendering/traj_views.py`.
 
+### The act brief names the repository's own scripts directory, and the first-acceptance brief asks for ACCEPT [since 3c33b3783]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** The act brief (`prompts/adjudicate-act.template.md`) named
+`python scripts/intake.py` in its instructions and in the commands
+`scripts/adjudicate_act.py` renders into it. It now takes a `{scripts}` slot,
+filled with the directory the reviewer and worker briefs already name
+(`scripts` in a scaffolded repository), and renders its commands from the
+same value, so in a scaffolded repository the composed act reads as before.
+The first-acceptance brief (`prompts/adjudicate-first-acceptance.template.md`)
+asked for `APPROVE` when every row is accepted, a word its verdict grammar
+(`OUTCOME: ACCEPT|RETURN`) refuses; it now asks for `ACCEPT`.
+
+**What to do.** Nothing is forced for the shipped briefs. An operator
+override of `ADJUDICATE-ACT` (`--prompt-map`) must now declare the
+`{scripts}` slot, best where it names the snapshot script, or the act
+brief's strict fill refuses it, naming the slot. An override of
+`ADJUDICATE-FIRST-ACCEPTANCE` that kept the old sentence should ask for
+`ACCEPT` there too.
+
+**Kit-owned files — overwrite:** `scripts/adjudicate_act.py`,
+`prompts/adjudicate-act.template.md`,
+`prompts/adjudicate-first-acceptance.template.md`, `prompts/CATALOG.md`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
