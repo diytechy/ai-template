@@ -45,7 +45,9 @@ trees through `tree_acts` (which rows each writing commit's act names, and
 whether its record is judged row by row: its act ledger holds an entry
 carrying `kept`), `written_problems` (one copy at the row) and
 `whole_file_faults` (a copy written whole, judged as written), each handed the
-judge's own readers so this module imports no sibling but the carrier.
+judge's own readers so this module imports no sibling but the carrier. Since a
+copy's last writer may be another reviewer's act that kept a row,
+`acting_rev` reads who accepted a row from the act ledger's history instead.
 
 Component: CMP-006
 """
@@ -583,3 +585,30 @@ def tree_acts(root, ledger, trees, added_entries):
         )
         for key, (parents, new) in trees.items()
     }
+
+
+def acting_rev(root, ledger, row_id, copies, shallow, added_entries):
+    """`(rev, paths)` at which `git log -1 <rev> -- <paths>` names the commit of
+    the act that accepted row `row_id`, whose author is the row's acting
+    reviewer. That is the latest commit adding an act-ledger entry (the ledger
+    at `ledger`) that lists the row accepted or re-accepted, its added entries
+    read over EVERY parent (`added_entries`), so an entry a merge carries from
+    one side stays its own commit's act; a row an act kept keeps its reviewer.
+    For a row no entry names, it is the commit that last wrote the registry's
+    copy (`copies`) before the first commit adding an entry that carries
+    `kept` (`act_rows`), or at HEAD while none does: until then each act wrote
+    its copy whole. A shallow clone's boundary commits (`shallow`) are not
+    read, since their diff reads as adding every entry.
+
+    Implements: SR-140, LLR-173"""
+    log = _kitgit.git_out(root, ["log", "--format=%H %P", "--", ledger]) or ""
+    commits = [c for c in map(str.split, log.splitlines()) if c and c[0] not in shallow]
+    texts = texts_of(root, sorted({r + ":" + ledger for c in commits for r in c}))
+    fallback = "HEAD"
+    for sha, *parents in commits:
+        sides = [texts[p + ":" + ledger] for p in parents]
+        named, by_row = act_rows(sides, texts[sha + ":" + ledger], added_entries)
+        if row_id in named:
+            return sha, []
+        fallback = sha + "^" if by_row else fallback
+    return fallback, copies

@@ -139,7 +139,8 @@ Contract IF-124: the anchor read a composed brief takes — `exists`, `stamp` an
     costs a reader one line and nothing more. Named a registry, it answers for
     that registry's copy alone, because a refresh copies only what its act
     authorises and the directory's newest write is one copy's provenance, not
-    every copy's.
+    every copy's; named a row of it too, it answers for the act that accepted
+    that row, whose author is the row's acting reviewer (SR-140).
 Contract IF-125: the drift read — `load_all`, `rows_for`, `is_drifted` and
     `SNAPSHOT_DIR`, and never `copy_live`. Drift is asked only of a row that
     CLAIMS acceptance-or-above and is present in the snapshot; a row below
@@ -228,7 +229,6 @@ Contract IF-220: the act ledger, `ACTS` under `SNAPSHOT_DIR`. A TOML file of
 from __future__ import annotations
 
 import re
-import subprocess
 import sys
 import tomllib
 from pathlib import Path
@@ -593,11 +593,19 @@ _COPY_SUFFIXES = tuple(
 )
 
 
-def stamp(root, registry=None):
+def stamp(root, registry=None, row=None):
     """`(short rev, date)` of the commit that last wrote the snapshot — or, named
     a `registry` (its live path, either carrier), the commit that last wrote
     THAT registry's copy — or `("", "")` when there is none, git cannot answer,
     or this is not a checkout.
+
+    PER ROW WHEN A READER ASKS WHO ACCEPTED ONE (WI-1060). Named a `row` of the
+    registry too, it is the commit of the act that accepted that row
+    (`record_rows.acting_rev`): the latest commit whose act-ledger entry names
+    the row accepted or re-accepted, else the copy's last writing commit before
+    acts began recording the rows they keep. An act now writes a copy row by
+    row, so the copy's last writer may be another reviewer's act that kept the
+    row; this commit's author is the row's acting reviewer (SR-140).
 
     PER REGISTRY WHEN A READER SHOWS ROWS OF ONE. A refresh copies only the
     registries its act authorises (WI-571), so the copies in the directory were
@@ -623,28 +631,13 @@ def stamp(root, registry=None):
             for rel in spine_carrier.carriers(registry, _COPY_SUFFIXES)
         ]
     )
-    try:
-        proc = subprocess.run(
-            [
-                "git",
-                "-C",
-                str(root),
-                "log",
-                "-1",
-                "--format=%h %cs",
-                "--",
-                *paths,
-            ],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-        )
-    except (OSError, ValueError):
-        return "", ""
-    if proc.returncode != 0:
-        return "", ""
-    parts = proc.stdout.strip().split()
+    rev = "HEAD"
+    if row is not None:
+        ledger = SNAPSHOT_DIR + "/" + ACTS
+        added, shallow = acceptance_record.added_ledger_entries, _shallow_commits(root)
+        rev, paths = record_rows.acting_rev(root, ledger, row, paths, shallow, added)
+    out = _git(root, ["log", "-1", "--format=%h %cs", rev, "--", *paths])
+    parts = (out or "").split()
     return (parts[0], parts[1]) if len(parts) >= 2 else ("", "")
 
 

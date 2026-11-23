@@ -54,8 +54,9 @@ without copying the text it blessed.
 > row placed by the row rule.
 
 This README and `acts.toml` have no live counterpart and are exempt from the
-copy comparison by name; neither may be deleted while the rest of the record
-stands. A record written before its first row-by-row act (no `acts.toml` entry
+copy comparison by name. Deleting `acts.toml` or a registry's copy while the
+rest of the record stands is refused; that refusal does not cover this README,
+which is prose. A record written before its first row-by-row act (no `acts.toml` entry
 carrying `kept`) is judged as it was written: each copy byte-identical to its
 live counterpart in its commit.
 

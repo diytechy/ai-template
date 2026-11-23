@@ -37,8 +37,9 @@ more than about 10 seconds. (4) Record this approval here.
 - `2ded34460`: the red tests, under the declared expected-failure marker.
 - `72f0a63ca`: the build: `record_rows.py`, the writer, the judges, the rows,
   the prose, the RESYNC entry, regenerated evidence and views.
-- The commit after it: this close-out (the Deliverable, the move, the log
-  fragment).
+- `cd88d3c13`: the close-out (the Deliverable, the move, the log fragment).
+- The commit after it: review round 1's two adopted findings (the review
+  record, at the end of this Deliverable).
 
 **`refresh_refusal`, under correction 1 (my choice, as the go-ahead allowed).**
 Kept, under its name and signature, shrunk to the one arm that remains: it
@@ -286,6 +287,90 @@ scratch `--basetemp`):
   (`data`, `version`, `notes`: the `kept` field and the ledger-deletion
   refusal), an off-spine interface row, outside the spine's acceptance-act
   rung (OI-30 D3). No new row.
+
+**Review record.**
+
+Round 1 (2026-11-23, against `cd88d3c13`): Hydrogen APPROVE; Sol reviewed in
+a code half and a docs half. The coordinator's rulings:
+
+- Adopted, Sol docs MINOR: SR-140's acting reviewer. The acceptance said an
+  acceptance's acting reviewer is the author of the commit that wrote its
+  copy, and the reader answered at the registry: the copy's latest writing
+  commit, even when that act kept another reviewer's row. Fixed at the row.
+  `stamp(root, registry, row)` now answers for the act that accepted the row
+  (`record_rows.acting_rev`, 12 source lines): the latest commit adding an
+  act-ledger entry that names the row accepted or re-accepted. Each commit's
+  added entries are read over every parent, so a merge that carries another
+  commit's entry is not that act. For a row no entry names, the answer is
+  the commit that last wrote the registry's copy before the first entry
+  carrying `kept`, or at HEAD while there is none. A shallow clone's boundary
+  commits are not read.
+  - My reading of the coordinator's fallback: the entry naming the row is
+    taken first in any era, since a ledger written before `kept` still names
+    the rows its acts accepted. The copy's last writer stands in only for a
+    row no entry names.
+  - `stamp` now reads git through the shared `git_out` helper instead of its
+    own `subprocess` call, which kept `baseline_snapshot.py` under its size
+    limit (994 to 981 SLOC).
+  - Three tests:
+    - two reviewers' acts on one registry, where the kept row reads its own
+      reviewer, a row only the seed named reads the seed's author, and the
+      registry reads the later act;
+    - a row no entry ever named, read at the tip and then before the first
+      row-by-row act;
+    - a merge whose ledger differs from both parents, which does not read as
+      the reviewer of the act it carries. Reading over the first parent alone
+      fails this test.
+  - SR-140 (`acceptance_criteria`), LLR-173 (`detail`) and TC-167 (`method`)
+    are reworded to match, cells already owed below. TC-167's evidence was
+    regenerated. LLR-302's rationale ("the author of the commit that writes
+    the copy as the acting reviewer of the text the copy carries") still
+    holds for the text each act writes, so it is left as it is.
+- Adopted, Sol docs MINOR: the README template. "The one rule" said neither
+  the README nor `acts.toml` may be deleted while the rest of the record
+  stands. The staged check never covered the README, so the template now says
+  the refusal protects `acts.toml` and each registry's copy, and does not
+  cover the README. The strings
+  `test_the_shipped_README_describes_the_writer_that_exists` pins are
+  unchanged.
+- Dismissed, Sol code MAJOR: the vocabulary migrator's whole-file record
+  write is refused after the first row-scoped act. This is the plan's D8,
+  approved, and the RESYNC entry covers it. The coordinator files a
+  follow-up row on trunk and puts the design call to the operator.
+- Dismissed, Sol code MINOR: retiring every row of a removed registry.
+  Today's deletion arm (LLR-178) already refuses a copy deleted while the
+  record stands, so this is no regression, and no supported workflow
+  removes a whole registry.
+- Dismissed, Sol docs MINOR: IF-220's notes name code. Interface rows are
+  off-spine and state their form by convention (WI-1052's precedent).
+- Noted by both halves: the unfiltered-suite item is unticked. The
+  coordinator runs it next.
+
+Tests of the round-1 fix:
+
+- 30 modules: every test module importing `baseline_snapshot`, `record_rows`
+  or the README template (`test_baseline_snapshot.py` and
+  `test_acceptance_record.py` among them), plus the complexity, import-layer,
+  dogfood-sync and bootstrap modules: `1246 passed, 1 skipped in 2661.38s
+  (0:44:21)`.
+  - The first attempt ran under a long scratch `--basetemp` and failed 120
+    tests, all in git reads of the record. Git refused `<sha>:<path>`
+    arguments with "Filename too long" in those deeply nested temp repos.
+    The same failure reproduced with this round's changes stashed, so it was
+    an environment fault. The run above used the short basetemp the earlier
+    runs used.
+- `run_menu.py smoke`, first run: `1 failed, 3767 passed, 3 skipped, 18
+  warnings in 139.25s`. The failure was
+  `test_generated_newlines.py::test_the_one_non_literal_site_in_the_kit_is_lf`,
+  which pins `gen_open_items.py`'s one `newline=chr(10)` site at line 1672.
+  The close-out's rewording of the off-spine census note added a source line
+  and moved the site to 1673. The close-out commit's hook does not run that
+  tier, and no smoke run followed that commit, so it went unseen. The note's
+  string is reflowed into its old line count (the rendered text is
+  unchanged), and the site is back at 1672.
+- `run_menu.py smoke`, after that fix: `3768 passed, 3 skipped, 18 warnings in
+  147.70s (0:02:27)`, exit 0, `check_resync` OK. The budget step reported
+  CPU 644.0 s against the 540 s budget, a warning that fails nothing.
 
 ## Context
 

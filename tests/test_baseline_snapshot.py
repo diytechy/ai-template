@@ -2830,6 +2830,104 @@ def test_the_commit_that_wrote_a_copy_is_read_from_git_with_its_author(tmp_path)
     assert author == "The Adjudicator"
 
 
+def _author(run_git, rev):
+    assert rev, "no commit read"
+    return run_git("log", "-1", "--format=%an", rev).stdout.strip()
+
+
+def _retitle(root, rid, old, new):
+    _rewrite(root, SR_REL, '"Row {}{}"'.format(rid, old), '"Row {}{}"'.format(rid, new))
+
+
+def _commit_as(run_git, who, message):
+    run_git("add", "-A")
+    run_git("-c", "user.name=" + who, "commit", "-q", "-m", message)
+
+
+def _two_rows(tmp_path, n=2):
+    ids = _ids("SR-ID", n)
+    rows = "".join(_block("SR-ID", r, "Accepted", "Row " + r) for r in ids)
+    return ids, *_git_tree(tmp_path, lambda r: _append(r, SR_REL, rows))
+
+
+def test_each_row_reads_the_reviewer_whose_act_named_it(tmp_path):
+    """SR-140's acting reviewer, read at the row: two reviewers take separate
+    acts on one registry, and each row reads the author of the latest act that
+    named it, the row the later act kept included; a row no act has named
+    since the seed reads the seed's author, and the registry's copy reads the
+    later act.
+
+    Implements: TC-167
+    """
+    (a, b, c), root, run_git = _two_rows(tmp_path, 3)
+    _retitle(root, a, "", ", amended")
+    _commit_as(run_git, "T", "A's text")
+    _act_or_fail(root, reaccepts={a})
+    _commit_as(run_git, "Reviewer One", "the first act")
+    _retitle(root, a, ", amended", ", unblessed")
+    _retitle(root, b, "", ", amended")
+    _commit_as(run_git, "T", "A's and B's text")
+    _act_or_fail(root, reaccepts={b})
+    _commit_as(run_git, "Reviewer Two", "the second act")
+    assert SNAP.read_acts(root)[-1]["kept"] == [a]
+    who = {r: _author(run_git, SNAP.stamp(root, SR_REL, r)[0]) for r in (a, b, c)}
+    assert who == {a: "Reviewer One", b: "Reviewer Two", c: "T"}
+    assert _author(run_git, SNAP.stamp(root, SR_REL)[0]) == "Reviewer Two"
+
+
+def test_a_row_no_act_names_reads_the_last_write_of_its_copy(tmp_path):
+    """A row no act-ledger entry has ever named (a record seeded before acts
+    named their rows) reads the commit that last wrote its registry's copy: at
+    the tip while no act has recorded the rows it keeps, and once one has, the
+    last write before it, since that act only carried the row.
+
+    Implements: TC-167
+    """
+    (a, b), root, run_git = _two_rows(tmp_path)
+    ledger = root / _LEDGER_REL
+    text = re.sub(r"(?m)^(copied|kept) = \[[^\]]*\]\n", "", ledger.read_text("utf-8"))
+    text = re.sub(r"(?ms)^accepted = \[.*?\]", "accepted = []", text)
+    ledger.write_bytes(text.encode("utf-8"))
+    run_git("commit", "-q", "-a", "--amend", "--no-edit")  # a seed naming no row
+    _retitle(root, a, "", ", amended")
+    shutil.copyfile(root / SR_REL, SNAP.snapshot_root(root) / SR_REL)
+    _commit_as(run_git, "Old Writer", "a whole-file write")
+    assert _author(run_git, SNAP.stamp(root, SR_REL, a)[0]) == "Old Writer"
+    _retitle(root, b, "", ", amended")
+    _commit_as(run_git, "T", "B's text")
+    _act_or_fail(root, reaccepts={b})
+    _commit_as(run_git, "Reviewer Two", "a row-by-row act")
+    assert SNAP.read_acts(root)[-1]["kept"] == []
+    assert _author(run_git, SNAP.stamp(root, SR_REL, a)[0]) == "Old Writer"
+    assert _author(run_git, SNAP.stamp(root, SR_REL, b)[0]) == "Reviewer Two"
+
+
+def test_a_merge_carrying_an_act_is_not_that_acts_reviewer(tmp_path):
+    """A merge whose act ledger differs from both parents brings the other
+    side's entry in without adding it: the row reads the act's own commit, not
+    the merge's author.
+
+    Implements: TC-167
+    """
+    (a, _b), root, run_git = _two_rows(tmp_path)
+    run_git("checkout", "-q", "-b", "other")
+    _retitle(root, a, "", ", amended")
+    _commit_as(run_git, "T", "A's text")
+    _act_or_fail(root, reaccepts={a})
+    _commit_as(run_git, "Reviewer Two", "the act")
+    run_git("checkout", "-q", "-")
+    ledger = root / _LEDGER_REL
+    ledger.write_bytes(b"# trunk's note\n" + ledger.read_bytes())
+    _commit_as(run_git, "T", "trunk touches the ledger")
+    run_git(
+        "-c", "user.name=The Coordinator", "merge", "-q", "--no-ff", "-m", "m", "other"
+    )
+    merge = _head(run_git)
+    assert merge in run_git("log", "--format=%H", "--", _LEDGER_REL).stdout.split()
+    assert _author(run_git, merge) == "The Coordinator"
+    assert _author(run_git, SNAP.stamp(root, SR_REL, a)[0]) == "Reviewer Two"
+
+
 def test_a_merge_carries_the_rows_its_other_side_acted_on(tmp_path):
     """At a merge the hook judges the index against HEAD, and the act-ledger
     entries the merge brings in name their rows: a branch that re-accepted a
