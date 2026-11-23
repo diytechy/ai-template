@@ -53,7 +53,31 @@ A coordinator session resumes with these steps, in this order.
      with any F-row amendments ready by then. From then on an act records
      its blessed rows and leaves an unblessed one owed, so the standing
      revert ruling (step 3) stops being needed.
-2. **Then F's order** (§2): WI-1024 (F-4) and WI-1027 (F-7), either order;
+2. **F-4 and F-7 are building** beside WI-1060, both cut from `bba30552f`
+   (worktrees `D:/ai-template-wt-wi1024` and `-wi1027`).
+   - **F-4 (WI-1024)**: plan `40336c427` approved, D1 to D21 as proposed
+     (`constrains` a routed traced cell; `dimensions` and `out_of_domain`
+     accepted text). It lands in **five slices**: (1) the mechanism and the
+     CMP-009 and `external:` population; (2) CMP-007; (3) CMP-008; (4)
+     CMP-006; (5) strictness and OI-43's retirement. Six sittings by owner
+     component (A, B, C1, C2, D1, D2, with E foldable into D2), about 190
+     rows in all. **Only slice 1 is approved to build.** Slices 2 to 4 wait
+     for sitting A's verdict. D9 (every touched row scrubbed of inherited
+     code names, about 85 accepted LLRs that WI-1025 rewrites again later)
+     is approved for slice 1 and revisited on sitting A's result. Each
+     slice writes `docs/plans/WI-1024/slice-N.md`; the spec stays queued
+     until slice 5.
+   - **F-7 (WI-1027)**: plan `578416476` approved. `parent` is accepted
+     text, recorded in `docs/decisions/maint-wi-1027.toml`. LLR-367,
+     LLR-244 and LLR-257 are amended; LLR-001, LLR-201, LLR-186 and LLR-197
+     are kept, each with its clause quoted in the Deliverable. New rows
+     are LLR-480 to 482 and TC-560 to 567. Its second decision is filed as
+     WI-1064 (the parent-first rule reads the parent link).
+   - **Both amend LLR-244's `detail`** (F-4 one placement clause, F-7 the
+     walk). The second merge joins both edits cell by cell (§7.2).
+     Whichever of F-4 and F-7 lands second moves blast radius onto the
+     tree walk.
+   Then, in F's order (§2): WI-1024 (F-4) and WI-1027 (F-7), either order;
    WI-1045 after WI-1060; WI-1039 only on a quiet box. Each F row's
    amendments go to a sitting. Brief each builder with the three row rules:
    a row it writes or amends names no code (inherited names included:
@@ -170,6 +194,7 @@ adjudication sittings by Gemini Neon through `agy` (operator, 2026-11-21;
 | Item | What | Wave | Notes |
 |---|---|---|---|
 | WI-1060 | An act's copy writes only the rows it names (the revert loop's fix) | Building (plan approved with corrections, §0 step 1); one at a time with WI-1045 | Critiqued; the unfiltered suite runs on its branch before the merge; its fifteen amendments go to the seventh sitting |
+| WI-1064 | The parent-first rule reads a child design row's parent link | After WI-1027 | Filed from F-7's plan; owes a scope critique |
 | WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6, §3.4) | F, after the N6 stop | Filed and critiqued (round 1, Sol and Argon, all findings applied, `a57782d59`). Order by `needs`: 1021; 1022; 1023; then 1024 and 1027 (either order); 1025; then 1026, 1028 and 1030; then 1029. Built side by side where `needs` allows, landing one at a time (plan revision 37). F-1 merged (`147fed185`), F-2 merged (`b2b0d9476`), F-3 merged (`4335c1a4d`); next 1024 and 1027 |
 | WI-1016 | A repository can switch off the implementation layer | After F | Re-critiqued once F lands; reverses SR-186, so its amendment is drafted for the operator |
 | WI-1018 | Row text a lane leaves stale is filed, and the first set is brought up to the code | After F-8 | F-8's text migration takes B1, B7 and B9 and likely more; this row then fixes what is left |
@@ -1301,3 +1326,8 @@ Append one line per step taken: the item, what happened, the commit.
   `43f711b6d` (three flips in one commit). No spine row owes an act.
   WI-1060's plan approved with D4 changed (an act that writes nothing
   stays refused); WI-1060 building.
+- 2026-11-23 (fourth session, later still): F-4's plan approved for slice
+  1 (of five), F-7's plan approved with D13 recorded and D15 evidenced;
+  both building beside WI-1060. WI-1060's builder resumed after a server
+  error (HTTP 500) with its red tests committed. WI-1064 filed from F-7's
+  plan.
