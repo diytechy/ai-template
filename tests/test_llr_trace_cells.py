@@ -14,6 +14,7 @@ In-process: synthetic registries under `tmp_path`, plus the live test-case
 registry read as data, so the module rides the per-commit smoke tier.
 """
 
+import functools
 import shutil
 import sys
 import tomllib
@@ -489,6 +490,112 @@ def test_a_rewrite_that_does_not_re_read_is_refused_and_writes_nothing(
     code = _main(monkeypatch, "--root", tmp_path, "--regen-evidence")
     assert "REFUSED" in str(code) and "nothing written" in str(code), code
     assert reg.read_bytes() == before
+
+
+def test_a_declaration_naming_a_case_the_registry_does_not_hold_adds_nothing(
+    tmp_path, capsys, monkeypatch
+):
+    """Implements: TC-483"""
+    # TC-009 was retired, so the registry no longer holds it, but a test file
+    # still declares it. The rewrite adds nothing for it and does not name it;
+    # the stale case the registry does hold is rewritten, and named, alone.
+    _write(tmp_path, "docs/stack.ini", "[paths]\nsrc = src\ntests = tests\n")
+    _write(tmp_path, "tests/test_a.py", '"""Implements: TC-001"""\n')
+    _write(tmp_path, "tests/test_r.py", '"""Implements: TC-009"""\n')
+    reg = _write(
+        tmp_path,
+        TC_REL,
+        '[test.TC-001]\nverifies = ["LLR-001"]\nevidence = "tests/test_gone.py"\n',
+    )
+    assert _main(monkeypatch, "--root", tmp_path, "--regen-evidence") == 0
+    assert reg.read_bytes().decode("utf-8") == (
+        '[test.TC-001]\nverifies = ["LLR-001"]\nevidence = "tests/test_a.py"\n'
+    )
+    assert capsys.readouterr().out.splitlines() == [
+        "trace: evidence regenerated for TC-001"
+    ]
+
+
+def test_a_keyless_case_no_declaration_names_stays_keyless_and_unchanged(
+    tmp_path, capsys, monkeypatch
+):
+    """Implements: TC-483"""
+    # TC-002 has no evidence key and no test file declares it, so its
+    # declarations supply no part: it gains no key, the command does not name
+    # it, and the registry's bytes are as written.
+    _write(tmp_path, "docs/stack.ini", "[paths]\nsrc = src\ntests = tests\n")
+    _write(tmp_path, "tests/test_a.py", '"""Implements: TC-001"""\n')
+    before = (
+        '[test.TC-001]\nverifies = ["LLR-001"]\nevidence = "tests/test_a.py"\n\n'
+        '[test.TC-002]\nverifies = ["LLR-001"]\nstatus = "Drafted"\n'
+    ).encode("utf-8")
+    reg = _write(tmp_path, TC_REL, before.decode("utf-8"))
+    assert _main(monkeypatch, "--root", tmp_path, "--regen-evidence") == 0
+    assert "TC-002" not in capsys.readouterr().out
+    assert reg.read_bytes() == before
+
+
+def test_a_registry_opening_with_a_byte_order_mark_keeps_it(
+    tmp_path, capsys, monkeypatch
+):
+    """Implements: TC-483"""
+    # A Windows editor can leave a byte-order mark at the head of a
+    # hand-authored registry. The rewrite of one stale cell writes it back,
+    # and every other byte, as read.
+    _write(tmp_path, "docs/stack.ini", "[paths]\nsrc = src\ntests = tests\n")
+    _write(tmp_path, "tests/test_a.py", '"""Implements: TC-001"""\n')
+    _write(tmp_path, "tests/test_b.py", '"""Implements: TC-002"""\n')
+    body = (
+        "# Test cases, kept by hand.\n\n"
+        '[test.TC-001]\nverifies = ["LLR-001"]\nevidence = "tests/test_a.py"\n\n'
+        '[test.TC-002]\nverifies = ["LLR-001"]\nevidence = "tests/test_gone.py"\n'
+    )
+    bom = b"\xef\xbb\xbf"
+    reg = tmp_path / TC_REL
+    reg.parent.mkdir(parents=True)
+    reg.write_bytes(bom + body.encode("utf-8"))
+    assert _main(monkeypatch, "--root", tmp_path, "--regen-evidence") == 0
+    assert capsys.readouterr().out.splitlines() == [
+        "trace: evidence regenerated for TC-002"
+    ]
+    assert reg.read_bytes() == bom + body.replace(
+        "tests/test_gone.py", "tests/test_b.py"
+    ).encode("utf-8")
+
+
+def test_a_failed_replacement_leaves_the_registry_and_no_copy_beside_it(
+    tmp_path, monkeypatch
+):
+    """Implements: TC-483"""
+    # The rewritten registry is written whole beside it and moved into its
+    # place by one replace. That replace is the step substituted here, and it
+    # fails: the registry keeps its bytes and no copy is left beside it. The
+    # writer is called directly, on the module instance the substitution
+    # patches (the command reaches a different instance of it).
+    _write(tmp_path, "tests/test_b.py", '"""Implements: TC-001"""\n')
+    reg = _write(
+        tmp_path,
+        TC_REL,
+        '[test.TC-001]\nverifies = ["LLR-001"]\nevidence = "tests/test_gone.py"\n',
+    )
+    before = reg.read_bytes()
+    seen = []
+
+    def fails(src, dst):
+        seen.append((Path(src).parent, Path(dst), Path(src).read_bytes()))
+        raise OSError("the replace step failed")
+
+    monkeypatch.setattr(
+        arch_tags,
+        "write_atomic",
+        functools.partial(arch_tags.write_atomic, replace=fails),
+    )
+    with pytest.raises(OSError, match="the replace step failed"):
+        arch_tags.write_evidence(tmp_path, "tests")
+    rewritten = b'[test.TC-001]\nverifies = ["LLR-001"]\nevidence = "tests/test_b.py"\n'
+    assert seen == [(reg.parent, reg, rewritten)]
+    assert reg.read_bytes() == before
+    assert [p.name for p in reg.parent.iterdir()] == [reg.name]
 
 
 def test_with_no_registry_or_no_tests_root_the_regeneration_says_so(

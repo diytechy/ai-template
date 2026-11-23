@@ -20,7 +20,8 @@ The tag rule surface ``trajectory_arch`` re-exports.
 then the accepted automated cases no test declares, `[]` with no test-case
 registry. `evidence_regen(root, tests_dir)` returns `{TC id: (before, after)}`
 for each cell the tags would change, and `write_evidence(root, tests_dir)`
-writes those cells and nothing else into the test-case registry. They read
+writes those cells and nothing else into the test-case registry, replacing it
+whole through `kitlib.observation.write_atomic` (IF-315). They read
 `gen_arch_map`'s walks; only `write_evidence` writes.
 """
 
@@ -29,9 +30,11 @@ from pathlib import Path
 
 try:
     from kitlib import spine as _kitspine
+    from kitlib.observation import write_atomic
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from kitlib import spine as _kitspine
+    from kitlib.observation import write_atomic
 
 import spine_carrier
 from arch_inputs import TC_CSV
@@ -213,7 +216,9 @@ def evidence_input_missing(root, tests_dir):
 def evidence_regen(root, tests_dir):
     """`{TC id: (before, after)}` for each live test case whose `Evidence`
     cell the tags would change (`generated_evidence`), `{}` when every cell is
-    current, or when an input is missing (`evidence_input_missing`).
+    current, or when an input is missing (`evidence_input_missing`). A live
+    case is one the registry holds: a tag naming any other id is mapped to no
+    case (`read_test_tags`), so it adds nothing here and is never returned.
 
     Implements: SR-251, LLR-406"""
     if gen_arch_map is None or evidence_input_missing(root, tests_dir):
@@ -267,12 +272,16 @@ def _table_spans(lines):
 
 def write_evidence(root, tests_dir):
     """Write each changed cell `evidence_regen` returns into the test-case
-    registry in place, and return the ids written, sorted. Only those `evidence`
-    lines move; every other byte, comments, order and newline style included,
-    is kept. A cell that becomes empty leaves its key (an empty cell is an
-    absent key); a case with none gains one after its last key. The rewrite is
-    re-read and refused, writing nothing, unless it parses to the same rows
-    with exactly those cells changed.
+    registry, and return the ids written, sorted. Only those `evidence` lines
+    move; every other byte, comments, order, newline style and a leading
+    byte-order mark included, is kept: the mark is set aside before the lines
+    are read and written back in front of them. A cell that becomes empty leaves its key (an empty cell is an absent
+    key); a case with none gains one after its last key, and only when its
+    declarations supply a part, since an unchanged cell is not returned. The
+    rewrite is re-read and refused, writing nothing, unless it parses to the
+    same rows with exactly those cells changed. It then replaces the registry
+    whole through `write_atomic` (IF-315), which keeps the text's own line ends,
+    so an interrupted write leaves the old registry or the new one, never part.
 
     Implements: SR-251, LLR-406"""
     changed = evidence_regen(root, tests_dir)
@@ -284,8 +293,10 @@ def write_evidence(root, tests_dir):
             "arch_tags: the evidence column is written into the TOML carrier "
             "only; convert {} first (scripts/migrate_carrier.py)".format(path)
         )
-    with open(path, "r", encoding="utf-8-sig", newline="") as fh:
-        raw = fh.read()
+    with open(path, "r", encoding="utf-8", newline="") as fh:
+        read = fh.read()
+    raw = read.removeprefix("﻿")
+    bom = read[: len(read) - len(raw)]
     eol = "\r\n" if "\r\n" in raw else "\n"
     lines = raw.split(eol)
     tables, keys = _table_spans(lines)
@@ -310,7 +321,7 @@ def write_evidence(root, tests_dir):
             "arch_tags: REFUSED - the evidence rewrite of {} did not re-read as "
             "the generated cells and nothing else; nothing written".format(path)
         )
-    path.write_text(text, encoding="utf-8", newline="")
+    write_atomic(path, bom + text)
     return sorted(changed)
 
 

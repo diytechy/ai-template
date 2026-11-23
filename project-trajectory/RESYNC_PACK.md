@@ -12468,6 +12468,33 @@ drains once, at its next clear point.
 `scripts/acceptance_record.py`, `prompts/adjudicate-act.template.md`,
 `skills/coordinator-cycle/references/recipes.md`.
 
+### The evidence regeneration replaces the test-case registry whole instead of writing it in place [since 3db0c6823]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** `trace.py --regen-evidence` wrote the regenerated cells
+into `docs/test/test-cases.toml` in place, so a write cut short could leave
+the registry partly written. `arch_tags.write_evidence` now hands the
+rewritten text to the kit's one all-or-nothing writer,
+`kitlib/observation.py`'s `write_atomic`: the text goes to a leading-dot
+file beside the registry (`docs/test/.test-cases.toml`), is flushed to disk
+and moved into place by one replace, which is retried a bounded number of
+times while Windows holds the target. When the write fails the registry
+keeps its bytes, and the temporary file is removed where it can be. The text keeps the line
+ends it was read with and is written as UTF-8, as before. A registry that
+opens with a byte-order mark now keeps it; the writer used to drop it on
+every regeneration that changed a cell. Two readings that
+already held are now stated and tested: a test file still declaring a case
+the registry no longer holds adds nothing and is not named, and a case with
+no evidence key that no test declares stays keyless.
+
+**What to do.** Nothing is forced. On Windows, a regeneration whose replace
+is refused while another process holds the registry retries it the bounded
+number of times before it raises; a leading-dot file beside the registry
+exists only during the write.
+
+**Kit-owned files — overwrite:** `scripts/arch_tags.py`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
