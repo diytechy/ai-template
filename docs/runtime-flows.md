@@ -252,7 +252,11 @@ sequenceDiagram
 A judging turn reserves and binds a verdict, recording the identity of each
 judged row's accepted text beside it, launches its judging brief, commits and
 accepts the verdict, then stops. After the lane has rebased, a later act turn
-derives only the remaining authorized work from that committed verdict. For a
+derives only the remaining authorized work from that committed verdict. A
+first-acceptance flip whose parent would still not be accepted after the act
+waits: the act brief names it with that parent instead of listing it, and it
+stays owed, so an act turn that leaves it does not read complete; a later act
+takes it once the parent is accepted. For a
 held CLARITY row the act turn checks that the committed row's accepted text
 still has the bound identity, and refuses before launch when it does not; for
 the other judged rows the coordinator confirms by hand that they are
@@ -276,16 +280,16 @@ sequenceDiagram
     Note over Coord,Verdict: The judging turn stops here.
     Coord->>Lane: confirm lane claim and no uncommitted change (SR-231/LLR-306)
     Coord->>Verdict: read recorded verdict and binding at HEAD (LLR-338)
-    alt verdict is unrecorded, owes no act, has an unexplained row state, or binds a held CLARITY row to other text than its committed accepted text (LLR-359)
+    alt verdict is unrecorded, owes no act, owes only flips waiting on an unaccepted parent (LLR-338), has an unexplained row state, or binds a held CLARITY row to other text than its committed accepted text (LLR-359)
         Coord-->>Lane: refuse before launch, naming the input
     else later act is owed
         Coord->>Keep: plan by the verdict's bound class (LLR-338)
         Coord->>Agent: launch complete act brief; append loop provenance when marked (SR-209)
-        Agent->>Records: take amendment act, then first-acceptance act
+        Agent->>Records: take amendment act, then first-acceptance act (a waiting flip is named, never flipped)
         Coord->>Verdict: re-derive owed work and inspect verdict-record changes
         alt call succeeded, nothing owed, and verdict records unchanged
             Coord-->>Lane: complete
-        else work remains or verdict records changed
+        else work remains (a waiting flip included) or verdict records changed
             Coord-->>Lane: fail after launch, naming the remaining condition
         end
     end

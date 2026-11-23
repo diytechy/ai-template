@@ -192,7 +192,7 @@ def _take_amendment_act(repo, ids):
 
 def _take_acceptance_act(repo, ids, registries):
     for rid in ids:
-        rel = LLRS if rid.startswith("LLR") else TCS
+        rel = {"SR": SRS, "LLR": LLRS, "TC": TCS}[rid.split("-")[0]]
         text = (repo / rel).read_text(encoding="utf-8")
         line = next(ln for ln in text.splitlines() if ln.startswith(rid + ","))
         _replace(repo, rel, line, line.replace(",Drafted,", ",Accepted,"))
@@ -925,3 +925,214 @@ def test_each_rows_act_arm_follows_the_adjudication_action_policy_on_every_rung(
         ("reaccept", "TC-001", False),
     ]
     assert act._authorized(parts, "DevStg-Release") == [("reaccept", "TC-001", True)]
+
+
+# --- a flip whose parent stays unaccepted waits (WI-1059) -------------------
+#
+# WI-1057's act listed LLR-406's flip while its parent SR-251 was returned,
+# and the commit hook's parent-first step refused the act taken as listed. A
+# first-acceptance flip whose parent the act leaves unaccepted now WAITS: the
+# brief names it with each parent it waits on and does not list it, it stays
+# owed, and the same verdict's act lists it once the parent is accepted.
+
+SR_DRAFT = (
+    "SR-002,Subtracts,SN-001,The system shall subtract two numbers.,arithmetic "
+    "is the demo,the difference is right,Must,Test,Drafted,P1,core\n"
+)
+LLR_UNDER_DRAFT = (
+    "LLR-003,SR-002,diff impl,src/demo.py,diff,diff() returns a - b.,TC-003,"
+    "Drafted,,P1\n"
+)
+TC_UNDER_DRAFT = (
+    'TC-003,SR-002; LLR-003,unit,run pytest,fast,"diff(4, 2) == 2",yes,'
+    "tests/test_demo.py::test_diff,Drafted,P1\n"
+)
+# The returned parent's verdict: LLR-002 (under the accepted SR-001) and
+# LLR-003 (under the returned SR-002) are accepted.
+WAITING = (
+    "- [ACCEPT] LLR-002 -> sub -> chain holds -> ready\n"
+    "- [ACCEPT] LLR-003 -> diff -> chain of SR-002 -> ready\n"
+    "- [RETURN] SR-002 -> subtract -> no evidence -> not ready\n\n"
+    "OUTCOME: RETURN rows=3\n"
+)
+# WI-1057's shape: the child accepted, its parent returned, nothing else.
+ONLY_WAITING = (
+    "- [ACCEPT] LLR-003 -> diff -> chain of SR-002 -> ready\n"
+    "- [RETURN] SR-002 -> subtract -> no evidence -> not ready\n\n"
+    "OUTCOME: RETURN rows=2\n"
+)
+LLR_003_WAITS = "LLR-003 ({}) waiting on SR-002 (Drafted)".format(LLR_REL)
+
+
+def _returned_parent(tmp_path, tc=False):
+    """`_repo` with LLR-002 drafted under the accepted SR-001, and SR-002
+    drafted with LLR-003 under it (and, when `tc`, TC-003 verifying both),
+    committed."""
+    repo = _repo(tmp_path)
+    _append(repo, SRS, SR_DRAFT)
+    _append(repo, LLRS, NEW_LLR + LLR_UNDER_DRAFT)
+    if tc:
+        _append(repo, TCS, TC_UNDER_DRAFT)
+    _commit(repo, "draft SR-002 and its children")
+    return repo
+
+
+def _take_listed(repo, acts, values):
+    """Take the first-acceptance act exactly as listed."""
+    accepts = acts["first-acceptance"]["accepts"]
+    ids = [rid for rel in sorted(accepts) for rid in accepts[rel]]
+    _take_acceptance_act(repo, ids, values["registries"])
+
+
+def test_a_flip_under_a_returned_parent_waits_and_the_listed_flips_pass_the_parent_first_check(
+    tmp_path,
+):
+    """Implements: TC-368"""
+    repo = _returned_parent(tmp_path)
+    _verdict(repo, WAITING, "first-acceptance")
+    acts, why = act.owed_acts(repo, VERDICT, "HEAD")
+    assert why is None, why
+    assert acts == {
+        "first-acceptance": {
+            "accepts": {LLR_REL: ["LLR-002"]},
+            "waiting": {"LLR-003": [("SR-002", "Drafted")]},
+        }
+    }
+    values, why = act.act_values(repo, VERDICT, WI)
+    assert why is None, why
+    part = values["acceptance_act"]
+    flip_line = next(ln for ln in part.splitlines() if "exactly these rows" in ln)
+    assert "LLR-002" in flip_line and "LLR-003" not in flip_line, flip_line
+    assert "Not in this act" in part and LLR_003_WAITS in part, part
+    assert "LLR-003" not in values["accepts_rows"] + values["registries"]
+    text, why = act.compose_act(repo, VERDICT, WI)
+    assert why is None and LLR_003_WAITS in text, why
+    _take_listed(repo, acts, values)
+    assert acceptance_record.commit_parent_first_lines(repo, "HEAD") == []
+
+
+def test_a_parent_accepted_in_the_same_act_lets_its_child_be_listed(tmp_path):
+    """Implements: TC-368"""
+    repo = _returned_parent(tmp_path)
+    _verdict(
+        repo,
+        "- [ACCEPT] SR-002 -> subtract -> chain holds -> ready\n"
+        "- [ACCEPT] LLR-003 -> diff -> chain of SR-002 -> ready\n\n"
+        "OUTCOME: ACCEPT rows=2\n",
+        "first-acceptance",
+    )
+    acts, why = act.owed_acts(repo, VERDICT, "HEAD")
+    assert why is None, why
+    assert acts == {
+        "first-acceptance": {"accepts": {SR_REL: ["SR-002"], LLR_REL: ["LLR-003"]}}
+    }
+    values, why = act.act_values(repo, VERDICT, WI)
+    assert why is None and "Not in this act" not in values["acceptance_act"], why
+    _take_listed(repo, acts, values)
+    assert acceptance_record.commit_parent_first_lines(repo, "HEAD") == []
+    assert act.left_owed(repo, VERDICT, "HEAD") is None
+
+
+def test_a_test_case_waits_on_a_waiting_design_row_and_names_every_parent(tmp_path):
+    """Implements: TC-368"""
+    repo = _returned_parent(tmp_path, tc=True)
+    _verdict(
+        repo,
+        "- [ACCEPT] LLR-002 -> sub -> chain holds -> ready\n"
+        "- [ACCEPT] LLR-003 -> diff -> chain of SR-002 -> ready\n"
+        "- [ACCEPT] TC-003 -> diff -> verifies SR-002 and LLR-003 -> ready\n"
+        "- [RETURN] SR-002 -> subtract -> no evidence -> not ready\n\n"
+        "OUTCOME: RETURN rows=4\n",
+        "first-acceptance",
+    )
+    acts, why = act.owed_acts(repo, VERDICT, "HEAD")
+    assert why is None, why
+    assert acts == {
+        "first-acceptance": {
+            "accepts": {LLR_REL: ["LLR-002"]},
+            "waiting": {
+                "LLR-003": [("SR-002", "Drafted")],
+                "TC-003": [("SR-002", "Drafted"), ("LLR-003", "Drafted")],
+            },
+        }
+    }
+    values, why = act.act_values(repo, VERDICT, WI)
+    assert why is None, why
+    tc_waits = "TC-003 ({}) waiting on SR-002 (Drafted), LLR-003 (Drafted)".format(
+        TC_REL
+    )
+    assert tc_waits in values["acceptance_act"], values["acceptance_act"]
+    assert TC_REL not in values["registries"]
+
+
+def test_a_verdict_whose_only_remaining_act_waits_is_refused_naming_each_row_and_parent(
+    tmp_path,
+):
+    """Implements: TC-368"""
+    repo = _returned_parent(tmp_path)
+    _verdict(repo, ONLY_WAITING, "first-acceptance")
+    refusal = (
+        "the verdict {} owes no act that can be taken at HEAD: every flip it "
+        "still owes waits on a parent that is not accepted, and a later act lists "
+        "each once its parent is accepted: {}".format(VERDICT, LLR_003_WAITS)
+    )
+    assert act.owed_acts(repo, VERDICT, "HEAD") == (None, refusal)
+    assert act.compose_act(repo, VERDICT, WI) == (None, refusal)
+
+
+def test_the_later_act_derivation_reports_a_waiting_flip_as_owed_and_marked_never_taken(
+    tmp_path,
+):
+    """Implements: TC-368"""
+    repo = _returned_parent(tmp_path)
+    _verdict(repo, WAITING, "first-acceptance")
+    assert act.left_owed(repo, VERDICT, "HEAD") == "flip LLR-002 ({}); flip {}".format(
+        LLR_REL, LLR_003_WAITS
+    )
+    acts, _why = act.owed_acts(repo, VERDICT, "HEAD")
+    values, _why = act.act_values(repo, VERDICT, WI)
+    _take_listed(repo, acts, values)
+    assert act.left_owed(repo, VERDICT, "HEAD") == "flip " + LLR_003_WAITS
+
+
+def test_once_its_parent_is_accepted_the_same_verdicts_act_lists_the_waiting_flip(
+    tmp_path,
+):
+    """Implements: TC-368"""
+    repo = _returned_parent(tmp_path)
+    _verdict(repo, ONLY_WAITING, "first-acceptance")
+    acts, why = act.owed_acts(repo, VERDICT, "HEAD")
+    assert acts is None and "waits on a parent" in why, why
+    # The parent's own act, under a later verdict, lands.
+    _take_acceptance_act(repo, ["SR-002"], "{}={}".format(SR_REL, WI))
+    acts, why = act.owed_acts(repo, VERDICT, "HEAD")
+    assert why is None, why
+    assert acts == {"first-acceptance": {"accepts": {LLR_REL: ["LLR-003"]}}}
+
+
+def test_a_parent_registry_that_does_not_parse_refuses_the_derivation_naming_it(
+    tmp_path,
+):
+    """Implements: TC-368"""
+    # The design rows' system requirements are read from the first listed
+    # carrier, here a TOML file beside the CSV that does not parse: the hook
+    # would refuse the act's commit on it, so the derivation refuses first.
+    repo = _returned_parent(tmp_path)
+    _verdict(repo, WAITING, "first-acceptance")
+    _write(repo, SR_REL, "[requirement.SR-001\nstatus = \n")
+    _commit(repo, "an SR carrier that does not parse")
+    acts, why = act.owed_acts(repo, VERDICT, "HEAD")
+    assert acts is None
+    for reason in (why, act.left_owed(repo, VERDICT, "HEAD")):
+        assert SR_REL in reason and "does not parse" in reason, reason
+
+
+def test_the_wait_is_read_from_the_parent_first_rules_one_predicate():
+    """Implements: TC-368"""
+    # The hold asks the commit hook's own question, over the hook's own rows:
+    # no second statement of the rule's edges in the act assembler.
+    source = inspect.getsource(act)
+    assert "kspine.parent_first_findings(" in source
+    assert "acceptance_record.parent_first_tiers(" in source
+    for edge in ("PARENT_EDGES", '"SR-Refs"', '"Verifies"', '"SN-Refs"'):
+        assert edge not in source, edge

@@ -22,6 +22,12 @@
      is refused before this brief is composed (all or nothing). A held
      MEANING row, a MEANING row without the bless mark, a held APPROVE row, a
      RETURN row and a Done-when part owe no act and are never listed.
+     A first-acceptance flip WAITS (WI-1059) when a parent the parent-first
+     rule reads for it would still not be accepted after this act: it stays
+     owed, is never listed, and is named under `Not in this act` in
+     `{acceptance_act}` with each parent it waits on, so the act lists only
+     flips the commit hook's parent-first step admits. A verdict whose every
+     remaining act waits is refused before this brief is composed.
 
      Slots (single-brace, strict fill — a missing one refuses):
        {verdict}        the committed verdict that authorizes this act, as a
@@ -33,8 +39,9 @@
                         command, or `none owed`.
        {acceptance_act}   the flips the first-acceptance part still owes: the
                         rows, each with its registry, and the one
-                        `intake.py snapshot --accepts` command, or
-                        `none owed`.
+                        `intake.py snapshot --accepts` command (or that no
+                        flip can be taken in this act), then any waiting
+                        flip under `Not in this act`; or `none owed`.
        {registries}     the `--accepts` value of that command: one
                         `REGISTRY=REF` token per registry holding an owed
                         APPROVE row and no other, or `none owed`.
