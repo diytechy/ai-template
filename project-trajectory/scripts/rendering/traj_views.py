@@ -180,13 +180,16 @@ def arch_icicle(root):
         if parent:
             link(parent, tid)
 
-    # The next three walks (wt/collect/draw) recurse over `kids`, and unlike the
-    # work-item DAG this tree's depth is bounded by construction: `link()` is
+    # The next three walks (wt/collect/draw) recurse over `kids`. `link()` is
     # only ever called SN->SR, SR->LLR, LLR->LLR, LLR->TC, SR->TC, and the
-    # LLR->LLR links are the requirement tree's walk, which never links a cycle,
-    # so the depth is the tree's depth plus four. They therefore need no
-    # iterative rewrite or depth guard, unlike `_dag_ranks` /
-    # `check_trajectory._cycles` which walk the unbounded WI chain.
+    # LLR->LLR links are the requirement tree's walk, which never links a
+    # cycle, so the recursion ends and its depth is the requirement tree's
+    # depth plus four. That is BOUNDED, NOT CAPPED: a real tree is a few levels
+    # deep, far under the interpreter's recursion limit (1000 frames by
+    # default), but an acyclic chain of design rows close to that limit would
+    # raise RecursionError here, failing the dashboard's generation loudly
+    # rather than drawing a partial view. Kept recursive, unlike `_dag_ranks` /
+    # `check_trajectory._cycles`, which walk the unbounded WI chain.
     # Kept recursive so this block stays a faithful port
     # of the proven gilbert icicle; if that port is ever hardened upstream (for a
     # deeper tree there), mirror it — here it is provably safe.

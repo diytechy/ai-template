@@ -2089,7 +2089,7 @@ def _required_fields(label, row):
     """The cells `row` must fill: its tier's `REQUIRED_FIELDS`, less `SR-Refs`
     on a child design row, whose SRs are read up its parent chain.
 
-    Implements: SR-157, LLR-480
+    Implements: SR-157, LLR-483
     """
     if label == "LLR" and refs(row.get("Parent")):
         return [col for col in REQUIRED_FIELDS[label] if col != "SR-Refs"]
@@ -3345,6 +3345,13 @@ def _llr_forest_node(lr, children, tcs_by_ref, tc_node, orphan_ids):
     """One design row's forest node: its test cases (`tc_node` over
     `tcs_by_ref`), then the nodes of its child rows (`children`, the
     requirement tree's).
+
+    Recursive, one frame per level of the requirement tree. The walk never
+    links a cycle, so the recursion ends; its depth is the tree's, a few levels
+    in a real spine and far under the interpreter's recursion limit (1000
+    frames by default). An acyclic chain of design rows near that limit would
+    raise RecursionError, failing the report loudly rather than rendering a
+    truncated outline.
 
     Implements: SR-157, SR-049, LLR-481"""
     lid = lr["LLR-ID"]

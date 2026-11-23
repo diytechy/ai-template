@@ -35,10 +35,21 @@ The record is in the row's Deliverable
   watched file, re-stamped); the spine-authoring and gate-advance skills and
   `spine-questions.md` point at it; the registry machinery reference and a
   RESYNC entry follow.
-- **Rows:** LLR-480, LLR-481, LLR-482 and TC-560 to TC-567 (Drafted);
+- **Rows:** LLR-480 to LLR-483 and TC-560 to TC-568 (Drafted);
   LLR-367, LLR-244 and LLR-257 amended in `detail`, text only. LLR-001,
   LLR-201, LLR-186 and LLR-197 stay as they are, the Deliverable quoting each
   clause and why it holds.
+- **Review round 1** (`bba30552f..9cc2cd5a0`): Hydrogen APPROVE; Sol six
+  findings, all adopted and fixed in one commit. LLR-480's required-field
+  clause moved to a new row, LLR-483, with TC-568 (LLR-003 names the check
+  only as a whole, and re-opening it would have re-opened clauses its test
+  case does not drive); LLR-480's propagation clause narrowed to what the
+  walk propagates; TC-562's span and TC-560's both-statuses and
+  strict-per-fault clauses each gained the cases that drive them; the walk's
+  cost restated (linear chain resolution, an output-sensitive descendant
+  index); the recursive walks' comments state their bound and what happens
+  past it. After the fixes, the 79 importing modules: `2715 passed, 2 skipped,
+  18 warnings in 2436.57s (0:40:36)`; smoke exit 0, `3840 passed, 3 skipped`.
 - **Ratchets:** `trace.py` +46 SLOC (3784 -> 3830), a reviewed bump whose
   reason is in its entry: the walk's readers and the outward decomposition the
   cognitive-complexity census asked for; `check_trajectory.py` and `intake.py`

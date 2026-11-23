@@ -84,7 +84,7 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **LLR-ID**: LLR-480
 - **SR-Refs**: SR-157
 - **Title**: A design row hangs from one parent row or from its system requirements, and a malformed tree fails the strict check
-- **Detail**: A design row's parent cell, when present, names one other design row: the row is then a child and names no system requirement, its requirements being read up its parent chain; a row with no parent cell is top-level and names at least one system requirement. The strict check reports each of these, naming the row, whatever its status: a top-level row naming no system requirement; a child naming one; a parent cell naming anything but exactly one live design row, an example row not being live; each row on a cycle of parent links, naming the cycle's rows; and each row whose parent chain ends at one of those faults, naming the row where the chain breaks. The required-field check asks for system-requirement references on a top-level row only.
+- **Detail**: A design row's parent cell, when present, names one other design row: the row is then a child and names no system requirement, its requirements being read up its parent chain; a row with no parent cell is top-level and names at least one system requirement. The strict check reports each of these, naming the row, whatever its status: a top-level row naming no system requirement; a child naming one; a parent cell naming anything but exactly one live design row, an example row not being live; each row on a cycle of parent links, naming the cycle's rows; and each row whose parent chain reaches such a parent cell or such a cycle, naming the row where the chain breaks.
 - **Rationale**: A child naming its own system requirements would give its parentage two homes that can disagree, so the chain is the one home. A row on a cycle or under a missing parent reaches no requirement, so every derivation starting from a requirement would drop it and its test cases; reporting it at the strict check keeps that loss visible.
 - **TestRefs**: TC-560
 - **Status**: Drafted
@@ -100,17 +100,27 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Status**: Drafted
 - **Phase**: 6
 
+### LLR LLR-483 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-483
+- **SR-Refs**: SR-157
+- **Title**: The required-field check asks a top-level design row, not a child, for its system requirements
+- **Detail**: The required-field check asks a design row for its system-requirement references only when the row names no parent row: a child, whose requirements are read up its parent chain, is not reported for leaving them empty. Every other required cell of a design row is asked of a child as of a top-level row.
+- **Rationale**: A child stating its own requirements would give its parentage a second home, so the one cell the check asks of every top-level row is one a child leaves empty; the rest of a child's row is held to the same cells, since it is a design row like any other.
+- **TestRefs**: TC-568
+- **Status**: Drafted
+- **Phase**: 6
+
 ### TC TC-560 — ADDED since the snapshot, Drafted — never accepted
 - **TC-ID**: TC-560
 - **Verifies**: SR-157;LLR-480
 - **Level**: Unit
-- **Method**: Run the orphan pass and the strict check over a three-level tree of design rows beside one row of each fault: a top-level row naming no system requirement, a child naming one, a parent cell naming a missing row, one naming a system requirement, one naming two rows, a cycle of two rows and a cycle of one, and a row below the missing parent; once with the faulty rows Drafted and once Accepted. Run the required-field check over a child and a top-level row that each name no system requirement. Load a design registry whose rows carry parent cells.
+- **Method**: Run the orphan pass and the strict check over a three-level tree of design rows beside one row of each fault: a top-level row naming no system requirement, a child naming one, a parent cell naming a missing row, one naming a system requirement, one naming two rows, a cycle of two rows and a cycle of one, and a row below the missing parent; once with the faulty rows Drafted and once Accepted, through the orphan pass and through the strict check for each fault. Load a design registry whose rows carry parent cells.
 - **Tier**: Smoke
-- **Expected**: The well-formed tree produces no report. Each faulty row is reported once, naming the row and its fault, at both statuses, and the strict check fails: each row on a cycle names the cycle's rows, and the row below the missing parent names the row where its chain breaks. The required-field check reports the top-level row and not the child. The registry loads.
+- **Expected**: The well-formed tree produces no report. Each faulty row is reported once, naming the row and its fault, at both statuses, and the strict check fails on each fault at both statuses: each row on a cycle names the cycle's rows, and the row below the missing parent names the row where its chain breaks. The registry loads.
 - **Automated**: Yes
 - **Status**: Drafted
 - **Phase**: 6
-- **Evidence**: tests/test_requirement_tree.py::test_a_design_registry_whose_rows_carry_a_parent_loads; tests/test_requirement_tree.py::test_a_row_below_a_missing_parent_names_where_its_chain_breaks; tests/test_requirement_tree.py::test_a_well_formed_tree_is_silent; tests/test_requirement_tree.py::test_each_fault_is_reported_once_at_either_status; tests/test_requirement_tree.py::test_each_row_on_a_two_row_cycle_names_the_cycle; tests/test_requirement_tree.py::test_the_required_field_check_asks_sr_refs_of_a_top_level_row_only; tests/test_requirement_tree.py::test_the_strict_check_fails_on_a_fault
+- **Evidence**: tests/test_requirement_tree.py::test_a_design_registry_whose_rows_carry_a_parent_loads; tests/test_requirement_tree.py::test_a_row_below_a_missing_parent_names_where_its_chain_breaks; tests/test_requirement_tree.py::test_a_well_formed_tree_is_silent; tests/test_requirement_tree.py::test_each_fault_is_reported_once_at_either_status; tests/test_requirement_tree.py::test_each_row_on_a_two_row_cycle_names_the_cycle; tests/test_requirement_tree.py::test_a_well_formed_tree_passes_the_strict_check; tests/test_requirement_tree.py::test_the_strict_check_fails_on_each_fault
 
 ### TC TC-561 — ADDED since the snapshot, Drafted — never accepted
 - **TC-ID**: TC-561
@@ -135,6 +145,18 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Status**: Drafted
 - **Phase**: 6
 - **Evidence**: tests/test_requirement_tree.py::test_a_drafted_grandchild_holds_its_phases_live_reading; tests/test_requirement_tree.py::test_a_grandchilds_effective_perspectives_include_its_chains_requirements; tests/test_requirement_tree.py::test_the_graph_draws_each_parent_link; tests/test_requirement_tree.py::test_the_matrix_lists_every_row_below_a_requirement; tests/test_requirement_tree.py::test_the_outline_nests_the_grandchild_under_the_child_under_the_top_row; tests/test_requirement_tree.py::test_the_paraphrase_advisory_compares_a_grandchild_with_its_chains_requirement; tests/test_requirement_tree.py::test_the_stage_places_a_grandchild_in_its_requirements_phase; tests/test_requirement_tree.py::test_the_triangle_rule_reads_a_grandchilds_requirement_up_its_chain; tests/test_requirement_tree.py::test_the_settled_grouping_reads_the_walk_over_the_live_rows
+
+### TC TC-568 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-568
+- **Verifies**: SR-157;LLR-483
+- **Level**: Unit
+- **Method**: Run the required-field check over a top-level design row and a child row that each name no system requirement, and over a child that also leaves its title empty.
+- **Tier**: Smoke
+- **Expected**: The top-level row is reported for its empty system-requirement references and the first child is not; the untitled child is reported for its empty title only.
+- **Automated**: Yes
+- **Status**: Drafted
+- **Phase**: 6
+- **Evidence**: tests/test_requirement_tree.py::test_the_required_field_check_asks_sr_refs_of_a_top_level_row_only
 
 ## SR-168 — The state view shows current progress and next work
 
@@ -163,7 +185,7 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Automated**: Yes
 - **Status**: Drafted
 - **Phase**: 6
-- **Evidence**: tests/test_requirement_tree.py::test_a_spine_with_no_child_keeps_one_design_column; tests/test_requirement_tree.py::test_the_spine_view_draws_each_child_one_column_further_in
+- **Evidence**: tests/test_requirement_tree.py::test_a_spine_with_no_child_keeps_one_design_column; tests/test_requirement_tree.py::test_the_spine_view_draws_each_child_one_column_further_in; tests/test_requirement_tree.py::test_the_spine_view_draws_each_child_inside_its_parents_span
 
 ## SR-212 — With the assumption gate on, interface-form requirements are bridged at their crossings and reached and bridged at the architecture rung
 

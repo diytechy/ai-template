@@ -4772,13 +4772,13 @@ evidence = "tests/test_llr_trace_cells.py::test_a_design_row_is_discharged_by_a_
 [test.TC-560]
 verifies = ["SR-157", "LLR-480"]
 level = "Unit"
-method = "Run the orphan pass and the strict check over a three-level tree of design rows beside one row of each fault: a top-level row naming no system requirement, a child naming one, a parent cell naming a missing row, one naming a system requirement, one naming two rows, a cycle of two rows and a cycle of one, and a row below the missing parent; once with the faulty rows Drafted and once Accepted. Run the required-field check over a child and a top-level row that each name no system requirement. Load a design registry whose rows carry parent cells."
+method = "Run the orphan pass and the strict check over a three-level tree of design rows beside one row of each fault: a top-level row naming no system requirement, a child naming one, a parent cell naming a missing row, one naming a system requirement, one naming two rows, a cycle of two rows and a cycle of one, and a row below the missing parent; once with the faulty rows Drafted and once Accepted, through the orphan pass and through the strict check for each fault. Load a design registry whose rows carry parent cells."
 tier = "Smoke"
-expected = "The well-formed tree produces no report. Each faulty row is reported once, naming the row and its fault, at both statuses, and the strict check fails: each row on a cycle names the cycle's rows, and the row below the missing parent names the row where its chain breaks. The required-field check reports the top-level row and not the child. The registry loads."
+expected = "The well-formed tree produces no report. Each faulty row is reported once, naming the row and its fault, at both statuses, and the strict check fails on each fault at both statuses: each row on a cycle names the cycle's rows, and the row below the missing parent names the row where its chain breaks. The registry loads."
 automated = "Yes"
 status = "Drafted"
 phase = 6
-evidence = "tests/test_requirement_tree.py::test_a_design_registry_whose_rows_carry_a_parent_loads; tests/test_requirement_tree.py::test_a_row_below_a_missing_parent_names_where_its_chain_breaks; tests/test_requirement_tree.py::test_a_well_formed_tree_is_silent; tests/test_requirement_tree.py::test_each_fault_is_reported_once_at_either_status; tests/test_requirement_tree.py::test_each_row_on_a_two_row_cycle_names_the_cycle; tests/test_requirement_tree.py::test_the_required_field_check_asks_sr_refs_of_a_top_level_row_only; tests/test_requirement_tree.py::test_the_strict_check_fails_on_a_fault"
+evidence = "tests/test_requirement_tree.py::test_a_design_registry_whose_rows_carry_a_parent_loads; tests/test_requirement_tree.py::test_a_row_below_a_missing_parent_names_where_its_chain_breaks; tests/test_requirement_tree.py::test_a_well_formed_tree_is_silent; tests/test_requirement_tree.py::test_each_fault_is_reported_once_at_either_status; tests/test_requirement_tree.py::test_each_row_on_a_two_row_cycle_names_the_cycle; tests/test_requirement_tree.py::test_a_well_formed_tree_passes_the_strict_check; tests/test_requirement_tree.py::test_the_strict_check_fails_on_each_fault"
 
 [test.TC-561]
 verifies = ["SR-157", "SR-049", "LLR-481"]
@@ -4800,7 +4800,7 @@ expected = "The child is drawn inside the top-level row's span one column furthe
 automated = "Yes"
 status = "Drafted"
 phase = 6
-evidence = "tests/test_requirement_tree.py::test_a_spine_with_no_child_keeps_one_design_column; tests/test_requirement_tree.py::test_the_spine_view_draws_each_child_one_column_further_in"
+evidence = "tests/test_requirement_tree.py::test_a_spine_with_no_child_keeps_one_design_column; tests/test_requirement_tree.py::test_the_spine_view_draws_each_child_one_column_further_in; tests/test_requirement_tree.py::test_the_spine_view_draws_each_child_inside_its_parents_span"
 
 [test.TC-563]
 verifies = ["SR-241", "LLR-367"]
@@ -4856,3 +4856,14 @@ automated = "Yes"
 status = "Drafted"
 phase = 6
 evidence = "tests/test_requirement_tree.py::test_a_drafted_grandchild_holds_its_phases_live_reading; tests/test_requirement_tree.py::test_a_grandchilds_effective_perspectives_include_its_chains_requirements; tests/test_requirement_tree.py::test_the_graph_draws_each_parent_link; tests/test_requirement_tree.py::test_the_matrix_lists_every_row_below_a_requirement; tests/test_requirement_tree.py::test_the_outline_nests_the_grandchild_under_the_child_under_the_top_row; tests/test_requirement_tree.py::test_the_paraphrase_advisory_compares_a_grandchild_with_its_chains_requirement; tests/test_requirement_tree.py::test_the_stage_places_a_grandchild_in_its_requirements_phase; tests/test_requirement_tree.py::test_the_triangle_rule_reads_a_grandchilds_requirement_up_its_chain; tests/test_requirement_tree.py::test_the_settled_grouping_reads_the_walk_over_the_live_rows"
+
+[test.TC-568]
+verifies = ["SR-157", "LLR-483"]
+level = "Unit"
+method = "Run the required-field check over a top-level design row and a child row that each name no system requirement, and over a child that also leaves its title empty."
+tier = "Smoke"
+expected = "The top-level row is reported for its empty system-requirement references and the first child is not; the untitled child is reported for its empty title only."
+automated = "Yes"
+status = "Drafted"
+phase = 6
+evidence = "tests/test_requirement_tree.py::test_the_required_field_check_asks_sr_refs_of_a_top_level_row_only"

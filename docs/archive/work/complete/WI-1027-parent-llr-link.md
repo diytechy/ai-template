@@ -43,8 +43,11 @@ parent cell naming no live design row, an SR id or a `-000` id included
 (`names parent Z, which is no live design row`); one naming several
 (`names N parents (...)`); each row on a cycle (`is on a parent cycle (X -> Y
 -> X)`); and each row whose chain breaks at one of those (`reaches no SR: its
-parent chain breaks at LLR-Y`). `trace.schema_findings` asks `SR-Refs` of a
-top-level row only (`_required_fields`). The cell is **accepted** text in the
+parent chain breaks at LLR-Y`); that last one is reported where the chain
+reaches a parent cell of the third kind or a cycle, which is what the walk
+propagates. `trace.schema_findings` asks `SR-Refs` of a top-level row only
+(`_required_fields`; LLR-483, new at review round 1, below). The cell is
+**accepted** text in the
 cell split (`SPINE_ACCEPTED_CELLS`, by name; decisions record
 `docs/decisions/maint-wi-1027.toml` D-001, as the coordinator asked): a
 re-parent of an accepted row is an amendment of that row, judged with its
@@ -58,7 +61,12 @@ returns `LlrTree(below, srs_of, parent_of, depth, broken)`: down, every design
 row below an SR or below a design row, each once, in registry order; up, a
 top-level row's own SRs and a child's read up its chain; never raising and
 never looping (each chain stops at a top-level row, a broken parent cell or a
-row it has passed, memoized, linear in the rows). `llr_tree_rows` gives the
+row it has passed). Its costs: resolving the chains is linear in the rows,
+since each row's answer is memoized and every row is resolved once; building
+the descendant index is output-sensitive, since each row is listed under every
+ancestor and every SR its chain reaches, so a single chain of n rows costs
+about n²/2 entries (a real tree, a few levels deep, costs a few times the
+rows). `llr_tree_rows` gives the
 same answers as rows for the readers that render them; `llrs_under` keeps its
 signature and reads the walk. Every reader that relates an SR to its design
 rows now takes it:
@@ -168,10 +176,11 @@ parent chain ends at"** are inserted before the full stop. Nothing else in the
 cell changes.
 
 **Rows** (`Drafted`, phase 6, minted from the branch's ranges, then
-`trace.py --bump-ids`: LLR 408 -> 482, TC 508 -> 567): LLR-480 (SR-157),
-LLR-481 (SR-157, SR-049), LLR-482 (SR-168); TC-560 (LLR-480), TC-561 and
-TC-567 (LLR-481), TC-562 (LLR-482), TC-563 (LLR-367), TC-564 (LLR-244),
-TC-565 (LLR-257), TC-566 (LLR-408), each naming its SRs beside, its evidence
+`trace.py --bump-ids`: LLR 408 -> 483, TC 508 -> 568): LLR-480 (SR-157),
+LLR-481 (SR-157, SR-049), LLR-482 (SR-168), LLR-483 (SR-157, review round
+1); TC-560 (LLR-480), TC-561 and TC-567 (LLR-481), TC-562 (LLR-482), TC-563
+(LLR-367), TC-564 (LLR-244), TC-565 (LLR-257), TC-566 (LLR-408), TC-568
+(LLR-483, review round 1), each naming its SRs beside, its evidence
 generated from the tests' tags (`--regen-evidence`). Amended, `detail` text
 only: LLR-367 (the scope phrase), LLR-244 (above), LLR-257 (the pairing
 phrase, and four inherited code names scrubbed: the settings key, the tag
@@ -216,6 +225,9 @@ then the reader changed):
   <!-- fig: cmd="python -m pytest -q -m smoke --collect-only tests" rev="e158002d8" -->
 - The unfiltered suite was not run, as the brief directs.
 
+- Review round 1, after the fixes: the 79 modules importing what the round changed (`trace.py`, the dashboard's views, the registries' readers) with `test_requirement_tree`, `test_evidence_join`, `test_trace_golden` and the four named modules: `2715 passed, 2 skipped, 18 warnings in 2436.57s (0:40:36)`; `run_menu.py smoke`: exit 0, `3840 passed, 3 skipped, 18 warnings in 155.80s (0:02:35)`, its budget line `CPU 715.6 s vs 540 s ... -> OVER` warn-only, the tier overrun WI-1039 is filed for.
+  <!-- fig: cmd="python -m pytest -q -n auto <the 79 modules>; python project-trajectory/scripts/run_menu.py smoke" rev="the round-1 fix tree, ahead of its commit" -->
+
 **Ratchets.** `trace.py`'s module-size baseline is bumped +46 (3784 -> 3830),
 the reason in its entry: the views and rules reading the walk, and the
 outward decomposition the cognitive-complexity census asked for, which takes
@@ -227,14 +239,53 @@ outward decomposition the cognitive-complexity census asked for, which takes
 **Also for the coordinator.** The watermark bump over the gap below this
 branch's reserved ranges makes `trace.py` print a warn-only line naming spent
 ids with no retirement record (LLR 409 to 479, TC 509 to 559 are other rows'
-ranges); it is an advisory and changes no exit code. The merge hunks expected:
+ranges); it is an advisory and changes no exit code. The recursive walks that
+render the tree (the dashboard's icicle walks and the report's
+`_llr_forest_node`) are bounded by the tree's depth, not capped: an acyclic
+chain near the interpreter's recursion limit would raise RecursionError and
+fail the generation loudly; their comments say so (review round 1). The merge hunks expected:
 `intake.py` and `acceptance_record.py` (one line each beside WI-1060's
 rework), `trace.py`, `kitlib/spine.py`, the registries, the watermark, the
 ratchet baselines, the generated views and the RESYNC pack.
 
+**Review round 1** (`bba30552f..9cc2cd5a0`): Hydrogen APPROVE; Sol, over a
+code half and a docs half, six findings, all adopted by the coordinator, fixed
+in one commit:
+
+1. **MAJOR, LLR-480 stated two obligations** (the parentage findings and the
+   required-field clause). The ruling: move the schema clause out, into an
+   accepted row that states the required-field check, or a new row. It went to
+   a new row, **LLR-483** (SR-157, Drafted) with **TC-568**, and the case's
+   tag moved to TC-568 and gained the clause that every other required cell
+   is asked of a child. LLR-003 names the required-field check only as a
+   whole and lists no cell, so it stays true; amending it would have re-opened
+   a row whose numeric-phase clause is driven by cases its TC-003 does not
+   name (they are in `test_trace.py`; TC-003 names `test_registry_checks.py`)
+   and whose text carries five flags and a ruling stamp to scrub, so the new
+   row is the narrower act. The coordinator may rule it into LLR-003 instead.
+2. **MINOR, LLR-480's propagation clause** read "each row whose parent chain
+   ends at one of those faults", wider than the code, which propagates only a
+   parent cell naming no live row or several, and a cycle. Narrowed to "each
+   row whose parent chain reaches such a parent cell or such a cycle".
+3. **MINOR, TC-562's expected** said "inside the top-level row's span" while
+   the cases checked columns only. A new case asserts each row's vertical span
+   lies inside its parent's and each height in units of its test cases (the
+   grandchild one, the child two, the top-level row three).
+4. **MINOR, TC-560's expected** said "at both statuses" while the cycle and
+   below-a-missing-parent cases ran Drafted only, and the strict failure was
+   checked for a missing parent only. Both cases now run at both statuses, and
+   the strict check is driven for every fault kind at both statuses (16
+   cases); TC-560's method and expected say so.
+5. **MINOR, "linear in the rows"** overstated the walk: corrected above
+   (linear chain resolution, an output-sensitive descendant index).
+6. **MINOR, recursion depth**: the comments on the icicle's walks and on
+   `_llr_forest_node` now state the bound and what happens past it; the walks
+   stay recursive, as ruled.
+
 **Acts owed for automated adjudication:**
 - First acceptance (`Drafted` rows this branch wrote): LLR-480, LLR-481,
-  LLR-482, TC-560, TC-561, TC-562, TC-563, TC-564, TC-565, TC-566, TC-567.
+  LLR-482, LLR-483, TC-560, TC-561, TC-562, TC-563, TC-564, TC-565, TC-566,
+  TC-567, TC-568.
 - Amendments to `Accepted` rows, each in its `detail` cell: LLR-367, LLR-244,
   LLR-257.
 - No routed traced change to an `Accepted` row.

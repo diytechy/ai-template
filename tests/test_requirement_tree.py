@@ -157,32 +157,38 @@ def test_each_fault_is_reported_once_at_either_status(fault, text, status):
     assert [f for f in findings if fault["LLR-ID"] in f] == hits
 
 
-def test_each_row_on_a_two_row_cycle_names_the_cycle():
-    """Implements: TC-560"""
-    llrs = fx.llrs() + [
-        {"LLR-ID": "LLR-060", "Parent": "LLR-061", "Status": "Drafted"},
-        {"LLR-ID": "LLR-061", "Parent": "LLR-060", "Status": "Drafted"},
+def _cycle(status):
+    return [
+        {"LLR-ID": "LLR-060", "Parent": "LLR-061", "Status": status},
+        {"LLR-ID": "LLR-061", "Parent": "LLR-060", "Status": status},
     ]
-    findings = _orphans(llrs)
-    assert (
-        "LLR LLR-060 is on a parent cycle (LLR-060 -> LLR-061 -> LLR-060)" in findings
-    )
-    assert (
-        "LLR LLR-061 is on a parent cycle (LLR-061 -> LLR-060 -> LLR-061)" in findings
-    )
 
 
-def test_a_row_below_a_missing_parent_names_where_its_chain_breaks():
+def _below_missing(status):
+    return [
+        {"LLR-ID": "LLR-070", "Parent": "LLR-099", "Status": status},
+        {"LLR-ID": "LLR-071", "Parent": "LLR-070", "Status": status},
+    ]
+
+
+@pytest.mark.parametrize("status", ["Drafted", "Accepted"])
+def test_each_row_on_a_two_row_cycle_names_the_cycle(status):
     """Implements: TC-560"""
-    llrs = fx.llrs() + [
-        {"LLR-ID": "LLR-070", "Parent": "LLR-099", "Status": "Drafted"},
-        {"LLR-ID": "LLR-071", "Parent": "LLR-070", "Status": "Drafted"},
-    ]
-    findings = _orphans(llrs)
-    assert "LLR LLR-071 reaches no SR: its parent chain breaks at LLR-070" in findings
-    assert [f for f in findings if f.startswith("LLR LLR-071")] == [
-        "LLR LLR-071 reaches no SR: its parent chain breaks at LLR-070"
-    ]
+    findings = _orphans(fx.llrs() + _cycle(status))
+    for rid, loop in (
+        ("LLR-060", "LLR-060 -> LLR-061 -> LLR-060"),
+        ("LLR-061", "LLR-061 -> LLR-060 -> LLR-061"),
+    ):
+        hits = [f for f in findings if f.startswith("LLR {} is on".format(rid))]
+        assert hits == ["LLR {} is on a parent cycle ({})".format(rid, loop)], findings
+
+
+@pytest.mark.parametrize("status", ["Drafted", "Accepted"])
+def test_a_row_below_a_missing_parent_names_where_its_chain_breaks(status):
+    """Implements: TC-560"""
+    findings = _orphans(fx.llrs() + _below_missing(status))
+    breaks = [f for f in findings if "reaches no SR" in f]
+    assert breaks == ["LLR LLR-071 reaches no SR: its parent chain breaks at LLR-070"]
 
 
 STRICT = argparse.Namespace(strict=True, strict_integrity=False)
@@ -194,26 +200,48 @@ def _analyze(trace, root):
     )
 
 
-def test_the_strict_check_fails_on_a_fault(tmp_path):
+def _filled(rows, status):
+    """Fault rows a registry can carry: titled, detailed, phased."""
+    return [dict(r, Title="t", Detail="d", Status=status, Phase="1") for r in rows]
+
+
+STRICT_FAULTS = [(fault, text) for fault, text in FAULTS] + [
+    (_cycle, "LLR LLR-060 is on a parent cycle"),
+    (_below_missing, "LLR LLR-071 reaches no SR"),
+]
+
+
+@pytest.mark.parametrize("status", ["Drafted", "Accepted"])
+@pytest.mark.parametrize("fault,text", STRICT_FAULTS)
+def test_the_strict_check_fails_on_each_fault(tmp_path, fault, text, status):
     """Implements: TC-560"""
     trace = load_script("trace")
-    rows = fx.llrs() + [{"LLR-ID": "LLR-052", "Parent": "LLR-099", "Title": "t",
-                         "Detail": "d", "Status": "Drafted", "Phase": "1"}]  # fmt: skip
-    findings = _analyze(trace, fx.write(tmp_path / "bad", llr_rows=rows))
-    assert any("names parent LLR-099" in f for f in findings.orphans)
+    rows = fault(status) if callable(fault) else [fault]
+    llrs = fx.llrs() + _filled(rows, status)
+    findings = _analyze(trace, fx.write(tmp_path, llr_rows=llrs))
+    assert any(f.startswith(text) for f in findings.orphans), findings.orphans
     assert trace.exit_code(findings, STRICT) == 1
-    clean = _analyze(trace, fx.write(tmp_path / "ok"))
+
+
+def test_a_well_formed_tree_passes_the_strict_check(tmp_path):
+    """Implements: TC-560"""
+    trace = load_script("trace")
+    clean = _analyze(trace, fx.write(tmp_path))
     assert clean.orphans == []
     assert trace.exit_code(clean, STRICT) == 0
 
 
 def test_the_required_field_check_asks_sr_refs_of_a_top_level_row_only():
-    """Implements: TC-560"""
+    """Implements: TC-568"""
     trace = load_script("trace")
     top = {"LLR-ID": "LLR-080", "Title": "t", "Detail": "d", "Status": "Drafted"}
     child = dict(top, **{"LLR-ID": "LLR-081", "Parent": fx.TOP})
-    findings = trace.schema_findings("LLR", [top, child])
-    assert findings == ["LLR LLR-080 has empty required field SR-Refs"]
+    untitled = dict(child, **{"LLR-ID": "LLR-082", "Title": ""})
+    findings = trace.schema_findings("LLR", [top, child, untitled])
+    assert findings == [
+        "LLR LLR-080 has empty required field SR-Refs",
+        "LLR LLR-082 has empty required field Title",
+    ]
 
 
 def test_a_design_registry_whose_rows_carry_a_parent_loads(tmp_path):
@@ -545,25 +573,56 @@ def test_a_case_naming_only_a_grandchild_is_paired_with_its_chains_requirement()
 
 # --- the state view draws a child inside its parent (LLR-482) ----------------
 
-_CELL = re.compile(r'<g class="cell (\w+)" data-id="([^"]+)"[^>]*>.*?<rect x="(\d+)"')
+_CELL = re.compile(
+    r'<g class="cell (\w+)" data-id="([^"]+)"[^>]*>.*?'
+    r'<rect x="(\d+)" y="([\d.]+)" width="\d+" height="([\d.]+)"'
+)
 
 
-def _columns(tmp_path, llrs):
+def _cells(tmp_path, llrs):
+    """`{node id: (tier, x, top, bottom)}` of the spine view's icicle cells."""
     from rendering import traj_views
 
     svg, _details, _desc = traj_views.arch_icicle(fx.write(tmp_path, llr_rows=llrs))
-    return {rid: (tier, int(x)) for tier, rid, x in _CELL.findall(svg)}
+    return {
+        rid: (tier, int(x), float(y), float(y) + float(h))
+        for tier, rid, x, y, h in _CELL.findall(svg)
+    }
+
+
+def _inside(cells, inner, outer):
+    """`inner`'s vertical span lies within `outer`'s, and is not empty."""
+    _t, _x, top, bottom = cells[inner]
+    _t, _x, otop, obottom = cells[outer]
+    return otop <= top < bottom <= obottom
 
 
 def test_the_spine_view_draws_each_child_one_column_further_in(tmp_path):
     """Implements: TC-562"""
-    cols = _columns(tmp_path, fx.llrs())
-    step = cols[fx.SR1][1] - cols["SN-001"][1]
-    assert cols[fx.TOP][1] == 2 * step
-    assert cols[fx.CHILD][1] == 3 * step
-    assert cols[fx.GRAND][1] == 4 * step
-    assert {cols[t][1] for t in ("TC-001", "TC-002", "TC-003", "TC-009")} == {5 * step}
-    assert cols[fx.OTHER][1] == 2 * step
+    cells = _cells(tmp_path, fx.llrs())
+    step = cells[fx.SR1][1] - cells["SN-001"][1]
+    assert cells[fx.TOP][1] == 2 * step
+    assert cells[fx.CHILD][1] == 3 * step
+    assert cells[fx.GRAND][1] == 4 * step
+    assert {cells[t][1] for t in ("TC-001", "TC-002", "TC-003", "TC-009")} == {5 * step}
+    assert cells[fx.OTHER][1] == 2 * step
+
+
+def test_the_spine_view_draws_each_child_inside_its_parents_span(tmp_path):
+    """Implements: TC-562"""
+    cells = _cells(tmp_path, fx.llrs())
+    assert _inside(cells, fx.TOP, fx.SR1)
+    assert _inside(cells, fx.CHILD, fx.TOP)
+    assert _inside(cells, fx.GRAND, fx.CHILD)
+    assert _inside(cells, "TC-003", fx.GRAND)
+    assert _inside(cells, "TC-001", fx.TOP)
+    assert not _inside(cells, "TC-001", fx.CHILD)
+    # each test case is one unit of height (a cell is drawn a pixel short of
+    # its span): a grandchild spans its case, a child its own and the
+    # grandchild's, the top-level row all three
+    unit = cells["TC-003"][3] - cells["TC-003"][2] + 1
+    for rid, units in ((fx.GRAND, 1), (fx.CHILD, 2), (fx.TOP, 3)):
+        assert cells[rid][3] - cells[rid][2] + 1 == pytest.approx(units * unit)
 
 
 def test_a_spine_with_no_child_keeps_one_design_column(tmp_path):
@@ -572,7 +631,7 @@ def test_a_spine_with_no_child_keeps_one_design_column(tmp_path):
     for r in flat:
         r.pop("Parent", None)
     flat[-1]["SR-Refs"] = fx.SR2
-    cols = _columns(tmp_path, flat)
-    step = cols[fx.SR1][1] - cols["SN-001"][1]
-    assert {cols[rid][1] for rid in (*fx.TREE, fx.OTHER)} == {2 * step}
-    assert {cols[t][1] for t in ("TC-001", "TC-002", "TC-003", "TC-009")} == {3 * step}
+    cells = _cells(tmp_path, flat)
+    step = cells[fx.SR1][1] - cells["SN-001"][1]
+    assert {cells[rid][1] for rid in (*fx.TREE, fx.OTHER)} == {2 * step}
+    assert {cells[t][1] for t in ("TC-001", "TC-002", "TC-003", "TC-009")} == {3 * step}
