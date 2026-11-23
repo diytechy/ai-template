@@ -304,7 +304,7 @@ def implements_index(root):
     script. Back-links stay encouraged, never obliged: a row no tag names is
     simply absent.
 
-    Implements: SR-248, LLR-405"""
+    Implements: SR-250, LLR-405"""
     root = Path(root)
     if gen_arch_map is None:
         return {}

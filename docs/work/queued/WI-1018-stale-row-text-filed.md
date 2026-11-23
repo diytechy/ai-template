@@ -33,12 +33,11 @@ it covers (B1, B7 and B9's symbol) out of this row's set.
 
 **Added at F-3's merge (2026-11-22).** F-3 (WI-1023) removed the cells, so
 B1, B7 and B9's symbol leave the set. Its review found one more stale row it did
-not amend: SR-221 (`Accepted`) still says "for a module a design row names",
+not amend: SR-221 (`Accepted`) said "for a module a design row names",
 though design rows now name no module; the files realizing a row are read
-from the code's back-links. It joins the first set.
-(Moved to WI-1056 the same day: the third adjudication sitting made SR-221's
-amendment a blocker for LLR-263, so WI-1056 amends it and this row does
-not.)
+from the code's back-links. It joined the first set and left it the same
+day: the third adjudication sitting made SR-221's amendment a blocker for
+LLR-263, so WI-1056 amends it, and SR-221 is not in this row's set.
 
 ## Done-when
 

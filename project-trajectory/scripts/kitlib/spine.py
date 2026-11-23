@@ -920,7 +920,7 @@ def evidence_spans(cell):
     reads them. The evidence generator's input, so a rewrite keeps every byte
     it does not move.
 
-    Implements: SR-157, LLR-406
+    Implements: SR-251, LLR-406
 
     Contract:
       Inputs:  cell: str | None — one TC row's `Evidence` cell
@@ -994,7 +994,7 @@ def llr_placement(tcs, ifs):
     is unplaced, counted, never refused (`unplaced_llrs`). The `-000` example
     rows are not read.
 
-    Implements: SR-248, LLR-403
+    Implements: SR-249, LLR-403
 
     Contract:
       Inputs:  tcs: iterable of TC row mappings; ifs: iterable of IF row mappings
@@ -1029,7 +1029,7 @@ def unplaced_llrs(llrs, placement):
     """The sorted live design-row ids `placement` (`llr_placement`) places
     nowhere: listed and counted by the views, never a finding.
 
-    Implements: SR-248, LLR-403
+    Implements: SR-249, LLR-403
 
     Contract:
       Inputs:  llrs: iterable of LLR row mappings; placement: its mapping

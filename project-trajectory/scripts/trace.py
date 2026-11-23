@@ -6427,20 +6427,18 @@ def _cmd_tests_for(docs, wanted):
 
 def _cmd_regen_evidence(root):
     """`--regen-evidence`: write each test case's `Evidence` cell as the test
-    files' tags generate it (`arch_tags.write_evidence`), the parts outside the
-    declared tests root and the notes kept as written, and report the ids
-    written. "Current" is the tag rule `check_trajectory` already runs: a cell
-    this rewrites is one that rule reports.
+    files' tags generate it (`arch_tags.evidence_regen_report`), the parts
+    outside the declared tests root and the notes kept as written, and print
+    its one report line: the ids written, every cell current, or the missing
+    test-case registry or tests root, with nothing written. "Current" is the
+    tag rule `check_trajectory` already runs: a cell this rewrites is one that
+    rule reports.
 
-    Implements: SR-157, LLR-406
+    Implements: SR-251, LLR-406
     """
     root = Path(root)
-    written = check_trajectory.write_evidence(root, check_trajectory._tests_dir(root))
-    print(
-        "trace: evidence regenerated for {}".format(", ".join(written))
-        if written
-        else "trace: every evidence cell is current"
-    )
+    tests_dir = check_trajectory._tests_dir(root)
+    print("trace: " + check_trajectory.evidence_regen_report(root, tests_dir))
     return 0
 
 
