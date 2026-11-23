@@ -152,12 +152,15 @@ Contract IF-216: the observation results and what they can falsify, the rules
     record file that is not a whole record or that its case does not allow
     joins the integrity floor, naming the file, with or without a frame; where
     the frame declares a crossing, the falsification worklist and each
-    reopened accepted risk ride the warn pipe. Its rules are public:
+    unproven accepted risk ride the warn pipe, the risk worded as reopened
+    only where an act accepted it. Its rules are public:
     `record_policy_problem(tid, tc, observed_at, expires)` (the writer's
     refusal and the checker's finding, one statement),
     `observation_record_findings`, `falsification_worklist` and
     `accepted_risk_state` (one of `RISK_COVERED`, `RISK_UNPROVEN`, with its
-    reasons). A view is `baseline_snapshot.risk_acceptance_view`'s dict.
+    reasons; with no act found, its one reason says whether the record, read
+    whole, holds no act accepting the risk or could not be read whole). A
+    view is `baseline_snapshot.risk_acceptance_view`'s dict.
 Contract IF-226: the chain the acceptance brief renders for one assumption or
     surrogate, read by `trace.py`'s brief. `assumption_chain(da_id, reg)`
     returns a dict, or None for an id the registry does not declare, and reads
@@ -1250,10 +1253,35 @@ def obstacle_hat_findings(das, hat_names):
 # them here.
 
 # AN ACCEPTED RISK'S READING (SR-202). `covered`: the risk accepted for the
-# assumption still stands. `unproven`: the risk has reopened. No result makes
-# a risk moot.
+# assumption still stands. `unproven`: the risk has reopened, was never
+# accepted, or no act accepting it could be read. No result makes a risk moot.
 RISK_COVERED = "covered"
 RISK_UNPROVEN = "unproven"
+
+# The one reason an unproven reading gives when no act anchors the risk, led by
+# which of two it is: the record, read whole, holds no act accepting the risk
+# (the view's `unaccepted`); or the record could not be read whole, so no act
+# was found and nothing is claimed about one. The reports word an unproven
+# risk by these leads (`_unproven_case`), so only a risk an act accepted is
+# ever said to have reopened.
+_NEVER_ACCEPTED = "no acceptance act accepted assumption {}'s risk: {}"
+_ACT_UNREAD = "no act accepting assumption {}'s risk was found: {}"
+_REOPENED, _NEVER, _UNREAD = "reopened", "never", "unread"
+# How each report words an unproven risk, by why it reads unproven.
+_ADVISORY = {
+    _REOPENED: "assumption {}'s accepted risk has reopened, and it reads unproven "
+    "until the risk is accepted again in a reviewed acceptance: {}",
+    _NEVER: "assumption {}'s accepted risk was never accepted in an acceptance "
+    "act, and it reads unproven until an act accepts it: {}",
+    _UNREAD: "assumption {}'s accepted risk reads unproven: {}",
+}
+_RELEASE = {
+    _REOPENED: "its accepted risk has reopened, so it covers nothing until the "
+    "risk is accepted again: {}",
+    _NEVER: "its accepted risk was never accepted in an acceptance act, so it "
+    "covers nothing until an act accepts it: {}",
+    _UNREAD: "its accepted risk reads unproven: {}",
+}
 
 # An assumption's cells the risk's acceptance is NOT bound to: its id, its
 # maturity (an act moves it) and the accepted risk itself.
@@ -1472,9 +1500,11 @@ def accepted_risk_state(da, view, needs, tcs=(), records=()):
     failing record of a case naming it is not in the act's tree. A later
     re-acceptance of a changed need clears nothing, since the comparison is with
     the act, not with the latest recorded copy; accepting the risk again in an
-    act moves the anchor. With no act found (history too shallow, no act
-    accepting the risk) it reads unproven with the view's reason. Otherwise
-    `RISK_COVERED`. No clock is read, so time alone never reopens it.
+    act moves the anchor. With no act found it reads unproven with the view's
+    reason, led by whether the record, read whole, holds no act accepting the
+    risk (the view's `unaccepted`) or could not be read whole (history too
+    shallow, a malformed ledger, no view). Otherwise `RISK_COVERED`. No clock
+    is read, so time alone never reopens it.
 
     Implements: SR-202, LLR-239
     """
@@ -1482,10 +1512,10 @@ def accepted_risk_state(da, view, needs, tcs=(), records=()):
     if not _cell(da, "AcceptedRisk"):
         return None, []
     if not view or not view.get("act"):
-        reason = (view or {}).get("reason") or "no record of its acceptance was read"
-        return RISK_UNPROVEN, [
-            "no act accepting assumption {}'s risk was found: {}".format(did, reason)
-        ]
+        view = view or {}
+        reason = view.get("reason") or "no record of its acceptance was read"
+        lead = _NEVER_ACCEPTED if view.get("unaccepted") else _ACT_UNREAD
+        return RISK_UNPROVEN, [lead.format(did, reason)]
     act = view["act"][:12]
     reasons = (
         _assumption_drift(did, view.get("assumption"), da, act)
@@ -1495,10 +1525,28 @@ def accepted_risk_state(da, view, needs, tcs=(), records=()):
     return (RISK_UNPROVEN, reasons) if reasons else (RISK_COVERED, [])
 
 
+def _unproven_case(did, reasons):
+    """`(case, reasons)` for an unproven reading of assumption `did`'s risk,
+    from what `accepted_risk_state` returned: `_NEVER` when the record, read
+    whole, holds no act accepting it, its reason given without the lead the
+    report words for it; `_UNREAD` when no act could be read, its reason kept
+    whole; otherwise `_REOPENED`, an act accepted the risk and each reason is a
+    trigger that undid it."""
+    first = reasons[0] if reasons else ""
+    never = _NEVER_ACCEPTED.format(did, "")
+    if first.startswith(never):
+        return _NEVER, [first[len(never) :], *reasons[1:]]
+    if first.startswith(_ACT_UNREAD.format(did, "")):
+        return _UNREAD, list(reasons)
+    return _REOPENED, list(reasons) or ["?"]
+
+
 def accepted_risk_advisories(das, tcs, needs, records, views):
-    """SR-202's report: one advisory per assumption whose accepted risk has
-    reopened, naming each trigger. `views` maps an assumption id to its
-    `baseline_snapshot.risk_acceptance_view`.
+    """SR-202's report: one advisory per assumption whose accepted risk reads
+    unproven, worded by why (`_unproven_case`): reopened, naming each trigger;
+    never accepted, saying an act accepting it clears it; or, where no act
+    could be read, the reading's reason alone. `views` maps an assumption id
+    to its `baseline_snapshot.risk_acceptance_view`.
     """
     out = []
     for did, da in _real(das, "DA-ID"):
@@ -1506,11 +1554,8 @@ def accepted_risk_advisories(das, tcs, needs, records, views):
             continue
         state, reasons = accepted_risk_state(da, views.get(did), needs, tcs, records)
         if state == RISK_UNPROVEN:
-            out.append(
-                "assumption {}'s accepted risk has reopened, and it reads "
-                "unproven until the risk is accepted again in a reviewed "
-                "acceptance: {}".format(did, "; ".join(reasons))
-            )
+            case, shown = _unproven_case(did, reasons)
+            out.append(_ADVISORY[case].format(did, "; ".join(shown)))
     return out
 
 
@@ -1533,7 +1578,7 @@ def observation_evidence_findings(
     does not allow (`observation_record_findings`), with or without a frame,
     since an observation case need not name an assumption. ADVISORIES, where
     the frame declares a crossing: the falsification worklist and each
-    reopened accepted risk. No assumption is reported for lacking a result.
+    unproven accepted risk. No assumption is reported for lacking a result.
     `gate` is the assumption gate's setting, read by the caller.
     """
     integrity = observation_record_findings(records, raw_files, tcs)
@@ -1744,8 +1789,9 @@ def release_gate_findings(das, srs, risks):
     its sample and a failing one sets nothing until a person records the
     assumption false. A falsified assumption passes only while its accepted
     risk reads covered (`risks`, `accepted_risk_state` per assumption id); with
-    no accepted risk, or one reopened, it fails, naming the reopening
-    triggers.
+    no accepted risk it fails saying so, and with one that reads unproven it
+    fails saying why, as the advisory does (`_unproven_case`): reopened,
+    naming the triggers; never accepted; or the reading's reason alone.
 
     Implements: SR-206, LLR-243
     """
@@ -1757,14 +1803,13 @@ def release_gate_findings(das, srs, risks):
         reading, reasons = risks.get(did) or (None, [])
         if reading == RISK_COVERED:
             continue
-        risk = "its accepted risk has reopened: " + "; ".join(reasons or ["?"])
+        risk = "it records no accepted risk"
+        if reading:
+            case, shown = _unproven_case(did, reasons)
+            risk = _RELEASE[case].format("; ".join(shown))
         out.append(
             "assumption {}, relied on by {}: it is falsified (its Standing reads "
-            "falsified), and {}".format(
-                did,
-                ", ".join(cited[did]),
-                risk if reading else "it records no accepted risk",
-            )
+            "falsified), and {}".format(did, ", ".join(cited[did]), risk)
         )
     return out
 

@@ -30,7 +30,7 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 4 chain(s): SR-036, SR-157, SR-221, SR-248</summary>
+<summary>Waiting for automated adjudication — 6 chain(s): SR-036, SR-157, SR-202, SR-206, SR-221, SR-248</summary>
 
 ## SR-036 — Deliberate re-sync integration
 
@@ -95,6 +95,54 @@ _No cell differs from the accepted snapshot; this row owes because its own `Stat
 - **Evidence**: tests/test_llr_trace_cells.py::test_the_evidence_column_is_generated_from_the_tags
 - **Status**: Drafted
 - **Phase**: 6
+
+## SR-202 — An accepted risk reopens on a failed sample or on any change to what it was accepted for
+
+> **Requirement.** When a sample for an assumption relied on under an accepted risk fails, or the text of the assumption or of a need it served when the risk was accepted changes after that acceptance, the delivered harness shall read the assumption as unproven until the risk is accepted again.
+
+> **Rationale.** A recorded accepted risk is a judgment about a particular assumption serving particular needs, so it cannot outlive a change to either, nor a sample showing the assumption failing. Binding the acceptance to the texts as they stood when it was made is what keeps a later, separate re-acceptance of a changed need from silently carrying the old risk forward. A clock would reopen it for no reason and teach readers to re-accept by reflex, so time alone never reopens it. Accepting again is a reviewed acceptance, like the first acceptance.
+
+
+### LLR LLR-239
+- **Detail**
+  - before: risk_acceptance_act(root, da_id) is the latest commit whose acceptance-act record names the assumption, as accepted or re-accepted, while its accepted_risk is non-empty; re-accepting a risk is re-accepting the row in an act, so it moves the anchor even when no byte of the row changes. Where no act names the row, nobody accepted the risk and there is no anchor: it walks no history of the live registry for a commit to stand in for the act, and reports the risk unanchored, with a reason naming the assumption and telling the operator to accept the risk in an acceptance act, and the risk reads unproven with that reason. accepted_risk_state compares, at the act's commit and now, the assumption's cells other than status and accepted_risk, and the need and acceptance cells of each need it served then, derived through that commit's requirements; any difference reads the assumption unproven and is an advisory naming the trigger, and a later re-acceptance of a changed need does not clear it, because the comparison is with the acceptance act, not the latest recorded copy. A failing observation record added in a commit that is not an ancestor of the acceptance act also reads it unproven, ordered by commit ancestry rather than by clock. Time is never read. History too shallow to find the act reads unproven with the reason stated.
+  - after: risk_acceptance_act(root, da_id) is the latest commit whose acceptance-act record names the assumption, as accepted or re-accepted, while its accepted_risk is non-empty; re-accepting a risk is re-accepting the row in an act, so it moves the anchor even when no byte of the row changes. Where no act names the row, nobody accepted the risk and there is no anchor: it walks no history of the live registry for a commit to stand in for the act, and reports the risk unanchored, with a reason naming the assumption and telling the operator to accept the risk in an acceptance act, and the risk reads unproven with that reason. accepted_risk_state compares, at the act's commit and now, the assumption's cells other than status and accepted_risk, and the need and acceptance cells of each need it served then, derived through that commit's requirements; any difference reads the assumption unproven and is an advisory naming the trigger, and a later re-acceptance of a changed need does not clear it, because the comparison is with the acceptance act, not the latest recorded copy. A failing observation record added in a commit that is not an ancestor of the acceptance act also reads it unproven, ordered by commit ancestry rather than by clock. Time is never read. History too shallow to find the act reads unproven with the reason stated. The advisory words an unproven risk by why it reads unproven: for a risk an act accepted and a later difference or failing record undid, it says the risk has reopened and reads unproven until accepted again; for a risk no act accepted, the history and the act records on it read whole, whether no act names the row or none that does recorded a risk, it says the assumption's risk was never accepted and reads unproven until an act accepts it; and where they could not be read whole, as in a shallow clone or with a malformed act record, it states the reason and says neither that the risk reopened nor that the assumption's risk was never accepted.
+
+### TC TC-500 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-500
+- **Verifies**: SR-202;LLR-239
+- **Level**: Integration
+- **Method**: Driven on real git repositories, the advisory for an assumption whose accepted risk reads unproven, composed as the checker composes it from the act reader's view of the history, in five histories: the assumption accepted with its risk in an act, then its own text amended; an act naming the needs and requirements but not the assumption; the assumption accepted in an act with no risk recorded, the risk written after it; a shallow clone, one commit deep, of a history whose act accepted the risk; and a history whose act record was renumbered by hand after a re-acceptance.
+- **Tier**: Full
+- **Expected**: The first says the risk has reopened and reads unproven until the risk is accepted again, names the amended text as the trigger, and does not say never accepted. The second and third each say the risk was never accepted and reads unproven until an act accepts it, carry the reader's reason, and say neither reopened nor accepted again. The fourth and fifth each carry the reading's own reason, naming the shallow clone or the act record, and say neither reopened nor never accepted.
+- **Automated**: Yes
+- **Status**: Drafted
+- **Phase**: 6
+- **Evidence**: tests/test_accepted_risk.py::test_the_advisory_claims_neither_where_the_record_cannot_be_read_whole; tests/test_accepted_risk.py::test_the_advisory_says_a_risk_an_act_accepted_has_reopened; tests/test_accepted_risk.py::test_the_advisory_says_a_risk_no_act_accepted_was_never_accepted
+
+## SR-206 — With the assumption gate on, release blocks on a relied-on assumption shown false unless an accepted risk covers it
+
+> **Requirement.** Where the assumption gate is enabled, the delivered harness shall fail the release gate for each assumption a system requirement relies on that is recorded as falsified and is not covered by a recorded accepted risk that has not reopened.
+
+> **Rationale.** A passed observation shows only that a problem was not found in what was observed, so no result proves an assumption holds and the gate asks for none; the one evidence-shaped signal is falsification, and recording an assumption false is a person's or an adjudication's act on its validity. At release the gate therefore reads validity: a falsified premise blocks unless a reviewed acceptance accepted the risk of relying on it and that acceptance still stands. The honest alternatives are to amend the assumption and the requirements relying on it, or to accept the risk on the record.
+
+
+### LLR LLR-243
+- **Detail**
+  - before: release_gate_findings(das, srs, risks) fails each assumption that at least one requirement cites and whose standing reads falsified, unless its accepted risk reads covered by accepted_risk_state; each failure names the assumption, the requirements relying on it and either that it records no accepted risk or the triggers that reopened its risk. An active assumption passes whatever results it has or lacks. The rule itself reads no result, inputs digest or suite record: an observation record reaches it only through an accepted risk's reading. Standing is among the cells an accepted risk is bound to, so a risk accepted while the assumption stood active reopens once it is recorded falsified, and covers it only when accepted again. check.py gains a built-in step `assumption-evidence` at the DevStg-Release threshold, gated by the same setting; the step reads the observation records and each accepted risk's acceptance act to compute those readings. The stage's single release producer, the harness evidence verdict, is left untouched.
+  - after: release_gate_findings(das, srs, risks) fails each assumption that at least one requirement cites and whose standing reads falsified, unless its accepted risk reads covered by accepted_risk_state; each failure names the assumption, the requirements relying on it and either that it records no accepted risk or why its accepted risk does not cover it: that the risk has reopened, naming the triggers, and covers nothing until it is accepted again; that the assumption's risk was never accepted, and covers nothing until an act accepts it; or, where no act accepting it could be read, the reading's reason alone, saying neither. An active assumption passes whatever results it has or lacks. The rule itself reads no result, inputs digest or suite record: an observation record reaches it only through an accepted risk's reading. Standing is among the cells an accepted risk is bound to, so a risk accepted while the assumption stood active reopens once it is recorded falsified, and covers it only when accepted again. check.py gains a built-in step `assumption-evidence` at the DevStg-Release threshold, gated by the same setting; the step reads the observation records and each accepted risk's acceptance act to compute those readings. The stage's single release producer, the harness evidence verdict, is left untouched.
+
+### TC TC-501 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-501
+- **Verifies**: SR-206;LLR-243
+- **Level**: Unit
+- **Method**: The release rule called on in-memory rows: a falsified assumption with an accepted risk, relied on by one requirement, its risk read by the accepted-risk rule from each of four acceptance readings: an act whose copy of the assumption text differs from the text now; a record read whole that holds no act accepting the risk; a record that could not be read whole, a shallow clone's window; and no reading at all.
+- **Tier**: Smoke
+- **Expected**: Each fails once, naming the assumption and the requirement. The first says the risk has reopened, names the changed text as the trigger and says it covers nothing until the risk is accepted again, and does not say never accepted. The second says the risk was never accepted and covers nothing until an act accepts it, carries the reading's reason, and says neither reopened nor accepted again. The third and fourth each carry the reading's own reason and say neither reopened nor never accepted.
+- **Automated**: Yes
+- **Status**: Drafted
+- **Phase**: 6
+- **Evidence**: tests/test_assumption_rules.py::test_the_release_gate_words_an_unproven_risk_by_why_it_reads_unproven
 
 ## SR-221 — A builder changing a module can list the tests the spine links to it
 

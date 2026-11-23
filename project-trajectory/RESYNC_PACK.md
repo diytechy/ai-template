@@ -12332,6 +12332,33 @@ skills under `skills/`.
 (the migration), `docs/requirements/performance-budgets.csv` (`Refs`), and
 your own `docs/runtime-flows.md` where its prose named a design row's module.
 
+### An unproven accepted risk is worded by why it reads unproven: reopened, never accepted, or unread [since 3c33b3783]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** `trace.py`'s accepted-risk advisory and the release gate's
+`assumption-evidence` step said every unproven accepted risk "has reopened".
+They now say so only for a risk an acceptance act accepted and a later change
+or failing record undid. A risk no act accepted, with the whole history and
+every act ledger on it read (no ledger entry names the assumption, or the
+entries naming it recorded no risk), is said to have been never accepted, and
+to read unproven until an act accepts it. Where the history cannot be read
+whole (a shallow clone's window, a malformed ledger, no git), the line keeps
+the reader's reason and claims neither. No reading changes: each of these
+still reads unproven, and a falsified assumption under one still fails the
+gate where it is on. `risk_acceptance_view` in `scripts/baseline_snapshot.py`
+gains an `unaccepted` key when it finds no anchor, saying which of the two
+cases it is.
+
+**What to do.** Nothing, unless something of yours matches the old wording:
+a script or a filter that looks for "has reopened" to find every unproven
+risk now also needs "never accepted" and "reads unproven". The action for a
+never-accepted risk is unchanged: accept it in an act, as the entry above on
+an accepted risk no acceptance act names says.
+
+**Kit-owned files — overwrite:** `scripts/assumption_rules.py`,
+`scripts/baseline_snapshot.py`.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

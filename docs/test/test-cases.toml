@@ -4713,3 +4713,25 @@ automated = "Yes"
 evidence = "tests/test_llr_trace_cells.py::test_the_migration_drops_the_three_cells_and_nothing_else; tests/test_llr_trace_cells.py::test_the_migration_drops_a_multi_line_literal_value; tests/test_llr_trace_cells.py::test_the_migration_keeps_crlf_line_ends"
 status = "Drafted"
 phase = 6
+
+[test.TC-500]
+verifies = ["SR-202", "LLR-239"]
+level = "Integration"
+method = "Driven on real git repositories, the advisory for an assumption whose accepted risk reads unproven, composed as the checker composes it from the act reader's view of the history, in five histories: the assumption accepted with its risk in an act, then its own text amended; an act naming the needs and requirements but not the assumption; the assumption accepted in an act with no risk recorded, the risk written after it; a shallow clone, one commit deep, of a history whose act accepted the risk; and a history whose act record was renumbered by hand after a re-acceptance."
+tier = "Full"
+expected = "The first says the risk has reopened and reads unproven until the risk is accepted again, names the amended text as the trigger, and does not say never accepted. The second and third each say the risk was never accepted and reads unproven until an act accepts it, carry the reader's reason, and say neither reopened nor accepted again. The fourth and fifth each carry the reading's own reason, naming the shallow clone or the act record, and say neither reopened nor never accepted."
+automated = "Yes"
+status = "Drafted"
+phase = 6
+evidence = "tests/test_accepted_risk.py::test_the_advisory_claims_neither_where_the_record_cannot_be_read_whole; tests/test_accepted_risk.py::test_the_advisory_says_a_risk_an_act_accepted_has_reopened; tests/test_accepted_risk.py::test_the_advisory_says_a_risk_no_act_accepted_was_never_accepted"
+
+[test.TC-501]
+verifies = ["SR-206", "LLR-243"]
+level = "Unit"
+method = "The release rule called on in-memory rows: a falsified assumption with an accepted risk, relied on by one requirement, its risk read by the accepted-risk rule from each of four acceptance readings: an act whose copy of the assumption text differs from the text now; a record read whole that holds no act accepting the risk; a record that could not be read whole, a shallow clone's window; and no reading at all."
+tier = "Smoke"
+expected = "Each fails once, naming the assumption and the requirement. The first says the risk has reopened, names the changed text as the trigger and says it covers nothing until the risk is accepted again, and does not say never accepted. The second says the risk was never accepted and covers nothing until an act accepts it, carries the reading's reason, and says neither reopened nor accepted again. The third and fourth each carry the reading's own reason and say neither reopened nor never accepted."
+automated = "Yes"
+status = "Drafted"
+phase = 6
+evidence = "tests/test_assumption_rules.py::test_the_release_gate_words_an_unproven_risk_by_why_it_reads_unproven"

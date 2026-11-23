@@ -171,7 +171,10 @@ Contract IF-217: the accepted risk's anchor, read from history.
     `risk_acceptance_view(root, da_id)` adds what the pure rule
     (`assumption_rules.accepted_risk_state`) compares, as a dict: `act`,
     `reason`, and at that commit the `assumption` row, the requirement rows
-    `srs`, the `needs` keyed by id and the `known` observation record names.
+    `srs`, the `needs` keyed by id and the `known` observation record names;
+    with no anchor, `act`, `reason` and `unaccepted`, true only when the whole
+    history and every act ledger on it were read and no act there accepted the
+    risk (acts naming the row with no risk recorded, or no act naming it).
     Read-only; no clock is read, and ancestry, not a timestamp, orders a record.
 Contract IF-220: the act ledger, `ACTS` under `SNAPSHOT_DIR`. A TOML file of
     `[[act]]` entries, one appended by each `copy_live` that copied a registry
@@ -2097,13 +2100,26 @@ def risk_acceptance_act(root, da_id):
     risk is unanchored, and no history of the live registry is walked for a
     commit to stand in for the act); an act ledger on the walk that is
     malformed (`acts_problems`), since which acts it holds would be a guess;
-    or no git at all. Time is never read.
+    or no git at all. Time is never read. Of these, the acts recording no risk
+    and no act naming the row are the two in which the record, read whole,
+    holds no act accepting the risk; `risk_acceptance_view` says which.
 
     Implements: SR-202, LLR-239
     """
+    act, reason, _unaccepted = _risk_anchor(root, da_id)
+    return act, reason
+
+
+def _risk_anchor(root, da_id):
+    """`risk_acceptance_act`'s `(commit, reason)`, and `unaccepted`: true only
+    when the whole history and every act ledger on it were read and no act
+    there accepted the risk (the acts naming the row recorded none, or no act
+    names it); false with an anchor, and false where the record cannot be read
+    whole (a shallow clone's window, a malformed ledger, no git), since an act
+    accepting the risk may lie in what was not read."""
     shas, shallow = _ledger_commits(root)
     if shas is None:
-        return None, "git cannot read this repository's history"
+        return None, "git cannot read this repository's history", False
     named = False
     for sha in shas:
         # Every ledger on the walk is read whole: a malformed one cannot say
@@ -2111,32 +2127,41 @@ def risk_acceptance_act(root, da_id):
         try:
             names = _act_names(root, sha, da_id)
         except ActLedgerError as exc:
-            return None, (
+            return (
+                None,
                 "the act ledger {}/{} at commit {} or its parent is malformed "
                 "({}); no acceptance act can be read until it is repaired".format(
                     SNAPSHOT_DIR, ACTS, sha[:12], exc
-                )
+                ),
+                False,
             )
         row = _recorded_assumption(root, sha, da_id) if names else None
         if row is None:
             continue
         named = True
         if (row.get("AcceptedRisk") or "").strip():
-            return sha, "the acceptance act {} accepted its risk".format(sha[:12])
+            reason = "the acceptance act {} accepted its risk".format(sha[:12])
+            return sha, reason, False
     if shallow:
-        return None, (
+        return (
+            None,
             "history too shallow to find the acceptance act accepting {}'s risk: "
             "this is a shallow clone, and the act may lie beyond its window; "
-            "fetch the full history".format(da_id)
+            "fetch the full history".format(da_id),
+            False,
         )
     if named:
-        return None, (
+        return (
+            None,
             "the acceptance acts naming {} recorded no accepted risk; accepting "
-            "one is re-accepting the row in an act".format(da_id)
+            "one is re-accepting the row in an act".format(da_id),
+            True,
         )
-    return None, (
+    return (
+        None,
         "no acceptance act names {0}, so its accepted risk is unanchored; accept "
-        "it in an acceptance act that names {0}".format(da_id)
+        "it in an acceptance act that names {0}".format(da_id),
+        True,
     )
 
 
@@ -2167,12 +2192,14 @@ def risk_acceptance_view(root, da_id):
     at that commit, the `assumption` row, the requirement rows `srs` its served
     needs are derived through, the `needs` keyed by id, and the observation
     record names the tree held (`known`), which is what orders a failed sample
-    by ancestry rather than by the instant it names. Only `act` and `reason`
-    when there is no anchor.
+    by ancestry rather than by the instant it names. With no anchor, only
+    `act`, `reason` and `unaccepted`: true when the record, read whole, holds
+    no act accepting the risk, false when it could not be read whole, so that
+    the rule never says a risk reopened, or was never accepted, on a guess.
     """
-    act, reason = risk_acceptance_act(root, da_id)
+    act, reason, unaccepted = _risk_anchor(root, da_id)
     if act is None:
-        return {"act": None, "reason": reason}
+        return {"act": None, "reason": reason, "unaccepted": unaccepted}
     return {
         "act": act,
         "reason": reason,
