@@ -7,78 +7,81 @@ reading before starting.
 
 **Where the drill stands.** Waves A and B are merged, and WI-1036 and
 WI-1037 beside F-1. Variant F is filed (WI-1021 to WI-1030), critiqued, and
-its cut approved (§3.4). F-1 (WI-1021) is merged, its one-component table
-ruled by the operator (§3.5). F-2 (WI-1022) is merged, and WI-1040 to
-WI-1044, WI-1046 and WI-1048 beside it; WI-1038 is cancelled, superseded.
-The first adjudication sitting (WI-1047) was refused its act and is
-cancelled, superseded; the second (WI-1049) is done: 23 amendments
-re-accepted and 22 rows accepted, after the operator ruled two unblessed
-amendments reverted (§0). F-3 (WI-1023) is merged, and the operator ruled
-its batch act (§0). **Start at §0.**
+its cut approved (§3.4). F-1 (WI-1021), F-2 (WI-1022) and F-3 (WI-1023) are
+merged, with the rows beside them. Three adjudication sittings have run:
+WI-1047 was refused its act (cancelled, superseded); WI-1049 and WI-1055
+each had their act taken after the operator ruled their unblessed
+amendments reverted, and WI-1055's act carried the operator's batch ruling
+over F-3. WI-1056 answers WI-1055's verdict, for a fourth sitting. **Start
+at §0.**
 
-## 0. Resume here (2026-11-22, second session)
+## 0. Resume here (2026-11-22, end of the second session)
 
 A new coordinator session starts with these steps, in this order.
 
-1. **F-3 (WI-1023) is merged** (`4335c1a4d`, regen `d31ddce0c`, a link
-   fix `dc907c4c6`); smoke `3723 passed, 3 skipped`; the unfiltered suite
-   on `dc907c4c6` `8282 passed, 31 skipped` in 32:10. **The operator's
-   batch ruling (2026-11-22):** "trace cells removed, requirement text
-   unchanged", over the 350 accepted design rows, recorded in WI-1023's
-   Deliverable; the third sitting's act carries it (its copy of the design
-   registry drops the cells), and no separate batch act runs. The three
-   cells are traced, so their removal blocks no act. F-3's text amendments
-   (LLR-005, -153, -198, -199, -201, -210, -217, -244, -263, -293; SR-212;
-   TC-195, -197, -239, -258), its retirements (SR-180, LLR-180, TC-175) and
-   its new rows (SR-248, LLR-403 to 407, TC-480 to 484) owe the third
-   sitting. **WI-1050** (needs WI-1023) is building on `maint/wi-1050` in
-   `D:/ai-template-wt-wi1050`; review and merge it next (§4).
-2. **The third adjudication sitting**, once WI-1050 lands (F-3 is merged).
-   WI-1050 answers WI-1049's verdict: LLR-257 re-landed without code names
-   (its amended text is at `468c91fd9`), TC-457, TC-468 and TC-475 made
-   ready, TC-428 and TC-429 pointed at LLR-395. File a combined row over
-   every row `docs/ratify/CURRENT.md` lists then, plus F-3's retirements,
-   and run it as WI-1049 ran (its Context and Deliverable; §3.7). Its act
-   names the operator's batch ruling for the design registry's dropped
-   cells (§0 step 1):
-   - `compose_lane.py`, `reserve_verdict`, `bind_requested`, the plan-mode
-     preface (WI-1049's, in `<scratch>/sit/`: no writes, return the verdict
-     whole, ACCEPT not APPROVE, one session), Neon through `agy` from the
+1. **WI-1056** answers the third sitting's verdict (WI-1055): it re-lands
+   the five amendments the operator's ruling reverted (LLR-244, LLR-263,
+   SR-212, TC-239, TC-258; their amended text is at `8e08b3029`) under an
+   amended SR-221, and repairs F-3's SR-248 chain (SR-248 split; LLR-403,
+   LLR-405, LLR-406 and TC-480 to TC-484 as the verdict's findings say).
+   Filed `7b342d8b9`; it owes a scope critique (§4 step 1; Sol and
+   Hydrogen), which may split it. Then build, review, merge (§4, §7).
+2. **The fourth adjudication sitting**, once WI-1056 lands. File a combined
+   row over every row whose accepted text drifts then
+   (`baseline_snapshot.refresh_ledger`), every routed traced change, and
+   every `Drafted` SR, LLR or TC; leave out rows that changed only traced
+   cells. Run it as WI-1055 ran (its Context, Deliverable and record; §3.7):
+   - `compose_lane.py`, then `reserve_verdict` and `bind_requested` (the
+     script `<scratch>/sit/prepare_1055.py` does all three; adapt the WI and
+     paths), the plan-mode preface (no writes, return the verdict whole,
+     ACCEPT not APPROVE, one session), Neon through `agy` from the
      scratchpad, the reply verbatim at the reserved path, `verdict_refusal`,
      commit with `WI: WI-NNNN`, `record_outcome`.
-   - Test the derived act's first snapshot read-only first
+   - Test the derived act's first snapshot read-only
      (`baseline_snapshot.refresh_refusal(root, reaccepts=...)`). If it
-     refuses over an unblessed row, put the choice to the operator, as
-     WI-1049 did; do not revert on your own.
-   - Each act commit carries the regenerated views (`trunk_step --regen`;
-     the hook's `acceptance-fresh` and `open-items` steps refuse an act
-     commit without them). Run `intake.py` as
-     `project-trajectory/scripts/intake.py --root .`.
-3. **Then F's order** (§2): WI-1024 and WI-1027 after F-3; WI-1045 after
-   F-3; WI-1039 only on a quiet box.
-4. **Kit leftovers, filed and critiqued 2026-11-22 (Sol and Hydrogen, all
-   findings applied, `a8e55cb1e`), not built:** WI-1051
+     refuses over an unblessed row, put the choice to the operator; the two
+     earlier rulings (WI-1049, WI-1055) were each for that sitting's rows.
+   - Each act commit carries the regenerated views (`trunk_step --regen`).
+     Run `intake.py` as `project-trajectory/scripts/intake.py --root .`.
+   - Close the row with its record under a heading other than
+     `## Dispositions` (§9).
+3. **Then F's order** (§2): WI-1024 (F-4) and WI-1027 (F-7), either order;
+   WI-1045 after F-3; WI-1039 only on a quiet box. Each F row's amendments
+   go to a sitting; brief each builder that an amendment must add no code
+   name (the sittings refuse to bless one) and that a new row states one
+   obligation and has every clause tested, the two things the third
+   sitting returned F-3's rows for.
+4. **Kit leftovers, filed and critiqued (`a8e55cb1e`), not built:** WI-1051
    (the act template's `scripts/intake.py` and the first-acceptance
    template's "`APPROVE`"), WI-1052 (an unproven risk no act accepted reads
-   "has reopened"), WI-1053 (a files-mode adopter's listed headers),
-   WI-1054 (the flat How-SW legend omits component nodes). Not yet filed,
-   for the operator to weigh: one unblessed drifted row blocks every
-   blessed row of its registry from being acted on (SR-207 refuses the whole
-   copy), so each full re-judge risks another refusal; a copy that writes
-   only the rows an act names would end the loop.
+   "has reopened"), WI-1053 (files mode: the one-body check reports itself
+   dormant; the coordinator settled the fork, open to the operator's
+   overrule), WI-1054 (the flat How-SW legend omits component nodes). **For
+   the operator to weigh, not filed:** one unblessed drifted row blocks
+   every blessed row of its registry from being acted on (SR-207 refuses the
+   whole copy), so every sitting so far has needed a revert ruling or a
+   re-judge; a copy that writes only the rows an act names would end the
+   loop. And the commit hook does not run `check_docs`, so a broken link
+   reached trunk at F-3's merge and was caught only at the smoke run.
 5. **For the operator:**
    - delete the builders' scratch folders `D:/rt1040`, `D:/rt1042`,
-     `D:/rt1048` and `D:/rt1023`; the harness blocks the coordinator from
-     removing them, and every link inside them points within the folder;
+     `D:/rt1048`, `D:/rt1023` and `D:/rt1050`; the harness blocks the
+     coordinator from removing them, and every link inside them points
+     within the folder;
    - the push, as before. (OI-79 is closed: the operator confirmed its
      delete done, and its row carries a `follow_up` cell, 2026-11-22.)
 
-Scratch tools from this session (in its scratchpad, which may be cleared):
-`build_review.py` (the review briefs, with `--part code|docs`,
-`--replace path=summary`, `--round N --findings`), `if_summary.py` (a
-registry's change row by row), `mkbundle.py` (critique bundles) and
-`write_records.py` (critique records). They are small enough to rebuild
-from §4 and §6 if lost.
+Scratch tools (in the second session's scratchpad,
+`C:/Users/Peter/AppData/Local/Temp/claude/9919beaa12ed540b/8c8e2238-86ef-403f-b9ee-25349b76b3d0/scratchpad`,
+which may be cleared): `build_review.py` (the review briefs, with
+`--part code|docs`, `--replace path=summary`, `--round N --findings`,
+`--checks`), `llr_filter.py` (a design-registry diff without named cells,
+checked with tomllib), `mkbundle.py` (critique bundles),
+`write_records_1050.py` (critique records), and under `sit/`:
+`prepare_1055.py` (compose, reserve, bind and bundle a sitting),
+`flip.py` (status flips, checked with tomllib) and `revert_cells.py` (cells
+back to the accepted copy, checked with tomllib). Each is small enough to
+rebuild from §4, §6 and §3.7 if lost.
 
 **The job:** take each drillable work item through scope critique, build,
 review and merge into `refactor_again`, running items in parallel worktrees
@@ -100,23 +103,26 @@ adjudication sittings by Gemini Neon through `agy` (operator, 2026-11-21;
   WI-1041 (`8b50e28c1`), WI-1046 (`e29eb9d30`) and WI-1040 (`2a57861ec`);
   F-2, WI-1022 (`b2b0d9476`, regen `24656b1de`); after F-2, WI-1042
   (`abb00a88d`) and WI-1048 (`0f670626a`, regen `22a9a9369`); F-3, WI-1023
-  (`4335c1a4d`, regen `d31ddce0c`); WI-1038
+  (`4335c1a4d`, regen `d31ddce0c`); after F-3, WI-1050 (`9ce559b84`,
+  regen `867d6361e`); WI-1038
   cancelled, superseded by WI-1048. On trunk, not merged branches: OI-79
   closed (`6eff30f85`); WI-1049, the second sitting (filed `d5cb62675`,
   verdict `7598caf5e`, revert `0333b64f0`, acts `4e3e28a2f` and
-  `55e40f407`); WI-1047 cancelled, superseded by WI-1049; WI-1050 to
-  WI-1054 filed. Open drill worktree: F-3's (§0). Suites:
+  `55e40f407`); WI-1047 cancelled, superseded by WI-1049; WI-1055, the
+  third sitting (filed `982063eef`, verdict `0c5440672`, revert
+  `7b342d8b9`, acts `b86518820` and `fe8db46b2`); WI-1050 to WI-1054 and
+  WI-1056 filed. Open drill worktree: F-3's (§0). Suites:
   after wave A on `361270a84`, `8264 passed, 31 skipped`; after wave B on
   `224ff2c68`, `8264 passed, 31 skipped`; smoke after WI-1048 on
   `73aa095ce`, `3717 passed, 3 skipped`; after F-3 on `dc907c4c6`,
   `8282 passed, 31 skipped` (32:10). The next unfiltered suite runs when F
   closes (§3.4), or sooner when a smoke red points wider.
 - Acts owed, all to automated adjudication (§3.3 N4; §0 step 2):
-  `docs/ratify/CURRENT.md` waits on three chains (SR-157, SR-159, SR-217),
-  for TC-475, TC-457 and TC-468, which WI-1049 returned and WI-1050
-  answers; LLR-244 and LLR-257 owe their amendments again once WI-1050 (and
-  F-3, for LLR-244) re-land them; IF-312 and CMP-006 still drift in their
-  off-spine registries. F-3 adds its own (§0 step 1).
+  `docs/ratify/CURRENT.md` waits on four chains (SR-036, SR-157, SR-221,
+  SR-248), for the nine rows WI-1055 returned; the five amendments its
+  ruling reverted owe again once WI-1056 re-lands them; IF-312 and CMP-006
+  still drift in their off-spine registries (no sitting has been shown
+  them).
 - The operator still owes, outside this drill: the push. OI-79 is closed
   (operator, 2026-11-22): its remote-ref delete is done (`git ls-remote
   origin`: no `wi508-architectural-remap-HELD-for-owner-verdict` branch; the
@@ -127,7 +133,7 @@ adjudication sittings by Gemini Neon through `agy` (operator, 2026-11-21;
 
 | Item | What | Wave | Notes |
 |---|---|---|---|
-| WI-1050 | WI-1049's verdict answered: LLR-257 re-amended without code names, TC-457, TC-468 and TC-475 made ready | After F-3; before the third sitting (§0 step 2) | Filed `0333b64f0`, critiqued `a8e55cb1e` (LLR-244 moved to F-3); building (§0 step 1) |
+| WI-1056 | WI-1055's verdict answered: five reverted amendments re-landed under an amended SR-221, SR-248's chain repaired | Next (§0 step 1); before the fourth sitting | Filed `7b342d8b9`; owes a scope critique |
 | WI-1051 to WI-1054 | Kit leftovers from this drill (§0 step 4) | Any time | Filed and critiqued (`a8e55cb1e`); not built |
 | WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6, §3.4) | F, after the N6 stop | Filed and critiqued (round 1, Sol and Argon, all findings applied, `a57782d59`). Order by `needs`: 1021; 1022; 1023; then 1024 and 1027 (either order); 1025; then 1026, 1028 and 1030; then 1029. Built side by side where `needs` allows, landing one at a time (plan revision 37). F-1 merged (`147fed185`), F-2 merged (`b2b0d9476`), F-3 merged (`4335c1a4d`); next 1024 and 1027 |
 | WI-1016 | A repository can switch off the implementation layer | After F | Re-critiqued once F lands; reverses SR-186, so its amendment is drafted for the operator |
@@ -139,7 +145,8 @@ adjudication sittings by Gemini Neon through `agy` (operator, 2026-11-21;
 Done in wave A: WI-1013, WI-1014 and WI-1017; in wave B: WI-1019; beside
 F-1: WI-1036 and WI-1037; beside F-2: WI-1044, WI-1043, WI-1041, WI-1046
 and WI-1040; after F-2: WI-1042 and WI-1048, and the second sitting
-WI-1049 (§10). Cancelled: WI-1038, superseded by WI-1048's TC-475; WI-1047,
+WI-1049; F-3 (WI-1023); after F-3: WI-1050 and the third sitting WI-1055
+(§10). Cancelled: WI-1038, superseded by WI-1048's TC-475; WI-1047,
 superseded by WI-1049.
 Closed by §3.3:
 WI-1015 restructured into F's rows (N1), WI-1020 cancelled (N5).
@@ -1113,3 +1120,19 @@ Append one line per step taken: the item, what happened, the commit.
   `dc907c4c6`: `8282 passed, 31 skipped` in 32:10, no failure. Worktree and
   branch removed. The operator ruled F-3's batch act ("trace cells removed,
   requirement text unchanged"), to ride the third sitting's act.
+- 2026-11-22: WI-1050 built (`maint/wi-1050`; LLR-257 re-amended with no
+  code name at all, TC-457's unreadable-file test shown red against three
+  deliberate breakages, TC-475 narrowed, TC-428 and TC-429 pointed at
+  LLR-395). Review round 1: Hydrogen APPROVE; Sol one MAJOR dismissed (a
+  generated evidence cell names its test by definition) and one NIT fixed.
+  Merged `9ce559b84`, regen `867d6361e`; smoke `3724 passed, 3 skipped`.
+- 2026-11-22: the third adjudication sitting. WI-1055 filed `982063eef`
+  (38 tokens over 15 chains, the cell-only rows left to the batch ruling;
+  brief 275K characters); Neon 444 s. Verdict `0c5440672`, recorded
+  `8e08b3029`: 14 MEANING+BLESS, 1 CLARITY, 5 MEANING not blessed (LLR-244,
+  SR-212, TC-239, LLR-263, TC-258), 5 ACCEPT, 9 RETURN (SR-248's chain).
+  The act's first snapshot refused over the five; the operator ruled
+  revert and act, as at WI-1049. Revert and WI-1056 filed `7b342d8b9`;
+  re-acceptance `b86518820` (the copy drops the retired cells: the batch
+  ruling), first acceptance `fe8db46b2`; `compose_act`: no act owed.
+  `CURRENT.md` waits on four chains. WI-1055 closed.
