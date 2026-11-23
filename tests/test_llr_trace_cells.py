@@ -173,8 +173,10 @@ def test_the_loader_refuses_a_key_a_requirement_tier_does_not_declare(tmp_path):
     reg = _write(tmp_path, LLR_REL, LLR_ROW + 'module = "src/a.py"\n')
     with pytest.raises(SystemExit) as exc:
         spine_carrier.load(reg, "LLR-ID")
-    assert "LLR-001" in str(exc.value) and "`module`" in str(exc.value)
-    # Every requirement tier, the example row included.
+    why = str(exc.value)
+    assert str(reg) in why and "LLR-001" in why and "`module`" in why
+    # Every requirement tier, the example row included; each refusal names
+    # the registry file, the row and the key.
     sr = _write(
         tmp_path,
         "docs/requirements/system-requirements.toml",
@@ -182,12 +184,15 @@ def test_the_loader_refuses_a_key_a_requirement_tier_does_not_declare(tmp_path):
     )
     with pytest.raises(SystemExit) as exc:
         spine_carrier.load(sr, "SR-ID")
-    assert "SR-000" in str(exc.value) and "`owner`" in str(exc.value)
+    why = str(exc.value)
+    assert str(sr) in why and "SR-000" in why and "`owner`" in why
     tc = _write(
         tmp_path, TC_REL, '[test.TC-001]\nverifies = ["LLR-001"]\nmodule = "x"\n'
     )
-    with pytest.raises(SystemExit):
+    with pytest.raises(SystemExit) as exc:
         spine_carrier.load(tc, "TC-ID")
+    why = str(exc.value)
+    assert str(tc) in why and "TC-001" in why and "`module`" in why
     # A declared row loads; an off-spine tier is not judged here.
     assert spine_carrier.load(_write(tmp_path, LLR_REL, LLR_ROW), "LLR-ID")
     ifs = _write(

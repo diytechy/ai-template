@@ -31,7 +31,13 @@ The specref (WI-1055's verdict) is cleared at close, as a terminal row's is.
 - `08639915b`: the trajectory composer re-exports
   `arch_tags.evidence_input_missing` again (the composer test found it
   dropped by the report's move into `arch_tags`).
-- The commit after it: this close-out.
+- `150d7f955`: this close-out.
+- The commit after it: review round 1's finding (OpenAI Sol, MAJOR,
+  adopted by the coordinator) answered. TC-481's existing test now asserts
+  the registry file, the row and the key for the system-requirement and
+  test-case refusals too, as for the design and need tiers, with three
+  mutation proofs in the table below; TC-481's text was not changed, since
+  it no longer overstates.
 
 **1. SR-212, LLR-244 and TC-239.** SR-212's `acceptance_criteria` defines
 the architecture rung's reach as LLR-244 states it: a boundary interface
@@ -175,6 +181,9 @@ committed:
 | `test_a_design_row_is_discharged_by_a_case_of_any_kind` (TC-485) | `coherence.py`: only an automated case's `Verifies` discharges | `tests/test_llr_trace_cells.py:161`, `assert [f for f in findings if f.startswith("LLR ")] == [` | 1 failed in 0.44s; 1 passed in 0.31s |
 | same (TC-485) | `coherence.py`: the Drafted exemption removed | `tests/test_llr_trace_cells.py:161`, the same assertion | 1 failed in 0.42s; 1 passed in 0.30s |
 | `test_every_refusal_names_the_file_the_row_and_the_key` (TC-481) | `spine_carrier.py`: the undeclared-key finding given `""` for the file | `tests/test_llr_trace_cells.py:222`, `assert str(reg) in why and ...` | 1 failed in 0.44s; 1 passed in 0.31s |
+| `test_the_loader_refuses_a_key_a_requirement_tier_does_not_declare` (TC-481; review round 1) | `spine_carrier.py`: the undeclared-key finding given `""` for the file on every tier | `tests/test_llr_trace_cells.py:177`, `` assert str(reg) in why and "LLR-001" in why and "`module`" in why `` | 1 failed in 0.50s; 1 passed in 0.36s |
+| same (TC-481; review round 1) | `spine_carrier.py`: the file left out on the requirement and test-case tiers only | `tests/test_llr_trace_cells.py:188`, `` assert str(sr) in why and "SR-000" in why and "`owner`" in why `` | 1 failed in 0.43s; 1 passed in 0.35s |
+| same (TC-481; review round 1) | `spine_carrier.py`: the file left out on the test-case tier only | `tests/test_llr_trace_cells.py:195`, `` assert str(tc) in why and "TC-001" in why and "`module`" in why `` | 1 failed in 0.45s; 1 passed in 0.44s |
 | `test_the_retired_design_cells_stay_classed_traced` (TC-481) | `acceptance_record.py`: `CodeSymbol` dropped from the design tier's traced cells | `tests/test_llr_trace_cells.py:239`, `assert acceptance_record.spine_cell_class(LLR_REL, column) == "traced"` | 1 failed in 0.44s; 1 passed in 0.28s |
 | `test_the_index_reads_past_what_it_cannot_read` (TC-482) | `gen_arch_map.py`: the source scan decodes as Latin-1 | `tests/test_llr_trace_cells.py:316`, `assert arch_inputs.implements_index(tmp_path) == {` | 1 failed in 0.48s; 1 passed in 0.40s |
 | same (TC-482) | `arch_inputs.py`: an absent source root returns `{}` before the headers are read | `tests/test_llr_trace_cells.py:322`, `assert arch_inputs.implements_index(tmp_path) == {"LLR-003": ["docs/reg.toml"]}` | 1 failed in 0.51s; 1 passed in 0.38s |
