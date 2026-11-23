@@ -104,20 +104,31 @@ two land one after the other, never side by side.
 
 - [ ] An act writes into the record only the rows it names, each copied
       byte for byte from live; every other row of the recorded file keeps
-      its recorded text, apart from what the traced-cell rule refreshes. A
+      its recorded text, except that a row the act does not name follows
+      live (its live text taken whole, or its copy dropped when live no
+      longer carries it) when its live text claims no acceptance (or, gone
+      from live, its recorded copy claimed none), or when its recorded copy
+      and its live text both claim acceptance and neither its accepted
+      cells nor its routed traced cells (`SN-Refs`, `Boundary-Refs`,
+      `SR-Refs`, `Verifies`: the traced cells whose change routes to
+      adjudication) differ, which refreshes its other traced cells. A
       drifted row the act does not name stays drifted, is reported as owed,
       and no longer refuses the act.
 - [ ] The writer re-reads its result and refuses, writing nothing, unless
       the result reads as the previous record with exactly the named rows
-      replaced, plus what the traced-cell rule refreshes.
+      replaced, plus the unnamed rows that follow live under item 1's rule
+      (a row whose live text claims no acceptance, or, gone from live,
+      whose recorded copy claimed none; and a row claiming acceptance on
+      both sides whose accepted and routed traced cells are unchanged).
 - [ ] The checks that judge a written record judge it at the row: a record
       written at a commit equals the previous record with exactly that
-      act's named rows taken from live at the commit, plus what the
-      traced-cell rule refreshes. (The traced-cell rule is the one the plan
-      settles and writes into these three items.) Tests show refused,
-      at the commit hook and on a committed revision: an unnamed row's
-      drift carried in, a named row copied with an edit, and a row dropped
-      that no act retired.
+      act's named rows taken from live at the commit, plus the unnamed rows
+      that follow live under item 1's rule (a row whose live text claims no
+      acceptance, or, gone from live, whose recorded copy claimed none; and
+      a row claiming acceptance on both sides whose accepted and routed
+      traced cells are unchanged). Tests show refused, at the commit hook
+      and on a committed revision: an unnamed row's drift carried in, a
+      named row copied with an edit, and a row dropped that no act retired.
 - [ ] A test reproduces the drill's case: one registry holding a blessed
       amendment, an unblessed amendment and a row ruled ACCEPT. The act
       records the first and third and leaves the second drifted and owed.
