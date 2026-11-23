@@ -190,7 +190,11 @@ under `%TEMP%`.
   `check_resync: REFUSED project-trajectory/scripts/arch_tags.py: no RESYNC_PACK.md entry added for this change`;
   with the entry: `check_resync: OK, 1 shipped path(s) changed; entry
   anchored at 3db0c68236b6aa3355ebebc20d887c0e03224d32`.
-- The commit hook passed on `6c082f5d5`, each of its 30 steps `PASS`.
+- The commit hook passed on `6c082f5d5`, each of its 29 steps `PASS`. On
+  the close-out `9c30268a7` it first refused (`status-map` and
+  `trajectory-map`: the spec's move left `docs/status.md` and
+  `PROJECT_STATE.html` stale), then passed, all 29 steps, once
+  `trunk_step.py --root . --regen` had regenerated them.
 - `run_menu.py smoke`, exit 0, with the close-out's tree: `trace.py
   --strict` `orphans=0 integrity=0`; `check_trajectory: clean (1059 work
   item(s), 930 done (88%), 37 cancelled, graph acyclic).`; `check_docs: OK -
