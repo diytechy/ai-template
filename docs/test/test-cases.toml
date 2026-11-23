@@ -2096,11 +2096,11 @@ phase = 5
 [test.TC-195]
 verifies = ["SR-070", "LLR-199", "IF-139", "IF-140", "IF-141", "IF-142"]
 level = "Unit"
-method = "The join, the three coverage edges, the standing constraint and the freshness contract, each driven against a two-component spine small enough to reason about by hand. THE JOIN: assert the design rows are placed through the interfaces their verifying test cases name and the requirement tier is reached through them, while the modules come from the files' Component headers. DERIVED NEVER COPIED: a design row carrying no hat cell still contributes its SR parent's perspectives, and re-ruling that one requirement moves the view with no design cell edited. EDGE 1: a requirement with no design child appears in the unplaced table, is counted there, and appears in no component section - visible rather than dropped. EDGE 2: a requirement reaching two components appears in both and is marked shared in both, while one reaching a single component is not. EDGE 3: seams enter the view, an interface with both endpoints inside a component is internal to it while one crossing two is a boundary of BOTH, an interface is placed by the components its endpoint cells name, and one naming no component is reported as unplaced. NO ACCEPTANCE: with one Accepted and one Drafted component declared in the hand file, no maturity key and neither word appears in any emitted cell. FRESHNESS, DRIVEN BOTH WAYS: --check passes on a fresh view, fails after a registry row moves, and passes again once regenerated; a missing view fails; the written bytes carry no CRLF and two renders agree. VACUITY: a repo whose only CMP row is the inert -000 example writes nothing and exits zero on both paths."
+method = "The join, the three coverage edges, the standing constraint and the freshness contract, each driven against a two-component spine small enough to reason about by hand. THE JOIN: assert the design rows are placed where the derived placement puts them, through an interface a design row constrains and through the interfaces its verifying test cases name, and the requirement tier is reached through them, while the files come from their component headers. DERIVED NEVER COPIED: a design row carrying no hat cell still contributes its SR parent's perspectives, and re-ruling that one requirement moves the view with no design cell edited. EDGE 1: a requirement with no design child appears in the unplaced table, is counted there, and appears in no component section - visible rather than dropped. EDGE 2: a requirement reaching two components appears in both and is marked shared in both, while one reaching a single component is not. EDGE 3: seams enter the view, an interface with both endpoints inside a component is internal to it while one crossing two is a boundary of BOTH, an interface is placed by the components its endpoint cells name, and one naming no component is reported as unplaced. NO ACCEPTANCE: with one Accepted and one Drafted component declared in the hand file, no maturity key and neither word appears in any emitted cell. FRESHNESS, DRIVEN BOTH WAYS: the freshness check passes on a fresh view, fails after a registry row moves, and passes again once regenerated; a missing view fails; the written bytes carry no CRLF and two renders agree. VACUITY: a repo whose only CMP row is the inert example row writes nothing and exits zero on both paths."
 tier = "Smoke"
 expected = "Satisfies the acceptance folded into LLR-199 (parent SR-070)"
 automated = "Yes"
-evidence = "tests/test_gen_components.py::test_membership_and_the_requirement_reach; tests/test_gen_components.py::test_the_hat_union_is_DERIVED_from_the_parent_not_copied; tests/test_gen_components.py::test_a_parent_re_ruling_moves_the_view_with_no_design_cell_edited; tests/test_gen_components.py::test_a_childless_requirement_is_listed_ONCE_and_never_dropped; tests/test_gen_components.py::test_a_shared_requirement_appears_in_EVERY_component_it_reaches; tests/test_gen_components.py::test_seams_enter_the_view_split_internal_from_boundary; tests/test_gen_components.py::test_a_seam_is_placed_by_the_components_its_endpoints_name; tests/test_gen_components.py::test_an_unplaceable_seam_is_REPORTED_not_silently_excluded; tests/test_gen_components.py::test_the_generated_view_carries_NO_acceptance_cell; tests/test_gen_components.py::test_check_reds_on_a_stale_view_and_greens_once_regenerated; tests/test_gen_components.py::test_check_reds_when_the_view_is_missing_entirely; tests/test_gen_components.py::test_the_written_file_is_LF_and_reproducible; tests/test_gen_components.py::test_a_repo_with_no_real_component_is_VACUOUS; tests/test_gen_components.py::test_the_cli_runs_out_of_process"
+evidence = "tests/test_gen_components.py::test_membership_and_the_requirement_reach; tests/test_gen_components.py::test_the_hat_union_is_DERIVED_from_the_parent_not_copied; tests/test_gen_components.py::test_a_parent_re_ruling_moves_the_view_with_no_design_cell_edited; tests/test_gen_components.py::test_a_childless_requirement_is_listed_ONCE_and_never_dropped; tests/test_gen_components.py::test_a_shared_requirement_appears_in_EVERY_component_it_reaches; tests/test_gen_components.py::test_seams_enter_the_view_split_internal_from_boundary; tests/test_gen_components.py::test_a_seam_is_placed_by_the_components_its_endpoints_name; tests/test_gen_components.py::test_an_unplaceable_seam_is_REPORTED_not_silently_excluded; tests/test_gen_components.py::test_the_generated_view_carries_NO_acceptance_cell; tests/test_gen_components.py::test_check_reds_on_a_stale_view_and_greens_once_regenerated; tests/test_gen_components.py::test_check_reds_when_the_view_is_missing_entirely; tests/test_gen_components.py::test_the_written_file_is_LF_and_reproducible; tests/test_gen_components.py::test_a_repo_with_no_real_component_is_VACUOUS; tests/test_gen_components.py::test_the_cli_runs_out_of_process; tests/test_gen_components.py::test_a_design_row_sits_where_the_interface_it_constrains_is_owned"
 status = "Accepted"
 phase = 5
 
@@ -4578,7 +4578,7 @@ method = "Reach requirements from two boundary interfaces, one whose body a desi
 tier = "Smoke"
 expected = "The first reaches its design row's requirement, the second reaches none, and the internal interface is not judged; with no scanned source both boundary interfaces reach the requirement of the design row placed in their owner component."
 automated = "Yes"
-evidence = "tests/test_if_owner_component.py::test_a_boundary_row_reaches_requirements_through_the_file_stating_its_body"
+evidence = "tests/test_if_owner_component.py::test_a_boundary_row_reaches_requirements_through_the_file_stating_its_body; tests/test_if_owner_component.py::test_with_no_scanned_source_a_row_is_placed_by_the_interface_it_constrains"
 status = "Accepted"
 phase = 6
 
@@ -4662,11 +4662,11 @@ phase = 6
 [test.TC-480]
 verifies = ["SR-249", "LLR-403"]
 level = "Unit"
-method = "Place design rows over test cases naming interfaces: one case naming two interfaces owned by two components, a second naming one of them for two rows, a case naming an interface an external party owns, a case naming no interface and an example case. Count the unplaced rows, then count twelve unplaced rows; build the component view, and render it, from the same rows; and read the state view's design-row detail for them. Then run the strict check over a project whose one design row is verified by a test case naming no interface."
+method = "Place design rows over test cases naming interfaces: one case naming two interfaces owned by two components, a second naming one of them for two rows, a case naming an interface an external party owns, a case naming no interface and an example case; and place a design row that constrains an interface a component owns and is verified by a case naming none, and one that constrains an interface an external party owns. Count the unplaced rows, then count twelve unplaced rows; build the component view, and render it, from the same rows; and read the state view's design-row detail for them. Then run the strict check over a project whose one design row is verified by a test case naming no interface."
 tier = "Smoke"
-expected = "The first row is placed at both components and the second at the one its case names; the external owner and the interface-free case place nothing, and the example case is not read. The two unplaced rows are counted and named on one line, and of twelve the line names ten and counts two more. The component view holds each placed row and its requirement in its components, lists the unplaced rows and counts them in its census; the state view shows each placed row's components and the word unplaced for the others. The project's check passes with its row unplaced, its report counting that row as unplaced."
+expected = "The first row is placed at both components and the second at the one its case names; the row constraining the component's interface is placed at that component; the external owners and the interface-free case place nothing, and the example case is not read. The two unplaced rows are counted and named on one line, and of twelve the line names ten and counts two more. The component view holds each placed row and its requirement in its components, lists the unplaced rows and counts them in its census; the state view shows each placed row's components and the word unplaced for the others. The project's check passes with its row unplaced, its report counting that row as unplaced."
 automated = "Yes"
-evidence = "tests/test_llr_trace_cells.py::test_a_design_row_is_placed_through_the_interfaces_its_cases_name; tests/test_llr_trace_cells.py::test_the_views_show_where_each_design_row_sits; tests/test_trace.py::test_an_unplaced_design_row_changes_no_exit_code"
+evidence = "tests/test_llr_trace_cells.py::test_a_design_row_is_placed_through_the_interfaces_its_cases_name; tests/test_llr_trace_cells.py::test_the_views_show_where_each_design_row_sits; tests/test_trace.py::test_an_unplaced_design_row_changes_no_exit_code; tests/test_constrains.py::test_a_design_row_is_placed_through_the_interfaces_it_constrains; tests/test_llr_trace_cells.py::test_the_build_brief_places_a_row_through_the_interface_it_constrains"
 status = "Accepted"
 phase = 6
 
@@ -4768,3 +4768,80 @@ automated = "Yes"
 status = "Accepted"
 phase = 6
 evidence = "tests/test_llr_trace_cells.py::test_a_design_row_is_discharged_by_a_case_of_any_kind; tests/test_trace.py::test_draft_llr_is_exempt_from_tc_rule"
+
+[test.TC-527]
+verifies = ["SR-157", "LLR-417"]
+level = "Integration"
+method = "Run the strict check over a project whose design rows and requirement name, in their constrains cells, a live interface, an interface id no row has, a requirement id and the example interface id; then over a project whose only constrains cell names live interfaces; then read a design-row registry whose constrains cell is an empty list."
+tier = "Smoke"
+expected = "Each id naming no live interface row is a finding naming its row and the id and the check exits 1, while a live id on either tier draws none; the second project passes; the empty list is refused on read, naming the row and the cell."
+automated = "Yes"
+evidence = "tests/test_constrains.py::test_a_constrains_id_naming_no_live_interface_fails_the_strict_check; tests/test_constrains.py::test_a_live_constrains_cell_passes_and_an_empty_one_is_refused_on_read"
+status = "Drafted"
+phase = 6
+
+[test.TC-528]
+verifies = ["SR-157", "LLR-418"]
+level = "Integration"
+method = "Run the strict check over design rows that constrain an interface and carry a dimensions cell that parses, one of an unknown dimension type, one naming a strategy outside the grammar's three, an out-of-domain cell of two sentences and one with no full stop, and over rows constraining nothing that carry either cell; and parse eight grammar strings, accepted and refused, through the cell's parser and the case generator's."
+tier = "Smoke"
+expected = "Each malformed cell, and each companion cell on a row constraining nothing, is a finding naming its row and cell, and the check exits 1, while the well-formed row draws none; the two parsers accept the same strings with the same result and refuse the same strings with the same message."
+automated = "Yes"
+evidence = "tests/test_constrains.py::test_a_companion_cell_that_does_not_parse_or_constrains_nothing_fails; tests/test_constrains.py::test_the_cell_and_the_generator_read_one_grammar"
+status = "Drafted"
+phase = 6
+
+[test.TC-529]
+verifies = ["SR-157", "LLR-419"]
+level = "Integration"
+method = "Run the strict check over twelve design rows constraining an exit-code interface and a command-line interface: one carrying both companion cells and constraining both, one carrying only an input set, and ten carrying neither."
+tier = "Smoke"
+expected = "One warning line names the first ten of the eleven rows lacking a companion cell and counts one more, and counts the pairs by channel with both cells and without: command-line one and one, exit-code one and ten; the check exits 0."
+automated = "Yes"
+evidence = "tests/test_constrains.py::test_a_constraining_row_without_its_companions_is_counted_and_passes"
+status = "Drafted"
+phase = 6
+
+[test.TC-530]
+verifies = ["SR-178", "LLR-420"]
+level = "Integration"
+method = "Read the class of the constrains cell on the requirement and design-row registries and of the two companion cells, and whether the merge's amendment walk routes each; then commit a project whose design row is accepted with no constrains cell, add a constrains cell and a dimensions cell to it in a second commit, and run the amendment walk and the trunk's amendment mint over the two commits."
+tier = "Smoke"
+expected = "The constrains cell is traced and routed on both registries and the two companion cells are accepted; the walk records the constrains change in the row's traced half and the dimensions change in its accepted half, and the mint routes the constrains change."
+automated = "Yes"
+evidence = "tests/test_constrains.py::test_a_constrains_change_on_an_accepted_row_is_a_routed_amendment; tests/test_constrains.py::test_constrains_is_traced_and_routed_and_its_companions_are_accepted"
+status = "Drafted"
+phase = 6
+
+[test.TC-531]
+verifies = ["SR-157", "LLR-421"]
+level = "Integration"
+method = "Derive the reach and the route of six interfaces: one a design row constrains, one a requirement constrains whose design row a case verifies, one a case names beside the row it verifies, one only an observation case names, one no row or case reaches, and one that only a design row verified by an observation case constrains; then run the strict check over the project, again with the interface-check opt-out set, and over a project with no interface row."
+tier = "Smoke"
+expected = "Each interface's reach holds its constraining or observed rows and the cases verifying them; the routes are design row, requirement, case, observation, unreached and observation; the count line reads one, one, one, two and one; the unreached interface and the two observation-only interfaces are each named on their own line; the check exits 0; the opted-out run and the project with no interface row print no coverage line."
+automated = "Yes"
+evidence = "tests/test_constrains.py::test_each_interface_reaches_a_run_case_through_a_constraining_row_or_a_naming_case; tests/test_constrains.py::test_the_interface_check_opt_out_silences_coverage"
+status = "Drafted"
+phase = 6
+
+[test.TC-532]
+verifies = ["SR-157", "LLR-422"]
+level = "Integration"
+method = "Report the repeated names over three test cases each naming an interface: one verifying two design rows that both constrain it, one verifying a row that constrains it and one that does not, and one verifying a requirement that constrains nothing beside a row that constrains it; and over a case naming only an interface; then run the strict check and the integrity check over the project."
+tier = "Smoke"
+expected = "Only the first case's name is reported, naming the case, the interface and both rows; the other cases and the interface-only case report nothing; both checks exit 0."
+automated = "Yes"
+evidence = "tests/test_constrains.py::test_a_name_every_verified_row_already_constrains_is_reported_per_pair"
+status = "Drafted"
+phase = 6
+
+[test.TC-533]
+verifies = ["SR-229", "LLR-423"]
+level = "Unit"
+method = "Run a guarded claim whose environment names the lease holder's session under the agent tool's session variable, and again under another variable name; resolve a guard command's repository root with a root given, with only the project-root variable set, and with neither."
+tier = "Smoke"
+expected = "The claim under the tool's variable passes and the one under another name reads its caller as unknown; the root is the one given, else the variable's, else the working directory."
+automated = "Yes"
+evidence = "tests/test_coordinator_guard.py::test_the_guard_reads_its_caller_and_root_from_the_agent_tools_environment"
+status = "Drafted"
+phase = 6

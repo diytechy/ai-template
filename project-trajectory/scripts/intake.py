@@ -236,11 +236,16 @@ def normalize_checks_stage(value):
 # (§A5.1 for `SN-Refs`/`Verifies`; the WI-388 ruling for LLR `SR-Refs` —
 # recorded at acceptance_record.SPINE_TRACED_CELLS, the cell-split table's
 # home). Keyed per registry so a same-named column elsewhere never rides in.
+# `Constrains` (WI-1024) routes too: whether a row's text states the behaviour
+# across the interface it names is the adjudication's question.
+# Implements: SR-178, LLR-420
 ROUTED_TRACED_CELLS = {
     "docs/requirements/system-requirements.toml": frozenset(
-        {"SN-Refs", "Boundary-Refs"}
+        {"SN-Refs", "Boundary-Refs", "Constrains"}
     ),
-    "docs/requirements/low-level-requirements.toml": frozenset({"SR-Refs"}),
+    "docs/requirements/low-level-requirements.toml": frozenset(
+        {"SR-Refs", "Constrains"}
+    ),
     "docs/test/test-cases.toml": frozenset({"Verifies"}),
 }
 
@@ -628,10 +633,14 @@ def _pending_oi_lines(root, wi_row, rows, kin):
 
 def _placement(root):
     """Each design row's derived placement (`kitlib.spine.llr_placement`): the
-    owner components of the interfaces its verifying cases name."""
+    owner components of the interfaces it constrains and those its verifying
+    cases name."""
     return _spine.llr_placement(
         spine_carrier.load(root / "docs/test/test-cases.toml", "TC-ID"),
         spine_carrier.load(root / "docs/requirements/interfaces.toml", "IF-ID"),
+        spine_carrier.load(
+            root / "docs/requirements/low-level-requirements.toml", "LLR-ID"
+        ),
     )
 
 

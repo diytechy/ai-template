@@ -22,4 +22,570 @@ _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies
 - `docs/requirements/interfaces.toml` — 237 changed, 2 added, 31 removed since the snapshot; ruling(s): WI-1014, WI-1021, WI-1022, WI-1023, WI-1042, WI-1048, WI-1052, WI-1059.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-1021, WI-1022.
 
-_No spine row differs from its `docs/archive/last_accepted` copy, and no row awaits a first acceptance._
+
+_No chain on a rung the operator-acceptance dial holds owes an act; every chain in this brief waits for automated adjudication._
+
+## Waiting for automated adjudication
+
+_Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
+
+<details>
+<summary>Waiting for automated adjudication — 20 chain(s): SR-010, SR-026, SR-032, SR-035, SR-046, SR-049, SR-070, SR-112, SR-157, SR-158, SR-168, SR-170, SR-178, SR-211, SR-212, SR-218, SR-224, SR-229, SR-238, SR-249</summary>
+
+## SR-010 — Scaffold passes out of the box
+
+> **Requirement.** The delivered scaffold generator shall produce a scaffold whose harness passes immediately after generation.
+
+> **Rationale.** Realizes SN-001 (a working process without hand-building tooling) and SN-007 (the suite bootstraps a real scaffold and exercises every script).
+
+
+### LLR LLR-010
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: Writes the mapped kit files into --dest so the generated harness passes out of the box. For a non-Python profile, append_stack_checklist files the pending toolchain open item, and file_stack_placeholder files the queued work item whose needs cite that item, its placeholder on the queue; both raise their id-watermark marks over the ids they allocate.
+  - after: Writes the mapped kit files into the destination root so the generated harness passes out of the box. For a non-Python profile it files the pending toolchain open item, and a queued work item whose needs cite that item as its placeholder on the queue; both filings raise their id-watermark marks over the ids they allocate.
+_traced — routes to adjudication_
+- **Constrains**
+  - before: (empty)
+  - after: IF-014
+
+## SR-026 — Coordinator resumes headless
+
+> **Requirement.** The delivered coordinator shall resume headless with stdin closed, never blocking on a prompt: a worker resumes from its explicit claimed assignment plus the committed trailer evidence on its branch, and the integrator derives claim and queue state from trunk history alone — the generated status surface never a session input.
+
+> **Rationale.** Realizes SN-006 and the dissolved edge expectation that an unattended run never blocks on a prompt, at launch or mid-run. The acceptance is deliberately narrower than it once was: it had carried two obligations the shall never stated - transient-limit backoff and stall abort - and an acceptance cell cannot mint a requirement. Both were MINTED rather than deleted, because each describes live behaviour worth keeping: SR-171 and SR-172. An unattended run blocked on a prompt is indistinguishable from a hung one and holds its lane until an operator notices. Keeping a separate serial resume path beside the dispatcher was rejected: two authorities over one decision drift, and the divergence surfaces as a run that resumes differently depending on how it was started.
+
+
+### LLR LLR-026
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: Runs the agent CLI headless: build_argv substitutes {model} into argv and, when a CmdTemplate carries no {prompt} placeholder (the default for both provider CLIs), routes the prompt to the child's STDIN (run_session writes it from a daemon thread then closes), while the no-wedge invariant holds — a fixed prompt plus EOF, never an interactive read. A codex session additionally captures that CLI's own --output-last-message file as the result (_codex_lastmsg_setup/_codex_lastmsg_read). stdin is otherwise closed so no prompt wedges the loop; the scope is the dispatcher and worker sessions, and the former status.md-resume read is retired rather than coexisting with them. An interruption ends the tree only once the coordinator supervises the session; one that lands while the session is still being launched is outside the kill. A wall or idle deadline, or an interruption while the coordinator supervises the session, ends every process in the session process group on POSIX or session job on Windows: the direct child is reaped, then the group or job is polled until empty. On Windows the kill takes a handle on each member, then terminates the job, and returns only when the job count is zero and every held member is signalled; an unopenable live member raises after the terminate. Past 10 s the kill raises naming the survivor. A failure to end the tree, or to show that it ended, raises the named tree-end error; an ordinary launch error still returns the session error. A child that cannot be contained ends as a session error before it runs.
+  - after: Runs the agent command-line tool headless: the launch substitutes the routed model into the command's tokens and, when the command template carries no prompt slot (the default for both provider tools), delivers the prompt on the child's standard input, written from a background thread and then closed, while the no-wedge invariant holds: a fixed prompt plus end-of-file, never an interactive read. A Codex session also captures that tool's own last-message file as the result. Standard input is otherwise closed so no prompt wedges the loop; the scope is the dispatcher and worker sessions, and the former status-file resume read is retired rather than coexisting with them. An interruption ends the tree only once the coordinator supervises the session; one that lands while the session is still being launched is outside the kill. A wall or idle deadline, or an interruption while the coordinator supervises the session, ends every process in the session's process group on POSIX or its session job on Windows: the direct child is reaped, then the group or job is polled until empty. On Windows the kill takes a handle on each member, then terminates the job, and returns only when the job count is zero and every held member is signalled; an unopenable live member raises after the terminate. Past 10 s the kill raises naming the survivor. A failure to end the tree, or to show that it ended, raises the named tree-end error; an ordinary launch error still returns the session error. A child that cannot be contained ends as a session error before it runs.
+- **Rationale**
+  - before: A large prompt passed as argv dies at the OS command-line cap (8191 characters through a Windows .CMD shim, 32767 via CreateProcess) and a round's briefs run to roughly 70k, so stdin is the only delivery that survives — both limits verified live rather than assumed. The last-message capture exists because that CLI echoes its banner and the whole prompt into stdout, so stdout is not the result. A surviving descendant can keep editing a worktree after its parent session ends; process-group and job containment make the tree an atomic session lifetime, while an uncontained Windows child is rejected before it can create that survivor. Holding each member before termination covers the measured interval where the job count reaches zero before a terminated process is signalled.
+  - after: A large prompt passed on the command line dies at the operating system's command-line cap (8191 characters through a Windows command shim, 32767 through direct process creation) and a round's briefs run to roughly 70k, so standard input is the only delivery that survives; both limits were verified live rather than assumed. The last-message capture exists because that tool echoes its banner and the whole prompt into standard output, so standard output is not the result. A surviving descendant can keep editing a worktree after its parent session ends; process-group and job containment make the tree an atomic session lifetime, while an uncontained Windows child is rejected before it can create that survivor. Holding each member before termination covers the measured interval where the job count reaches zero before a terminated process is signalled.
+_traced — routes to adjudication_
+- **Constrains**
+  - before: (empty)
+  - after: IF-041
+
+## SR-032 — Onboarding and dev-setup scaffold
+
+> **Requirement.** The onboarding and dev-setup templates shall scaffold and run to a passing developer setup.
+
+> **Rationale.** Realizes SN-001 — a new contributor who cannot reach a working setup from the repo alone is blocked on whoever set it up last, and onboarding prose that is never executed drifts from the commands that work. A README checklist was rejected: nothing fails when it goes stale.
+
+
+### LLR LLR-320
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: The --for-run/-ForRun operation reports workstation readiness first, querying a workstation tool only once it is found present and reporting an absent one as missing, so an absent tool never ends the report before its runtime result; it then offers each missing setup item only at an interactive terminal, and without one it offers nothing and does not consume menu input. Its runtime is the interpreter the launcher hands it, never one it searches for: it exits 0 when that interpreter satisfies the runtime floor and otherwise, including when none is handed, exits 1 with the step to take. The standalone --check/-Check operation reports only, performs no offer or write, and exits 0.
+  - after: Dev-setup's readiness operation for a bare run reports workstation readiness first, querying a workstation tool only once it is found present and reporting an absent one as missing, so an absent tool never ends the report before its runtime result; it then offers each missing setup item only at an interactive terminal, and without one it offers nothing and does not consume menu input. Its runtime is the interpreter the launcher hands it, never one it searches for: it exits 0 when that interpreter satisfies the runtime floor and otherwise, including when none is handed, exits 1 with the step to take. The standalone readiness check reports only, performs no offer or write, and exits 0.
+_traced — routes to adjudication_
+- **Constrains**
+  - before: (empty)
+  - after: IF-292;IF-293
+
+## SR-035 — No language-specific token in the shipped scheme
+
+> **Requirement.** The delivered process and ID scheme shall carry no language-specific token in the shipped registries and ID vocabulary, such that a non-Python adopter's scaffold passes the delivered registry checks unmodified.
+
+> **Rationale.** Realizes SN-003 — a method that presumes one language is re-derived by every adopter on a different stack, and the re-derivation is where the traceability guarantees get dropped. Shipping per-stack variants was rejected: it multiplies the surface that must stay consistent.
+
+
+### LLR LLR-171
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: The shipped registry templates and the ID scheme (SN/SR/LLR/TC and the off-spine spaces) carry no language-specific token: a scaffold produced with a non-Python profile passes trace.py --strict-integrity --strict-schema unmodified, and a token scan over the shipped templates and the ID vocabulary finds no language-specific token.
+  - after: The shipped registry templates and the id scheme (SN, SR, LLR and TC and the off-spine spaces) carry no language-specific token: a scaffold produced with a non-Python profile passes the integrity and schema checks unmodified, and a token scan over the shipped templates and the id vocabulary finds no language-specific token.
+_traced — routes to adjudication_
+- **Constrains**
+  - before: (empty)
+  - after: IF-039
+
+## SR-046 — Declared runnable capabilities reachable from the repository root
+
+> **Requirement.** The launchers at the repository root shall expose every declared runnable capability consistently to an interactive operator, to a direct caller naming one capability, and to automated discovery - from a single declaration, on Windows and POSIX alike.
+
+> **Rationale.** Realizes SN-001 - the evaluator's rungs make running the product never depend on recalling a command, and the capability set is declared once in docs/stack.ini rather than hard-wired and duplicated across the platform launchers. ONE OBLIGATION, not a menu specification: the row states the one capability-level decision - every declared capability is reachable, the same way, from one declaration, by three kinds of caller - because numbering, listing format, declaration grammar, fallback text and exit handling fail independently, which makes an enumeration of them a decomposition wearing a requirement's clothes. Those are LLR-047's and the acceptance's.
+
+
+### LLR LLR-047
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: load_capabilities parses the docs/stack.ini [run] section (configparser, interpolation=None, case-preserving optionxform; declaration order kept; a name.desc row attaches to its command and an orphan or empty-value command is dropped) into an ordered (name, command, desc) list; --list prints name<TAB>desc per row; direct(name) launches by exact-match name (exit 2 on an unknown name) and launch() runs the shell line via subprocess shell=True, passing the child exit code straight through. launch prepends to PATH a directory whose bare python resolves to the menu interpreter: on Windows that interpreter's own directory, and on POSIX a per-launch temporary directory of executable shims that exec its exact path. On Windows the command processor searches the line's working directory before PATH, so a python.exe there, whether at the repository root or in a directory the line enters, runs instead and is outside this guarantee; when that directory has no interpreter, the prepended directory governs PATH lookup. On POSIX that directory also makes bare python3 exact; a line intended to run on Windows declares python. The POSIX construction is a shim rather than a link so a virtual environment retains its configuration. interactive_menu prints the numbered menu, reads a pick from stdin, and returns EOF-safe without hanging; an absent or empty [run] prints guidance and exits 1. Every run launcher form resolves one interpreter by running, in order, its repository virtual-environment candidates and then the candidates from its dev-setup's ordinary runtime search, taking the first that reports Python 3.11 or later as its executable path; it runs the menu on exactly that path. The no-argument launchers change to the repository root and invoke dev-setup's --for-run/-ForRun readiness operation once before the menu, handing it that interpreter when one resolves; a nonzero result prints guidance and leaves the menu unopened. Direct and --list forms bypass that operation and, on Windows, the closing pause, and exit 1 with guidance when no interpreter resolves; run.command delegates to run.sh so it does not duplicate the operation, and non-interactive menu input remains available after it.
+  - after: The run menu reads the run section of the stack profile into a list of name, command and description in declaration order; a name's description row attaches to its command. Its list form prints one line per capability: the name, a tab and the description. A capability named on the command line is launched by exact name, an unknown name exiting 2, and the launch runs the declared line through the shell and passes the child's exit code straight through. The launch puts first on the search path a directory whose bare python resolves to the menu's own interpreter: on Windows that interpreter's own directory, and on POSIX a per-launch temporary directory of executable shims that run its exact path. On Windows the command processor searches the line's working directory before the search path, so a python executable there, at the repository root or in a directory the line enters, runs instead and is outside this guarantee; with no interpreter there, the prepended directory governs the search. On POSIX that directory also makes bare python3 exact, and a line meant to run on Windows declares python; the POSIX construction is a shim rather than a link so a virtual environment keeps its configuration. With no argument it prints the numbered menu, reads a pick from standard input, and returns without hanging when the input is closed; an absent or empty run section prints guidance and exits 1. Every run launcher resolves one interpreter by running, in order, its repository virtual-environment candidates and then the candidates of its dev-setup's ordinary runtime search, taking the first that reports Python 3.11 or later as its executable path, and runs the menu on exactly that path. The no-argument launchers change to the repository root and invoke dev-setup's readiness operation for a bare run once before the menu, handing it that interpreter when one resolves; a nonzero result prints guidance and leaves the menu unopened. The direct and list forms bypass that operation and, on Windows, the closing pause, and exit 1 with guidance when no interpreter resolves; the macOS launcher delegates to the POSIX one so it does not duplicate the operation, and non-interactive menu input remains available after it.
+- **Rationale**
+  - before: The command being run is the user's own declared line, so shell=True is the same trust boundary the declaration already establishes rather than a new one. EOF-safety is load-bearing: a menu that blocks on a closed stdin turns an unattended invocation into a hang, which is the failure this launcher exists to avoid.
+  - after: The command being run is the user's own declared line, so running it through the shell is the same trust boundary the declaration already establishes rather than a new one. Safety at end-of-file is load-bearing: a menu that blocks on a closed standard input turns an unattended invocation into a hang, which is the failure this launcher exists to avoid.
+_traced — routes to adjudication_
+- **Constrains**
+  - before: (empty)
+  - after: IF-048;IF-157;IF-158
+
+## SR-049 — Derived stage from artifact states
+
+> **Requirement.** The delivered harness shall derive the stage the project is currently at from the spine artifact states alone, caching it as a derived value — never accepting a hand-set one — with a post-acceptance amendment dropping the derived stage exactly as a newly introduced draft does, and the pending-amendment count carried beside the draft count so the pending state never hides.
+
+> **Rationale.** SSOT applied to the gate itself: a hand-set marker can be bumped without the work; deriving it makes gate advancement mechanical (SN-004) and un-gameable (SN-008). The hybrid cache keeps the value readable on checkout; --check guards rot. SN-029 is a parent because this row's shall is the only place in the SR layer stating that an amended requirement drops the derived stage exactly as a newly introduced one does — SR-139 states which tiers are held, SR-140 what an acceptance record contains, and SR-148 loop selection, none of them the drop clause.
+
+
+### LLR LLR-118
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: The rendered half of the acceptance regime under SR-049. The page renders, in this order: the pending open items that queued or claimed work items cite in their needs, as decision briefs beside the queued or claimed rows citing them, preceded by an integrity notice naming and linking the pending items that no queued or claimed row cites, the page claiming an empty queue only when there is neither; every SR whose chain holds a row owing a first acceptance or drifted from the accepted snapshot, with the chain's per-cell before/after, a section with no changed cell stating that no cell differs from the accepted snapshot and never reading as nothing changed; every stakeholder need and stakeholder owing an act, as LLR-271 states; every assumption and surrogate owing a first acceptance or drifted from the accepted snapshot, the rows the acceptance brief's assumption section renders, each with its cells whole or its moved cells before and after, followed by the requirements relying on it with their title and text, or for a surrogate the assumptions naming it, the header counting them; the audit list of every act-ledger entry naming a verdict, newest first, or None recorded; and, last, the pending owner actions, closed by the delegated-decisions records' format findings when a record carries one, a notice LLR-283 states and gen_open_items.record_findings_block renders, the page listing no delegated-decisions entry. It owns no second opinion: the queue is pending.open_item_queue, the acceptance model trace.reaccept_model, the owing needs baseline_snapshot.needs_owing, the owing assumptions and surrogates trace.assumption_owing_model, the pointers pending.pending_block and the record findings pending.decision_records, imported rather than re-derived, so where this view and the trace.py --accept brief disagree, this view is the defect. NOT claimed: that the rendered page is legible or well-composed.
+  - after: The rendered half of the acceptance regime under SR-049. The page renders, in this order: the pending open items that queued or claimed work items cite in their needs, as decision briefs beside the queued or claimed rows citing them, preceded by an integrity notice naming and linking the pending items that no queued or claimed row cites, the page claiming an empty queue only when there is neither; every SR whose chain holds a row owing a first acceptance or drifted from the accepted snapshot, with the chain's per-cell before/after, a section with no changed cell stating that no cell differs from the accepted snapshot and never reading as nothing changed; every stakeholder need and stakeholder owing an act, as LLR-271 states; every assumption and surrogate owing a first acceptance or drifted from the accepted snapshot, the rows the acceptance brief's assumption section renders, each with its cells whole or its moved cells before and after, followed by the requirements relying on it with their title and text, or for a surrogate the assumptions naming it, the header counting them; the audit list of every act-ledger entry naming a verdict, newest first, or None recorded; and, last, the pending owner actions, closed by the delegated-decisions records' format findings when a record carries one, a notice LLR-283 states, the page listing no delegated-decisions entry. It owns no second opinion: the queue, the acceptance model, the owing needs, the owing assumptions and surrogates, the pending pointers and the record findings are read from the derivations the acceptance brief and the pending-action read model use, never re-derived, so where this view and the acceptance brief disagree, this view is the defect. NOT claimed: that the rendered page is legible or well-composed.
+_traced — routes to adjudication_
+- **Constrains**
+  - before: (empty)
+  - after: IF-074
+
+## SR-070 — Generated views are offline, deterministic and drift-checkable
+
+> **Requirement.** The delivered generator set shall derive each artifact it produces from the tracked registries alone — self-contained and usable without network access, byte-stable across regeneration from unchanged sources, and carrying a freshness contract that fails when the committed copy has drifted from those sources — omitting a view whose source registries the adopting repository does not carry rather than emitting an empty one.
+
+> **Rationale.** Realizes SN-010 and the dissolved edge expectation that a generated artifact drifting from its source fails its --check, by isolating one independently reviewable obligation formerly carried by SR-038; with SN-012, since a repository that carries no source registry pays nothing for the view that registry would have fed. ONE DECISION PER ROW: the INTEGRITY of a generated artifact and what the state view must SHOW are two unrelated obligations, and this row holds the first alone. They fail independently: a view can be perfectly offline, deterministic and drift-checkable while showing nothing about the work in flight or how the parts connect. The content half sheds along the conjunction SN-023 itself draws ("progress AND how its parts connect") to SR-168 and SR-169; this row keeps the artifact-integrity contract alone. The subject is "each artifact the generator set produces" rather than "each view" deliberately: the knowledge-export bundle is not a view, and a fourth row minted to hold it would be the filler tier the ruling forbids. The child/parent phase spread is untouched and is intended — this split is by observable class, not by phase, a partition that was considered and rejected.
+
+
+### LLR LLR-039
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: emit() builds {relpath: content} for every real row (sorted, deterministic, no timestamps): frontmatter via JSON-quoted YAML scalars, bodies carrying the row prose plus up/down markdown links from locally built reverse maps, per-tier and root indexes, the UPSTREAM.md spec pin; on_disk() snapshots docs/okf for the byte-compare; write mode writes-if-changed and prunes; small loaders duplicated per the F5 rule (no new sibling import). Layer B2 adds a process-guides tier: _doc_title_and_summary derives each guide title+summary from the doc first heading/paragraph (inline links stripped so nothing dangles), emitted only after the vacuity gate so a fresh scaffold stays vacuous. Graph links resolve within the bundle; each Process Guide carries a resource pointer to its source doc, which is left unmodified. --check trips on a registry or doc edit, a missing bundle file and a hand-added extra, recovering after regeneration; docs/process.toml [checks] okf_export = false silences the step, with the legacy docs/okf-export sentinel still read through the SN-028 migration window; off and placeholder-only registries pass silently, and process guides emit only alongside a real spine.
+  - after: The bundle generator builds one file per real registry row, sorted and deterministic with no timestamp: each file's front matter carries the row's cells as quoted scalars and its body the row's prose with links up and down the spine, beside per-tier and root indexes and a pin of the bundle format's specification. Its write mode writes a file only when its content changed and prunes a file the bundle no longer holds. A process-guides tier gives each present guide document a title and summary taken from its first heading and paragraph, inline links stripped so nothing dangles, and points at its source document, which is left unmodified; guides are emitted only alongside a real spine, so a fresh scaffold stays vacuous. Every link in the bundle resolves within it. The freshness check fails after a registry edit and on a hand-added extra file, and passes again after regeneration. The process settings' bundle opt-out silences the step, and a registry holding only example rows passes silently.
+_traced — routes to adjudication_
+- **Constrains**
+  - before: (empty)
+  - after: IF-012;IF-149
+
+### LLR LLR-130
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: Implements stale/missing --check with a git as-of stamp excluded from stamp-only comparison. As-of behavior is stable both inside and outside Git, the visible git-derived stamp excluded from stamp-only comparisons.
+  - after: The dashboard's freshness check fails when the committed dashboard is stale or missing and passes when it is current, with the git-derived as-of stamp left out of the comparison, so a difference in the stamp alone is not stale. The as-of behaviour is stable both inside and outside a git checkout.
+_traced — routes to adjudication_
+- **Constrains**
+  - before: (empty)
+  - after: IF-011
+
+### LLR LLR-199
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: gen_components.py derives the component view from five registries and the files' Component headers: components.toml declares components, each file's Component header places that file in one, each design row of low-level-requirements.toml is placed at the owner component of each interface a test case of test-cases.toml verifying it names, system-requirements.toml is reached through those rows, and interfaces.toml provides the owners and the seams. It writes docs/requirements/components.derived.toml; docs/stack.ini [generated] declares kind components, check.py freshness-gates component-view, trunk_step --regen regenerates it on trunk, and the file carries the generated-but-live staleness header. For each component it emits member design rows, their decomposed requirements, perspectives from trace.effective_hats over members, modules, and seams split into internal and boundary by the components layer rule. A design row placed in no component appears once in the counted unplaced table, and so does a requirement with no component; registries cannot distinguish missing decomposition from an all-component constraint, and that judgement has no place in shipped machinery. A requirement in several components appears in each and in each component's sr_shared_refs, so the view never implies exclusive ownership. A seam is placed from its endpoint cells, which name components: it appears in each component it names, internal to the lowest component enclosing every endpoint through part_of (none when an endpoint is an external party or no component encloses them all) and boundary to every other; a seam naming no declared component stays in the unplaced table rather than being dropped. NO ACCEPTANCE CELL APPEARS, EVER: the hand file declares the component and holds its maturity, while this file describes it. With no real CMP row and no view on disk, the generator exits 0 and writes nothing. NOT DISCHARGED: the view has no INTERNALS, so mechanism remains in the named design rows; freshness compares the artifact with its regeneration, never asking whether the source rows were right, which remains the amend-without-flip guard's residue.
+  - after: The component view is derived from the component, design-row, system-requirement, interface and test-case registries and the files' component headers. The component registry declares the components, and each file's header places that file in one. Each design row is placed where LLR-403 places it, and a system requirement reaches the components its placed design rows sit in. The interface registry gives each seam's owner and far side. The view is written to the generated component file, which a freshness check compares with a regeneration, failing when they differ. For each component the view lists its member design rows, the requirements they decompose, the perspectives in effect on those members, its files, and its seams split into internal and boundary. A requirement reaching no component appears once in the counted unplaced table. A requirement in several components appears in each and in each component's shared list. A seam appears in each component its endpoint cells name: internal to the lowest component enclosing every endpoint through the part-of chain, internal to none when an endpoint is an external party or no component encloses them all, and boundary to every other; a seam naming no declared component stays in the unplaced table. No acceptance or maturity cell appears in the view. With no real component row and no view on disk, the generator exits 0 and writes nothing.
+- **Rationale**
+  - before: The column this replaces promised a prose home the kit never created and no script ever read, which is the weakest form a design record can take: its staleness was undetectable by construction, so nothing could ever report it wrong. A derived view inherits every check the spine already carries - the rows it joins have to be correct for the gate to pass at all - and it is stale-DETECTABLE by the same --check mechanism the other nine generated artifacts use. The cost is real and is accepted rather than hidden: a requirement list says what a component is obliged to do and nothing about how its parts fit, so the artifact that stays true is bought at the price of the artifact that showed mechanism. The coverage edges are answered in the emitted file rather than in the generator's head because a view that silently drops rows is indistinguishable from one with a bug, and the distinction between the two is the only thing that makes a derived artifact worth reading.
+  - after: The column this replaces promised a prose home the kit never created and no script ever read, which is the weakest form a design record can take: its staleness was undetectable by construction. A derived view inherits every check the spine already carries, since the rows it joins have to be correct for the gate to pass, and the same freshness check the other generated views carry reports it stale. The cost is accepted rather than hidden: a requirement list says what a component is obliged to do and nothing about how its parts fit, so the artifact that stays true is bought at the price of the artifact that showed mechanism. The coverage edges are answered in the emitted file rather than in the generator's head, because a view that silently drops rows is indistinguishable from one with a bug.
+_traced — routes to adjudication_
+- **Constrains**
+  - before: (empty)
+  - after: IF-139;IF-140
+
+### TC TC-195
+_accepted — re-acceptance owed_
+- **Method**
+  - before: The join, the three coverage edges, the standing constraint and the freshness contract, each driven against a two-component spine small enough to reason about by hand. THE JOIN: assert the design rows are placed through the interfaces their verifying test cases name and the requirement tier is reached through them, while the modules come from the files' Component headers. DERIVED NEVER COPIED: a design row carrying no hat cell still contributes its SR parent's perspectives, and re-ruling that one requirement moves the view with no design cell edited. EDGE 1: a requirement with no design child appears in the unplaced table, is counted there, and appears in no component section - visible rather than dropped. EDGE 2: a requirement reaching two components appears in both and is marked shared in both, while one reaching a single component is not. EDGE 3: seams enter the view, an interface with both endpoints inside a component is internal to it while one crossing two is a boundary of BOTH, an interface is placed by the components its endpoint cells name, and one naming no component is reported as unplaced. NO ACCEPTANCE: with one Accepted and one Drafted component declared in the hand file, no maturity key and neither word appears in any emitted cell. FRESHNESS, DRIVEN BOTH WAYS: --check passes on a fresh view, fails after a registry row moves, and passes again once regenerated; a missing view fails; the written bytes carry no CRLF and two renders agree. VACUITY: a repo whose only CMP row is the inert -000 example writes nothing and exits zero on both paths.
+  - after: The join, the three coverage edges, the standing constraint and the freshness contract, each driven against a two-component spine small enough to reason about by hand. THE JOIN: assert the design rows are placed where the derived placement puts them, through an interface a design row constrains and through the interfaces its verifying test cases name, and the requirement tier is reached through them, while the files come from their component headers. DERIVED NEVER COPIED: a design row carrying no hat cell still contributes its SR parent's perspectives, and re-ruling that one requirement moves the view with no design cell edited. EDGE 1: a requirement with no design child appears in the unplaced table, is counted there, and appears in no component section - visible rather than dropped. EDGE 2: a requirement reaching two components appears in both and is marked shared in both, while one reaching a single component is not. EDGE 3: seams enter the view, an interface with both endpoints inside a component is internal to it while one crossing two is a boundary of BOTH, an interface is placed by the components its endpoint cells name, and one naming no component is reported as unplaced. NO ACCEPTANCE: with one Accepted and one Drafted component declared in the hand file, no maturity key and neither word appears in any emitted cell. FRESHNESS, DRIVEN BOTH WAYS: the freshness check passes on a fresh view, fails after a registry row moves, and passes again once regenerated; a missing view fails; the written bytes carry no CRLF and two renders agree. VACUITY: a repo whose only CMP row is the inert example row writes nothing and exits zero on both paths.
+_traced — routes to adjudication_
+- **Evidence**
+  - before: tests/test_gen_components.py::test_membership_and_the_requirement_reach; tests/test_gen_components.py::test_the_hat_union_is_DERIVED_from_the_parent_not_copied; tests/test_gen_components.py::test_a_parent_re_ruling_moves_the_view_with_no_design_cell_edited; tests/test_gen_components.py::test_a_childless_requirement_is_listed_ONCE_and_never_dropped; tests/test_gen_components.py::test_a_shared_requirement_appears_in_EVERY_component_it_reaches; tests/test_gen_components.py::test_seams_enter_the_view_split_internal_from_boundary; tests/test_gen_components.py::test_a_seam_is_placed_by_the_components_its_endpoints_name; tests/test_gen_components.py::test_an_unplaceable_seam_is_REPORTED_not_silently_excluded; tests/test_gen_components.py::test_the_generated_view_carries_NO_acceptance_cell; tests/test_gen_components.py::test_check_reds_on_a_stale_view_and_greens_once_regenerated; tests/test_gen_components.py::test_check_reds_when_the_view_is_missing_entirely; tests/test_gen_components.py::test_the_written_file_is_LF_and_reproducible; tests/test_gen_components.py::test_a_repo_with_no_real_component_is_VACUOUS; tests/test_gen_components.py::test_the_cli_runs_out_of_process
+  - after: tests/test_gen_components.py::test_membership_and_the_requirement_reach; tests/test_gen_components.py::test_the_hat_union_is_DERIVED_from_the_parent_not_copied; tests/test_gen_components.py::test_a_parent_re_ruling_moves_the_view_with_no_design_cell_edited; tests/test_gen_components.py::test_a_childless_requirement_is_listed_ONCE_and_never_dropped; tests/test_gen_components.py::test_a_shared_requirement_appears_in_EVERY_component_it_reaches; tests/test_gen_components.py::test_seams_enter_the_view_split_internal_from_boundary; tests/test_gen_components.py::test_a_seam_is_placed_by_the_components_its_endpoints_name; tests/test_gen_components.py::test_an_unplaceable_seam_is_REPORTED_not_silently_excluded; tests/test_gen_components.py::test_the_generated_view_carries_NO_acceptance_cell; tests/test_gen_components.py::test_check_reds_on_a_stale_view_and_greens_once_regenerated; tests/test_gen_components.py::test_check_reds_when_the_view_is_missing_entirely; tests/test_gen_components.py::test_the_written_file_is_LF_and_reproducible; tests/test_gen_components.py::test_a_repo_with_no_real_component_is_VACUOUS; tests/test_gen_components.py::test_the_cli_runs_out_of_process; tests/test_gen_components.py::test_a_design_row_sits_where_the_interface_it_constrains_is_owned
+
+## SR-112 — Checked per-agent skill fan-out
+
+> **Requirement.** The per-agent skill copies shall be a checked, generated fan-out of the one neutral skill source.
+
+> **Rationale.** Realizes the dissolved edge expectation that a generated artifact drifting from its source fails its --check — one skill maintained in three agent-specific copies rots into three different skills, and the copy an agent actually loads is the one nobody edited. Maintaining a single shared directory was rejected because each agent harness looks in its own path; the fan-out is forced, so the copies are generated and drift is a finding. Generated marking is what stops a maintainer editing a disposable copy.
+
+
+### LLR LLR-025
+- **Constrains**
+  - before: (empty)
+  - after: IF-019
+
+### LLR LLR-279
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: skill_copies(skill_dir, name, spec) names the files under a skill's directory, paired with their destinations at the same relative path under the agent's skills directory, so the unit a skill materializes as is its directory rather than its SKILL.md. materialize_agent_layer copies those pairs write-once for the chosen agents, and delivery_inventory lists the same pairs as the skill's conditional deliveries, so the scaffold copy and the delivered-package inventory read one statement of what a skill ships.
+  - after: A skill's copy names every file under its directory, each paired with its destination at the same relative path under the agent's skills directory, so the unit a skill materializes as is its directory rather than its SKILL.md. The agent layer's write-once copy for the chosen agents copies those pairs, and the delivered-package inventory lists the same pairs as the skill's conditional deliveries, so the scaffold copy and the inventory read one statement of what a skill ships.
+_traced — routes to adjudication_
+- **Constrains**
+  - before: (empty)
+  - after: IF-035
+
+## SR-157 — Spine and work-registry rules fail the harness verdict
+
+> **Requirement.** The delivered harness shall report every declared spine and work-registry rule violation — broken joins, integrity and schema faults, leftover placeholders, requirement-form findings and work-item coherence contradictions — naming the at-fault row and cell, gating the declared failure set at the declared gate while advisory classes never change the exit code.
+
+> **Rationale.** Realizes SN-002 (the chain is mechanically verified, not asserted — this row is the boundary-level home of the verdict SN-002's acceptance asks for), SN-012 (optional registries and opt-outs cost a non-user nothing) and SN-025 (the tracked work-item graph the loop derives its next work from is kept coherent). One row because the adopter-observable contract is one: registry rules produce named findings at a declared severity; which rules, at which severities, is the component detail the rows below it decompose. Fan-out re-stamp: the delivered contract is one — a named, row-and-cell-attributed finding at a declared severity, gating or advisory — while the rule inventory it ranges over is open by this row's own acceptance ("a rule added at one of those sites is in this row's scope by default"), so the child count tracks the number of declared rules rather than the number of decisions this row makes, and would climb back through any bound a split bought.
+
+
+### LLR LLR-417 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-417
+- **SR-Refs**: SR-157
+- **Title**: A design or system-requirement row names the interfaces it constrains, each a live interface
+- **Detail**: A design row or a system requirement may carry a constrains cell listing one or more interface ids, written as its other reference lists are. Each id must name a live interface row, the example row excluded; one that does not is a finding that fails the strict check, naming the row and the id. An empty list is refused when the registry is read, naming the row and the cell, as any explicit empty cell is.
+- **Rationale**: The interface row states only its form; the row stating what must be true of what crosses it names it, so the relation points from requirement to interface and has one home.
+- **TestRefs**: TC-527
+- **Status**: Drafted
+- **Phase**: 6
+
+### LLR LLR-418 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-418
+- **SR-Refs**: SR-157
+- **Title**: A design row's input-set and out-of-domain cells parse, and sit only beside a constrains cell
+- **Detail**: A design row carrying a constrains cell may carry a dimensions cell, one string in the permutation grammar of ranges, sets and booleans with an optional combination strategy, and an out-of-domain cell, one sentence saying what the interface does with an input outside those dimensions. A dimensions cell the grammar does not parse or whose strategy is not one of the grammar's three, an out-of-domain cell that is not one line ending in a full stop with no sentence ending inside, and either cell on a design row with no constrains cell are each a finding that fails the strict check, naming the row and the cell. The cell is parsed by the parser the case generator uses, so the two accept and refuse the same strings.
+- **Rationale**: One grammar with one parser means an input set the generator can expand is exactly one the check accepts.
+- **TestRefs**: TC-528
+- **Status**: Drafted
+- **Phase**: 6
+
+### LLR LLR-419 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-419
+- **SR-Refs**: SR-157
+- **Title**: A design row constraining an interface without both companion cells is reported without failing the strict check
+- **Detail**: Each design row carrying a constrains cell but lacking a dimensions cell or an out-of-domain cell is reported on one warning line that names the first ten such rows and counts the rest, and that counts, by the channel of each interface a design row constrains, the pairs whose row carries both cells and those whose row lacks one or both. The warning does not change the strict check's exit code.
+- **Rationale**: Most interfaces carry a schema or a document rather than a closed set, so the companion cells are counted before they are required; the count by channel is the evidence that decision reads.
+- **TestRefs**: TC-529
+- **Status**: Drafted
+- **Phase**: 6
+
+### LLR LLR-421 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-421
+- **SR-Refs**: SR-157
+- **Title**: An interface whose reach through the rows constraining it and the cases naming it holds no executable test case is reported
+- **Detail**: An interface's reach is the design rows and system requirements whose constrains cell names it, the design rows a test case naming it verifies, and every test case naming it or verifying one of those rows, a requirement's cases including those of the design rows decomposing it. Each live interface whose reach holds no test case the harness runs, an observation case being one it does not run, is named on one warning line, and those whose reach holds observation cases alone are named on a line of their own. A count line gives the interfaces reached through a constraining design row, through a constraining requirement, through a naming test case alone, by observation alone, and not at all. The process settings' interface-check opt-out silences the report, and with no live interface row it is empty. The report does not change the strict check's exit code.
+- **Rationale**: Every interface is pointed at by a requirement stating its behaviour or by a test case observing it, and reaches a test the harness runs that way; reporting the reach before it fails lets the population land first.
+- **TestRefs**: TC-531
+- **Status**: Drafted
+- **Phase**: 6
+
+### LLR LLR-422 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-422
+- **SR-Refs**: SR-157
+- **Title**: A test case naming an interface every row it verifies already constrains is reported
+- **Detail**: For each interface a test case's verifies cell names, the name repeats each verified design row or system requirement whose constrains cell includes that interface. The name is reported, naming the case, the interface and the rows, only when it repeats every design row and system requirement the case verifies: a case verifying neither repeats nothing, and a case verifying one row that constrains the interface beside a row or requirement that does not repeats nothing. The report changes the exit code of neither the strict check nor the integrity check.
+- **Rationale**: A test case names an interface only where it observes the behaviour at a different interface from the one its rows constrain; per pair, a row that constrains nothing still needs the name for its placement.
+- **TestRefs**: TC-532
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-527 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-527
+- **Verifies**: SR-157;LLR-417
+- **Level**: Integration
+- **Method**: Run the strict check over a project whose design rows and requirement name, in their constrains cells, a live interface, an interface id no row has, a requirement id and the example interface id; then over a project whose only constrains cell names live interfaces; then read a design-row registry whose constrains cell is an empty list.
+- **Tier**: Smoke
+- **Expected**: Each id naming no live interface row is a finding naming its row and the id and the check exits 1, while a live id on either tier draws none; the second project passes; the empty list is refused on read, naming the row and the cell.
+- **Automated**: Yes
+- **Evidence**: tests/test_constrains.py::test_a_constrains_id_naming_no_live_interface_fails_the_strict_check; tests/test_constrains.py::test_a_live_constrains_cell_passes_and_an_empty_one_is_refused_on_read
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-528 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-528
+- **Verifies**: SR-157;LLR-418
+- **Level**: Integration
+- **Method**: Run the strict check over design rows that constrain an interface and carry a dimensions cell that parses, one of an unknown dimension type, one naming a strategy outside the grammar's three, an out-of-domain cell of two sentences and one with no full stop, and over rows constraining nothing that carry either cell; and parse eight grammar strings, accepted and refused, through the cell's parser and the case generator's.
+- **Tier**: Smoke
+- **Expected**: Each malformed cell, and each companion cell on a row constraining nothing, is a finding naming its row and cell, and the check exits 1, while the well-formed row draws none; the two parsers accept the same strings with the same result and refuse the same strings with the same message.
+- **Automated**: Yes
+- **Evidence**: tests/test_constrains.py::test_a_companion_cell_that_does_not_parse_or_constrains_nothing_fails; tests/test_constrains.py::test_the_cell_and_the_generator_read_one_grammar
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-529 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-529
+- **Verifies**: SR-157;LLR-419
+- **Level**: Integration
+- **Method**: Run the strict check over twelve design rows constraining an exit-code interface and a command-line interface: one carrying both companion cells and constraining both, one carrying only an input set, and ten carrying neither.
+- **Tier**: Smoke
+- **Expected**: One warning line names the first ten of the eleven rows lacking a companion cell and counts one more, and counts the pairs by channel with both cells and without: command-line one and one, exit-code one and ten; the check exits 0.
+- **Automated**: Yes
+- **Evidence**: tests/test_constrains.py::test_a_constraining_row_without_its_companions_is_counted_and_passes
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-531 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-531
+- **Verifies**: SR-157;LLR-421
+- **Level**: Integration
+- **Method**: Derive the reach and the route of six interfaces: one a design row constrains, one a requirement constrains whose design row a case verifies, one a case names beside the row it verifies, one only an observation case names, one no row or case reaches, and one that only a design row verified by an observation case constrains; then run the strict check over the project, again with the interface-check opt-out set, and over a project with no interface row.
+- **Tier**: Smoke
+- **Expected**: Each interface's reach holds its constraining or observed rows and the cases verifying them; the routes are design row, requirement, case, observation, unreached and observation; the count line reads one, one, one, two and one; the unreached interface and the two observation-only interfaces are each named on their own line; the check exits 0; the opted-out run and the project with no interface row print no coverage line.
+- **Automated**: Yes
+- **Evidence**: tests/test_constrains.py::test_each_interface_reaches_a_run_case_through_a_constraining_row_or_a_naming_case; tests/test_constrains.py::test_the_interface_check_opt_out_silences_coverage
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-532 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-532
+- **Verifies**: SR-157;LLR-422
+- **Level**: Integration
+- **Method**: Report the repeated names over three test cases each naming an interface: one verifying two design rows that both constrain it, one verifying a row that constrains it and one that does not, and one verifying a requirement that constrains nothing beside a row that constrains it; and over a case naming only an interface; then run the strict check and the integrity check over the project.
+- **Tier**: Smoke
+- **Expected**: Only the first case's name is reported, naming the case, the interface and both rows; the other cases and the interface-only case report nothing; both checks exit 0.
+- **Automated**: Yes
+- **Evidence**: tests/test_constrains.py::test_a_name_every_verified_row_already_constrains_is_reported_per_pair
+- **Status**: Drafted
+- **Phase**: 6
+
+## SR-158 — Documentation drift fails or warns per its declared tier
+
+> **Requirement.** The delivered harness shall report a documentation surface that has drifted from what it claims — a broken intra-repo link, a missing vision declaration, a reference to an absent path or symbol, a stale generated doc, or a declared figure without its provenance — at the declared warn-or-gate severity for each class.
+
+> **Rationale.** Realizes SN-010 (navigable, honest documentation) and SN-008 (a pass never hides a stale claim). One row because the delivered contract is one honesty verdict over the documentation surfaces; the individual checkers and their carve-outs are component details.
+
+
+### LLR LLR-012
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: Resolves intra-repo links, requires a PROJECT-VISION tag, and checks generated-doc freshness under --stale. A dead intra-repo link or an absent PROJECT-VISION tag fails; a clean doc set passes. Wired as check.py's built-in doc-navigability step, running from DevStg-Reqs on; orphans warn unless --strict-orphans, with docs/orphans-allow as the reviewed carve-out, and --stale is warn-only.
+  - after: Resolves intra-repository links, requires the project-vision tag, and in its staleness mode checks generated-document freshness. A dead intra-repository link or an absent project-vision tag fails, and a clean document set passes. The gate harness runs it as its built-in documentation step from DevStg-Reqs on; an orphaned document warns unless orphans are made strict, with the declared orphan allowlist as the reviewed carve-out, and the staleness mode only warns.
+_traced — routes to adjudication_
+- **Constrains**
+  - before: (empty)
+  - after: IF-030
+
+### LLR LLR-013
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: Validates an authored runtime-flow doc against its structural contract; a malformed flow fails. A conformant doc passes. Bound to its input surface: the authored runtime-flow doc is docs/runtime-flows.md. The recorded dependency is on the authored-flow surface as a class, not on any one file, so re-homing the flows re-points the default --doc rather than standing the obligation down.
+  - after: Validates an authored runtime-flow document against its structural contract: a malformed flow fails and a conformant document passes. Its input is the authored runtime-flow document, docs/runtime-flows.md by default.
+_traced — routes to adjudication_
+- **Constrains**
+  - before: (empty)
+  - after: IF-029
+
+## SR-168 — The state view shows current progress and next work
+
+> **Requirement.** The delivered generator set shall produce one state view from which a reviewer reads the adopted repository's completeness, its requirement decomposition, its planned and in-flight work, and any declared hold on that work, without consulting a second surface.
+
+> **Rationale.** Realizes SN-023's FIRST conjunct — a reviewer sees the project's progress from one dashboard-like file — with SN-010 (what the reviewer reads there is the generated truth, never a hand-kept summary of it). ONE DECISION PER ROW: the integrity of a generated artifact (SR-070) and what that artifact must SHOW are two obligations that fail independently. This row is the progress half; SR-169 is the connection half, along the conjunction SN-023 itself draws. Deliberately NOT folded back into SR-070: a state view that regenerates deterministically, offline and drift-checkably while omitting the work in flight satisfies that row completely and this one not at all. Deliberately NOT folded into SR-169 either: a complete progress view can carry no seam graph whatsoever — the state this repository was in before its interface registry existed — so the two are separately observable and separately buildable. `phase` inherits the parent's 1 rather than tracking its children (which span 1 through 4), because a phase records WHEN a piece shipped, and child-later-than-parent is the ordinary case.
+
+
+### LLR LLR-198
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: The pending-operator-action derivation, in one module that renders no page and decides nothing about lanes. Its two committed-tree-pure, clock-free sources are spine_pending, which names each Drafted SR needing a first acceptance and each SR whose text has drifted from its copy under docs/archive/last_accepted needing a re-accept, one pointer line each naming the on-demand brief that carries the depth; and pause_pending, which names the tracked docs/work/pause and fails closed on a file it cannot read. pending_items joins the two into the TYPED model - one PendingItem per action carrying its kind and its rendered bullet. pending_block is that model rendered, the byte-compared content of the generated operator surface's pending region, and operator_cards is the model minus the pause, which is what a drained-queue banner counts. THE SITING IS THE ROW: the dashboard status snapshot, the generated operator surface and the dispatcher's exit banner all read this derivation, and only the first is inside the render family, so defining it there forced the other two through the gen_trajectory facade and into a private name. traj_status.py re-exports the three surviving names (spine_pending, pause_pending, pending_block) under their former names, so no caller moved to gain the layer and the generated surfaces are byte-identical - which is why that split sibling belongs to this row beside the read model: the shim is part of what this row delivers, not a leftover.
+  - after: The pending-operator-action derivation sits in one module that renders no page and decides nothing about lanes. Its two committed-tree-pure, clock-free sources are the spine source, which names each Drafted SR needing a first acceptance and each SR whose text has drifted from its recorded copy and needs a re-accept, one pointer line each naming the on-demand brief that carries the depth, and the pause source, which names the tracked pause file and fails closed on a file it cannot read. The two join into one typed model, one item per action carrying its kind and its rendered line. The rendered block, the byte-compared content of the generated operator surface's pending region, is that model rendered, and the operator cards are the model less the pause, which is what a drained-queue banner counts. The dashboard status snapshot, the generated operator surface and the dispatcher's exit banner all read this derivation, and the dashboard status module still answers for the spine source, the pause source and the rendered block under their former names, so no caller moved and the generated surfaces stay byte-identical.
+- **Rationale**
+  - before: A derivation every layer reads must sit below all of them, and this one did not: it lived inside a render module of the traj_* family, reachable only through a re-export facade of about a thousand lines. The repository review recorded the consequence twice - a large facade imported for a state query, and private names used as a cross-module API - and the second was DOCUMENTED as an interface row rather than removed, which is the failure mode this kit's own doctrine names: a seam registry records crossings, it does not license them. Extracting the derivation cut both edges at their cause and left the facade with no importers at all, which is now asserted rather than described. The typed item is what makes the banner's exclusion of the pause a declared filter over a kind field instead of a second opinion about what is pending: the ruled amendment requires that the banner and the operator surface can never disagree, and one read model with one filter is that requirement held by construction rather than by three callers agreeing to be careful. A generic shared module was refused for the same reason it is refused everywhere here, and the package of stdlib-only shared helpers by a hard rule rather than by taste - every module there must stay import-clean of the rest of the scripts directory so the scaffolder can import it, while this module reads the work registry through the validator's loaders and the spine through its sibling parser.
+  - after: A derivation every layer reads must sit below all of them, and this one did not: it lived inside a render module of the dashboard family, reachable only through a re-export facade of about a thousand lines. The repository review recorded the consequence twice, a large facade imported for a state query and private names used as a cross-module interface, and the second was documented as an interface row rather than removed: a seam registry records crossings, it does not license them. Extracting the derivation cut both edges at their cause and left the facade with no importers at all, which is now asserted rather than described. The typed item makes the banner's exclusion of the pause a declared filter over a kind field instead of a second opinion about what is pending, so the banner and the operator surface cannot disagree, by one read model with one filter rather than by three callers agreeing to be careful. A generic shared module was refused, and the package of stdlib-only shared helpers by a hard rule rather than by taste: every module there must stay import-clean of the rest of the scripts directory so the scaffolder can import it, while this module reads the work registry through the validator's loaders and the spine through its sibling parser.
+_traced — routes to adjudication_
+- **Constrains**
+  - before: (empty)
+  - after: IF-088
+
+## SR-170 — Shared authority surfaces are the serial actor's alone
+
+> **Requirement.** The delivered loop content shall write the shared records it derives - the compiled activity log and the generated project-state artifacts - only from the serial merge step and only against the merged tree, never from a parallel work branch.
+
+> **Rationale.** ONE DECISION PER ROW: a shared serial actor is a shared MECHANISM, not one decision. This row holds the EXCLUSIVE-WRITER contract alone; ordering-and-all-or-nothing is SR-173's and identity allocation SR-174's, each with its own children. Realizes SN-027's serialization guarantee at the surfaces where a parallel writer would actually corrupt something, with SN-010 (the status surface a human reads regenerates at the seam, never on a lane), SN-008 (a first failure stops loudly rather than half-regenerating) and SN-025 (the surface a session reads is generated, never hand-copied). The serial LANDING (SR-156) and the rule that shared authority surfaces regenerate only there are two contracts that fail independently, since a perfectly serialized landing that still lets a lane commit a regenerated artifact satisfies the landing row and not this one. The three surfaces sit in ONE row rather than three because they share one decision, not three: the serial trunk actor is their sole writer. That decision is already ruled for the identity mint — a work branch never mints a work-item id — and this row is its requirement-tier home, which it did not have. `phase` inherits the parent's 4, matching every child.
+
+
+### LLR LLR-124
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: docs/status.md's generated block is maintained by the trunk lane only: trunk_step --regen runs gen_trajectory --status after derive_stage (the derived stage is its input), and the status-map freshness gate byte-compares it on the trunk while work branches skip (SS5.2). (docs/run-state and its four-valued dispatcher outcome retired with the dispatcher at Phase 5.) The snapshot is an output of the kit in operation, read by the person (EXT-006) across B-09; a work branch never commits the artifact.
+  - after: The generated block of docs/status.md is maintained by the trunk lane only: the trunk step's regeneration writes it after the stage derivation, whose derived stage is its input, and the status freshness gate byte-compares it on the trunk while work branches skip it. The snapshot is an output of the kit in operation, read by the person (EXT-006) across B-09; a work branch never commits the artifact.
+_traced — routes to adjudication_
+- **Constrains**
+  - before: (empty)
+  - after: IF-164
+
+## SR-178 — Text that has moved away from its acceptance record is reported
+
+> **Requirement.** The kit shall report any recorded artifact whose text has moved away from the
+copy recording its acceptance - stakeholder needs included - regardless of any
+Status movement.
+
+> **Rationale.** THE DRIFT half, separable from SR-140 in the direction that matters: a record that exists and rides its acceptance commit, with nothing ever comparing live text against it, satisfies SR-140 completely and leaves every later amendment invisible. That is not a hypothetical - it is precisely the failure the git-history derivation had, and the reason a baseline on disk was owed at all.
+REGARDLESS OF STATUS MOVEMENT is the load-bearing clause, not a qualifier. The amendment machinery watches the Status flip, and the sanctioned staged-amendment path deliberately does not flip - so a rule keyed off the flip returns nothing on exactly the rows a sitting exists to judge. Reporting against the recorded copy is the only reading that survives that, because the copy is a baseline OUTSIDE the live file and a walk over the live file can never be one.
+THE STAKEHOLDER-NEED RIDER is in the normative text rather than left to the acceptance because the need tier is the one a sitting most wants to hold and the one the amendment-watching rules were last to reach: each rule walks the tiers it is given, so without the clause the need tier is left off the walk and no rule reaches it. Needs are compared row by row under the same accepted and traced split as every other tier.
+WHAT COUNTS AS MOVEMENT is one definition with one home, shared with the amend-without-flip guard: the id column and the Status cell are excluded STRUCTURALLY (the id is the join key rather than content, and folding Status in woul… [233 more chars — read the registry row]
+
+
+### LLR LLR-420 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-420
+- **SR-Refs**: SR-178
+- **Title**: The constrains cell is traced and routed to adjudication, and the input-set and out-of-domain cells are accepted text
+- **Detail**: A requirement's or design row's constrains cell is a traced cell: a change to it on an accepted row moves no accepted text, and the merge's amendment walk routes it to adjudication as it routes a changed requirement or verifies reference. A design row's dimensions and out-of-domain cells are accepted cells: a change to either on an accepted row amends its accepted text.
+- **Rationale**: The pointer re-points no prose, but whether the row's text states the behaviour across the interface it now names is a judgement on the row; the input set and the out-of-domain rule are statements the row makes.
+- **TestRefs**: TC-530
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-530 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-530
+- **Verifies**: SR-178;LLR-420
+- **Level**: Integration
+- **Method**: Read the class of the constrains cell on the requirement and design-row registries and of the two companion cells, and whether the merge's amendment walk routes each; then commit a project whose design row is accepted with no constrains cell, add a constrains cell and a dimensions cell to it in a second commit, and run the amendment walk and the trunk's amendment mint over the two commits.
+- **Tier**: Smoke
+- **Expected**: The constrains cell is traced and routed on both registries and the two companion cells are accepted; the walk records the constrains change in the row's traced half and the dimensions change in its accepted half, and the mint routes the constrains change.
+- **Automated**: Yes
+- **Evidence**: tests/test_constrains.py::test_a_constrains_change_on_an_accepted_row_is_a_routed_amendment; tests/test_constrains.py::test_constrains_is_traced_and_routed_and_its_companions_are_accepted
+- **Status**: Drafted
+- **Phase**: 6
+
+## SR-211 — Each boundary interface is bridged or coincident
+
+> **Requirement.** The delivered harness shall report each interface realizing a boundary crossing that neither names the assumptions carrying its reading to an outcome nor records why its reading is the outcome.
+
+> **Rationale.** A requirement is testable only if the interface it is met at is defined or its reading is clearly assumed. The allocation is recorded on the interface, which is accepted at the architecture rung where interfaces are, so an assumption accepted earlier at the boundary rung is never edited to point at a seam accepted later. A requirement stating the behaviour a seam carries names that seam in its own constrains cell, and the relation is never recorded on the interface, so it keeps one home.
+
+
+### SR SR-211
+- **Rationale**
+  - before: A requirement is testable only if the interface it is met at is defined or its reading is clearly assumed. The allocation is recorded on the interface, which is accepted at the architecture rung where interfaces are, so an assumption accepted earlier at the boundary rung is never edited to point at a seam accepted later. The requirement a seam answers stays derived through the interface's owner, because stating it on the interface would give that relation a second home.
+  - after: A requirement is testable only if the interface it is met at is defined or its reading is clearly assumed. The allocation is recorded on the interface, which is accepted at the architecture rung where interfaces are, so an assumption accepted earlier at the boundary rung is never edited to point at a seam accepted later. A requirement stating the behaviour a seam carries names that seam in its own constrains cell, and the relation is never recorded on the interface, so it keeps one home.
+
+## SR-212 — With the assumption gate on, interface-form requirements are bridged at their crossings and reached and bridged at the architecture rung
+
+> **Requirement.** Where the assumption gate is enabled, the delivered harness shall fail, for each system requirement of interface form, the boundary gate when the requirement is not recorded as coincident and names a crossing on which no assumption it cites lands, and the architecture gate when no boundary interface reaches it or a reaching boundary interface neither records it as coincident nor bridges it by an assumption the requirement also cites.
+
+> **Rationale.** A requirement meant to be met at an interface is not testable until that interface exists and its reading is either the outcome or carried by an assumption the requirement itself relies on. The frame's crossings are the first such interfaces: they are accepted with the frame at the boundary rung, before any interface row exists, and an assumption already names the crossing it lands on, so the requirement is judged against them there. Judging it again at the architecture rung, against the boundary interfaces that realize the crossings, keeps interfaces after the requirements they answer. Minting interface rows to match a count would produce seams with no contract behind them, so the check reports the gap rather than inventing the seam.
+
+
+### LLR LLR-244
+- **Detail**
+  - before: Each boundary interface, one carrying a from- or to-external tie-back, reaches the requirements named in SR-Refs by the design rows realized in the one file stating its contract body. That file is the one the definition gate's scan finds; the files realizing a design row are those the back-link index names for it; the two are compared through the one path normalizer. An interface with no contract body yet reaches none. Where no source is scanned, an interface instead reaches the requirements of the design rows placed in its owner component, a design row placed through the interfaces its verifying test cases name. The architecture arm judges each requirement whose form is interface against every boundary interface reaching it: one reached by none fails naming the requirement and stating that no boundary interface reaches it; each reaching interface with no Coincident whose BridgedBy shares no assumption with the requirement's DA-Refs fails naming the requirement and that interface, so one valid interface never excuses another invalid one. The harness gains a built-in step for the architecture arm at the DevStg-Arch threshold, gated by the same setting. The boundary arm judges the frame's crossings: each interface-form requirement with no Coincident fails once for each declared crossing its Boundary-Refs names on which no assumption in its DA-Refs lands (EffectAt), naming the requirement and that crossing; a crossing the frame does not declare is left to the frame's own reference rule. The harness gains a built-in step for the boundary arm at the DevStg-Boundary threshold, gated by the same setting. The relation is derived here and never recorded on an interface, and the stage fold gains no interface parameter.
+  - after: Each boundary interface, one carrying a from- or to-external tie-back, reaches the requirements named in SR-Refs by the design rows realized in the one file stating its contract body. That file is the one the definition gate's scan finds; the files realizing a design row are those the back-link index names for it; the two are compared through the one path normalizer. An interface with no contract body yet reaches none. Where no source is scanned, an interface instead reaches the requirements of the design rows placed in its owner component, each placed as LLR-403 places it. The architecture arm judges each requirement whose form is interface against every boundary interface reaching it: one reached by none fails naming the requirement and stating that no boundary interface reaches it; each reaching interface with no Coincident whose BridgedBy shares no assumption with the requirement's DA-Refs fails naming the requirement and that interface, so one valid interface never excuses another invalid one. The harness gains a built-in step for the architecture arm at the DevStg-Arch threshold, gated by the same setting. The boundary arm judges the frame's crossings: each interface-form requirement with no Coincident fails once for each declared crossing its Boundary-Refs names on which no assumption in its DA-Refs lands (EffectAt), naming the requirement and that crossing; a crossing the frame does not declare is left to the frame's own reference rule. The harness gains a built-in step for the boundary arm at the DevStg-Boundary threshold, gated by the same setting. The relation is derived here and never recorded on an interface, and the stage fold gains no interface parameter.
+
+### TC TC-466
+- **Evidence**
+  - before: tests/test_if_owner_component.py::test_a_boundary_row_reaches_requirements_through_the_file_stating_its_body
+  - after: tests/test_if_owner_component.py::test_a_boundary_row_reaches_requirements_through_the_file_stating_its_body; tests/test_if_owner_component.py::test_with_no_scanned_source_a_row_is_placed_by_the_interface_it_constrains
+
+## SR-218 — The state view shows, for each need, the assumptions it relies on and whether any has been shown false
+
+> **Requirement.** The delivered state view shall show, for each stakeholder need, the assumptions its requirements rely on, with each assumption's status, validity and falsifier and the test cases whose failure shows it false.
+
+> **Rationale.** The need promises that a reviewer can see what each outcome relies on and whether any of it has been shown false. The per-assumption reports and the acceptance brief answer other questions — what is wrong now, and what is being accepted — and neither lets a reviewer start from an outcome. Deriving the view from the registries keeps it from going stale the way a hand-written summary does, and marking a falsified premise in words as well as color keeps the signal readable for a reader who does not see color.
+
+
+### LLR LLR-258
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: traj_parse.need_assumptions(root) derives, for each need, the assumptions cited by its requirements, each once, with its status, its standing, its falsifier, the test cases naming it in Assumption-Refs and the requirements citing it, and marks a need with an unclassified requirement and one whose requirements are all coincident. traj_views.need_assumption_block renders that list into the need's detail panel in the spine view; the test cases appear as the cases that can falsify it; a falsified assumption carries a text label as well as its color, and no evidence level is shown. With no assumptions registry the block is empty and the page is byte-identical to today's.
+  - after: The per-need assumption derivation gives, for each need, the assumptions cited by its requirements, each once, with its status, its standing, its falsifier, the test cases naming it in Assumption-Refs and the requirements citing it, and marks a need with an unclassified requirement and one whose requirements are all coincident. The spine view renders that list into the need's detail panel: the test cases appear as the cases that can falsify it, a falsified assumption carries a text label as well as its colour, and no evidence level is shown. With no assumptions registry the block is empty and the generated page is byte-identical to the stored page without it.
+_traced — routes to adjudication_
+- **Constrains**
+  - before: (empty)
+  - after: IF-227
+
+## SR-224 — A skill whose description cannot say when to use it fails the skills-index check
+
+> **Requirement.** The kit shall hold every skill description to the declared description floor: the descriptions it ships are at or above it, and its skills-index check fails, naming the skill, on any description shorter than it.
+
+> **Rationale.** A DERIVED requirement, and labelled so. SN-005 asks that agents and humans work from the same playbook; it does not name what a skill's description must carry, so this obligation arrives through the first-run-adopter lens rather than through the need's text. An agent reads only a skill's description to decide whether to load it, so a description too short to say when to use the skill is shipped guidance an adopter's agent never reads: the skill works only for someone who already knows it exists, the undocumented-knowledge failure that lens listens for. A length floor is a lexical proxy, not a proof that a description is good: it catches the one-line stub that cannot state a trigger and leaves the wording to review. A reviewer's judgement of every description was the alternative, and it lost as the only guard because nothing would re-ask it when a skill is added. Fed back to the need: SN-005's acceptance could name the skills' descriptions as part of the playbook; until it does, this row is derived and says so.
+
+
+### LLR LLR-281
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: DESCRIPTION_FLOOR is the shortest description --check accepts, in characters, set at 100: room for a trigger and an effect ("Use when <trigger> - <what>"). short_descriptions(rows) returns the name and length of the rows under it, and refuse_short_descriptions(rows), called first by --check, prints one SHORT line per such skill naming it, its length and the floor, then exits 1. The regenerating path does not apply the floor, so a short description is refused where the index is checked rather than silently written.
+  - after: The shortest skill description the skills index check accepts is one declared floor of 100 characters, room for a trigger and an effect ("Use when <trigger> - <what>"). The check prints one line per skill whose description is under the floor, naming the skill, its length and the floor, and then exits 1; a description at the floor passes. Regenerating the index does not apply the floor, so a short description is refused where the index is checked rather than silently written.
+- **Rationale**
+  - before: The floor is one declared number read by one function, so the check and its tests agree on it; a length written into the message and the comparison separately would drift. Refusing at --check rather than at regeneration keeps the generator total: the index still renders, and the gate that reads the generator's exit code is the one that says the description needs rewriting.
+  - after: The floor is one declared number, so the check and its tests agree on it; a length written into the message and the comparison separately would drift. Refusing at the check rather than at regeneration keeps the generator total: the index still renders, and the gate that reads the check's exit code is the one that says the description needs rewriting.
+_traced — routes to adjudication_
+- **Constrains**
+  - before: (empty)
+  - after: IF-254
+
+## SR-229 — Coordinator claim admission respects a blackout pause
+
+> **Requirement.** Where a blackout window is armed, the delivered work-item admission shall refuse a new claim inside that window on every route at any context-guard dial; outside a blackout window, where the declared coordinator context guard is enabled, it admits a coordinator claim only from the current lease holder while that holder's context drain is not latched, the drain latching once the holder's context occupancy reaches the declared threshold and holding across compaction and resume until the operator records a clear or a release, the holder records a hand-back naming its handoff, or a relaunched successor takes the lease.
+
+> **Rationale.** A DERIVED requirement, and labelled so. SN-027 asks that a declared pause stop claiming and drain what is already in flight, and that recovery never double-assign work; it does not name the coordinating session's own context, so this obligation arrives through two lenses rather than through the need's text. The unattended-operations lens listens for a silent degrade: a coordinator whose context has crossed its declared limit keeps claiming after compaction has degraded the context it needs to close the work it already holds, and nothing pages anyone. The integrity lens listens for a recovery path written only for the unattended run when the same corruption is reachable attended, and for a claim nothing can reclaim once its holder is gone: a retained adjudicator session already drains on occupancy while the attended coordinator does not, and a second or missing holder leaves claim authority ambiguous, so one lease names the coordinator and only the operator's recorded release frees a lease whose holder has gone. A latched single-holder admission boundary was chosen over a one-time event observation because every claim must remain protected when an event is missed or the transcript later reports a lower reading. Fed back to the need: SN-027's acceptance could name the coordinating session's own capacity as a declared reason to stop claiming and drain; until it does, this row is derived and says so.
+
+
+### LLR LLR-423 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-423
+- **SR-Refs**: SR-229
+- **Title**: The coordinator guard reads its caller and its repository root from the agent tool's environment
+- **Detail**: The coordinator guard identifies a claim's caller by the session-identity variable the agent command-line tool exports to its tool processes, and a variable under any other name identifies no one. A guard command acts on the repository root it is given, else on the project-root variable the agent tool sets for a hook process, else on the working directory.
+- **Rationale**: The tool's documentation is not ours to write, so our reading of its environment is stated where the guard depends on it.
+- **TestRefs**: TC-533
+- **Status**: Drafted
+- **Phase**: 6
+- **Constrains**: IF-277
+
+### TC TC-533 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-533
+- **Verifies**: SR-229;LLR-423
+- **Level**: Unit
+- **Method**: Run a guarded claim whose environment names the lease holder's session under the agent tool's session variable, and again under another variable name; resolve a guard command's repository root with a root given, with only the project-root variable set, and with neither.
+- **Tier**: Smoke
+- **Expected**: The claim under the tool's variable passes and the one under another name reads its caller as unknown; the root is the one given, else the variable's, else the working directory.
+- **Automated**: Yes
+- **Evidence**: tests/test_coordinator_guard.py::test_the_guard_reads_its_caller_and_root_from_the_agent_tools_environment
+- **Status**: Drafted
+- **Phase**: 6
+
+## SR-238 — A deadline or interruption ends the session process tree
+
+> **Requirement.** When a declared deadline or coordinator interruption ends a session, the delivered coordinator shall end every process in the session process group on POSIX or session job on Windows.
+
+> **Rationale.** A descendant can outlive the direct session child and keep editing the worktree handed to the next session. Ending only the direct child was rejected because it leaves that concurrent writer outside the coordinator's supervision. The bounded guarantee excludes a descendant that leaves the session process group and a process another service starts outside the session job: neither is ended, and the kill does not report it. A POSIX zombie under a PID 1 that never reaps keeps the group nonempty, so the kill raises after the bound. A descendant that denies the kill access to wait on it also makes the kill raise, rather than letting the coordinator continue without knowing whether it ended. Stopping is the need's cannot-proceed case, not a supervision fault: continuing would hand the worktree to the next session beside a writer that may still be live, and nothing can proceed safely past that. Two windows lie outside the guarantee, each sub-second and on no supported workflow's ordinary path: an interruption while the session is still being launched, before the coordinator supervises it, which can leave a running child; and a process that joins the session job while the kill takes its member list, which is terminated with the job but can still be ending, for milliseconds, when the coordinator continues.
+
+
+### LLR LLR-026
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: Runs the agent CLI headless: build_argv substitutes {model} into argv and, when a CmdTemplate carries no {prompt} placeholder (the default for both provider CLIs), routes the prompt to the child's STDIN (run_session writes it from a daemon thread then closes), while the no-wedge invariant holds — a fixed prompt plus EOF, never an interactive read. A codex session additionally captures that CLI's own --output-last-message file as the result (_codex_lastmsg_setup/_codex_lastmsg_read). stdin is otherwise closed so no prompt wedges the loop; the scope is the dispatcher and worker sessions, and the former status.md-resume read is retired rather than coexisting with them. An interruption ends the tree only once the coordinator supervises the session; one that lands while the session is still being launched is outside the kill. A wall or idle deadline, or an interruption while the coordinator supervises the session, ends every process in the session process group on POSIX or session job on Windows: the direct child is reaped, then the group or job is polled until empty. On Windows the kill takes a handle on each member, then terminates the job, and returns only when the job count is zero and every held member is signalled; an unopenable live member raises after the terminate. Past 10 s the kill raises naming the survivor. A failure to end the tree, or to show that it ended, raises the named tree-end error; an ordinary launch error still returns the session error. A child that cannot be contained ends as a session error before it runs.
+  - after: Runs the agent command-line tool headless: the launch substitutes the routed model into the command's tokens and, when the command template carries no prompt slot (the default for both provider tools), delivers the prompt on the child's standard input, written from a background thread and then closed, while the no-wedge invariant holds: a fixed prompt plus end-of-file, never an interactive read. A Codex session also captures that tool's own last-message file as the result. Standard input is otherwise closed so no prompt wedges the loop; the scope is the dispatcher and worker sessions, and the former status-file resume read is retired rather than coexisting with them. An interruption ends the tree only once the coordinator supervises the session; one that lands while the session is still being launched is outside the kill. A wall or idle deadline, or an interruption while the coordinator supervises the session, ends every process in the session's process group on POSIX or its session job on Windows: the direct child is reaped, then the group or job is polled until empty. On Windows the kill takes a handle on each member, then terminates the job, and returns only when the job count is zero and every held member is signalled; an unopenable live member raises after the terminate. Past 10 s the kill raises naming the survivor. A failure to end the tree, or to show that it ended, raises the named tree-end error; an ordinary launch error still returns the session error. A child that cannot be contained ends as a session error before it runs.
+- **Rationale**
+  - before: A large prompt passed as argv dies at the OS command-line cap (8191 characters through a Windows .CMD shim, 32767 via CreateProcess) and a round's briefs run to roughly 70k, so stdin is the only delivery that survives — both limits verified live rather than assumed. The last-message capture exists because that CLI echoes its banner and the whole prompt into stdout, so stdout is not the result. A surviving descendant can keep editing a worktree after its parent session ends; process-group and job containment make the tree an atomic session lifetime, while an uncontained Windows child is rejected before it can create that survivor. Holding each member before termination covers the measured interval where the job count reaches zero before a terminated process is signalled.
+  - after: A large prompt passed on the command line dies at the operating system's command-line cap (8191 characters through a Windows command shim, 32767 through direct process creation) and a round's briefs run to roughly 70k, so standard input is the only delivery that survives; both limits were verified live rather than assumed. The last-message capture exists because that tool echoes its banner and the whole prompt into standard output, so standard output is not the result. A surviving descendant can keep editing a worktree after its parent session ends; process-group and job containment make the tree an atomic session lifetime, while an uncontained Windows child is rejected before it can create that survivor. Holding each member before termination covers the measured interval where the job count reaches zero before a terminated process is signalled.
+_traced — routes to adjudication_
+- **Constrains**
+  - before: (empty)
+  - after: IF-041
+
+## SR-249 — Where a design row sits is derived from the interfaces it constrains and those its verifying test cases name
+
+> **Requirement.** The delivered harness shall derive the components each design-tier row sits in from the interfaces it constrains and those its verifying test cases name, counting a row placed in none as unplaced rather than refusing it.
+
+> **Rationale.** Realizes SN-002 and SN-023. Where a row sits follows from the interfaces whose behaviour it states and those it is verified at, each owned by a component, so placement is derived and never restated on the row. A row that named its component restated by hand a fact the interfaces and the cases verifying it already hold, and the copy drifted when the code moved; deriving it leaves one home. A row placed nowhere is a decomposition whose interface is not yet named, which is legal and visible, so it is counted and listed rather than refused, and the views a reviewer reads to see how the parts connect show it as unplaced.
+
+
+### SR SR-249
+- **AcceptanceCriteria**
+  - before: A design row is placed at the owner component of each interface that a test case verifying it names, once per component; an interface owned by an external party places nothing, and a row placed at several components is placed at each. The generated component view lists each placed row in its components and each unplaced row in its unplaced table, the state view shows each design row's components or that it is unplaced, and the strict check's report counts the placed and the unplaced rows; a row's being unplaced changes no check's exit code.
+  - after: A design row is placed at the owner component of each interface it constrains and of each interface that a test case verifying it names, once per component; an interface owned by an external party places nothing, and a row placed at several components is placed at each. The generated component view lists each placed row in its components and each unplaced row in its unplaced table, the state view shows each design row's components or that it is unplaced, and the strict check's report counts the placed and the unplaced rows; a row's being unplaced does not change the strict check's exit code.
+- **Rationale**
+  - before: Realizes SN-002 and SN-023. Where a row sits follows from what it is verified at: the interfaces its verifying cases name, each owned by a component, so placement is derived and never restated on the row. A row that named its component restated by hand a fact the interfaces and the cases verifying it already hold, and the copy drifted when the code moved; deriving it leaves one home. A row placed nowhere is a decomposition whose interface is not yet named, which is legal and visible, so it is counted and listed rather than refused, and the views a reviewer reads to see how the parts connect show it as unplaced.
+  - after: Realizes SN-002 and SN-023. Where a row sits follows from the interfaces whose behaviour it states and those it is verified at, each owned by a component, so placement is derived and never restated on the row. A row that named its component restated by hand a fact the interfaces and the cases verifying it already hold, and the copy drifted when the code moved; deriving it leaves one home. A row placed nowhere is a decomposition whose interface is not yet named, which is legal and visible, so it is counted and listed rather than refused, and the views a reviewer reads to see how the parts connect show it as unplaced.
+- **Requirement**
+  - before: The delivered harness shall derive the components each design-tier row sits in from the interfaces its verifying test cases name, counting a row placed in none as unplaced rather than refusing it.
+  - after: The delivered harness shall derive the components each design-tier row sits in from the interfaces it constrains and those its verifying test cases name, counting a row placed in none as unplaced rather than refusing it.
+- **Title**
+  - before: Where a design row sits is derived from the interfaces its verifying test cases name
+  - after: Where a design row sits is derived from the interfaces it constrains and those its verifying test cases name
+
+### LLR LLR-403
+- **Detail**
+  - before: For each pair of a test case and a design row its verifies cell names, the row is placed at the owner of each interface the same case names, where that owner is a component; an interface owned by an external party places nothing, and a row placed at several components is placed at each. Example rows are not read. A row no case places is unplaced. The generated component view lists each placed row in its components and each unplaced row in its unplaced table, counted in its census; the state view's design-row detail shows a placed row's components and the word unplaced for the rest; and the strict check's report prints one line counting the placed and unplaced rows, naming the first ten unplaced and counting the rest. Being unplaced changes no exit code.
+  - after: A design row is placed at the owner of each interface its constrains cell names, and, for each pair of a test case and a design row its verifies cell names, at the owner of each interface the same case names, where that owner is a component; an interface owned by an external party places nothing, and a row placed at several components is placed at each. Example rows are not read. A row placed by neither is unplaced. The generated component view lists each placed row in its components and each unplaced row in its unplaced table, counted in its census; the state view's design-row detail shows a placed row's components and the word unplaced for the rest; and the strict check's report prints one line counting the placed and unplaced rows, naming the first ten unplaced and counting the rest. Being unplaced does not change the strict check's exit code.
+- **Rationale**
+  - before: A row that named its component restated by hand a fact the interfaces and the cases verifying it already hold, and the copy drifted when the code moved; deriving it leaves one home. Counting rather than refusing keeps a decomposition whose interface is not yet named legal while keeping the gap visible.
+  - after: A row that named its component restated by hand a fact the interfaces it constrains and the cases verifying it already hold, and the copy drifted when the code moved; deriving it leaves one home. Counting rather than refusing keeps a decomposition whose interface is not yet named legal while keeping the gap visible.
+- **Title**
+  - before: A design row sits where the interfaces its verifying test cases name are owned, and one placed nowhere is counted
+  - after: A design row sits where the interfaces it constrains or its verifying test cases name are owned, and one placed nowhere is counted
+
+### TC TC-480
+_accepted — re-acceptance owed_
+- **Expected**
+  - before: The first row is placed at both components and the second at the one its case names; the external owner and the interface-free case place nothing, and the example case is not read. The two unplaced rows are counted and named on one line, and of twelve the line names ten and counts two more. The component view holds each placed row and its requirement in its components, lists the unplaced rows and counts them in its census; the state view shows each placed row's components and the word unplaced for the others. The project's check passes with its row unplaced, its report counting that row as unplaced.
+  - after: The first row is placed at both components and the second at the one its case names; the row constraining the component's interface is placed at that component; the external owners and the interface-free case place nothing, and the example case is not read. The two unplaced rows are counted and named on one line, and of twelve the line names ten and counts two more. The component view holds each placed row and its requirement in its components, lists the unplaced rows and counts them in its census; the state view shows each placed row's components and the word unplaced for the others. The project's check passes with its row unplaced, its report counting that row as unplaced.
+- **Method**
+  - before: Place design rows over test cases naming interfaces: one case naming two interfaces owned by two components, a second naming one of them for two rows, a case naming an interface an external party owns, a case naming no interface and an example case. Count the unplaced rows, then count twelve unplaced rows; build the component view, and render it, from the same rows; and read the state view's design-row detail for them. Then run the strict check over a project whose one design row is verified by a test case naming no interface.
+  - after: Place design rows over test cases naming interfaces: one case naming two interfaces owned by two components, a second naming one of them for two rows, a case naming an interface an external party owns, a case naming no interface and an example case; and place a design row that constrains an interface a component owns and is verified by a case naming none, and one that constrains an interface an external party owns. Count the unplaced rows, then count twelve unplaced rows; build the component view, and render it, from the same rows; and read the state view's design-row detail for them. Then run the strict check over a project whose one design row is verified by a test case naming no interface.
+_traced — routes to adjudication_
+- **Evidence**
+  - before: tests/test_llr_trace_cells.py::test_a_design_row_is_placed_through_the_interfaces_its_cases_name; tests/test_llr_trace_cells.py::test_the_views_show_where_each_design_row_sits; tests/test_trace.py::test_an_unplaced_design_row_changes_no_exit_code
+  - after: tests/test_llr_trace_cells.py::test_a_design_row_is_placed_through_the_interfaces_its_cases_name; tests/test_llr_trace_cells.py::test_the_views_show_where_each_design_row_sits; tests/test_trace.py::test_an_unplaced_design_row_changes_no_exit_code; tests/test_constrains.py::test_a_design_row_is_placed_through_the_interfaces_it_constrains; tests/test_llr_trace_cells.py::test_the_build_brief_places_a_row_through_the_interface_it_constrains
+
+</details>

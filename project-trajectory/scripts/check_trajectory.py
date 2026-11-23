@@ -2364,12 +2364,14 @@ def _placed_sr_components(root, components):
     """`{SR id: {CMP ids}}`: the components among `components` each design row
     is placed in (`kitlib.spine.llr_placement`), keyed by the requirements the
     row decomposes. `knowledge_pack_findings`' join, split out of it."""
+    llrs = spine_carrier.load(root / LLR_CSV, "LLR-ID")
     placement = _kitspine.llr_placement(
         spine_carrier.load(root / TC_CSV, "TC-ID"),
         spine_carrier.load(root / IF_CSV, "IF-ID"),
+        llrs,
     )
     out = {}
-    for r in spine_carrier.load(root / LLR_CSV, "LLR-ID"):
+    for r in llrs:
         placed = set(placement.get((r.get("LLR-ID") or "").strip(), ())) & set(
             components
         )

@@ -44,14 +44,21 @@ row's rules.
 Component: CMP-006
 """
 
+import re
 from dataclasses import dataclass
 
 try:
     from kitlib.spine import (
+        DIMENSION_STRATEGIES,
+        id_number,
+        interface_reach,
         is_accepted,
         is_drafted,
+        is_example,
         is_founded,
         llr_exempt,
+        llrs_under,
+        parse_dimensions,
         phase_num,
         refs,
         sn_cited_ids,
@@ -62,10 +69,16 @@ except ImportError:  # pragma: no cover - in-process fallback
 
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from kitlib.spine import (
+        DIMENSION_STRATEGIES,
+        id_number,
+        interface_reach,
         is_accepted,
         is_drafted,
+        is_example,
         is_founded,
         llr_exempt,
+        llrs_under,
+        parse_dimensions,
         phase_num,
         refs,
         sn_cited_ids,
@@ -452,3 +465,298 @@ def status_criterion_findings(srs, scope):
                 "near-miss)"
             )
     return status_findings, phase_deferred
+
+
+# --- THE REQUIREMENT-TO-INTERFACE RELATION (variant F's fourth row, WI-1024) ---
+# A requirement or design row names the interfaces whose behaviour it states
+# in its `Constrains` cell; a design row may state that behaviour's input set
+# beside it (`Dimensions`, the permutation grammar) and what the interface
+# does outside that set (`OutOfDomain`, one sentence). Every interface reaches
+# a test case the harness runs through such a row or through a test case
+# naming it, and a test case names an interface only where that differs from
+# what the rows it verifies already constrain. Joins across rows, so they live
+# here; `trace.analyze` decides each one's severity.
+
+# One sentence: one line, ending in a full stop, with no sentence ending inside.
+_INTERIOR_SENTENCE_END = re.compile(r"[.!?]\s+[A-Z]")
+
+
+def _one_sentence(text):
+    """Whether `text` reads as one sentence, the out-of-domain cell's shape."""
+    return (
+        "\n" not in text
+        and text.endswith(".")
+        and not _INTERIOR_SENTENCE_END.search(text)
+    )
+
+
+def _dimensions_problem(spec):
+    """Why the permutation grammar refuses `spec`, or None."""
+    try:
+        _dims, strategy = parse_dimensions(spec)
+    except ValueError as exc:
+        return str(exc)
+    if strategy is not None and strategy not in DIMENSION_STRATEGIES:
+        return "unknown strategy: {}".format(strategy)
+    return None
+
+
+def _live_ifs(ifs):
+    """The live interface rows by id, the `-000` example excluded."""
+    return {
+        iid: r
+        for r in ifs
+        if (iid := str(r.get("IF-ID") or "").strip()) and not is_example(iid)
+    }
+
+
+def constrains_findings(srs, llrs, ifs):
+    """The `Constrains` cell and its two companion cells, as finding strings
+    that join the strict failure set: an id naming no live interface row, on a
+    requirement or a design row; a `Dimensions` cell the permutation grammar
+    refuses; an `OutOfDomain` cell that is not one sentence; and either
+    companion cell on a design row with no `Constrains` cell. An empty list
+    never reaches here: the carrier refuses an explicit empty cell on read.
+
+    Implements: SR-157, LLR-417, LLR-418
+    """
+    live = _live_ifs(ifs)
+    out = []
+    for col, rows in (("SR-ID", srs), ("LLR-ID", llrs)):
+        for r in rows:
+            out += [
+                "{} Constrains names {}, which is no live interface row".format(
+                    r[col], iid
+                )
+                for iid in refs(r.get("Constrains"))
+                if iid not in live
+            ]
+    for r in llrs:
+        out += _companion_findings(r)
+    return out
+
+
+def _companion_findings(r):
+    """One design row's companion-cell findings: either cell on a row
+    constraining nothing, a `Dimensions` cell the grammar refuses, an
+    `OutOfDomain` cell that is not one sentence. `constrains_findings`'
+    per-row step."""
+    rid, named = r["LLR-ID"], refs(r.get("Constrains"))
+    cells = {c: (r.get(c) or "").strip() for c in ("Dimensions", "OutOfDomain")}
+    if not named:
+        return [
+            "{} carries {} but constrains no interface: the cell states a "
+            "behaviour across an interface the Constrains cell names".format(rid, c)
+            for c, value in cells.items()
+            if value
+        ]
+    out = []
+    problem = _dimensions_problem(cells["Dimensions"]) if cells["Dimensions"] else None
+    if problem:
+        out.append(
+            "{} Dimensions does not parse in the permutation grammar: {}".format(
+                rid, problem
+            )
+        )
+    if cells["OutOfDomain"] and not _one_sentence(cells["OutOfDomain"]):
+        out.append(
+            "{} OutOfDomain is not one sentence: one line, ending in a full stop, "
+            "with no sentence ending inside".format(rid)
+        )
+    return out
+
+
+def companion_counts(llrs, ifs):
+    """`(rows, counts)`: the design rows constraining an interface without a
+    `Dimensions` or an `OutOfDomain` cell, sorted, and `{channel: [with both,
+    without one or both]}` over every (design row, constrained interface) pair,
+    keyed by that interface's channel.
+
+    Implements: SR-157, LLR-419
+    """
+    live = _live_ifs(ifs)
+    missing, counts = set(), {}
+    for r in llrs:
+        named = [i for i in refs(r.get("Constrains")) if i in live]
+        both = all((r.get(c) or "").strip() for c in ("Dimensions", "OutOfDomain"))
+        if named and not both:
+            missing.add(r["LLR-ID"])
+        for iid in named:
+            channel = (live[iid].get("Channel") or "").strip() or "(none)"
+            counts.setdefault(channel, [0, 0])[0 if both else 1] += 1
+    return sorted(missing), counts
+
+
+def companion_advisories(llrs, ifs, shown=10):
+    """One warning line for the design rows that constrain an interface
+    without both companion cells, counted by channel and the first `shown`
+    named. Warn-first by the operator's ruling (2026-11-21): it never joins
+    an exit code.
+
+    Implements: SR-157, LLR-419
+    """
+    missing, counts = companion_counts(llrs, ifs)
+    if not missing:
+        return []
+    names = ", ".join(missing[:shown]) + (
+        ", +{} more".format(len(missing) - shown) if len(missing) > shown else ""
+    )
+    by_channel = ", ".join(
+        "{} {}/{}".format(ch, n[0], n[1]) for ch, n in sorted(counts.items())
+    )
+    return [
+        "constrains: {} design row(s) constrain an interface without both a "
+        "Dimensions and an OutOfDomain cell ({}); per constrained interface's "
+        "channel, with both/without: {}. Reported, never failing --strict".format(
+            len(missing), names, by_channel
+        )
+    ]
+
+
+def _runs(tc):
+    """Whether the harness runs a test case: every case but an observation,
+    whose `Automated` cell reads No (the kit's one observation marker)."""
+    return (tc.get("Automated") or "").strip().lower() != "no"
+
+
+def interface_coverage(srs, llrs, tcs, ifs):
+    """`{IF id: route}` for each live interface, the route by which its reach
+    (`kitlib.spine.interface_reach`) holds a test case the harness runs:
+    `design row` through a design row constraining it, else `requirement`
+    through a constraining requirement or the design rows under it, else
+    `case` through a case naming it or verifying a row observed at it, else
+    `observation` when its reach holds observation cases alone, else
+    `unreached`.
+
+    Implements: SR-157, LLR-421
+    """
+    runs = {
+        str(t.get("TC-ID") or "").strip()
+        for t in tcs
+        if _runs(t) and not is_example(str(t.get("TC-ID") or ""))
+    }
+    by_row = {}
+    for t in tcs:
+        tid = str(t.get("TC-ID") or "").strip()
+        for x in refs(t.get("Verifies")):
+            by_row.setdefault(x, set()).add(tid)
+    constrains = _constrains_by_row(srs, llrs)
+    return {
+        iid: _route(iid, rows, cases, constrains, by_row, runs, llrs)
+        for iid, (rows, cases) in interface_reach(ifs, srs, llrs, tcs).items()
+    }
+
+
+def _route(iid, rows, cases, constrains, by_row, runs, llrs):
+    """One interface's route (`interface_coverage`): through the cases of the
+    design rows constraining it, else of the requirements constraining it and
+    the design rows under them, else of its whole reach."""
+    named = [r for r in rows if iid in constrains.get(r, ())]
+    via_llr = {c for r in named if r.startswith("LLR-") for c in by_row.get(r, ())}
+    via_sr = set()
+    for r in (r for r in named if r.startswith("SR-")):
+        for x in [r] + [row["LLR-ID"] for row in llrs_under([r], llrs)]:
+            via_sr |= by_row.get(x, set())
+    for route, reached in (
+        ("design row", via_llr),
+        ("requirement", via_sr),
+        ("case", set(cases)),
+    ):
+        if reached & runs:
+            return route
+    return "observation" if cases else "unreached"
+
+
+def _constrains_by_row(srs, llrs):
+    """`{row id: {IF ids}}`: each requirement's and design row's `Constrains`."""
+    out = {r["SR-ID"]: set(refs(r.get("Constrains"))) for r in srs}
+    out.update({r["LLR-ID"]: set(refs(r.get("Constrains"))) for r in llrs})
+    return out
+
+
+COVERAGE_ROUTES = ("design row", "requirement", "case", "observation", "unreached")
+
+
+def coverage_line(srs, llrs, tcs, ifs):
+    """The one count line for interface coverage: how many interfaces reach a
+    test case the harness runs through a constraining design row, a
+    constraining requirement or a naming case alone, how many by observation
+    alone, and how many not at all.
+
+    Implements: SR-157, LLR-421
+    """
+    routes = interface_coverage(srs, llrs, tcs, ifs)
+    count = {r: sum(1 for v in routes.values() if v == r) for r in COVERAGE_ROUTES}
+    return (
+        "interface coverage: {} interface(s): {} through a constraining design "
+        "row, {} through a constraining requirement, {} through a naming test "
+        "case, {} by observation alone, {} unreached".format(
+            len(routes), *(count[r] for r in COVERAGE_ROUTES)
+        )
+    )
+
+
+def coverage_advisories(srs, llrs, tcs, ifs):
+    """The interfaces whose reach holds no test case the harness runs, each
+    named: those reached by observation cases alone on their own line.
+    Reported, not yet failing the strict check.
+
+    Implements: SR-157, LLR-421
+    """
+    routes = interface_coverage(srs, llrs, tcs, ifs)
+    out = []
+    for route, what in (
+        (
+            "unreached",
+            "reach no test case through a row constraining them or a case naming them",
+        ),
+        ("observation", "are reached by observation cases alone"),
+    ):
+        ids = sorted((i for i, v in routes.items() if v == route), key=id_number)
+        if ids:
+            out.append(
+                "interface coverage: {} interface(s) {}: {}. Reported, not yet "
+                "failing --strict".format(len(ids), what, ", ".join(ids))
+            )
+    return out
+
+
+def repeat_findings(srs, llrs, tcs):
+    """Each interface a test case's `Verifies` names that every design row and
+    requirement the same case verifies already names in its `Constrains` cell:
+    the name repeats them, per (case, row) pair. A case verifying no design row
+    or requirement repeats nothing.
+
+    Implements: SR-157, LLR-422
+    """
+    constrains = _constrains_by_row(srs, llrs)
+    out = []
+    for t in tcs:
+        cited = refs(t.get("Verifies"))
+        rows = [x for x in cited if x.startswith(("SR-", "LLR-"))]
+        for iid in (x for x in cited if x.startswith("IF-")):
+            if rows and all(iid in constrains.get(x, ()) for x in rows):
+                out.append(
+                    "{} names {}, which every row it verifies already "
+                    "constrains ({}): a test case names an interface only where "
+                    "it differs from its rows'".format(t["TC-ID"], iid, ", ".join(rows))
+                )
+    return out
+
+
+def constrains_rules(srs, llrs, tcs, ifs, interfaces_check=True):
+    """`(findings, advisories)`: the requirement-to-interface rules as the
+    checker composes them. The cell findings fail the strict check; the
+    missing companion cells, the repeated names and, unless the process
+    settings turn the interface checks off, the interface coverage report
+    are advisories.
+
+    Implements: SR-157, LLR-417, LLR-418, LLR-419, LLR-421, LLR-422
+    """
+    advisories = companion_advisories(llrs, ifs) + [
+        "repeat: {}. Reported, not yet failing --strict".format(f)
+        for f in repeat_findings(srs, llrs, tcs)
+    ]
+    if interfaces_check:
+        advisories += coverage_advisories(srs, llrs, tcs, ifs)
+    return constrains_findings(srs, llrs, ifs), advisories

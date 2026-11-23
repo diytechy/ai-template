@@ -15,6 +15,14 @@
 # Its owner, consumers and requestors are components and parties; which file
 # states its contract is read from that file's own `Component:` header.
 #
+# THE ROW STATES THE FORM; THE REQUIREMENT SIDE STATES THE BEHAVIOUR. What must
+# be true of what crosses is stated by each design row (`LLR-###`), or at the
+# system boundary each requirement (`SR-###`), whose `constrains` cell names
+# this interface; a row here never lists the requirements it carries. Every
+# interface reaches a test case the harness runs through such a row or through
+# a test case whose `verifies` names it, and `trace.py` reports one that does
+# not (process.md §8).
+#
 # THE FIELDS — what each one is, and how it is used.
 #
 #   owner            REQUIRED. The providing THING — the component the

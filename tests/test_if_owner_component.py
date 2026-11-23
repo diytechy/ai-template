@@ -353,6 +353,20 @@ def test_a_boundary_row_reaches_requirements_through_the_file_stating_its_body()
     }
 
 
+def test_with_no_scanned_source_a_row_is_placed_by_the_interface_it_constrains():
+    """Implements: TC-466"""
+    # The fallback reach reads the one placement: LLR-001, which no case
+    # places, sits in CMP-001 because it constrains IF-003, which CMP-001 owns.
+    ifs = [
+        {"IF-ID": "IF-001", "Owner": "CMP-001", "InterfaceToExternal": "B-01"},
+        {"IF-ID": "IF-003", "Owner": "CMP-001"},
+    ]
+    llrs = [{"LLR-ID": "LLR-001", "SR-Refs": "SR-001", "Constrains": "IF-003"}]
+    assert assumption_rules.if_reached_srs(ifs, llrs, None, {}, []) == {
+        "IF-001": ["SR-001"]
+    }
+
+
 # --- connectivity over components (LLR-042) --------------------------------------
 
 

@@ -269,6 +269,8 @@ try:
         _repo_id,
         budget_backlink_findings,
         component_membership_findings,
+        constrains_rules,
+        coverage_line,
         delegation_findings,
         knowledge_pack_advisories,
         spine_orphan_findings,
@@ -326,6 +328,8 @@ except ImportError:  # pragma: no cover - in-process fallback
         _repo_id,
         budget_backlink_findings,
         component_membership_findings,
+        constrains_rules,
+        coverage_line,
         delegation_findings,
         knowledge_pack_advisories,
         spine_orphan_findings,
@@ -5076,6 +5080,9 @@ class Registries:
     hat_names: set
     hat_speaks_for: dict
     if_parties: frozenset
+    # The `[checks] interfaces_check` opt-out, read at load: it silences the
+    # interface coverage report as it silences the connectivity checks.
+    interfaces_check: bool = True
 
 
 @dataclass(frozen=True)
@@ -5361,6 +5368,7 @@ def load_registries(docs):
         # The parties an `external:` endpoint may name, read from the interface
         # registry's header here for the same reason (revision 35).
         if_parties=load_if_parties(docs),
+        interfaces_check=check_trajectory.read_interfaces_check_enabled(docs.parent),
     )
 
 
@@ -5672,6 +5680,16 @@ def analyze(reg, args):
         + if_verified_by_advisories(ifs, {t["TC-ID"] for t in tcs}, llr_ids)
         + if_carriage_advisories(ifs)
     )
+    # The requirement-to-interface relation (variant F, WI-1024): a constrains
+    # cell naming no live interface, or a companion cell that does not parse or
+    # sits on a row constraining nothing, joins the interface failure set; the
+    # missing companion cells, the interface coverage and the repeated names
+    # are reported.
+    constrains_found, constrains_warned = constrains_rules(
+        srs, llrs, tcs, ifs, reg.interfaces_check
+    )
+    interface_backlink_findings += constrains_found
+    interface_advisories += constrains_warned
 
     # The delivery filter and the two rules scoped by it. `verification_basis`
     # runs unconditionally (the footprint is always visible); the status
@@ -6240,6 +6258,17 @@ def _print_gating(findings, args, cap=10):
             print(f"... +{len(items) - cap} more {label} finding(s) in the report")
 
 
+def _count_lines(reg):
+    """The informational count lines the console prints before its summary:
+    where the design rows sit, and how the interfaces reach a test case (the
+    latter silenced by the interface-check opt-out)."""
+    srs, llrs, tcs, ifs = reg.srs, reg.llrs, reg.tcs, reg.ifs
+    out = [placement_line(llrs, tcs, ifs)] if llrs else []
+    if ifs and reg.interfaces_check:
+        out.append(coverage_line(srs, llrs, tcs, ifs))
+    return out
+
+
 def render_console(reg, findings, args, out, html_out):
     """Print the warn-only advisory lines and the one-line Traceability summary to stdout (loud but never gating)."""
     sn_ids = reg.sn_ids
@@ -6313,8 +6342,8 @@ def render_console(reg, findings, args, out, html_out):
     # summarize a failure away" (check.py). Mirrors exit_code()'s composition;
     # capped per class, the report holds the full lists.
     _print_gating(findings, args)
-    if llrs:
-        print(placement_line(llrs, tcs, ifs))
+    for line in _count_lines(reg):
+        print(line)
     print(
         f"Traceability: SN={len(sn_ids)} SR={len(srs)} LLR={len(llrs)} "
         f"TC={len(tcs)} orphans={len(orphans)} integrity={len(integrity)}"

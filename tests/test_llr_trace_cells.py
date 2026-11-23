@@ -139,6 +139,19 @@ def test_the_views_show_where_each_design_row_sits(tmp_path):
     assert details["LLR-001"]["meta"] == "Placed: CMP-001, CMP-002"
     assert details["LLR-002"]["meta"] == "Placed: CMP-001"
     assert details["LLR-003"]["meta"] == "Placed: unplaced"
+    # A row constraining an interface sits at its owner in both views.
+    llrs = tmp_path / LLR_REL
+    llrs.write_bytes(
+        llrs.read_bytes().replace(
+            b'title = "t3"\n', b'title = "t3"\nconstrains = ["IF-002"]\n'
+        )
+    )
+    assert (
+        "LLR-003"
+        not in tomllib.loads(gen_components.render(tmp_path))["unplaced"]["llr_refs"]
+    )
+    _svg, details, _desc = load_script("gen_trajectory").arch_icicle(tmp_path)
+    assert details["LLR-003"]["meta"] == "Placed: CMP-002"
 
 
 def test_a_design_row_is_discharged_by_a_case_of_any_kind():
@@ -342,6 +355,25 @@ def test_the_build_brief_marks_a_design_row_no_declaration_names(tmp_path):
     lines = text.splitlines()
     assert [ln for ln in lines if ln.startswith("- LLR-001 [src/pay.py]")], text
     assert [ln for ln in lines if ln.startswith("- LLR-002 [no Implements: tag]")], text
+
+
+def test_the_build_brief_places_a_row_through_the_interface_it_constrains(tmp_path):
+    """Implements: TC-480"""
+    _write(tmp_path, "docs/stack.ini", "[paths]\nsrc = src\n")
+    _write(
+        tmp_path,
+        LLR_REL,
+        LLR_ROW.replace('title = "', 'constrains = ["IF-001"]\ntitle = "', 1),
+    )
+    _write(
+        tmp_path,
+        "docs/requirements/interfaces.toml",
+        '[interface.IF-001]\nowner = "CMP-001"\nconsumers = ["CMP-001"]\n'
+        'channel = "call"\n',
+    )
+    text = intake.context_block(tmp_path, {"WI-ID": "WI-001", "SR-Refs": "SR-001"}, [])
+    lines = [ln for ln in text.splitlines() if ln.startswith("- LLR-001 [")]
+    assert lines and " placed: CMP-001 " in lines[0], text
 
 
 def test_the_evidence_column_is_generated_from_the_tags(tmp_path, monkeypatch):

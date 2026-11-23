@@ -184,6 +184,7 @@ _The ruled cross-cutting review grouping. Counts only — never a gate; a row ca
 
 ### Interface endpoint advisories (warn-only)
 
+- interface coverage: 1 interface(s) reach no test case through a row constraining them or a case naming them: IF-001. Reported, not yet failing --strict
 - TC TC-002 is an observation test case declaring no Inputs (the inputs its judgment reads) — declare it so its result can go stale
 - TC TC-002 is an observation test case declaring no MaxAge (its lifetime) — declare it so its result can go stale
 
@@ -197,9 +198,11 @@ None. Every in-scope accepted SR is Accepted (any method).
 
 ===STDOUT===
 WARNING (advisory): SR SR-002 AcceptanceCriteria uses 'identical' without a named predicate — say identical/equivalent *in what*, judged *how* (process.md §4 consistency review; heuristic, warn-only)
+WARNING (advisory): interface coverage: 1 interface(s) reach no test case through a row constraining them or a case naming them: IF-001. Reported, not yet failing --strict
 WARNING (advisory): TC TC-002 is an observation test case declaring no Inputs (the inputs its judgment reads) — declare it so its result can go stale
 WARNING (advisory): TC TC-002 is an observation test case declaring no MaxAge (its lifetime) — declare it so its result can go stale
 WARNING (advisory): CMP CMP-001 Knowledge ref 'docs/knowledge/missing-pack' names no pack (docs/knowledge/missing-pack.md)
 WARNING (advisory): id-watermark monotonicity NOT checked — no committed docs/id-watermark to compare against (first commit, shallow clone, or off a work tree); the live-id and complete-space rules still ran
 placement: 0 design row(s) placed, 1 unplaced (LLR-001); unplaced is counted, never refused
+interface coverage: 1 interface(s): 0 through a constraining design row, 0 through a constraining requirement, 0 through a naming test case, 0 by observation alone, 1 unreached
 Traceability: SN=3 SR=3 LLR=1 TC=2 orphans=0 integrity=1 verified-mechanized=1 verified-demonstrated=0 verified-vouched=1 status-findings=0 drafts=3 budgets=1 budget-findings=0 repos=1 delegation-findings=0 parts=1 assets=1 components=1 component-findings=0 knowledge-advisories=1 interfaces=1 interface-findings=0 ac-advisories=1 watermark-advisories=1. Report -> docs/test/report.md + docs/test/report.html
