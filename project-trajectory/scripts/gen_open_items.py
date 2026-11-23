@@ -1000,7 +1000,8 @@ def _offspine_census_block(rows):
         "per-row rendering here; <code>intake.py snapshot</code> copies one only "
         "when a row in it moves into acceptance or arrives accepted, "
         "<code>--accepts</code> names it or <code>--reaccepts</code> names one "
-        "of its rows; a re-SEED still blesses all. What it would absorb:</p>"
+        "of its rows, and writes only the rows it names and those that follow "
+        "live. What moved since the record:</p>"
         '<ul class="pointers">{}</ul>\n'.format(items)
     )
 

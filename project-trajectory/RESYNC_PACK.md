@@ -12468,7 +12468,7 @@ drains once, at its next clear point.
 `scripts/acceptance_record.py`, `prompts/adjudicate-act.template.md`,
 `skills/coordinator-cycle/references/recipes.md`.
 
-### An acceptance act records only the rows it names; a drifted row no longer blocks its registry [since 2ded34460]
+### An acceptance act records only the rows it names; a drifted row no longer blocks its registry [since 121ce2e00]
 
 *(Anchored at the preceding commit: the change lands in the commits after it.)*
 

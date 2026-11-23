@@ -4249,8 +4249,8 @@ def offspine_census_lines(root, snapshot=_UNSET):
         "",
         "_Off-spine registries get no per-row rendering here; `intake.py snapshot`"
         " copies one only when a row in it moves into acceptance or arrives accepted,"
-        " `--accepts` names it or `--reaccepts` names one of its rows; a re-SEED"
-        " still blesses the whole tree. What it would absorb:_",
+        " `--accepts` names it or `--reaccepts` names one of its rows, and writes only"
+        " the rows it names and those that follow live. What moved since the record:_",
         "",
     ] + [
         "- `{rel}` — {changed} changed, {added} added, {removed} removed"
