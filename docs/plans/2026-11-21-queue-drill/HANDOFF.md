@@ -59,6 +59,9 @@ A new coordinator session starts with these steps, in this order.
      F-7 inserts ", a child row's requirements being those of the
      top-level row its parent chain ends at" after "...stating its
      contract body". Join both edits.
+   - At F-7's merge its spec moves to `complete/`: re-point WI-1064's
+     `specref` there in the merge commit, or `check_trajectory --strict`
+     fails (it did for WI-1065 after WI-1060's merge, fixed in the commit after `090a75d03`).
    - F-7 minted LLR-480 to 483 and TC-560 to 568. LLR-483 states the
      required-field rule a new LLR-480 had carried; the builder did not
      amend LLR-003, with its reason in the Deliverable.

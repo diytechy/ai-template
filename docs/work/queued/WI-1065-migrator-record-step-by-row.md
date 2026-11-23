@@ -2,7 +2,7 @@
 id = "WI-1065"
 title = "The vocabulary migrator's record step works in a record that holds a row-by-row act"
 workstream = "process"
-specref = "docs/work/queued/WI-1060-row-scoped-acceptance-copy.md"
+specref = "docs/archive/work/complete/WI-1060-row-scoped-acceptance-copy.md"
 sr_refs = ["SR-247", "SR-179"]
 needs = ["WI-1060"]
 buildtier = "medium"
