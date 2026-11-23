@@ -535,6 +535,34 @@ def test_a_keyless_case_no_declaration_names_stays_keyless_and_unchanged(
     assert reg.read_bytes() == before
 
 
+def test_a_registry_opening_with_a_byte_order_mark_keeps_it(
+    tmp_path, capsys, monkeypatch
+):
+    """Implements: TC-483"""
+    # A Windows editor can leave a byte-order mark at the head of a
+    # hand-authored registry. The rewrite of one stale cell writes it back,
+    # and every other byte, as read.
+    _write(tmp_path, "docs/stack.ini", "[paths]\nsrc = src\ntests = tests\n")
+    _write(tmp_path, "tests/test_a.py", '"""Implements: TC-001"""\n')
+    _write(tmp_path, "tests/test_b.py", '"""Implements: TC-002"""\n')
+    body = (
+        "# Test cases, kept by hand.\n\n"
+        '[test.TC-001]\nverifies = ["LLR-001"]\nevidence = "tests/test_a.py"\n\n'
+        '[test.TC-002]\nverifies = ["LLR-001"]\nevidence = "tests/test_gone.py"\n'
+    )
+    bom = b"\xef\xbb\xbf"
+    reg = tmp_path / TC_REL
+    reg.parent.mkdir(parents=True)
+    reg.write_bytes(bom + body.encode("utf-8"))
+    assert _main(monkeypatch, "--root", tmp_path, "--regen-evidence") == 0
+    assert capsys.readouterr().out.splitlines() == [
+        "trace: evidence regenerated for TC-002"
+    ]
+    assert reg.read_bytes() == bom + body.replace(
+        "tests/test_gone.py", "tests/test_b.py"
+    ).encode("utf-8")
+
+
 def test_a_failed_replacement_leaves_the_registry_and_no_copy_beside_it(
     tmp_path, monkeypatch
 ):

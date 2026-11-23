@@ -25,6 +25,10 @@ verdict) is cleared at close, as a terminal row's is.
   writer swap owes. `check_resync.py` is a smoke step, not a hook step, so
   the build commit passed its hook without one, and the smoke step refused
   the build's tree until the entry was added (Tests, below).
+- `4eb965137`: a correction of this Deliverable's hook step count.
+- The commit after it: the coordinator's addition before review, item 6
+  below: the writer keeps a leading byte-order mark, with its test, TC-483's
+  text, the evidence, the RESYNC entry's sentence and this record.
 
 **1. SR-251.** `requirement` now reads "When requested, the delivered
 harness shall rewrite the parts under the declared tests root of the
@@ -76,7 +80,8 @@ not committed, regenerated a CRLF registry holding a non-ASCII comment and a
 multi-line string through the tip's writer: the bytes came back as written
 less the one changed cell, with no bare LF, and nothing was left beside the
 registry. No second writer. The module's, `evidence_regen`'s and
-`write_evidence`'s docstrings say what the code now does.
+`write_evidence`'s docstrings say what the code now does. A leading
+byte-order mark is kept too, since item 6.
 
 **4. Tests**, in `tests/test_llr_trace_cells.py`, each tagged TC-483:
 
@@ -165,6 +170,88 @@ verdict named is driven:
 The clauses earlier sittings judged are driven as WI-1058's table states. No
 text this row writes names a code file, function, symbol or flag.
 
+**6. The byte-order mark (the coordinator's addition before review).** The
+writer read the registry with a leading byte-order mark stripped and wrote
+UTF-8 without one, at the base as after the writer swap (an ad hoc check,
+not committed, regenerated a registry opening with one through each). A
+registry is hand-authored and a Windows editor can leave one, so for such a
+file LLR-406's "keeps every other byte of the registry" was false by three
+bytes. The coordinator ruled it fixed here, inside the row's own stated
+behaviour, rather than filed.
+
+- **The writer.** `write_evidence` reads the registry as UTF-8, sets a
+  leading mark aside before splitting the lines (`removeprefix`, the mark
+  being what it removed), and writes it back in front of the rewritten
+  text: `write_atomic(path, bom + text)`. A file without one gains none.
+  `write_atomic` is unchanged: it encodes the text as UTF-8, and the mark's
+  character encodes to the same three bytes. The re-read guard reads the
+  text without the mark, as before. A first form set the mark with a
+  conditional expression; the hook's `complexity` step refused it
+  (`check_complexity: FAIL - project-trajectory/scripts/arch_tags.py::write_evidence cognitive None -> 16. SIMPLIFY`),
+  so the branch was taken out rather than the baseline bumped, and the
+  step then read `check_complexity: OK - 171 row(s) over 15, unchanged
+  from baseline.`
+- **The test**, tagged TC-483:
+  `test_a_registry_opening_with_a_byte_order_mark_keeps_it`. A registry
+  opening with the mark holds a comment, a current TC-001 and a stale
+  TC-002. The command prints `trace: evidence regenerated for TC-002`
+  alone, and the registry's bytes are the mark followed by the text as
+  written with TC-002's cell alone rewritten.
+- **Red first**, against the writer as `4eb965137` holds it:
+  `E       assert b'# Test case.../test_b.py"\n' == b'\xef\xbb\xb.../test_b.py"\n'`,
+  `At index 0 diff: b'#' != b'\xef'`,
+  `1 failed, 23 deselected in 0.56s`. Green once the writer keeps the mark.
+  The ad hoc CRLF and mark checks above, rerun on the fixed writer: the CRLF
+  registry came back as before, and the mark was kept.
+- **TC-483.** `method` adds "regenerate a registry that opens with a
+  byte-order mark and holds a comment, a current case and a stale case";
+  `expected` adds "The registry that opens with a byte-order mark keeps it
+  and every other byte, its stale case's cell alone rewritten, and the
+  command names that case alone." Evidence regenerated from the tags:
+  `trace: evidence regenerated for TC-483`.
+- **No new clause.** LLR-406's "keeps every other byte of the registry" and
+  SR-251's "only those cells of the test-case registry change" each cover
+  the mark, which is a byte of the registry and no cell, so neither row
+  changes. The expected clause claims nothing beyond them.
+
+| Clause (SR-251 acceptance, LLR-406) | TC-483 test |
+|---|---|
+| only those cells change; every other byte of the registry is kept, a leading byte-order mark included | the keyless-case test, the byte-order-mark test |
+
+Checks for item 6, on its tree before its commit (base `4eb965137`):
+
+- `tests/test_llr_trace_cells.py`, `tests/test_import_layers.py`,
+  `tests/test_module_size_ratchet.py` and `tests/test_dogfood_sync.py`:
+  `79 passed, 1 skipped in 15.30s`, on the writer as committed (and
+  `79 passed, 1 skipped in 17.92s` on its first form).
+  <!-- fig: cmd="python -m pytest -q -p no:cacheprovider tests/test_llr_trace_cells.py tests/test_import_layers.py tests/test_module_size_ratchet.py tests/test_dogfood_sync.py" rev="4eb965137 with item 6's change" -->
+- The other two modules importing `arch_tags`, `tests/test_trajectory_arch.py`
+  and `tests/test_gen_arch_map.py`: `283 passed in 123.00s (0:02:03)` on
+  the writer as committed.
+  <!-- fig: cmd="python -m pytest -q -p no:cacheprovider tests/test_trajectory_arch.py tests/test_gen_arch_map.py" rev="4eb965137 with item 6's change" -->
+- `trace.py --root . --strict`, exit 0: `orphans=0 integrity=0`, 419
+  absolute-term advisories (SN 31, SR 138, LLR 250), unchanged.
+  `check_trajectory.py --root . --strict`: `check_trajectory: clean (1059
+  work item(s), 930 done (88%), 37 cancelled, graph acyclic).`
+  `check_resync.py`: `check_resync: OK, 1 shipped path(s) changed; entry
+  anchored at 3db0c68236b6aa3355ebebc20d887c0e03224d32`, the entry gaining
+  one sentence on the mark.
+  <!-- fig: cmd="python project-trajectory/scripts/trace.py --root . --strict; python project-trajectory/scripts/check_trajectory.py --root . --strict" rev="4eb965137 with item 6's change" -->
+- `run_menu.py smoke`, exit 0: `trace.py --strict` `orphans=0
+  integrity=0`; `check_trajectory: clean (1059 work item(s), 930 done
+  (88%), 37 cancelled, graph acyclic).`; `check_docs: OK - 3669 doc(s),
+  3827 intra-repo link(s), 0 broken.`; `check_resync: OK, 1 shipped path(s)
+  changed; entry anchored at 3db0c68236b6aa3355ebebc20d887c0e03224d32`; the
+  tier `3755 passed, 3 skipped, 18 warnings in 93.81s (0:01:33)`, on the
+  writer as committed. Its budget line reads CPU 568.1 s against 540, a
+  WARN only; wall 94.5 s against 600.
+  <!-- fig: cmd="python project-trajectory/scripts/run_menu.py smoke" rev="4eb965137 with item 6's change and its regenerated views" -->
+- Byte deltas from `4eb965137`: `docs/test/test-cases.toml` +354,
+  `project-trajectory/scripts/arch_tags.py` +191,
+  `tests/test_llr_trace_cells.py` +1,195,
+  `project-trajectory/RESYNC_PACK.md` +129; none budgeted or watched.
+  <!-- fig: derived="git cat-file -s at 4eb965137 against the working-tree size before item 6's commit" -->
+
 **Tests.** pytest ran under the worktree's Python 3.11, its temporary files
 under `%TEMP%`.
 
@@ -227,14 +314,12 @@ TC-483, the chain whole.
 - trace's advisory that SR-251 declares no `form`, as WI-1058 left it.
 - TC-483's closing clause that every cell of this repository's registry is
   current, as WI-1058 left it.
-- **A byte-order mark is dropped.** The writer reads the registry with a
-  leading byte-order mark stripped and writes UTF-8 without one, at the base
-  as at the tip: an ad hoc check, not committed, regenerated a registry
-  opening with one through each, and both wrote it back without. For such a
-  registry LLR-406's "keeps every other byte of the registry" does not hold
-  by three bytes. This row keeps the encoding as the spec asks (UTF-8 read,
-  UTF-8 written) and changes nothing here; it is a finding for the
-  coordinator, outside this row's scope.
+- The hook's `readability` step warns, report-only and not gating,
+  `flag-axis worsened project-trajectory/scripts/arch_tags.py:
+  boolean-literal call sites 0 -> 2 (+2)` on each commit touching the
+  module. The two sites are the registry loads passing `False`, which the
+  base already held; this row added none, so the module's missing entry in
+  the flag-axis baseline is the base's, not this change's.
 
 ## Context
 

@@ -273,8 +273,9 @@ def _table_spans(lines):
 def write_evidence(root, tests_dir):
     """Write each changed cell `evidence_regen` returns into the test-case
     registry, and return the ids written, sorted. Only those `evidence` lines
-    move; every other byte, comments, order and newline style included, is
-    kept. A cell that becomes empty leaves its key (an empty cell is an absent
+    move; every other byte, comments, order, newline style and a leading
+    byte-order mark included, is kept: the mark is set aside before the lines
+    are read and written back in front of them. A cell that becomes empty leaves its key (an empty cell is an absent
     key); a case with none gains one after its last key, and only when its
     declarations supply a part, since an unchanged cell is not returned. The
     rewrite is re-read and refused, writing nothing, unless it parses to the
@@ -292,8 +293,10 @@ def write_evidence(root, tests_dir):
             "arch_tags: the evidence column is written into the TOML carrier "
             "only; convert {} first (scripts/migrate_carrier.py)".format(path)
         )
-    with open(path, "r", encoding="utf-8-sig", newline="") as fh:
-        raw = fh.read()
+    with open(path, "r", encoding="utf-8", newline="") as fh:
+        read = fh.read()
+    raw = read.removeprefix("﻿")
+    bom = read[: len(read) - len(raw)]
     eol = "\r\n" if "\r\n" in raw else "\n"
     lines = raw.split(eol)
     tables, keys = _table_spans(lines)
@@ -318,7 +321,7 @@ def write_evidence(root, tests_dir):
             "arch_tags: REFUSED - the evidence rewrite of {} did not re-read as "
             "the generated cells and nothing else; nothing written".format(path)
         )
-    write_atomic(path, text)
+    write_atomic(path, bom + text)
     return sorted(changed)
 
 

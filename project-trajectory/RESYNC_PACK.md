@@ -12446,7 +12446,9 @@ file beside the registry (`docs/test/.test-cases.toml`), is flushed to disk
 and moved into place by one replace, which is retried a bounded number of
 times while Windows holds the target. When the write fails the registry
 keeps its bytes and the temporary file is removed. The text keeps the line
-ends it was read with and is written as UTF-8, as before. Two readings that
+ends it was read with and is written as UTF-8, as before. A registry that
+opens with a byte-order mark now keeps it; the writer used to drop it on
+every regeneration that changed a cell. Two readings that
 already held are now stated and tested: a test file still declaring a case
 the registry no longer holds adds nothing and is not named, and a case with
 no evidence key that no test declares stays keyless.

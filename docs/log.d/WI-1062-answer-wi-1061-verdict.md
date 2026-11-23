@@ -42,9 +42,17 @@ commit hooks on and planning `none`. The record is in the row's Deliverable
   `system-requirements.toml` +653, `low-level-requirements.toml` +913,
   `test-cases.toml` +1,110, `arch_tags.py` +574, `test_llr_trace_cells.py`
   +3,381, `RESYNC_PACK.md` +1,440.
+- **Byte-order mark (the coordinator's addition before review):** the
+  writer dropped a leading byte-order mark, at the base as after the swap,
+  so LLR-406's "keeps every other byte" was false for such a registry. It
+  now sets the mark aside and writes it back; `write_atomic` is unchanged.
+  A fourth TC-483 test, red first (`At index 0 diff: b'#' != b'\xef'`),
+  and TC-483's method and expected name the case. LLR-406 and SR-251 need
+  no new clause: "every other byte" and "only those cells change" cover
+  it. The trace-cells, import-layer, size-ratchet and dogfood-sync
+  modules: `79 passed, 1 skipped in 15.30s`; `run_menu.py smoke`:
+  `3755 passed, 3 skipped, 18 warnings in 93.81s (0:01:33)`, a CPU budget
+  WARN only.
+  <!-- fig: derived="the totals are those the Deliverable's item 6 declares, each with its command and revision" -->
 - **Owed to the next sitting:** the first acceptances of SR-251, LLR-406
   and TC-483.
-- **Found, not fixed:** the writer drops a leading byte-order mark from the
-  registry, at the base as at the tip, so LLR-406's "keeps every other
-  byte" does not hold for such a file. Outside this row's scope; left for
-  the coordinator.
