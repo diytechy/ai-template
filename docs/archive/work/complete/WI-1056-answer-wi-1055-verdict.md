@@ -262,6 +262,27 @@ under its baseline, re-stamped down (3788 to 3784) in the same commit.
   (rewritten); LLR-408 (new); TC-480, TC-481, TC-482, TC-483 and TC-484
   (rewritten); TC-485 (new).
 
+**Review** (the coordinator, 2026-11-22; queue-drill HANDOFF §4 step 4).
+Round 1 over `3c33b3783..150d7f955`, the generated views, the plan and this
+spec's copies withheld and the spec at the tip given whole. Each reviewer
+was told to judge every changed row as the fourth sitting will (no code
+name, nothing past the parent SR, one obligation with every clause tested),
+to say for each of the third sitting's findings whether the diff answers
+it, and to spot-check the mutation records against the tests. Gemini
+Hydrogen (`gemini-4-hydrogen-low`, the Antigravity CLI) read the prose:
+APPROVE, no findings. OpenAI Sol (`gpt-6.1-sol`, low) read the whole diff:
+one MAJOR, adopted after the coordinator confirmed it in the code. TC-481's
+Expected says each refusal names the file, the row and the key, but the
+system-requirement refusal asserted only the row and key, and the
+test-case refusal only that it refused. Both now assert all three, each
+with a mutation proof (`03332e39b`). Round 2, narrow, over
+`150d7f955..03332e39b`: Sol and Hydrogen APPROVE, no findings.
+
+The 45 failures this branch's builder met in five modules (above) do not
+reproduce on trunk: at `7ea8e6afd` the same five modules read
+`235 passed in 146.12s`. The coordinator re-runs them on trunk after this
+merge.
+
 ## Context
 
 Filed on trunk on 2026-11-22 by the queue drill's coordinator, to answer

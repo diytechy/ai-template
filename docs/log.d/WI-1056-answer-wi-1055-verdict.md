@@ -51,3 +51,7 @@ and the coordinator's go-ahead. The record is in the row's Deliverable
 - **Acts owed:** the amendments of SR-212, SR-221, LLR-244, LLR-263, TC-239
   and TC-258; no routed traced change; the first acceptance of SR-248 to
   SR-251, LLR-403, LLR-405, LLR-406, LLR-408 and TC-480 to TC-485.
+- **Review:** round 1, Hydrogen APPROVE; Sol one MAJOR, adopted (TC-481's
+  system-requirement and test-case refusals now assert file, row and key).
+  Round 2, narrow: Sol and Hydrogen APPROVE. The record is in the
+  Deliverable.
