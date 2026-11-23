@@ -1,14 +1,14 @@
 +++
 id = "WI-1061"
-title = "adjudicate: WI-1058's answer to the fourth sitting, SR-251's chain whole, in one combined sitting"
+title = "adjudicate: WI-1058's answer to the fourth sitting, SR-251's chain whole, in one first-acceptance sitting"
 workstream = "process"
 specref = "docs/archive/work/complete/WI-1058-answer-wi-1057-verdict.md"
 sr_refs = ["SR-251"]
 needs = []
 buildtier = "medium"
 safety_class = "adjudication"
-brief = "combined"
-adjudicates = ["amendment:CMP-006", "amendment:IF-312", "first-acceptance:LLR-406", "first-acceptance:SR-251", "first-acceptance:TC-483"]
+brief = "first-acceptance"
+adjudicates = ["LLR-406", "SR-251", "TC-483"]
 priority = 2
 +++
 
@@ -21,11 +21,15 @@ question: "Yes, run through antigravity cli (agy) model neon high"). It
 judges what WI-1058 (the specref) left owed: the fourth sitting's two
 returns, answered.
 
-**Scope.** Every row whose accepted text drifts from its recorded copy at
-`6925769b1` (`baseline_snapshot.refresh_ledger`), each as an `amendment:`
-token: only IF-312's and CMP-006's off-spine drift, as at the earlier
-sittings. Every `Drafted` SR, LLR or TC is a `first-acceptance:` token:
-SR-251 and TC-483, as WI-1058 rewrote them, and LLR-406, unchanged.
+**Scope.** Every `Drafted` SR, LLR or TC is in its scope:
+SR-251 and TC-483, as WI-1058 rewrote them, and LLR-406, unchanged. No
+spine row drifts from its recorded copy at `6925769b1`
+(`baseline_snapshot.refresh_ledger`), so the sitting is a first-acceptance
+one, not combined. IF-312 and CMP-006 still drift in their off-spine
+registries, but the amendment brief shows no off-spine row: filed as
+amendment tokens alone, they leave its section empty, and the compose
+refuses (it did, at the first filing of this row). They stay owed, as at
+every sitting so far.
 
 **Why LLR-406 is judged again.** The fourth sitting ruled LLR-406 ACCEPT,
 and its flip has been held under WI-1057's verdict since then, because its
@@ -60,9 +64,9 @@ One session, never fanned out (PROCESS.md §6).
 - [ ] The verdict is recorded beside its binding under
       `docs/reviews/wi-1061-adjudicate-fifth-sitting/`, as the adjudicator
       returned it, and `record_outcome` reads it recorded.
-- [ ] The act `compose_act` derives is taken, each part in its own commit.
+- [ ] The act `compose_act` derives is taken.
       If its first snapshot is refused over an unblessed row, the
       operator's standing revert ruling applies (HANDOFF §0 step 2); a
       refusal of another kind goes to the operator.
-- [ ] Each MEANING amendment and RETURN row is listed in the Deliverable
+- [ ] Each RETURN row is listed in the Deliverable
       with its finding, and its follow-up is filed or named.
