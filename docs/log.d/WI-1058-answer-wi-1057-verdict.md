@@ -38,3 +38,5 @@ commit hooks on and planning `none`. The record is in the row's Deliverable
   `system-requirements.toml` +31, `test-cases.toml` +821,
   `test_llr_trace_cells.py` +2,633.
 - **Owed to the next sitting:** the first acceptances of SR-251 and TC-483.
+- **Review:** Sol (low) over the whole diff and Hydrogen (low) over the
+  prose: both `VERDICT: APPROVE findings=0`; no change after the review.

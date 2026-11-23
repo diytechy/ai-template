@@ -142,6 +142,15 @@ evidence was regenerated.
 LLR-406's text did not change, so its flip stays owed under WI-1057's
 verdict and is not re-judged.
 
+**Review** (the coordinator, round 1, over `8db60ba58..9d1328c94`, generated
+views excluded, with the sittings' three row checks and SR-251's and
+LLR-406's text beside the diff). OpenAI Sol (`gpt-6.1-sol`, low) read the
+whole diff, the regeneration code and the new tests at the tip:
+`VERDICT: APPROVE findings=0`. Gemini Hydrogen (`gemini-4-hydrogen-low`,
+through `agy`) read the prose part: `VERDICT: APPROVE findings=0`. Both
+returned the bare verdict line; the coordinator read the two tests and
+the row text and found nothing to add. No change after the review.
+
 **Left as found:** trace's advisory that SR-251 declares no `form`
 (SR-248 to SR-251 were filed without one, and the fourth sitting raised no
 finding on it), and TC-483's closing clause that every cell of this
