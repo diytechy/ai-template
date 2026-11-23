@@ -13,7 +13,7 @@ _Baseline: `docs/requirements/external.toml` copied 2026-11-16 (675f5b7a4)._
 _Baseline: `docs/requirements/components.toml` copied 2026-11-20 (0e67ffffb)._
 _Baseline: `docs/requirements/assumptions.toml` copied 2026-11-20 (46d518b56)._
 
-_Acceptance provenance: the last acceptance act is the act ledger's seq 187, dated 2026-11-22, added by commit 55e40f407cc8._
+_Acceptance provenance: the last acceptance act is the act ledger's seq 188, dated 2026-11-22; its commit is not in the available history: no commit adds it yet, so the act is not committed._
 
 ## Off-spine census
 
@@ -30,7 +30,7 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 13 chain(s): SR-036, SR-070, SR-157, SR-159, SR-168, SR-174, SR-190, SR-215, SR-217, SR-220, SR-221, SR-228, SR-248</summary>
+<summary>Waiting for automated adjudication — 6 chain(s): SR-036, SR-157, SR-159, SR-217, SR-221, SR-248</summary>
 
 ## SR-036 — Deliberate re-sync integration
 
@@ -39,7 +39,8 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 > **Rationale.** Realizes SN-001 and SN-007 — picking up kit updates is a deliberate diff-and-merge, not a mechanical operation: bootstrap.py supplies the docs/kit-version stamp and --force (SR-011), while the operator makes the overwrite-vs-preserve call, aided by the downstream-resync skill.
 
 
-### LLR LLR-407 — ADDED since the snapshot, Drafted — never accepted
+### LLR LLR-407 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **LLR-ID**: LLR-407
 - **SR-Refs**: SR-036
 - **Title**: A migration removes the design rows' retired trace cells from an adopter's registry
@@ -49,7 +50,8 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Status**: Drafted
 - **Phase**: 6
 
-### TC TC-484 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-484 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-484
 - **Verifies**: SR-036;LLR-407
 - **Level**: Unit
@@ -61,105 +63,6 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 - **Status**: Drafted
 - **Phase**: 6
 
-## SR-070 — Generated views are offline, deterministic and drift-checkable
-
-> **Requirement.** The delivered generator set shall derive each artifact it produces from the tracked registries alone — self-contained and usable without network access, byte-stable across regeneration from unchanged sources, and carrying a freshness contract that fails when the committed copy has drifted from those sources — omitting a view whose source registries the adopting repository does not carry rather than emitting an empty one.
-
-> **Rationale.** Realizes SN-010 and the dissolved edge expectation that a generated artifact drifting from its source fails its --check, by isolating one independently reviewable obligation formerly carried by SR-038; with SN-012, since a repository that carries no source registry pays nothing for the view that registry would have fed. ONE DECISION PER ROW: the INTEGRITY of a generated artifact and what the state view must SHOW are two unrelated obligations, and this row holds the first alone. They fail independently: a view can be perfectly offline, deterministic and drift-checkable while showing nothing about the work in flight or how the parts connect. The content half sheds along the conjunction SN-023 itself draws ("progress AND how its parts connect") to SR-168 and SR-169; this row keeps the artifact-integrity contract alone. The subject is "each artifact the generator set produces" rather than "each view" deliberately: the knowledge-export bundle is not a view, and a fourth row minted to hold it would be the filler tier the ruling forbids. The child/parent phase spread is untouched and is intended — this split is by observable class, not by phase, a partition that was considered and rejected.
-
-
-### LLR LLR-023
-- **CodeSymbol**
-  - before: build_map/splice_region
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/gen_arch_map.py
-  - after: (empty)
-
-### LLR LLR-035
-- **CodeSymbol**
-  - before: build_html/spine_stats/arch_icicle/dag_svg
-  - after: (empty)
-- **Component**
-  - before: CMP-009
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_parse.py;project-trajectory/scripts/traj_display.py;project-trajectory/scripts/rendering/__init__.py;project-trajectory/scripts/rendering/traj_views.py
-  - after: (empty)
-
-### LLR LLR-039
-- **CodeSymbol**
-  - before: emit/concept/_doc_title_and_summary/on_disk
-  - after: (empty)
-- **Component**
-  - before: CMP-009
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/gen_okf.py
-  - after: (empty)
-
-### LLR LLR-078
-- **CodeSymbol**
-  - before: sw_modules/cmp_rows/know_graph/_okf_nodes
-  - after: (empty)
-- **Component**
-  - before: CMP-009
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/traj_parse.py;project-trajectory/scripts/rendering/traj_panels.py
-  - after: (empty)
-
-### LLR LLR-079
-- **CodeSymbol**
-  - before: main/_asof/ASOF_RE
-  - after: (empty)
-- **Component**
-  - before: CMP-009
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_parse.py
-  - after: (empty)
-
-### LLR LLR-130
-- **CodeSymbol**
-  - before: main/_asof/ASOF_RE
-  - after: (empty)
-- **Component**
-  - before: CMP-009
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_parse.py
-  - after: (empty)
-
-### LLR LLR-199
-_accepted — re-acceptance owed_
-- **Detail**
-  - before: gen_components.py derives the component view from four registries and the files' Component headers: components.toml declares components, each file's Component header places that file in one, low-level-requirements.toml's Component cells place the design rows, system-requirements.toml is reached through those rows, and interfaces.toml provides seams. It writes docs/requirements/components.derived.toml; docs/stack.ini [generated] declares kind components, check.py freshness-gates component-view, trunk_step --regen regenerates it on trunk, and the file carries the generated-but-live staleness header. For each component it emits member design rows, their decomposed requirements, perspectives from trace.effective_hats over members, modules, and seams split into internal and boundary by the components layer rule. A requirement with no component appears once in the counted unplaced table; registries cannot distinguish missing decomposition from an all-component constraint, and that judgement has no place in shipped machinery. A requirement in several components appears in each and in each component's sr_shared_refs, so the view never implies exclusive ownership. A seam is placed from its endpoint cells, which name components: it appears in each component it names, internal to the lowest component enclosing every endpoint through part_of (none when an endpoint is an external party or no component encloses them all) and boundary to every other; a seam naming no declared component stays in the unplaced table rather than being dropped. NO ACCEPTANCE CELL APPEARS, EVER: the hand file declares the component and holds its maturity, while this file describes it. With no real CMP row and no view on disk, the generator exits 0 and writes nothing. NOT DISCHARGED: the view has no INTERNALS, so mechanism remains in the named design rows; freshness compares the artifact with its regeneration, never asking whether the source rows were right, which remains the amend-without-flip guard's residue.
-  - after: gen_components.py derives the component view from five registries and the files' Component headers: components.toml declares components, each file's Component header places that file in one, each design row of low-level-requirements.toml is placed at the owner component of each interface a test case of test-cases.toml verifying it names, system-requirements.toml is reached through those rows, and interfaces.toml provides the owners and the seams. It writes docs/requirements/components.derived.toml; docs/stack.ini [generated] declares kind components, check.py freshness-gates component-view, trunk_step --regen regenerates it on trunk, and the file carries the generated-but-live staleness header. For each component it emits member design rows, their decomposed requirements, perspectives from trace.effective_hats over members, modules, and seams split into internal and boundary by the components layer rule. A design row placed in no component appears once in the counted unplaced table, and so does a requirement with no component; registries cannot distinguish missing decomposition from an all-component constraint, and that judgement has no place in shipped machinery. A requirement in several components appears in each and in each component's sr_shared_refs, so the view never implies exclusive ownership. A seam is placed from its endpoint cells, which name components: it appears in each component it names, internal to the lowest component enclosing every endpoint through part_of (none when an endpoint is an external party or no component encloses them all) and boundary to every other; a seam naming no declared component stays in the unplaced table rather than being dropped. NO ACCEPTANCE CELL APPEARS, EVER: the hand file declares the component and holds its maturity, while this file describes it. With no real CMP row and no view on disk, the generator exits 0 and writes nothing. NOT DISCHARGED: the view has no INTERNALS, so mechanism remains in the named design rows; freshness compares the artifact with its regeneration, never asking whether the source rows were right, which remains the amend-without-flip guard's residue.
-_traced — routes to adjudication_
-- **CodeSymbol**
-  - before: build/render/seam_placement
-  - after: (empty)
-- **Component**
-  - before: CMP-009
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/gen_components.py
-  - after: (empty)
-
-### TC TC-195
-- **Method**
-  - before: The join, the three coverage edges, the standing constraint and the freshness contract, each driven against a two-component spine small enough to reason about by hand. THE JOIN: assert the design rows are placed by the design tier's Component tag and the requirement tier is reached through them, while the modules come from the files' Component headers. DERIVED NEVER COPIED: a design row carrying no hat cell still contributes its SR parent's perspectives, and re-ruling that one requirement moves the view with no design cell edited. EDGE 1: a requirement with no design child appears in the unplaced table, is counted there, and appears in no component section - visible rather than dropped. EDGE 2: a requirement reaching two components appears in both and is marked shared in both, while one reaching a single component is not. EDGE 3: seams enter the view, an interface with both endpoints inside a component is internal to it while one crossing two is a boundary of BOTH, an interface is placed by the components its endpoint cells name, and one naming no component is reported as unplaced. NO ACCEPTANCE: with one Accepted and one Drafted component declared in the hand file, no maturity key and neither word appears in any emitted cell. FRESHNESS, DRIVEN BOTH WAYS: --check passes on a fresh view, fails after a registry row moves, and passes again once regenerated; a missing view fails; the written bytes carry no CRLF and two renders agree. VACUITY: a repo whose only CMP row is the inert -000 example writes nothing and exits zero on both paths.
-  - after: The join, the three coverage edges, the standing constraint and the freshness contract, each driven against a two-component spine small enough to reason about by hand. THE JOIN: assert the design rows are placed through the interfaces their verifying test cases name and the requirement tier is reached through them, while the modules come from the files' Component headers. DERIVED NEVER COPIED: a design row carrying no hat cell still contributes its SR parent's perspectives, and re-ruling that one requirement moves the view with no design cell edited. EDGE 1: a requirement with no design child appears in the unplaced table, is counted there, and appears in no component section - visible rather than dropped. EDGE 2: a requirement reaching two components appears in both and is marked shared in both, while one reaching a single component is not. EDGE 3: seams enter the view, an interface with both endpoints inside a component is internal to it while one crossing two is a boundary of BOTH, an interface is placed by the components its endpoint cells name, and one naming no component is reported as unplaced. NO ACCEPTANCE: with one Accepted and one Drafted component declared in the hand file, no maturity key and neither word appears in any emitted cell. FRESHNESS, DRIVEN BOTH WAYS: --check passes on a fresh view, fails after a registry row moves, and passes again once regenerated; a missing view fails; the written bytes carry no CRLF and two renders agree. VACUITY: a repo whose only CMP row is the inert -000 example writes nothing and exits zero on both paths.
-
-### TC TC-460
-- **Expected**
-  - before: The moved file leaves its old component's modules and joins the new one's beside the added file; the seams stay where their endpoint cells put them; the design row tagged into the old component still places its row there.
-  - after: The moved file leaves its old component's modules and joins the new one's beside the added file; the seams stay where their endpoint cells put them; the case verifying the design row at an interface the old component owns still places the row there.
-
 ## SR-157 — Spine and work-registry rules fail the harness verdict
 
 > **Requirement.** The delivered harness shall report every declared spine and work-registry rule violation — broken joins, integrity and schema faults, leftover placeholders, requirement-form findings and work-item coherence contradictions — naming the at-fault row and cell, gating the declared failure set at the declared gate while advisory classes never change the exit code.
@@ -167,292 +70,8 @@ _traced — routes to adjudication_
 > **Rationale.** Realizes SN-002 (the chain is mechanically verified, not asserted — this row is the boundary-level home of the verdict SN-002's acceptance asks for), SN-012 (optional registries and opt-outs cost a non-user nothing) and SN-025 (the tracked work-item graph the loop derives its next work from is kept coherent). One row because the adopter-observable contract is one: registry rules produce named findings at a declared severity; which rules, at which severities, is the component detail the rows below it decompose. Fan-out re-stamp: the delivered contract is one — a named, row-and-cell-attributed finding at a declared severity, gating or advisory — while the rule inventory it ranges over is open by this row's own acceptance ("a rule added at one of those sites is in this row's scope by default"), so the child count tracks the number of declared rules rather than the number of decisions this row makes, and would climb back through any bound a split bought.
 
 
-### LLR LLR-001
-- **CodeSymbol**
-  - before: main
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/trace.py
-  - after: (empty)
-
-### LLR LLR-002
-- **CodeSymbol**
-  - before: integrity_findings/structure_findings/triangle_findings
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/trace.py
-  - after: (empty)
-
-### LLR LLR-003
-- **CodeSymbol**
-  - before: placeholder_findings/schema_findings/phase_accepted_findings
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/trace.py
-  - after: (empty)
-
-### LLR LLR-004
-- **CodeSymbol**
-  - before: ac_advisories
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/trace_text.py
-  - after: (empty)
-
-### LLR LLR-005
-_accepted — re-acceptance owed_
-- **Detail**
-  - before: Integrity-checks the PB/REPO/PART/ASSET ids plus legacy MOD compatibility and resolves REPO/MOD DelegatedSRs against the SR set; -000 example rows ignored. Resolves each PB row's Refs to a real SR/LLR/Module id — an unresolvable or empty Refs is a finding. An unused optional registry never blocks: absent registries are vacuous.
-  - after: Integrity-checks the PB/REPO/PART/ASSET ids plus legacy MOD compatibility and resolves REPO/MOD DelegatedSRs against the SR set; -000 example rows ignored. Resolves each PB row's Refs to a real SR or LLR id — an unresolvable or empty Refs is a finding. An unused optional registry never blocks: absent registries are vacuous.
-_traced — routes to adjudication_
-- **CodeSymbol**
-  - before: integrity_findings/module_findings
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/trace.py
-  - after: (empty)
-
-### LLR LLR-034
-- **CodeSymbol**
-  - before: load_wis/validate
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/check_trajectory.py
-  - after: (empty)
-
-### LLR LLR-075
-- **CodeSymbol**
-  - before: status_forward_only_findings
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/check_trajectory.py
-  - after: (empty)
-
-### LLR LLR-077
-- **CodeSymbol**
-  - before: ssot_findings/spec_ref_findings
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/check_trajectory.py
-  - after: (empty)
-
-### LLR LLR-083
-- **CodeSymbol**
-  - before: VERIFICATION_VALUES/llr_exempt
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/trace.py
-  - after: (empty)
-
-### LLR LLR-084
-- **CodeSymbol**
-  - before: critique_ratchet_findings
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/check_trajectory.py
-  - after: (empty)
-
-### LLR LLR-097
-- **CodeSymbol**
-  - before: spec_lifecycle_findings
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/check_trajectory.py
-  - after: (empty)
-
-### LLR LLR-133
-- **CodeSymbol**
-  - before: provenance_findings/_cited_cells
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/trace_text.py
-  - after: (empty)
-
-### LLR LLR-134
-- **CodeSymbol**
-  - before: form_findings
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/trace_text.py
-  - after: (empty)
-
-### LLR LLR-135
-- **CodeSymbol**
-  - before: paraphrase_advisories
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/trace_text.py
-  - after: (empty)
-
-### LLR LLR-160
-- **CodeSymbol**
-  - before: queue_conflict_pairs/queue_conflict_findings/_title_tokens
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/check_trajectory.py
-  - after: (empty)
-
-### LLR LLR-179
-- **CodeSymbol**
-  - before: ears_advisories
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/trace_text.py
-  - after: (empty)
-
-### LLR LLR-197
-- **CodeSymbol**
-  - before: LLR_EXEMPT/is_drafted/is_accepted/is_founded/llr_exempt/phase_num/sn_all_ids/sn_cited_ids/refs/is_example/load_csv/norm_module/MODULE_EXTS/REGISTRY_KEYS/toml_value/toml_fields/clip_line
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/kitlib/spine.py
-  - after: (empty)
-
-### LLR LLR-201
-_accepted — re-acceptance owed_
-- **Detail**
-  - before: Every rule of the checker that needs MORE THAN ONE ROW to have an opinion, in one module below the engine that runs them. The four-tier orphan rules answer whether each row has the children its tier requires and whether each id it cites resolves - an SR its LLR, TC and SN, an LLR its SR parent and TC, a TC a real spine id (seam ids supplement, never replace, a spine citation), an SN at least one citing SR - and each tier now returns the same at-fault-id-and-finding pair, so the id set the rendered views flag is collected in ONE place rather than at eight append sites. The off-spine resolutions join the same way: a PB row's Refs against SR ids, LLR ids and LLR Module paths; a REPO row's DelegatedSRs against SR ids; a CMP row's PartOf and SupersededBy plus the Component tags on LLR, IF, PART and ASSET rows against the component registry; and a CMP Knowledge cell's docs/knowledge prefix against a real pack file, which is this module's single filesystem read and is named as such rather than left for a reader to find. PhaseScope resolves the delivery filter once - the requested labels plus the foundation phase every filter includes - and the require-verified status criterion is scoped by it. Emission ORDER is load-bearing and belongs to the composer: SR, then LLR, then TC, then SN, which is what the report and the console compare.
-  - after: Every rule of the checker that needs MORE THAN ONE ROW to have an opinion, in one module below the engine that runs them. The four-tier orphan rules answer whether each row has the children its tier requires and whether each id it cites resolves - an SR its LLR, TC and SN, an LLR its SR parent and TC, a TC a real spine id (seam ids supplement, never replace, a spine citation), an SN at least one citing SR - and each tier now returns the same at-fault-id-and-finding pair, so the id set the rendered views flag is collected in ONE place rather than at eight append sites. The off-spine resolutions join the same way: a PB row's Refs against SR ids and LLR ids; a REPO row's DelegatedSRs against SR ids; a CMP row's PartOf and SupersededBy plus the Component tags on IF, PART and ASSET rows against the component registry; and a CMP Knowledge cell's docs/knowledge prefix against a real pack file, which is this module's single filesystem read and is named as such rather than left for a reader to find. PhaseScope resolves the delivery filter once - the requested labels plus the foundation phase every filter includes - and the require-verified status criterion is scoped by it. Emission ORDER is load-bearing and belongs to the composer: SR, then LLR, then TC, then SN, which is what the report and the console compare.
-_traced — routes to adjudication_
-- **CodeSymbol**
-  - before: spine_orphan_findings/tc_citation_findings/llr_module_ids/budget_backlink_findings/delegation_findings/component_membership_findings/knowledge_pack_advisories/PhaseScope/status_criterion_findings
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/coherence.py
-  - after: (empty)
-
-### LLR LLR-260
-- **CodeSymbol**
-  - before: evidence_items/tier_findings
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/kitlib/spine.py
-  - after: (empty)
-
-### LLR LLR-272
-- **CodeSymbol**
-  - before: missing_cell_findings/PHASED_TIERS/_owes_first/owing_rows
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/kitlib/spine.py;project-trajectory/scripts/trace.py;project-trajectory/scripts/baseline_snapshot.py
-  - after: (empty)
-
-### LLR LLR-274
-- **CodeSymbol**
-  - before: absolute_advisories/absolutes/absolute_summary/absolute_report_lines/ABSOLUTE_CELLS/CLOSED_DOMAIN_WORDS/CLOSED_DOMAIN_PAIRS
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/absolute_terms.py
-  - after: (empty)
-
-### LLR LLR-365
-- **CodeSymbol**
-  - before: read_test_tags/tc_tag_findings
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/gen_arch_map.py;project-trajectory/scripts/arch_tags.py
-  - after: (empty)
-
-### LLR LLR-366
-- **CodeSymbol**
-  - before: tc_tag_findings/_tag_evidence_findings
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/arch_tags.py
-  - after: (empty)
-
-### LLR LLR-383
-- **CodeSymbol**
-  - before: id_number
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/kitlib/spine.py
-  - after: (empty)
-
-### LLR LLR-395
-- **CodeSymbol**
-  - before: tc_tag_findings/_undeclared_case_findings
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/arch_tags.py
-  - after: (empty)
-
-### LLR LLR-404 — ADDED since the snapshot, Drafted — never accepted
+### LLR LLR-404 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **LLR-ID**: LLR-404
 - **SR-Refs**: SR-157
 - **Title**: A requirement tier's row carrying a key the tier does not declare is refused when the registry is read
@@ -462,7 +81,8 @@ _traced — routes to adjudication_
 - **Status**: Drafted
 - **Phase**: 6
 
-### LLR LLR-406 — ADDED since the snapshot, Drafted — never accepted
+### LLR LLR-406 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **LLR-ID**: LLR-406
 - **SR-Refs**: SR-157
 - **Title**: A test case's evidence parts under the tests root are generated from the test files' declarations
@@ -472,38 +92,21 @@ _traced — routes to adjudication_
 - **Status**: Drafted
 - **Phase**: 6
 
-### TC TC-197
-_accepted — re-acceptance owed_
-- **Method**
-  - before: Two claims, because the row makes two. THE RULES, each driven directly rather than through the engine: the orphan pass emits SR then LLR then TC then SN and returns exactly the at-fault ids of the findings it emitted; a Drafted SR stands the child-completeness rules down while its SN linkage still applies; a PB Refs cell resolves against an LLR Module path as well as against ids, and an empty one is a finding; a Component tag naming no CMP row is a finding while an empty component registry disarms the membership half entirely; a knowledge ref resolves only under the docs/knowledge prefix and a traversal ref never escapes the pack root; the phase scope covers the foundation phase under every filter and a blank Phase always; and the status criterion defers an out-of-phase row rather than failing it. THE BOUNDARY AND THE BAGS: assert that this module imports no sibling of the scripts directory, that the engine still answers to every moved name and that each definition lives here; that the loaded registry record is frozen, total, and constructed at exactly one site; that the findings record's list defaults are per instance and that the two fields filled after the pure pass returns are DECLARED rather than conjured at a call site; that the flags record accepts either itself or a CLI namespace; that no caller imports argparse to forge the engine's config; and that the composer stays a composer - measured line span, and no nested def, which is how the number this split removed got to fifty.
-  - after: Two claims, because the row makes two. THE RULES, each driven directly rather than through the engine: the orphan pass emits SR then LLR then TC then SN and returns exactly the at-fault ids of the findings it emitted; a Drafted SR stands the child-completeness rules down while its SN linkage still applies; a PB Refs cell resolves against ids only, a file path being unknown, and an empty one is a finding; a Component tag naming no CMP row is a finding while an empty component registry disarms the membership half entirely; a knowledge ref resolves only under the docs/knowledge prefix and a traversal ref never escapes the pack root; the phase scope covers the foundation phase under every filter and a blank Phase always; and the status criterion defers an out-of-phase row rather than failing it. THE BOUNDARY AND THE BAGS: assert that this module imports no sibling of the scripts directory, that the engine still answers to every moved name and that each definition lives here; that the loaded registry record is frozen, total, and constructed at exactly one site; that the findings record's list defaults are per instance and that the two fields filled after the pure pass returns are DECLARED rather than conjured at a call site; that the flags record accepts either itself or a CLI namespace; that no caller imports argparse to forge the engine's config; and that the composer stays a composer - measured line span, and no nested def, which is how the number this split removed got to fifty.
-_traced — routes to adjudication_
-- **Evidence**
-  - before: tests/test_trace_coherence.py::test_the_orphan_rules_emit_sr_then_llr_then_tc_then_sn; tests/test_trace_coherence.py::test_a_drafted_row_stands_the_child_rules_down_but_not_its_sn_link; tests/test_trace_coherence.py::test_off_spine_backlinks_resolve_against_ids_and_llr_module_paths; tests/test_trace_coherence.py::test_component_membership_is_checked_from_the_primitive_side; tests/test_trace_coherence.py::test_the_knowledge_ref_resolves_only_the_pack_prefix; tests/test_trace_coherence.py::test_the_phase_scope_always_covers_the_foundation_phase; tests/test_trace_coherence.py::test_the_status_criterion_defers_out_of_phase_and_stands_down_for_drafted; tests/test_trace_coherence.py::test_registries_is_frozen_and_total; tests/test_trace_coherence.py::test_the_loader_is_the_only_construction_site_of_registries; tests/test_trace_coherence.py::test_findings_list_defaults_are_per_instance; tests/test_trace_coherence.py::test_the_two_post_analyze_fields_are_declared_not_conjured; tests/test_trace_coherence.py::test_analysis_flags_takes_a_record_or_a_namespace; tests/test_trace_coherence.py::test_no_caller_forges_an_argparse_namespace_for_the_engine; tests/test_trace_coherence.py::test_the_coherence_rules_import_no_sibling_of_scripts; tests/test_trace_coherence.py::test_trace_re_exports_every_moved_name; tests/test_trace_coherence.py::test_analyze_is_a_composer_and_stays_one
-  - after: tests/test_trace_coherence.py::test_the_orphan_rules_emit_sr_then_llr_then_tc_then_sn; tests/test_trace_coherence.py::test_a_drafted_row_stands_the_child_rules_down_but_not_its_sn_link; tests/test_trace_coherence.py::test_component_membership_is_checked_from_the_primitive_side; tests/test_trace_coherence.py::test_the_knowledge_ref_resolves_only_the_pack_prefix; tests/test_trace_coherence.py::test_the_phase_scope_always_covers_the_foundation_phase; tests/test_trace_coherence.py::test_the_status_criterion_defers_out_of_phase_and_stands_down_for_drafted; tests/test_trace_coherence.py::test_registries_is_frozen_and_total; tests/test_trace_coherence.py::test_the_loader_is_the_only_construction_site_of_registries; tests/test_trace_coherence.py::test_findings_list_defaults_are_per_instance; tests/test_trace_coherence.py::test_the_two_post_analyze_fields_are_declared_not_conjured; tests/test_trace_coherence.py::test_analysis_flags_takes_a_record_or_a_namespace; tests/test_trace_coherence.py::test_no_caller_forges_an_argparse_namespace_for_the_engine; tests/test_trace_coherence.py::test_the_coherence_rules_import_no_sibling_of_scripts; tests/test_trace_coherence.py::test_trace_re_exports_every_moved_name; tests/test_trace_coherence.py::test_analyze_is_a_composer_and_stays_one; tests/test_trace_coherence.py::test_off_spine_backlinks_resolve_against_ids_only
+### TC TC-475 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
+- **TC-ID**: TC-475
+- **Verifies**: SR-157;LLR-395
+- **Level**: Integration
+- **Method**: Write one Accepted automated test case and one test that validly declares it and fails when it is run; run that test and see it fail, then run the trajectory check under strict checking over the registry and the test file.
+- **Tier**: Full
+- **Expected**: The test fails when it is run, and the trajectory check still reads the case clean: no finding that no test declares it, no Evidence equality finding, and exit 0, since the rule reads declarations, not test outcomes.
+- **Automated**: Yes
+- **Evidence**: tests/test_trajectory_arch.py::test_a_declared_test_that_fails_leaves_its_case_clean
+- **Status**: Drafted
+- **Phase**: 6
 
-### TC TC-428
-- **Verifies**
-  - before: SR-157
-  - after: SR-157;LLR-395
-
-### TC TC-429
-- **Verifies**
-  - before: SR-157
-  - after: SR-157;LLR-395
-
-### TC TC-475, Drafted — never accepted
-- **Expected**
-  - before: Absent inputs are vacuous, and a registry that does not parse stops the run with its parse error and no such finding; a placeholder row, a Drafted case and a case not automated owe no declaration, while a Drafted case's parts are still held equal; an eligible tagged case is clean, and so is one whose tagged test fails; a part in an unreadable file adds only that file's finding; every other eligible untagged case reads that no test declares it, whatever its cell holds; a refused tag declares nothing; and one tag clears both the part's finding and the case's. A lane's order reads no finding at any step; an Accepted case with no tag warns with exit 0 in a plain run and errors with exit 1 under strict checking until it is tagged; and a newly created project warns and exits 0 at DevStg-Tests, fails at DevStg-Impl, and is clean once the case is tagged.
-  - after: The test fails when it is run, and the trajectory check still reads the case clean: no finding that no test declares it, no Evidence equality finding, and exit 0, since the rule reads declarations, not test outcomes.
-- **Method**
-  - before: Run the trajectory check over registries and test trees covering each input state of the undeclared-case rule: no registry, no tests root and a registry that does not parse; a placeholder row; a Drafted case holding a note and holding an untagged part; an automated cell reading No, another word, absent and blank; an Accepted and a Founded case, and one whose automated cell is padded and upper-case, each tagged and untagged; a case whose one tagged test fails when it is run; a case whose part is in an unreadable file, alone and beside a readable part; an untagged case holding a note, no cell, a whole-file part, a part outside the tests root and an absent path; a misplaced and a malformed tag, alone and beside a valid one; and an untagged part, then tagged. Then walk one case through a lane's order, Drafted holding a note, then Drafted and tagged, then Accepted and tagged; then out of order, Accepted before its tag, in plain and strict runs with and without work items, and once tagged; then run the same untagged Accepted case in a bootstrapped scaffold below and at the implementation rung, and once tagged.
-  - after: Write one Accepted automated test case and one test that validly declares it and fails when it is run; run that test and see it fail, then run the trajectory check under strict checking over the registry and the test file.
-- **Evidence**
-  - before: tests/test_trajectory_arch.py::test_the_undeclared_rule_is_vacuous_with_no_tests_root_or_no_registry; tests/test_trajectory_arch.py::test_an_unparseable_registry_stops_the_run_before_the_undeclared_rule; tests/test_trajectory_arch.py::test_a_placeholder_row_owes_no_declaration; tests/test_trajectory_arch.py::test_a_drafted_case_owes_no_declaration_and_its_parts_are_still_held; tests/test_trajectory_arch.py::test_a_case_not_automated_owes_no_declaration; tests/test_trajectory_arch.py::test_an_eligible_case_is_clean_when_tagged_and_named_when_not; tests/test_trajectory_arch.py::test_a_declared_test_that_fails_leaves_its_case_clean; tests/test_trajectory_arch.py::test_a_part_in_an_unreadable_file_adds_no_undeclared_finding; tests/test_trajectory_arch.py::test_an_eligible_untagged_case_is_named_whatever_its_cell_holds; tests/test_trajectory_arch.py::test_a_refused_tag_declares_nothing; tests/test_trajectory_arch.py::test_one_tag_clears_the_part_and_the_declaration_findings; tests/test_trajectory_arch.py::test_a_lanes_order_never_meets_the_undeclared_finding; tests/test_trajectory_arch.py::test_an_accepted_case_with_no_tag_warns_plain_and_errors_strict; tests/test_trajectory_arch.py::test_the_undeclared_finding_on_a_bootstrapped_scaffold
-  - after: tests/test_trajectory_arch.py::test_a_declared_test_that_fails_leaves_its_case_clean
-
-### TC TC-481 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-481 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-481
 - **Verifies**: SR-157;LLR-404
 - **Level**: Unit
@@ -515,7 +118,8 @@ _traced — routes to adjudication_
 - **Status**: Drafted
 - **Phase**: 6
 
-### TC TC-483 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-483 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-483
 - **Verifies**: SR-157;LLR-406
 - **Level**: Unit
@@ -534,416 +138,18 @@ _traced — routes to adjudication_
 > **Rationale.** Realizes SN-023 (the parts' connections are as much of the truth as the requirement tree, checked mechanically warn-first — the need's own words), SN-002 (interface rows stay resolvable) and SN-012 (opt-out and vacuity keep the layer free for non-users). One row: the delivered contract is one connectivity verdict; the checkers below it are its decomposition.
 
 
-### LLR LLR-041
-- **CodeSymbol**
-  - before: interface_findings/integrity_findings/declared_parties/endpoint_problem
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/trace.py;project-trajectory/scripts/trace_text.py
-  - after: (empty)
-
-### LLR LLR-042
-- **CodeSymbol**
-  - before: interface_findings/_component_connectivity/arch_inventory
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/arch_interfaces.py;project-trajectory/scripts/arch_inputs.py
-  - after: (empty)
-
-### LLR LLR-049
-- **CodeSymbol**
-  - before: component_top_view/component_findings/load_cmps/_cmp_roots
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/arch_components.py;project-trajectory/scripts/arch_inputs.py
-  - after: (empty)
-
-### LLR LLR-067
-- **CodeSymbol**
-  - before: cross_component_findings/_classifiable_edges/_call_cover/arch_inventory
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/arch_seams.py;project-trajectory/scripts/arch_inputs.py
-  - after: (empty)
-
-### LLR LLR-068
-- **CodeSymbol**
-  - before: spec_interface_findings/_spec_interfaces_section
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/trajectory_arch.py
-  - after: (empty)
-
-### LLR LLR-373
-- **CodeSymbol**
-  - before: module_components
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/kitlib/spine.py
-  - after: (empty)
-
-### LLR LLR-374
-- **CodeSymbol**
-  - before: resolve_import/_resolve_relative/package_paths/_classifiable_edges
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/gen_arch_map.py;project-trajectory/scripts/arch_seams.py
-  - after: (empty)
-
-### LLR LLR-396
-- **CodeSymbol**
-  - before: file_component/component_declaration/_docstring_lines/COMPONENT_RE/COMPONENT_TYPES
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/gen_arch_map.py
-  - after: (empty)
-
-### LLR LLR-397
-- **CodeSymbol**
-  - before: component_headers/_component_scope/states_contract_body/component_findings/source_files
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/arch_inputs.py;project-trajectory/scripts/gen_arch_map.py;project-trajectory/scripts/arch_components.py
-  - after: (empty)
-
-### LLR LLR-398
-- **CodeSymbol**
-  - before: contract_body_findings/_uniqueness_findings/_external_body_findings/_declaration_sites/header_files/file_contracts/declared_headers
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/arch_interfaces.py;project-trajectory/scripts/gen_arch_map.py;project-trajectory/scripts/kitlib/config.py
-  - after: (empty)
-
-### TC TC-457, Drafted — never accepted
-- **Expected**
-  - before: Every carrier yields the component and no problem. Each malformed file yields no component and a problem quoting its line as not a declaration, the file with a malformed line beside an exact one included; each doubled file yields a problem naming two components; each file with its line outside the carrier yields no component and the absent problem.
-  - after: Every carrier yields the component and no problem. Each malformed file yields no component and a problem quoting its line as not a declaration, the file with a malformed line beside an exact one included; each doubled file yields a problem naming two components; each file with its line outside the carrier yields no component and the absent problem; and each file that cannot be read or decoded yields no component and the absent problem, and reading it raises nothing.
-- **Method**
-  - before: Write one file per carrier, each declaring the same component: a Python module's docstring, a shell script after its shebang, a macOS command file, a PowerShell script's hash comments, a TOML, an INI and a CSV file, a file with no suffix, a Windows batch file's REM line below echo-off, and a Markdown file's opening comment, and read each. Then read files whose declaring line is malformed in each way (no space, lower case, upper case, trailing words, two ids, a lower-case id), one with a malformed line beside an exact one, two with two declaring lines (two ids, and one id twice), and files whose line sits outside the carrier (a comment below a docstring, a later string, an empty module, a line below the top comment block, Markdown outside the opening comment, the words mid-line, a PowerShell help block, a batch file's double-colon line).
-  - after: Write one file per carrier, each declaring the same component: a Python module's docstring, a shell script after its shebang, a macOS command file, a PowerShell script's hash comments, a TOML, an INI and a CSV file, a file with no suffix, a Windows batch file's REM line below echo-off, and a Markdown file's opening comment, and read each. Then read files whose declaring line is malformed in each way (no space, lower case, upper case, trailing words, two ids, a lower-case id), one with a malformed line beside an exact one, two with two declaring lines (two ids, and one id twice), and files whose line sits outside the carrier (a comment below a docstring, a later string, an empty module, a line below the top comment block, Markdown outside the opening comment, the words mid-line, a PowerShell help block, a batch file's double-colon line). Last, read a path that cannot be read, a directory standing at it, and a file whose bytes cannot be decoded as UTF-8 although it holds an exact declaring line, each once as a Python module and once as a shell script.
-- **Evidence**
-  - before: tests/test_component_headers.py::test_each_carrier_declares_through_its_own_comment_syntax; tests/test_component_headers.py::test_a_line_shaped_like_a_declaration_but_not_exact_is_malformed; tests/test_component_headers.py::test_a_malformed_line_beside_an_exact_one_leaves_the_file_undeclared; tests/test_component_headers.py::test_two_declarations_are_doubled_even_naming_one_id; tests/test_component_headers.py::test_a_declaration_outside_the_carrier_declares_nothing
-  - after: tests/test_component_headers.py::test_each_carrier_declares_through_its_own_comment_syntax; tests/test_component_headers.py::test_a_line_shaped_like_a_declaration_but_not_exact_is_malformed; tests/test_component_headers.py::test_a_malformed_line_beside_an_exact_one_leaves_the_file_undeclared; tests/test_component_headers.py::test_two_declarations_are_doubled_even_naming_one_id; tests/test_component_headers.py::test_a_declaration_outside_the_carrier_declares_nothing; tests/test_component_headers.py::test_a_file_that_cannot_be_read_or_decoded_is_absent
-
-## SR-168 — The state view shows current progress and next work
-
-> **Requirement.** The delivered generator set shall produce one state view from which a reviewer reads the adopted repository's completeness, its requirement decomposition, its planned and in-flight work, and any declared hold on that work, without consulting a second surface.
-
-> **Rationale.** Realizes SN-023's FIRST conjunct — a reviewer sees the project's progress from one dashboard-like file — with SN-010 (what the reviewer reads there is the generated truth, never a hand-kept summary of it). ONE DECISION PER ROW: the integrity of a generated artifact (SR-070) and what that artifact must SHOW are two obligations that fail independently. This row is the progress half; SR-169 is the connection half, along the conjunction SN-023 itself draws. Deliberately NOT folded back into SR-070: a state view that regenerates deterministically, offline and drift-checkably while omitting the work in flight satisfies that row completely and this one not at all. Deliberately NOT folded into SR-169 either: a complete progress view can carry no seam graph whatsoever — the state this repository was in before its interface registry existed — so the two are separately observable and separately buildable. `phase` inherits the parent's 1 rather than tracking its children (which span 1 through 4), because a phase records WHEN a piece shipped, and child-later-than-parent is the ordinary case.
-
-
-### LLR LLR-035
-- **CodeSymbol**
-  - before: build_html/spine_stats/arch_icicle/dag_svg
-  - after: (empty)
-- **Component**
-  - before: CMP-009
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_parse.py;project-trajectory/scripts/traj_display.py;project-trajectory/scripts/rendering/__init__.py;project-trajectory/scripts/rendering/traj_views.py
-  - after: (empty)
-
-### LLR LLR-051
-- **CodeSymbol**
-  - before: process_panel/build_html
-  - after: (empty)
-- **Component**
-  - before: CMP-009
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/rendering/traj_panels.py;project-trajectory/scripts/gen_trajectory.py
-  - after: (empty)
-
-### LLR LLR-052
-- **CodeSymbol**
-  - before: when_view/_wi_phases
-  - after: (empty)
-- **Component**
-  - before: CMP-009
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/rendering/traj_views.py
-  - after: (empty)
-
-### LLR LLR-056
-- **CodeSymbol**
-  - before: process_panel/_station_panel
-  - after: (empty)
-- **Component**
-  - before: CMP-009
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/rendering/traj_panels.py
-  - after: (empty)
-
-### LLR LLR-057
-- **CodeSymbol**
-  - before: when_view
-  - after: (empty)
-- **Component**
-  - before: CMP-009
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/rendering/traj_views.py
-  - after: (empty)
-
-### LLR LLR-139
-- **CodeSymbol**
-  - before: pause_pending/pending_block
-  - after: (empty)
-- **Component**
-  - before: CMP-009
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/pending.py
-  - after: (empty)
-
-### LLR LLR-198
-_accepted — re-acceptance owed_
-- **Detail**
-  - before: The pending-operator-action derivation, in one module that renders no page and decides nothing about lanes. Its two committed-tree-pure, clock-free sources are spine_pending, which names each Drafted SR needing a first acceptance and each SR whose text has drifted from its copy under docs/archive/last_accepted needing a re-accept, one pointer line each naming the on-demand brief that carries the depth; and pause_pending, which names the tracked docs/work/pause and fails closed on a file it cannot read. pending_items joins the two into the TYPED model - one PendingItem per action carrying its kind and its rendered bullet. pending_block is that model rendered, the byte-compared content of the generated operator surface's pending region, and operator_cards is the model minus the pause, which is what a drained-queue banner counts. THE SITING IS THE ROW: the dashboard status snapshot, the generated operator surface and the dispatcher's exit banner all read this derivation, and only the first is inside the render family, so defining it there forced the other two through the gen_trajectory facade and into a private name. traj_status.py re-exports the three surviving names (spine_pending, pause_pending, pending_block) under their former names, so no caller moved to gain the layer and the generated surfaces are byte-identical - which is why that split sibling is named in this row's Module cell beside the read model: the shim is part of what this row delivers, not a leftover.
-  - after: The pending-operator-action derivation, in one module that renders no page and decides nothing about lanes. Its two committed-tree-pure, clock-free sources are spine_pending, which names each Drafted SR needing a first acceptance and each SR whose text has drifted from its copy under docs/archive/last_accepted needing a re-accept, one pointer line each naming the on-demand brief that carries the depth; and pause_pending, which names the tracked docs/work/pause and fails closed on a file it cannot read. pending_items joins the two into the TYPED model - one PendingItem per action carrying its kind and its rendered bullet. pending_block is that model rendered, the byte-compared content of the generated operator surface's pending region, and operator_cards is the model minus the pause, which is what a drained-queue banner counts. THE SITING IS THE ROW: the dashboard status snapshot, the generated operator surface and the dispatcher's exit banner all read this derivation, and only the first is inside the render family, so defining it there forced the other two through the gen_trajectory facade and into a private name. traj_status.py re-exports the three surviving names (spine_pending, pause_pending, pending_block) under their former names, so no caller moved to gain the layer and the generated surfaces are byte-identical - which is why that split sibling belongs to this row beside the read model: the shim is part of what this row delivers, not a leftover.
-_traced — routes to adjudication_
-- **CodeSymbol**
-  - before: PendingItem/pending_items/open_item_queue/operator_cards/spine_pending/pause_pending/pending_block
-  - after: (empty)
-- **Component**
-  - before: CMP-009
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/pending.py;project-trajectory/scripts/traj_status.py
-  - after: (empty)
-
-### LLR LLR-200
-- **CodeSymbol**
-  - before: context_block/_context_svg/_ctx_layout
-  - after: (empty)
-- **Component**
-  - before: CMP-009
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/rendering/traj_context.py
-  - after: (empty)
-
-### LLR LLR-393
-- **CodeSymbol**
-  - before: RUNG_TIERS
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/spine_rules.py
-  - after: (empty)
-
-### LLR LLR-394
-- **CodeSymbol**
-  - before: rung_tiers/_lifecycle_rows/process_panel
-  - after: (empty)
-- **Component**
-  - before: CMP-009
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/traj_parse.py;project-trajectory/scripts/rendering/traj_panels.py
-  - after: (empty)
-
-## SR-174 — Identity is allocated once and never re-issued
-
-> **Requirement.** The delivered loop content shall allocate each identity it mints at most once. Work items are minted on the integration branch alone. The registry identities that parallel lanes author are drawn from one shared reservation record. No two concurrent actors receive the same identity, and an identity freed by a deletion is never re-issued.
-
-> **Rationale.** Identity allocation is its own decision, not a consequence of serialization: serializing the writer makes a COLLISION unlikely and does nothing about RE-USE, which is the half that silently re-points every commit message and archived document citing the freed id. The non-reuse clause has a `shall` of its own here rather than living in SR-170's acceptance, which is a cell that cannot mint a requirement. Contributes to SN-025 (the ready frontier ordered deterministically, so two readers of the same registry dispatch the same work) by supplying a work-item identity that names one record for every reader, before and after a deletion. It contributes to SN-027 by assigning the registry identities independently authored by parallel lanes from one reservation record, so concurrent lanes cannot receive the same identity.
-
-
-### LLR LLR-153
-_accepted — re-acceptance owed_
-- **Detail**
-  - before: The mint invariant: a WI id is created only by a trunk commit or this helper - lanes never mint. next_wi_id counts from max(the docs/id-watermark mark, the sweep of every spec FILENAME under docs/work/ and docs/archive/work/, active/<branch>/ included) + 1 - never max(live) alone, so an id freed by a deleted spec is never re-issued - and trace.read_watermark's refusal on an absent or malformed mark is deliberately NOT caught: a mint with no record of what has been allocated must not proceed on a guess (TC-158, IF-101). Four triggers, serial by construction: (a) the accepted/routed-cell diff on the merged commit via check_trajectory.staged_spine_amendments, whose walk covers the SR, LLR, TC, SN, DA and SUR tiers -> one adjudication row listing each changed row/cell/before-after (routed traced cells: SR SN-Refs and Boundary-Refs, LLR SR-Refs and TC Verifies per the declared cell split); (b) a merged spec carrying ## Handback -> the disposition row (outcomes cancel / defer / re-queue with drafted follow-up / surface an open item; NEVER minted for an adjudication row - no recursion, and handback.hand_back refuses the act itself); (c) the dispatcher's gap census -> concrete gap-closure rows, deduped against every existing row; (d) a recorded verdict in the merged range whose latest amendment ruling on a row is MEANING, blessed or not, on a rung the dial holds, with the row at the range's end differing from its accepted-snapshot copy and either equal to the text the verdict's binding records or gone from its registry, yields, per landing and per registry, one queued operator row and one pending open item naming every such row of that registry, their verdicts and the act's command, the item cited in that row's needs, in the mint's one commit. The command re-accepts every row it names and never names a verdict, the act being the operator's, and the item's option (a) directs the operator to name beside them any other row of the registry unanchored when the operator acts. Every other non-refusing state writes nothing, and a row left over, one whose text differs from what its verdict bound or whose verdict bound none included, stays on the amendment row as any other record does. Where a landing owes an open item, through this trigger or a drafted [open_item] table, and the open-items registry is not the TOML carrier, the mint refuses by naming the carrier, writes nothing, including any amendment row the same landing owes, and the merge stands; recovery is converting the carrier and then sweeping the range. A row sat more than once reads at its latest recorded verdict in the range. A replay mints no second item. Drafts-not-mints: a merged adjudication row's ## Dispositions fenced-toml drafts mint at ITS merge, validated loudly; a draft carrying an [open_item] table also mints a pending open item from it, with no work-item pointer, and writes the item's id into that draft's needs, so the minted row is the item's queued placeholder and reads blocked until the ruling, and a draft with no SpecRef gets the item's own registry record as its SpecRef. Tier signals are measurable (rows touched, gate delta, handback reason class). context_block renders the pure registry joins (cancelled precedent WITH REASONS first, the pending OIs cited in needs by the row, its predecessors or its siblings, the LLR/TC code map, CMP knowledge packs, IF seams, precedent reviews) - advisory-never-gating, three consumers; an open item's wi_refs joins nothing. flip_verified resolves the hold from the acceptance dial: held prints a recommendation and writes nothing; released requests the flip, but _apply_flips skips an already Accepted row and refuses every other Status by name, so it writes nothing; an unreadable dial or stage reads as held. adjudication_action(operator_held, verdict) returns flip when released, reaccept when held with a CLARITY verdict, and recommend otherwise. The mint commit mirrors the claim's bookkeeping shape; every derived title is deterministic, so the sweep CLI re-run is idempotent. An adopts-only disposition block allocates no id; a standing row found by exact title whose lineage (its supersedes) differs from the draft's refuses the mint before any write, while one on the draft's own lineage stands; and every replay re-points to the full successor set. Trigger (a) excludes only records the merged range already settled under LLR-364 and the rows the operator row carries.
-  - after: The mint invariant: a WI id is created only by a trunk commit or this helper - lanes never mint. next_wi_id counts from max(the docs/id-watermark mark, the sweep of every spec FILENAME under docs/work/ and docs/archive/work/, active/<branch>/ included) + 1 - never max(live) alone, so an id freed by a deleted spec is never re-issued - and trace.read_watermark's refusal on an absent or malformed mark is deliberately NOT caught: a mint with no record of what has been allocated must not proceed on a guess (TC-158, IF-101). Four triggers, serial by construction: (a) the accepted/routed-cell diff on the merged commit via check_trajectory.staged_spine_amendments, whose walk covers the SR, LLR, TC, SN, DA and SUR tiers -> one adjudication row listing each changed row/cell/before-after (routed traced cells: SR SN-Refs and Boundary-Refs, LLR SR-Refs and TC Verifies per the declared cell split); (b) a merged spec carrying ## Handback -> the disposition row (outcomes cancel / defer / re-queue with drafted follow-up / surface an open item; NEVER minted for an adjudication row - no recursion, and handback.hand_back refuses the act itself); (c) the dispatcher's gap census -> concrete gap-closure rows, deduped against every existing row; (d) a recorded verdict in the merged range whose latest amendment ruling on a row is MEANING, blessed or not, on a rung the dial holds, with the row at the range's end differing from its accepted-snapshot copy and either equal to the text the verdict's binding records or gone from its registry, yields, per landing and per registry, one queued operator row and one pending open item naming every such row of that registry, their verdicts and the act's command, the item cited in that row's needs, in the mint's one commit. The command re-accepts every row it names and never names a verdict, the act being the operator's, and the item's option (a) directs the operator to name beside them any other row of the registry unanchored when the operator acts. Every other non-refusing state writes nothing, and a row left over, one whose text differs from what its verdict bound or whose verdict bound none included, stays on the amendment row as any other record does. Where a landing owes an open item, through this trigger or a drafted [open_item] table, and the open-items registry is not the TOML carrier, the mint refuses by naming the carrier, writes nothing, including any amendment row the same landing owes, and the merge stands; recovery is converting the carrier and then sweeping the range. A row sat more than once reads at its latest recorded verdict in the range. A replay mints no second item. Drafts-not-mints: a merged adjudication row's ## Dispositions fenced-toml drafts mint at ITS merge, validated loudly; a draft carrying an [open_item] table also mints a pending open item from it, with no work-item pointer, and writes the item's id into that draft's needs, so the minted row is the item's queued placeholder and reads blocked until the ruling, and a draft with no SpecRef gets the item's own registry record as its SpecRef. Tier signals are measurable (rows touched, gate delta, handback reason class). context_block renders the registry joins (cancelled precedent WITH REASONS first, the pending OIs cited in needs by the row, its predecessors or its siblings, the LLR/TC code map with each design row's back-link files and its placement or the word unplaced, the CMP knowledge packs and IF seams of the components the rows are placed in, precedent reviews) - advisory-never-gating, three consumers; an open item's wi_refs joins nothing. flip_verified resolves the hold from the acceptance dial: held prints a recommendation and writes nothing; released requests the flip, but _apply_flips skips an already Accepted row and refuses every other Status by name, so it writes nothing; an unreadable dial or stage reads as held. adjudication_action(operator_held, verdict) returns flip when released, reaccept when held with a CLARITY verdict, and recommend otherwise. The mint commit mirrors the claim's bookkeeping shape; every derived title is deterministic, so the sweep CLI re-run is idempotent. An adopts-only disposition block allocates no id; a standing row found by exact title whose lineage (its supersedes) differs from the draft's refuses the mint before any write, while one on the draft's own lineage stands; and every replay re-points to the full successor set. Trigger (a) excludes only records the merged range already settled under LLR-364 and the rows the operator row carries.
-_traced — routes to adjudication_
-- **CodeSymbol**
-  - before: intake_after_merge/_amendment_drafts/_latest_rulings/_held_act_drafts/_held_act_draft/mint_gap_rows/parse_dispositions/parse_disposition_section/next_wi_id/context_block/_inject_open_item/_pending_oi_lines/adjudication_action/flip_verified/_standing_successors/_title_identity_refusal/_repoint_owed/unanchored_rows/text_as_bound
-  - after: (empty)
-- **Component**
-  - before: CMP-008
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/intake.py;project-trajectory/scripts/acceptance_record.py
-  - after: (empty)
-
-### LLR LLR-154
-- **CodeSymbol**
-  - before: integrate_one/_lane_checks_directives/_refresh_checks
-  - after: (empty)
-- **Component**
-  - before: CMP-008
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/integrate.py
-  - after: (empty)
-
-### LLR LLR-362
-- **CodeSymbol**
-  - before: WATERMARK/CARRIER_REF/TRUNK_SPACES/MAX_COUNT/LOST_RACE/RESERVE_VERB/CORRECTION_LINE/MARK_LINE/Refused/carrier_spaces/parse_marks/parse_corrections/parse_reservations/record_line/parse_counts/_count/plan_reservation/fold/carried/fold_lag/_ref_value/carrier_tip/carrier_text/_plumb/write_carrier/reserve/receiving_sides/record_history_findings/reserve_ids/check_work_item/committed_reservations/_baseline_texts/_reserved_highs/_basis/_trunk_name/_committed_marks/_cmd_reserve_ids/_cmd_fold_ids/render_watermark/bump_watermark/correct_watermark/_mark_history_findings
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/id_carrier.py;project-trajectory/scripts/trace.py
-  - after: (empty)
-
-### LLR LLR-363
-- **CodeSymbol**
-  - before: LANDING_DIRS/ids_at/_added_ids/_reissued_ids/_read_landing/_outside_lines/_retired_lines/_id_name/landing_lines/landing_refusal/rev_fold_lag/_watermark_at/live_ids/live_ids_at/landing_id_refusal/landing_fold_lag/fold_watermark/_reserved_id_refusal/_landing_ready/_merge_trunk_in/_lane_base/_fold_watermark_conflict/_fold_carrier_in/_reserved_ids_refusal/_squash_work_items/_reserved_ids_mode/FOLD_REMEDY
-  - after: (empty)
-- **Component**
-  - before: CMP-008
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/id_carrier.py;project-trajectory/scripts/trace.py;project-trajectory/scripts/integrate.py;project-trajectory/scripts/check.py;project-trajectory/hooks/pre-commit
-  - after: (empty)
-
-## SR-190 — A need's source pointer resolves to a document and anchor
-
-> **Requirement.** Where a stakeholder need records the document it was drawn from, the delivered harness shall resolve that pointer to an existing file and anchor.
-
-> **Rationale.** A need drawn from a longer document — an operator's statement of design constraints, an adopter's needs catalog — drifts from it unseen unless the need says where it came from. The need stays the canonical obligation and the document is its provenance, so the pointer takes a cell of its own instead of a place in the need's text, which is kept free of repository paths so a stakeholder can read it. A pointer that does not resolve is the same rot as a dead link, and fails the same way.
-
-
-### LLR LLR-217
-_accepted — re-acceptance owed_
-- **Detail**
-  - before: The need tier gains `source`, a list of repository-relative targets written path#anchor and mapped to Source. trace.main reads each named document's anchors once, through the kit's one markdown anchor reader, and passes them to frame_rules.need_source_findings, which fails --strict naming the need and the entry when the file does not exist or the anchor is not among its anchors; entries split on ';' only, because a target never holds one. The cell is left out of trace_text's scanned need cells (PROVENANCE_ADVISORY_COLS keeps need, why and acceptance only) and named in the pointer-column comment beside Module and Evidence; the kit's written provenance rule lists it among the pointer columns too. The need-form check keeps scanning the need cell alone.
-  - after: The need tier gains `source`, a list of repository-relative targets written path#anchor and mapped to Source. trace.main reads each named document's anchors once, through the kit's one markdown anchor reader, and passes them to frame_rules.need_source_findings, which fails --strict naming the need and the entry when the file does not exist or the anchor is not among its anchors; entries split on ';' only, because a target never holds one. The cell is left out of trace_text's scanned need cells (PROVENANCE_ADVISORY_COLS keeps need, why and acceptance only) and named in the pointer-column comment beside TestRefs and Evidence; the kit's written provenance rule lists it among the pointer columns too. The need-form check keeps scanning the need cell alone.
-_traced — routes to adjudication_
-- **CodeSymbol**
-  - before: need_source_findings/PROVENANCE_ADVISORY_COLS
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/kitlib/spine.py;project-trajectory/scripts/spine_carrier.py;project-trajectory/scripts/migrate_carrier.py;project-trajectory/scripts/frame_rules.py;project-trajectory/scripts/trace.py;project-trajectory/scripts/trace_text.py
-  - after: (empty)
-
-### LLR LLR-225
-- **CodeSymbol**
-  - before: SPINE_TRACED_CELLS/SPINE_ACCEPTED_CELLS/OFFSPINE_TRACED_CELLS
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/acceptance_record.py
-  - after: (empty)
-
-## SR-215 — At a checkpoint, an unjudged, expired or triggered observation test is queued once for re-judging
-
-> **Requirement.** When a work item merges, a release is prepared or a stage gate is checked, the delivered harness shall file one re-judge work item per due observation case: one with no result, one whose result expired, or one whose declared trigger fires after its work-item floor; with no declared trigger, a change to its declared inputs makes it due, subject to that floor. It keeps at most one open item per case, and reports each observation case that cites no written pass criteria as a warning.
-
-> **Rationale.** Judgements cost time and model calls and vary across sessions. Written pass criteria fixed before the first judgement make the pass reviewable. The closed-work floor and the declared trigger are cost limits the operator directed (the PERFORMANCE lens): no change or checkpoint makes an accepted judgement due again within the configured number of closed work items of its latest record, and a declared trigger replaces input changes with the change or checkpoint it names, so a judgement can stand on changes it never judged until a qualifying change or checkpoint meets the floor or its result expires. First judgement and expiry keep missing or old evidence from standing indefinitely.
-
-
-### LLR LLR-254
-- **CodeSymbol**
-  - before: observation_test_cases/checkpoint_for/checkpoint_drafts/_open_rejudge/due_cases/BRIEF/CHECKPOINTS
-  - after: (empty)
-- **Component**
-  - before: CMP-008
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/rejudge.py
-  - after: (empty)
-
-### LLR LLR-255
-- **CodeSymbol**
-  - before: intake_after_merge/mint_rejudge/_cmd_rejudge/_rejudge_checklist_line
-  - after: (empty)
-- **Component**
-  - before: CMP-008
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/intake.py;project-trajectory/scripts/gen_release_checklist.py
-  - after: (empty)
-
-### LLR LLR-265
-- **CodeSymbol**
-  - before: merged_outcomes/_merged_shape_refusal/_cmd_sweep
-  - after: (empty)
-- **Component**
-  - before: CMP-008
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/intake.py
-  - after: (empty)
-
-### LLR LLR-293
-_accepted — re-acceptance owed_
-- **Detail**
-  - before: Cadence reads the process policy at the committed checkpoint and counts distinct terminal archived WI IDs added since the commit that added the latest observation record. eligible applies the greater of default and case floors, then file globs, component-tagged LLR modules, release or stage-gate triggers. An omitted trigger leaves input-digest comparison to rejudge. History is cached per result commit; malformed policy, an unknown trigger and unreadable history raise ValueError. Zero explicitly disables the default floor.
-  - after: Cadence reads the process policy at the committed checkpoint and counts distinct terminal archived WI IDs added since the commit that added the latest observation record. eligible applies the greater of default and case floors, then file globs, the files whose Component header declares the component in the checked-out tree, release or stage-gate triggers. An omitted trigger leaves input-digest comparison to rejudge. History is cached per result commit; malformed policy, an unknown trigger and unreadable history raise ValueError. Zero explicitly disables the default floor.
-_traced — routes to adjudication_
-- **CodeSymbol**
-  - before: Cadence
-  - after: (empty)
-- **Component**
-  - before: CMP-008
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/observation_cadence.py
-  - after: (empty)
-
-### LLR LLR-294
-- **CodeSymbol**
-  - before: observation_rubric_findings
-  - after: (empty)
-- **Component**
-  - before: CMP-008
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/observation_cadence.py
-  - after: (empty)
-
-### LLR LLR-295
-- **CodeSymbol**
-  - before: _assumption_case_chain/_render_assumption_cases/_rejudge_case_text
-  - after: (empty)
-- **Component**
-  - before: CMP-008
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/adjudicate_brief.py
-  - after: (empty)
+### TC TC-457 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
+- **TC-ID**: TC-457
+- **Verifies**: SR-159;LLR-396
+- **Level**: Unit
+- **Method**: Write one file per carrier, each declaring the same component: a Python module's docstring, a shell script after its shebang, a macOS command file, a PowerShell script's hash comments, a TOML, an INI and a CSV file, a file with no suffix, a Windows batch file's REM line below echo-off, and a Markdown file's opening comment, and read each. Then read files whose declaring line is malformed in each way (no space, lower case, upper case, trailing words, two ids, a lower-case id), one with a malformed line beside an exact one, two with two declaring lines (two ids, and one id twice), and files whose line sits outside the carrier (a comment below a docstring, a later string, an empty module, a line below the top comment block, Markdown outside the opening comment, the words mid-line, a PowerShell help block, a batch file's double-colon line). Last, read a path that cannot be read, a directory standing at it, and a file whose bytes cannot be decoded as UTF-8 although it holds an exact declaring line, each once as a Python module and once as a shell script.
+- **Tier**: Smoke
+- **Expected**: Every carrier yields the component and no problem. Each malformed file yields no component and a problem quoting its line as not a declaration, the file with a malformed line beside an exact one included; each doubled file yields a problem naming two components; each file with its line outside the carrier yields no component and the absent problem; and each file that cannot be read or decoded yields no component and the absent problem, and reading it raises nothing.
+- **Automated**: Yes
+- **Evidence**: tests/test_component_headers.py::test_each_carrier_declares_through_its_own_comment_syntax; tests/test_component_headers.py::test_a_line_shaped_like_a_declaration_but_not_exact_is_malformed; tests/test_component_headers.py::test_a_malformed_line_beside_an_exact_one_leaves_the_file_undeclared; tests/test_component_headers.py::test_two_declarations_are_doubled_even_naming_one_id; tests/test_component_headers.py::test_a_declaration_outside_the_carrier_declares_nothing; tests/test_component_headers.py::test_a_file_that_cannot_be_read_or_decoded_is_absent
+- **Status**: Drafted
+- **Phase**: 6
 
 ## SR-217 — A requirement implemented before its test cases were accepted is reported
 
@@ -952,82 +158,18 @@ _traced — routes to adjudication_
 > **Rationale.** Tests written after the code tend to describe what the code does rather than what was required, so the order is the evidence that a passing run means the requirement is met. The stage ladder puts test cases before implementation for a project as a whole, but not requirement by requirement, and the committed history is the one record of order that no cell can restate after the fact. Code declaring which requirement or design row it implements is the one event that marks an implementation landing. A requirement's acceptance is its entry into scope, so judging only requirements accepted after a declared starting point keeps a project that adopts the rule from being judged on history written before it; a project that declares none is judged whole. A test case is evidence for a requirement only once it is accepted while it names that requirement: dated from its own acceptance alone, a test case accepted for something else could be re-pointed at code already written and lend it an order it never had. A test case not yet accepted is the same gap at its widest, since its passing run shows only that the code does what unaccepted text says; the report names it with a warning rather than withholding the result, which a reviewer can still weigh.
 
 
-### LLR LLR-257
-_accepted — re-acceptance owed_
-- **Detail**
-  - before: The start is [checks] test_first_since, a commit id, read by a string reader beside process_check. first_acceptance_commits walks trunk's first-parent history oldest first and, for each commit touching the requirement registry, parses the registry on both sides through acceptance_record's row reader, recording each row's first transition to Accepted; a row born Accepted counts at its birth. first_association_commits walks the test-case and design registries together the same way, over the pairs of a test case and each requirement it names directly or through a design row whose SR-Refs name the requirement at that commit, recording each pair's first move into accepted under the same acceptance-act rule, so a test case accepted earlier and re-pointed at the requirement after its code landed, or reached through a design row re-pointed then, is dated at the re-pointing. The start applies to the requirement's acceptance only: the requirement registry is walked from the start, or from the root when none is declared, and test-case acceptances are always read over the whole readable history, so a test case accepted after the implementation landed is reported even when both precede the start. An acceptance the TOML history cannot date exactly (a row or pair already accepted when a registry it is read from moved to TOML from an older carrier, or moved into Accepted from a word outside the status vocabulary) is known only to be at or before that commit; it settles the order when it falls at or before the landing, and otherwise the requirement is reported as unread, never as a pass. A count-based pickaxe is not used, because a commit accepting one row while withdrawing another nets to zero. first_implementation_commits finds, for each requirement and its design rows, the earliest first-parent commit adding an `Implements:` line naming one of them, read with the back-link grammar gen_arch_map defines. test_first_findings judges each requirement accepted after the start whose implementation has landed, over the test cases whose Verifies name it or one of its design rows at the tip: it reports each one accepted for it after the landing, naming the requirement, the implementation commit and each such acceptance commit, and each one that does not read accepted at the tip, by name, on one line carrying the warning that those test cases' results may not reflect the intended behaviour. history_unreadable reports a shallow clone, a start commit that no longer exists or is not a first-parent ancestor of trunk, a start before the TOML registries, and registries still under an older carrier, as unreadable, never as a pass, holding the design registry to both carrier rules with the requirement and test-case registries, since a test case reaching a requirement through a design row the TOML reader cannot see would otherwise drop out in silence; a rewrite that keeps the start on trunk is read as the history it now is. check.py gains a warn-only built-in step `test-first`.
-  - after: The start is [checks] test_first_since in the process settings, a commit id, read as text. When each requirement, and each pair of a test case and a requirement it names, was first accepted is read from the acceptance record, never by replaying the registries: the commits read are those that wrote the act ledger or the record's copies of the requirement, design and test-case registries at the record's current path, found by the act ledger's one history walk widened to those copies, and each commit's copies are read against every parent's through the shared row reader and acceptance-act rule. A commit that added a ledger entry is an act and dates exactly each row it carried into acceptance and each pair new in its copies, a pair being a test case accepted in a copy while it names the requirement directly or through a design row whose SR-Refs name the requirement in that same copy, so a test case accepted earlier and re-pointed at the requirement, or reached through a design row re-pointed at it, is dated at the act that re-accepts it; a row born Accepted counts at its act, and a row's later re-acceptances are not its first. An act made on a side branch is ordered at the first first-parent commit that contains it, as a landing is, and named by its own commit. The record's first commit at its current path is its cut: nothing before it is read, in any earlier spelling of the record, since no reader is kept for a spelling the record has left behind and its history is cut cleanly there rather than translated; each acceptance its copies carry is known only to be at or before the cut while its ledger records an act, and is unread when the cut holds no ledger, an empty one or a malformed one; in this repository the cut is the vocabulary move, which reached trunk at the declared start. A row moved into Accepted from a word outside the status vocabulary is likewise known only to be at or before its act. Such a date settles the order when it falls at or before the landing, and for a requirement's own acceptance at or before the start; otherwise the requirement is reported as unread, never as a pass. A commit that changes the copies with a flip or a new pair and adds no ledger entry, or whose ledger or its parent's is malformed, is a gap: what it carries is unread, never a pass and never dated at a later act, and so is a requirement or test case reading accepted at the tip that no act in the record accepted. The start applies to the requirement's acceptance only, and test-case acceptances are read over the whole record, so a test case accepted after the implementation landed is reported even when both precede the start. A count-based pickaxe is not used, because an act accepting one row while withdrawing another nets to zero. A requirement's implementation lands at the earliest first-parent commit adding an `Implements:` line naming it or one of its design rows, read with the one back-link grammar the reverse back-link scan defines. Each requirement accepted after the start whose implementation has landed is judged over the test cases whose Verifies name it or one of its design rows at the tip: the check reports each one accepted for it after the landing, naming the requirement, the implementation commit and each such acceptance commit, and each one that does not read accepted at the tip or that no act has accepted while it names the requirement, by name, on one line carrying the warning that those test cases' results may not reflect the intended behaviour. A shallow clone, a start commit that no longer exists or is not a first-parent ancestor of trunk, a start before the TOML registries, and registries still under an older carrier are reported as unreadable, never as a pass, the design registry held to both carrier rules with the requirement and test-case registries, since a test case reaching a requirement through a design row the TOML reader cannot see would otherwise drop out in silence; a rewrite that keeps the start on trunk is read as the history it now is. The harness's checks gain a warn-only built-in step `test-first`.
-_traced — routes to adjudication_
-- **CodeSymbol**
-  - before: record_acceptances/first_implementation_commits/history_unreadable/test_first_findings/_ledger_commits/BUILTIN_STEP_NAMES
-  - after: (empty)
-- **Component**
-  - before: CMP-007
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/check_test_first.py;project-trajectory/scripts/acceptance_record.py;project-trajectory/scripts/baseline_snapshot.py;project-trajectory/scripts/kitlib/config.py;project-trajectory/scripts/check.py
-  - after: (empty)
-
-### TC TC-468, Drafted — never accepted
-- **Method**
-  - before: Driven on real git repositories whose acts are taken with copy_live. A test case re-pointed at a requirement in a text commit before the requirement's code lands, and re-accepted by an act after it, is reported late at the act. An act made on a side branch before the code landed on trunk, merged after it, is placed at the merge and reported late, naming the act's own commit.
-  - after: Driven on real git repositories in which each acceptance act is taken as the kit takes one: the registries' copies are written into the acceptance record and the act's entry is appended to its ledger, in the act's own commit. A test case re-pointed at a requirement in a text commit before the requirement's code lands, and re-accepted by an act after it, is reported late at the act. An act made on a side branch before the code landed on trunk, merged after it, is placed at the merge and reported late, naming the act's own commit.
-
-## SR-220 — Overlapping queued work is consolidated through one judgement per queue state
-
-> **Requirement.** While the queued work items include a set that overlaps, the delivered loop content shall hand that set to a single judgement, at most once for any one state of the queued work items and never while another judgement is in progress, queued over an item of the set, or queued to run before it, whose outcome takes effect only as a recorded restructuring in which each absorbed item is closed in a terminal state naming its one successor, its scope text unchanged.
-
-> **Rationale.** A DERIVED requirement, and labelled so. SN-025 asks that no human curate what comes next; its acceptance states only that the next work derives from the tracked work-item graph, which a stranger reading it would derive as work selection alone. This row states what that promise needs once the loop also mints work: rows minted one finding at a time overlap, and without this row either a human merges them, which is the curation the need rules out, or the loop builds the same job more than once. Two lenses shape it. UNATTENDED-OPS: an overlap is a standing state, so a judgement fired on it re-asks the same question on every idle tick unless the judged state is remembered past the judging row's close, an unbounded retry that pages nobody. PERFORMANCE: each judgement is a strong-tier session, so asking once per queue state is the operating-cost bound rather than an optimisation. The restructuring is recorded rather than done by deletion so that an absorbed item's scope and its successor stay readable after the act. Fed back to the need: SN-025's acceptance could name the loop keeping its own queue free of duplicated work; until it does, this row is derived and says so. Choosing the next work stays SR-148's, and reporting an overlap as a warning stays SR-157's.
-
-
-### LLR LLR-210
-_accepted — re-acceptance owed_
-- **Detail**
-  - before: The queue-overlap pre-filter's judgement half, as a producer of one adjudication row rather than a warn. `clusters` selects the candidate set from `check_trajectory.queue_conflict_pairs` — the same three signals reported at PAIR grain so a caller reads edges instead of parsing warn sentences — widened by two signals the pair producer cannot carry: rows commissioned by one open-item edge, and rows whose SR-Refs reach the same design-row `Module` or whose own body names the same source file. A pair's commissioning finding names every open-item edge the two rows share and the spec of record they share, if any. Two specrefs name one spec of record under the shared-spec rule the validator reads (`kitlib.registry.shared_spec`): two sections of one document are two specs, and a specref with no section covers the whole document. That rule is also the pair producer's shared-SpecRef signal, so a shared spec of record adds its name to the finding and selects no pair the pair producer does not already select. The population is the queued work rows (`queued_work`): a judgement row is never a candidate, and the `-000` example row is never one either. `census_draft` returns the row that cluster would mint, carrying its scope in the typed `Adjudicates` cell and its recursion guard in the typed `Digests` cell (a queue sha over the sorted id/title/needs/safety_class of the queued work rows, and a spine sha over the three spine registries). Three refusals, all over typed cells and recorded verdicts: none while a judgement is active, while another consolidation row is queued, while a queued judgement's `Adjudicates` names a row of the candidate set, or while a queued judgement sorts at or before the row this census would mint in `schedule.evaluate`'s own order (the would-be row at its priority, with an id above every id on file), each naming that judgement, and a queued judgement that does neither refuses nothing; none for a queue sha a consolidation row already carries in ANY status, terminal included; and a row an earlier consolidation judgement minted neither seeds a cluster nor may be re-absorbed. That row is read from the judgement that ENACTED the absorption (`enacted_absorbs`): a `done` consolidation row whose own spec records a `## Consolidation` outcome of `consolidate` (`parse_verdict`) and whose `## Dispositions` draft supersedes a `restructured` row (`absorbed_ids`); its successor is the row whose `Supersedes` names that row. A consolidation row that queued, edged or returned its rows, one cancelled, or one whose scope alone names them enacted nothing, and a hand consolidation leaves no such row, so neither makes a successor: the host seeds clusters and may be absorbed. The brief's prior-consolidation lines read every absorption from the successors' `Supersedes` (`prior_absorbs`), keeping an absorption after its successor is itself absorbed, and mark each absorbed row as judged, naming the judging row, or by hand (`prior_line`, `HAND_LABEL`), so a mixed absorption is marked row by row. `parse_verdict` and `close_refusal` read the verdict's typed outcome block and refuse by name for any row it moves that is not queued; `restructured_text`, `returned_text` and `edged_text` are the pure transforms the two call sites write back, and `archive_absorbed` performs the absorbed rows' move to the fourth terminal folder at the mint, where the successor's id exists. The queue-with-edge transform gives a waiter whose frontmatter carries no `needs` line one holding just the blocker, inserted at the top of the frontmatter, ahead of any table, with the rest of the specification byte-identical. A row with a `needs` line is extended as before, idempotently: a row already waiting on the blocker, hard or soft, comes back unchanged; a specification whose frontmatter fence cannot be found, whose frontmatter does not parse, or whose `needs` list is not on one line is refused.
-  - after: The queue-overlap pre-filter's judgement half, as a producer of one adjudication row rather than a warn. `clusters` selects the candidate set from `check_trajectory.queue_conflict_pairs` — the same three signals reported at PAIR grain so a caller reads edges instead of parsing warn sentences — widened by two signals the pair producer cannot carry: rows commissioned by one open-item edge, and rows whose SR-Refs reach design rows one source file's back-link tags name, or whose own body names the same source file. A pair's commissioning finding names every open-item edge the two rows share and the spec of record they share, if any. Two specrefs name one spec of record under the shared-spec rule the validator reads (`kitlib.registry.shared_spec`): two sections of one document are two specs, and a specref with no section covers the whole document. That rule is also the pair producer's shared-SpecRef signal, so a shared spec of record adds its name to the finding and selects no pair the pair producer does not already select. The population is the queued work rows (`queued_work`): a judgement row is never a candidate, and the `-000` example row is never one either. `census_draft` returns the row that cluster would mint, carrying its scope in the typed `Adjudicates` cell and its recursion guard in the typed `Digests` cell (a queue sha over the sorted id/title/needs/safety_class of the queued work rows, and a spine sha over the three spine registries). Three refusals, all over typed cells and recorded verdicts: none while a judgement is active, while another consolidation row is queued, while a queued judgement's `Adjudicates` names a row of the candidate set, or while a queued judgement sorts at or before the row this census would mint in `schedule.evaluate`'s own order (the would-be row at its priority, with an id above every id on file), each naming that judgement, and a queued judgement that does neither refuses nothing; none for a queue sha a consolidation row already carries in ANY status, terminal included; and a row an earlier consolidation judgement minted neither seeds a cluster nor may be re-absorbed. That row is read from the judgement that ENACTED the absorption (`enacted_absorbs`): a `done` consolidation row whose own spec records a `## Consolidation` outcome of `consolidate` (`parse_verdict`) and whose `## Dispositions` draft supersedes a `restructured` row (`absorbed_ids`); its successor is the row whose `Supersedes` names that row. A consolidation row that queued, edged or returned its rows, one cancelled, or one whose scope alone names them enacted nothing, and a hand consolidation leaves no such row, so neither makes a successor: the host seeds clusters and may be absorbed. The brief's prior-consolidation lines read every absorption from the successors' `Supersedes` (`prior_absorbs`), keeping an absorption after its successor is itself absorbed, and mark each absorbed row as judged, naming the judging row, or by hand (`prior_line`, `HAND_LABEL`), so a mixed absorption is marked row by row. `parse_verdict` and `close_refusal` read the verdict's typed outcome block and refuse by name for any row it moves that is not queued; `restructured_text`, `returned_text` and `edged_text` are the pure transforms the two call sites write back, and `archive_absorbed` performs the absorbed rows' move to the fourth terminal folder at the mint, where the successor's id exists. The queue-with-edge transform gives a waiter whose frontmatter carries no `needs` line one holding just the blocker, inserted at the top of the frontmatter, ahead of any table, with the rest of the specification byte-identical. A row with a `needs` line is extended as before, idempotently: a row already waiting on the blocker, hard or soft, comes back unchanged; a specification whose frontmatter fence cannot be found, whose frontmatter does not parse, or whose `needs` list is not on one line is refused.
-_traced — routes to adjudication_
-- **CodeSymbol**
-  - before: census_draft/queue_digest/queued_work/spine_digest/clusters/enacted_absorbs/judged_absorbed/consolidation_successors/prior_absorbs/prior_line/HAND_LABEL/parse_verdict/close_refusal/archive_absorbed/_commissioning_docs/_shared_commission
-  - after: (empty)
-- **Component**
-  - before: CMP-008
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/consolidate.py
-  - after: (empty)
-
-### LLR LLR-264
-- **CodeSymbol**
-  - before: _cmd_consolidate
-  - after: (empty)
-- **Component**
-  - before: CMP-008
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/intake.py
-  - after: (empty)
-
-### LLR LLR-312
-- **CodeSymbol**
-  - before: close_adjudication/_archive_one_adjudication_row/_consolidation_close/_enact_plan/_apply_plan/_the_one_claimed_spec
-  - after: (empty)
-- **Component**
-  - before: CMP-008
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/handback.py
-  - after: (empty)
-
-### LLR LLR-384
-- **CodeSymbol**
-  - before: queued_spec
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/kitlib/registry.py
-  - after: (empty)
+### TC TC-468 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
+- **TC-ID**: TC-468
+- **Verifies**: SR-217;LLR-257
+- **Level**: Integration
+- **Method**: Driven on real git repositories in which each acceptance act is taken as the kit takes one: the registries' copies are written into the acceptance record and the act's entry is appended to its ledger, in the act's own commit. A test case re-pointed at a requirement in a text commit before the requirement's code lands, and re-accepted by an act after it, is reported late at the act. An act made on a side branch before the code landed on trunk, merged after it, is placed at the merge and reported late, naming the act's own commit.
+- **Tier**: Full
+- **Expected**: Each acceptance is dated at the commit that added its act's ledger entry: the re-pointing at the re-accepting act, not its text commit; the side-branch act ordered where it reached trunk.
+- **Automated**: Yes
+- **Evidence**: tests/test_check_test_first.py::test_a_re_pointing_committed_before_its_act_is_dated_at_the_act;tests/test_check_test_first.py::test_an_act_on_a_side_branch_is_ordered_where_it_reached_trunk
+- **Status**: Drafted
+- **Phase**: 6
 
 ## SR-221 — A builder changing a module can list the tests the spine links to it
 
@@ -1036,18 +178,8 @@ _traced — routes to adjudication_
 > **Rationale.** A DERIVED requirement: SN-012 asks that small changes stay cheap and does not name a test listing, so this obligation arrives through two lenses rather than through the need's text. The performance lens prices operator time: a builder iterating on one module either reruns the whole suite, minutes each time, or guesses which tests matter. The test-engineer lens names what the guess costs: tests picked by file name are a fraction of those exercising a module, because cases are named for the behaviour they drive and driven suites for the script they run, so a pass from them has not examined what the module's design rows claim. The spine already records which tests carry each design row's evidence, so the listing reads it. It is an inner loop only: the commit checks still runs before every commit, and making a module-scoped subset the checks were considered and rejected, since a change that breaks another module through a shared import would then commit with its checks passing.
 
 
-### LLR LLR-263
-- **CodeSymbol**
-  - before: resolve_modules/module_tests/_cmd_tests_for
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/kitlib/spine.py;project-trajectory/scripts/trace.py
-  - after: (empty)
-
-### TC TC-482 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-482 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-482
 - **Verifies**: LLR-405;LLR-263
 - **Level**: Unit
@@ -1059,62 +191,6 @@ _traced — routes to adjudication_
 - **Status**: Drafted
 - **Phase**: 6
 
-## SR-228 — Held-rung CLARITY re-acceptance
-
-> **Requirement.** Where the declared acceptance level holds a tier for an operator, the delivered loop shall permit an independent adjudication to re-accept an accepted amended row only when its verdict rules that amendment CLARITY.
-
-> **Rationale.** SN-029 delegates review on released tiers without skipping it, but an accepted row whose wording is clarified on a held tier remains anchored to a signature the operator already gave. Treating that unchanged meaning as a new acceptance would strand every clarification with the operator; treating a meaning change the same way would carry a signature onto text the operator did not read. The verdict boundary keeps those alternatives separate: only the independent judgement that the signature still describes the row permits re-acceptance, while a meaning change remains the operator's decision.
-
-
-### LLR LLR-153
-_accepted — re-acceptance owed_
-- **Detail**
-  - before: The mint invariant: a WI id is created only by a trunk commit or this helper - lanes never mint. next_wi_id counts from max(the docs/id-watermark mark, the sweep of every spec FILENAME under docs/work/ and docs/archive/work/, active/<branch>/ included) + 1 - never max(live) alone, so an id freed by a deleted spec is never re-issued - and trace.read_watermark's refusal on an absent or malformed mark is deliberately NOT caught: a mint with no record of what has been allocated must not proceed on a guess (TC-158, IF-101). Four triggers, serial by construction: (a) the accepted/routed-cell diff on the merged commit via check_trajectory.staged_spine_amendments, whose walk covers the SR, LLR, TC, SN, DA and SUR tiers -> one adjudication row listing each changed row/cell/before-after (routed traced cells: SR SN-Refs and Boundary-Refs, LLR SR-Refs and TC Verifies per the declared cell split); (b) a merged spec carrying ## Handback -> the disposition row (outcomes cancel / defer / re-queue with drafted follow-up / surface an open item; NEVER minted for an adjudication row - no recursion, and handback.hand_back refuses the act itself); (c) the dispatcher's gap census -> concrete gap-closure rows, deduped against every existing row; (d) a recorded verdict in the merged range whose latest amendment ruling on a row is MEANING, blessed or not, on a rung the dial holds, with the row at the range's end differing from its accepted-snapshot copy and either equal to the text the verdict's binding records or gone from its registry, yields, per landing and per registry, one queued operator row and one pending open item naming every such row of that registry, their verdicts and the act's command, the item cited in that row's needs, in the mint's one commit. The command re-accepts every row it names and never names a verdict, the act being the operator's, and the item's option (a) directs the operator to name beside them any other row of the registry unanchored when the operator acts. Every other non-refusing state writes nothing, and a row left over, one whose text differs from what its verdict bound or whose verdict bound none included, stays on the amendment row as any other record does. Where a landing owes an open item, through this trigger or a drafted [open_item] table, and the open-items registry is not the TOML carrier, the mint refuses by naming the carrier, writes nothing, including any amendment row the same landing owes, and the merge stands; recovery is converting the carrier and then sweeping the range. A row sat more than once reads at its latest recorded verdict in the range. A replay mints no second item. Drafts-not-mints: a merged adjudication row's ## Dispositions fenced-toml drafts mint at ITS merge, validated loudly; a draft carrying an [open_item] table also mints a pending open item from it, with no work-item pointer, and writes the item's id into that draft's needs, so the minted row is the item's queued placeholder and reads blocked until the ruling, and a draft with no SpecRef gets the item's own registry record as its SpecRef. Tier signals are measurable (rows touched, gate delta, handback reason class). context_block renders the pure registry joins (cancelled precedent WITH REASONS first, the pending OIs cited in needs by the row, its predecessors or its siblings, the LLR/TC code map, CMP knowledge packs, IF seams, precedent reviews) - advisory-never-gating, three consumers; an open item's wi_refs joins nothing. flip_verified resolves the hold from the acceptance dial: held prints a recommendation and writes nothing; released requests the flip, but _apply_flips skips an already Accepted row and refuses every other Status by name, so it writes nothing; an unreadable dial or stage reads as held. adjudication_action(operator_held, verdict) returns flip when released, reaccept when held with a CLARITY verdict, and recommend otherwise. The mint commit mirrors the claim's bookkeeping shape; every derived title is deterministic, so the sweep CLI re-run is idempotent. An adopts-only disposition block allocates no id; a standing row found by exact title whose lineage (its supersedes) differs from the draft's refuses the mint before any write, while one on the draft's own lineage stands; and every replay re-points to the full successor set. Trigger (a) excludes only records the merged range already settled under LLR-364 and the rows the operator row carries.
-  - after: The mint invariant: a WI id is created only by a trunk commit or this helper - lanes never mint. next_wi_id counts from max(the docs/id-watermark mark, the sweep of every spec FILENAME under docs/work/ and docs/archive/work/, active/<branch>/ included) + 1 - never max(live) alone, so an id freed by a deleted spec is never re-issued - and trace.read_watermark's refusal on an absent or malformed mark is deliberately NOT caught: a mint with no record of what has been allocated must not proceed on a guess (TC-158, IF-101). Four triggers, serial by construction: (a) the accepted/routed-cell diff on the merged commit via check_trajectory.staged_spine_amendments, whose walk covers the SR, LLR, TC, SN, DA and SUR tiers -> one adjudication row listing each changed row/cell/before-after (routed traced cells: SR SN-Refs and Boundary-Refs, LLR SR-Refs and TC Verifies per the declared cell split); (b) a merged spec carrying ## Handback -> the disposition row (outcomes cancel / defer / re-queue with drafted follow-up / surface an open item; NEVER minted for an adjudication row - no recursion, and handback.hand_back refuses the act itself); (c) the dispatcher's gap census -> concrete gap-closure rows, deduped against every existing row; (d) a recorded verdict in the merged range whose latest amendment ruling on a row is MEANING, blessed or not, on a rung the dial holds, with the row at the range's end differing from its accepted-snapshot copy and either equal to the text the verdict's binding records or gone from its registry, yields, per landing and per registry, one queued operator row and one pending open item naming every such row of that registry, their verdicts and the act's command, the item cited in that row's needs, in the mint's one commit. The command re-accepts every row it names and never names a verdict, the act being the operator's, and the item's option (a) directs the operator to name beside them any other row of the registry unanchored when the operator acts. Every other non-refusing state writes nothing, and a row left over, one whose text differs from what its verdict bound or whose verdict bound none included, stays on the amendment row as any other record does. Where a landing owes an open item, through this trigger or a drafted [open_item] table, and the open-items registry is not the TOML carrier, the mint refuses by naming the carrier, writes nothing, including any amendment row the same landing owes, and the merge stands; recovery is converting the carrier and then sweeping the range. A row sat more than once reads at its latest recorded verdict in the range. A replay mints no second item. Drafts-not-mints: a merged adjudication row's ## Dispositions fenced-toml drafts mint at ITS merge, validated loudly; a draft carrying an [open_item] table also mints a pending open item from it, with no work-item pointer, and writes the item's id into that draft's needs, so the minted row is the item's queued placeholder and reads blocked until the ruling, and a draft with no SpecRef gets the item's own registry record as its SpecRef. Tier signals are measurable (rows touched, gate delta, handback reason class). context_block renders the registry joins (cancelled precedent WITH REASONS first, the pending OIs cited in needs by the row, its predecessors or its siblings, the LLR/TC code map with each design row's back-link files and its placement or the word unplaced, the CMP knowledge packs and IF seams of the components the rows are placed in, precedent reviews) - advisory-never-gating, three consumers; an open item's wi_refs joins nothing. flip_verified resolves the hold from the acceptance dial: held prints a recommendation and writes nothing; released requests the flip, but _apply_flips skips an already Accepted row and refuses every other Status by name, so it writes nothing; an unreadable dial or stage reads as held. adjudication_action(operator_held, verdict) returns flip when released, reaccept when held with a CLARITY verdict, and recommend otherwise. The mint commit mirrors the claim's bookkeeping shape; every derived title is deterministic, so the sweep CLI re-run is idempotent. An adopts-only disposition block allocates no id; a standing row found by exact title whose lineage (its supersedes) differs from the draft's refuses the mint before any write, while one on the draft's own lineage stands; and every replay re-points to the full successor set. Trigger (a) excludes only records the merged range already settled under LLR-364 and the rows the operator row carries.
-_traced — routes to adjudication_
-- **CodeSymbol**
-  - before: intake_after_merge/_amendment_drafts/_latest_rulings/_held_act_drafts/_held_act_draft/mint_gap_rows/parse_dispositions/parse_disposition_section/next_wi_id/context_block/_inject_open_item/_pending_oi_lines/adjudication_action/flip_verified/_standing_successors/_title_identity_refusal/_repoint_owed/unanchored_rows/text_as_bound
-  - after: (empty)
-- **Component**
-  - before: CMP-008
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/intake.py;project-trajectory/scripts/acceptance_record.py
-  - after: (empty)
-
-### LLR LLR-245
-- **CodeSymbol**
-  - before: refresh_refusal/_ledger_live_rows/_unaccepted_rows/parse_reaccepts/verdict_rel/_refuse_verdict
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/baseline_snapshot.py;project-trajectory/scripts/intake.py
-  - after: (empty)
-
-### LLR LLR-246
-- **CodeSymbol**
-  - before: staged_status_moves/held_status_refusal/_held_status_refusal/_claim_locked/_mint/_commit_residue_as_is/commit_telemetry/ACCEPTANCE_RUNGS/_commit_object/dial_at/dial_from_config/merge_status_moves/pending_status_moves/registry_held/held_claims/held_acceptance_lines/commit_held_acceptance_lines/marked_refusal/_spine_status_moves/_held_squash_refusal/loop_held_status_refusal/squash_walk/grep_files/staged_heads/squash_lines
-  - after: (empty)
-- **Component**
-  - before: CMP-008
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/held_status.py;project-trajectory/scripts/integrate.py;project-trajectory/scripts/intake.py;project-trajectory/scripts/handback.py;project-trajectory/scripts/agent_common.py;project-trajectory/scripts/agent_policy.py;project-trajectory/scripts/check.py;project-trajectory/scripts/bookkeeping.py;project-trajectory/scripts/kitlib/authority.py;project-trajectory/scripts/text_then_act.py;project-trajectory/scripts/kitlib/git.py
-  - after: (empty)
-
-### LLR LLR-278
-- **CodeSymbol**
-  - before: first_acceptance_scope/adjudication_acceptance_refusal/merge_acceptance_refusal/_registry_identity/lane_acted_set/_copy_lines/amendment_scope/reaccepted_between/_wrote_ledger/_added_acts/row_rulings/verdict_rulings/_tier_of/reaccept_scope_refusal/added_ledger_entries/_reaccepted_ids
-  - after: (empty)
-- **Component**
-  - before: CMP-006
-  - after: (empty)
-- **Module**
-  - before: project-trajectory/scripts/acceptance_record.py;project-trajectory/scripts/kitlib/verdict.py
-  - after: (empty)
-
 ## SR-248 — A design row is discharged by the evidence of its kind, and where it sits is derived
 
 > **Requirement.** The delivered harness shall report as undischarged a design-tier row past its Drafted status that no test case verifies, and shall derive the components a design-tier row sits in from the interfaces its verifying test cases name, listing and counting a row placed in none rather than refusing it.
@@ -1125,9 +201,9 @@ Realizes SN-003 in the row's altitude. Where a row sits follows from what it is 
 
 Stated so it cannot be read in: nothing here obliges source code to carry a back-link naming the row it implements. A back-link is encouraged, read where present, and never demanded.
 
-_No accepted baseline — absent from the docs/archive/last_accepted snapshot — awaiting its first acceptance; current state only._
 
-### SR SR-248 (current)
+### SR SR-248 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **SR-ID**: SR-248
 - **Title**: A design row is discharged by the evidence of its kind, and where it sits is derived
 - **SN-Refs**: SN-002;SN-003
@@ -1147,7 +223,8 @@ Stated so it cannot be read in: nothing here obliges source code to carry a back
 - **Coincident**: The needs ask for a chain verified rather than asserted; a design row reported undischarged when no test case verifies it is that verification's verdict.
 - **Aspect**: trajectory
 
-### LLR LLR-403 (current)
+### LLR LLR-403 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **LLR-ID**: LLR-403
 - **SR-Refs**: SR-248
 - **Title**: A design row sits where the interfaces its verifying test cases name are owned, and one placed nowhere is counted
@@ -1157,7 +234,8 @@ Stated so it cannot be read in: nothing here obliges source code to carry a back
 - **Status**: Drafted
 - **Phase**: 6
 
-### LLR LLR-405 (current)
+### LLR LLR-405 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **LLR-ID**: LLR-405
 - **SR-Refs**: SR-248
 - **Title**: The files realizing a design row are read from the code's back-links, one index every reader shares
@@ -1167,7 +245,8 @@ Stated so it cannot be read in: nothing here obliges source code to carry a back
 - **Status**: Drafted
 - **Phase**: 6
 
-### TC TC-480 (current)
+### TC TC-480 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-480
 - **Verifies**: SR-248;LLR-403
 - **Level**: Unit
@@ -1179,7 +258,8 @@ Stated so it cannot be read in: nothing here obliges source code to carry a back
 - **Status**: Drafted
 - **Phase**: 6
 
-### TC TC-482 (current)
+### TC TC-482 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-482
 - **Verifies**: LLR-405;LLR-263
 - **Level**: Unit

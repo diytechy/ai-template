@@ -1884,17 +1884,6 @@ evidence = "tests/test_trace_rules.py::test_a_condition_stated_outside_the_ears_
 status = "Accepted"
 phase = 1
 
-[test.TC-175]
-verifies = ["SR-180", "LLR-180"]
-level = "Unit"
-method = """Run the realization-symbol anchor suite over planted registries: a row whose named symbols all miss fails under --strict; a row with one resolving token among several is anchored with the misses counted; a mixed module cell binds through the half the profile can resolve; a module the profile carries no resolver for is reported as an advisory that never moves the exit code, folding to one line past the declared threshold; a private name and a module constant resolve; a module absent from disk is not reported twice; an example placeholder row is skipped. The oracle half is exercised against the rendered map it deliberately does not read, and against class-scope and module-scope boundaries. The unbound-module count is exercised on its own: an anchored row listing a module none of its tokens binds in has that module counted as an unbound module, listed only by --show-untraced, never a warning and never the exit code; and a generic token, main or a name every CLI module the registry names defines, does not bind a listed module for that count, while a row listing one module is left to the anchor verdict; and the summary's total counts the unbound entries themselves, so a row whose own prose quotes the phrase does not inflate it."""
-tier = "Full"
-expected = "Satisfies the acceptance folded into LLR-180 (parent SR-180)"
-automated = "Yes"
-evidence = """tests/test_check_doc_refs.py::test_llr_symbol_anchor_reds_on_a_planted_defect; tests/test_check_doc_refs.py::test_llr_symbol_anchor_needs_only_one_resolving_token; tests/test_check_doc_refs.py::test_llr_symbol_anchor_skips_a_non_python_module; tests/test_check_doc_refs.py::test_llr_symbol_anchor_reports_the_non_python_skip_as_an_advisory; tests/test_check_doc_refs.py::test_llr_symbol_anchor_binds_through_the_py_half_of_a_mixed_module_cell; tests/test_check_doc_refs.py::test_the_non_python_advisory_folds_to_one_line_when_the_list_is_long; tests/test_check_doc_refs.py::test_llr_symbol_anchor_sees_private_names_and_constants; tests/test_check_doc_refs.py::test_llr_symbol_anchor_does_not_double_report_a_missing_module; tests/test_check_doc_refs.py::test_llr_symbol_anchor_skips_placeholder_rows; tests/test_gen_arch_map.py::test_module_bindings_covers_every_rendered_public_item; tests/test_gen_arch_map.py::test_module_bindings_sees_what_the_rendered_map_cannot; tests/test_gen_arch_map.py::test_module_bindings_stops_at_module_scope; tests/test_check_doc_refs.py::test_a_listed_module_none_of_the_row_symbols_binds_in_is_counted_untraced; tests/test_check_doc_refs.py::test_a_generic_main_does_not_bind_a_listed_module_for_the_count; tests/test_check_doc_refs.py::test_a_name_every_cli_module_defines_does_not_bind_for_the_count; tests/test_check_doc_refs.py::test_the_unbound_total_counts_entries_not_the_phrase_in_other_prose"""
-status = "Accepted"
-phase = 5
-
 [test.TC-176]
 verifies = ["SR-166", "LLR-181"]
 level = "Integration"
@@ -2107,7 +2096,7 @@ phase = 5
 [test.TC-195]
 verifies = ["SR-070", "LLR-199", "IF-139", "IF-140", "IF-141", "IF-142"]
 level = "Unit"
-method = "The join, the three coverage edges, the standing constraint and the freshness contract, each driven against a two-component spine small enough to reason about by hand. THE JOIN: assert the design rows are placed by the design tier's Component tag and the requirement tier is reached through them, while the modules come from the files' Component headers. DERIVED NEVER COPIED: a design row carrying no hat cell still contributes its SR parent's perspectives, and re-ruling that one requirement moves the view with no design cell edited. EDGE 1: a requirement with no design child appears in the unplaced table, is counted there, and appears in no component section - visible rather than dropped. EDGE 2: a requirement reaching two components appears in both and is marked shared in both, while one reaching a single component is not. EDGE 3: seams enter the view, an interface with both endpoints inside a component is internal to it while one crossing two is a boundary of BOTH, an interface is placed by the components its endpoint cells name, and one naming no component is reported as unplaced. NO ACCEPTANCE: with one Accepted and one Drafted component declared in the hand file, no maturity key and neither word appears in any emitted cell. FRESHNESS, DRIVEN BOTH WAYS: --check passes on a fresh view, fails after a registry row moves, and passes again once regenerated; a missing view fails; the written bytes carry no CRLF and two renders agree. VACUITY: a repo whose only CMP row is the inert -000 example writes nothing and exits zero on both paths."
+method = "The join, the three coverage edges, the standing constraint and the freshness contract, each driven against a two-component spine small enough to reason about by hand. THE JOIN: assert the design rows are placed through the interfaces their verifying test cases name and the requirement tier is reached through them, while the modules come from the files' Component headers. DERIVED NEVER COPIED: a design row carrying no hat cell still contributes its SR parent's perspectives, and re-ruling that one requirement moves the view with no design cell edited. EDGE 1: a requirement with no design child appears in the unplaced table, is counted there, and appears in no component section - visible rather than dropped. EDGE 2: a requirement reaching two components appears in both and is marked shared in both, while one reaching a single component is not. EDGE 3: seams enter the view, an interface with both endpoints inside a component is internal to it while one crossing two is a boundary of BOTH, an interface is placed by the components its endpoint cells name, and one naming no component is reported as unplaced. NO ACCEPTANCE: with one Accepted and one Drafted component declared in the hand file, no maturity key and neither word appears in any emitted cell. FRESHNESS, DRIVEN BOTH WAYS: --check passes on a fresh view, fails after a registry row moves, and passes again once regenerated; a missing view fails; the written bytes carry no CRLF and two renders agree. VACUITY: a repo whose only CMP row is the inert -000 example writes nothing and exits zero on both paths."
 tier = "Smoke"
 expected = "Satisfies the acceptance folded into LLR-199 (parent SR-070)"
 automated = "Yes"
@@ -2129,11 +2118,11 @@ phase = 5
 [test.TC-197]
 verifies = ["SR-157", "LLR-201"]
 level = "Unit"
-method = """Two claims, because the row makes two. THE RULES, each driven directly rather than through the engine: the orphan pass emits SR then LLR then TC then SN and returns exactly the at-fault ids of the findings it emitted; a Drafted SR stands the child-completeness rules down while its SN linkage still applies; a PB Refs cell resolves against an LLR Module path as well as against ids, and an empty one is a finding; a Component tag naming no CMP row is a finding while an empty component registry disarms the membership half entirely; a knowledge ref resolves only under the docs/knowledge prefix and a traversal ref never escapes the pack root; the phase scope covers the foundation phase under every filter and a blank Phase always; and the status criterion defers an out-of-phase row rather than failing it. THE BOUNDARY AND THE BAGS: assert that this module imports no sibling of the scripts directory, that the engine still answers to every moved name and that each definition lives here; that the loaded registry record is frozen, total, and constructed at exactly one site; that the findings record's list defaults are per instance and that the two fields filled after the pure pass returns are DECLARED rather than conjured at a call site; that the flags record accepts either itself or a CLI namespace; that no caller imports argparse to forge the engine's config; and that the composer stays a composer - measured line span, and no nested def, which is how the number this split removed got to fifty."""
+method = "Two claims, because the row makes two. THE RULES, each driven directly rather than through the engine: the orphan pass emits SR then LLR then TC then SN and returns exactly the at-fault ids of the findings it emitted; a Drafted SR stands the child-completeness rules down while its SN linkage still applies; a PB Refs cell resolves against ids only, a file path being unknown, and an empty one is a finding; a Component tag naming no CMP row is a finding while an empty component registry disarms the membership half entirely; a knowledge ref resolves only under the docs/knowledge prefix and a traversal ref never escapes the pack root; the phase scope covers the foundation phase under every filter and a blank Phase always; and the status criterion defers an out-of-phase row rather than failing it. THE BOUNDARY AND THE BAGS: assert that this module imports no sibling of the scripts directory, that the engine still answers to every moved name and that each definition lives here; that the loaded registry record is frozen, total, and constructed at exactly one site; that the findings record's list defaults are per instance and that the two fields filled after the pure pass returns are DECLARED rather than conjured at a call site; that the flags record accepts either itself or a CLI namespace; that no caller imports argparse to forge the engine's config; and that the composer stays a composer - measured line span, and no nested def, which is how the number this split removed got to fifty."
 tier = "Smoke"
 expected = "Satisfies the acceptance folded into LLR-201 (parent SR-157)"
 automated = "Yes"
-evidence = """tests/test_trace_coherence.py::test_the_orphan_rules_emit_sr_then_llr_then_tc_then_sn; tests/test_trace_coherence.py::test_a_drafted_row_stands_the_child_rules_down_but_not_its_sn_link; tests/test_trace_coherence.py::test_off_spine_backlinks_resolve_against_ids_and_llr_module_paths; tests/test_trace_coherence.py::test_component_membership_is_checked_from_the_primitive_side; tests/test_trace_coherence.py::test_the_knowledge_ref_resolves_only_the_pack_prefix; tests/test_trace_coherence.py::test_the_phase_scope_always_covers_the_foundation_phase; tests/test_trace_coherence.py::test_the_status_criterion_defers_out_of_phase_and_stands_down_for_drafted; tests/test_trace_coherence.py::test_registries_is_frozen_and_total; tests/test_trace_coherence.py::test_the_loader_is_the_only_construction_site_of_registries; tests/test_trace_coherence.py::test_findings_list_defaults_are_per_instance; tests/test_trace_coherence.py::test_the_two_post_analyze_fields_are_declared_not_conjured; tests/test_trace_coherence.py::test_analysis_flags_takes_a_record_or_a_namespace; tests/test_trace_coherence.py::test_no_caller_forges_an_argparse_namespace_for_the_engine; tests/test_trace_coherence.py::test_the_coherence_rules_import_no_sibling_of_scripts; tests/test_trace_coherence.py::test_trace_re_exports_every_moved_name; tests/test_trace_coherence.py::test_analyze_is_a_composer_and_stays_one"""
+evidence = "tests/test_trace_coherence.py::test_the_orphan_rules_emit_sr_then_llr_then_tc_then_sn; tests/test_trace_coherence.py::test_a_drafted_row_stands_the_child_rules_down_but_not_its_sn_link; tests/test_trace_coherence.py::test_component_membership_is_checked_from_the_primitive_side; tests/test_trace_coherence.py::test_the_knowledge_ref_resolves_only_the_pack_prefix; tests/test_trace_coherence.py::test_the_phase_scope_always_covers_the_foundation_phase; tests/test_trace_coherence.py::test_the_status_criterion_defers_out_of_phase_and_stands_down_for_drafted; tests/test_trace_coherence.py::test_registries_is_frozen_and_total; tests/test_trace_coherence.py::test_the_loader_is_the_only_construction_site_of_registries; tests/test_trace_coherence.py::test_findings_list_defaults_are_per_instance; tests/test_trace_coherence.py::test_the_two_post_analyze_fields_are_declared_not_conjured; tests/test_trace_coherence.py::test_analysis_flags_takes_a_record_or_a_namespace; tests/test_trace_coherence.py::test_no_caller_forges_an_argparse_namespace_for_the_engine; tests/test_trace_coherence.py::test_the_coherence_rules_import_no_sibling_of_scripts; tests/test_trace_coherence.py::test_trace_re_exports_every_moved_name; tests/test_trace_coherence.py::test_analyze_is_a_composer_and_stays_one; tests/test_trace_coherence.py::test_off_spine_backlinks_resolve_against_ids_only"
 status = "Accepted"
 phase = 5
 
@@ -4253,7 +4242,7 @@ status = "Accepted"
 phase = 6
 
 [test.TC-428]
-verifies = ["SR-157"]
+verifies = ["SR-157", "LLR-395"]
 level = "Integration"
 method = "Run the trajectory check over registries and test trees covering each input state of the undeclared-case rule: no registry, no tests root and a registry that does not parse; a placeholder row; a Drafted case holding a note and holding an untagged part; an automated cell reading No, another word, absent and blank; an Accepted and a Founded case, and one whose automated cell is padded and upper-case, each tagged and untagged; a case whose part is in an unreadable file, alone and beside a readable part; an untagged case holding a note, no cell, a whole-file part, a part outside the tests root and an absent path; a misplaced and a malformed tag, alone and beside a valid one; and an untagged part, then tagged."
 tier = "Full"
@@ -4264,7 +4253,7 @@ status = "Accepted"
 phase = 6
 
 [test.TC-429]
-verifies = ["SR-157"]
+verifies = ["SR-157", "LLR-395"]
 level = "Integration"
 method = "Walk one test case through a lane's order, Drafted holding a note, then Drafted and tagged, then Accepted and tagged; then out of order, Accepted before its tag, in plain and strict runs with and without work items, and once tagged; then run the same untagged Accepted case in a bootstrapped scaffold below and at the implementation rung, and once tagged."
 tier = "Full"
@@ -4486,11 +4475,11 @@ phase = 6
 [test.TC-457]
 verifies = ["SR-159", "LLR-396"]
 level = "Unit"
-method = "Write one file per carrier, each declaring the same component: a Python module's docstring, a shell script after its shebang, a macOS command file, a PowerShell script's hash comments, a TOML, an INI and a CSV file, a file with no suffix, a Windows batch file's REM line below echo-off, and a Markdown file's opening comment, and read each. Then read files whose declaring line is malformed in each way (no space, lower case, upper case, trailing words, two ids, a lower-case id), one with a malformed line beside an exact one, two with two declaring lines (two ids, and one id twice), and files whose line sits outside the carrier (a comment below a docstring, a later string, an empty module, a line below the top comment block, Markdown outside the opening comment, the words mid-line, a PowerShell help block, a batch file's double-colon line)."
+method = "Write one file per carrier, each declaring the same component: a Python module's docstring, a shell script after its shebang, a macOS command file, a PowerShell script's hash comments, a TOML, an INI and a CSV file, a file with no suffix, a Windows batch file's REM line below echo-off, and a Markdown file's opening comment, and read each. Then read files whose declaring line is malformed in each way (no space, lower case, upper case, trailing words, two ids, a lower-case id), one with a malformed line beside an exact one, two with two declaring lines (two ids, and one id twice), and files whose line sits outside the carrier (a comment below a docstring, a later string, an empty module, a line below the top comment block, Markdown outside the opening comment, the words mid-line, a PowerShell help block, a batch file's double-colon line). Last, read a path that cannot be read, a directory standing at it, and a file whose bytes cannot be decoded as UTF-8 although it holds an exact declaring line, each once as a Python module and once as a shell script."
 tier = "Smoke"
-expected = "Every carrier yields the component and no problem. Each malformed file yields no component and a problem quoting its line as not a declaration, the file with a malformed line beside an exact one included; each doubled file yields a problem naming two components; each file with its line outside the carrier yields no component and the absent problem."
+expected = "Every carrier yields the component and no problem. Each malformed file yields no component and a problem quoting its line as not a declaration, the file with a malformed line beside an exact one included; each doubled file yields a problem naming two components; each file with its line outside the carrier yields no component and the absent problem; and each file that cannot be read or decoded yields no component and the absent problem, and reading it raises nothing."
 automated = "Yes"
-evidence = "tests/test_component_headers.py::test_each_carrier_declares_through_its_own_comment_syntax; tests/test_component_headers.py::test_a_line_shaped_like_a_declaration_but_not_exact_is_malformed; tests/test_component_headers.py::test_a_malformed_line_beside_an_exact_one_leaves_the_file_undeclared; tests/test_component_headers.py::test_two_declarations_are_doubled_even_naming_one_id; tests/test_component_headers.py::test_a_declaration_outside_the_carrier_declares_nothing"
+evidence = "tests/test_component_headers.py::test_each_carrier_declares_through_its_own_comment_syntax; tests/test_component_headers.py::test_a_line_shaped_like_a_declaration_but_not_exact_is_malformed; tests/test_component_headers.py::test_a_malformed_line_beside_an_exact_one_leaves_the_file_undeclared; tests/test_component_headers.py::test_two_declarations_are_doubled_even_naming_one_id; tests/test_component_headers.py::test_a_declaration_outside_the_carrier_declares_nothing; tests/test_component_headers.py::test_a_file_that_cannot_be_read_or_decoded_is_absent"
 status = "Drafted"
 phase = 6
 
@@ -4521,7 +4510,7 @@ verifies = ["SR-070", "LLR-199", "IF-140"]
 level = "Unit"
 method = "Over the two-component view fixture, move one source file's header to the other component, add a file no design row names declaring that component, and render the view."
 tier = "Smoke"
-expected = "The moved file leaves its old component's modules and joins the new one's beside the added file; the seams stay where their endpoint cells put them; the design row tagged into the old component still places its row there."
+expected = "The moved file leaves its old component's modules and joins the new one's beside the added file; the seams stay where their endpoint cells put them; the case verifying the design row at an interface the old component owns still places the row there."
 automated = "Yes"
 evidence = "tests/test_gen_components.py::test_the_modules_and_the_seams_follow_the_headers"
 status = "Accepted"
@@ -4607,7 +4596,7 @@ phase = 6
 [test.TC-468]
 verifies = ["SR-217", "LLR-257"]
 level = "Integration"
-method = "Driven on real git repositories whose acts are taken with copy_live. A test case re-pointed at a requirement in a text commit before the requirement's code lands, and re-accepted by an act after it, is reported late at the act. An act made on a side branch before the code landed on trunk, merged after it, is placed at the merge and reported late, naming the act's own commit."
+method = "Driven on real git repositories in which each acceptance act is taken as the kit takes one: the registries' copies are written into the acceptance record and the act's entry is appended to its ledger, in the act's own commit. A test case re-pointed at a requirement in a text commit before the requirement's code lands, and re-accepted by an act after it, is reported late at the act. An act made on a side branch before the code landed on trunk, merged after it, is placed at the merge and reported late, naming the act's own commit."
 tier = "Full"
 expected = "Each acceptance is dated at the commit that added its act's ledger entry: the re-pointing at the re-accepting act, not its text commit; the side-branch act ordered where it reached trunk."
 automated = "Yes"
@@ -4662,10 +4651,65 @@ phase = 6
 [test.TC-475]
 verifies = ["SR-157", "LLR-395"]
 level = "Integration"
-method = "Run the trajectory check over registries and test trees covering each input state of the undeclared-case rule: no registry, no tests root and a registry that does not parse; a placeholder row; a Drafted case holding a note and holding an untagged part; an automated cell reading No, another word, absent and blank; an Accepted and a Founded case, and one whose automated cell is padded and upper-case, each tagged and untagged; a case whose one tagged test fails when it is run; a case whose part is in an unreadable file, alone and beside a readable part; an untagged case holding a note, no cell, a whole-file part, a part outside the tests root and an absent path; a misplaced and a malformed tag, alone and beside a valid one; and an untagged part, then tagged. Then walk one case through a lane's order, Drafted holding a note, then Drafted and tagged, then Accepted and tagged; then out of order, Accepted before its tag, in plain and strict runs with and without work items, and once tagged; then run the same untagged Accepted case in a bootstrapped scaffold below and at the implementation rung, and once tagged."
+method = "Write one Accepted automated test case and one test that validly declares it and fails when it is run; run that test and see it fail, then run the trajectory check under strict checking over the registry and the test file."
 tier = "Full"
-expected = "Absent inputs are vacuous, and a registry that does not parse stops the run with its parse error and no such finding; a placeholder row, a Drafted case and a case not automated owe no declaration, while a Drafted case's parts are still held equal; an eligible tagged case is clean, and so is one whose tagged test fails; a part in an unreadable file adds only that file's finding; every other eligible untagged case reads that no test declares it, whatever its cell holds; a refused tag declares nothing; and one tag clears both the part's finding and the case's. A lane's order reads no finding at any step; an Accepted case with no tag warns with exit 0 in a plain run and errors with exit 1 under strict checking until it is tagged; and a newly created project warns and exits 0 at DevStg-Tests, fails at DevStg-Impl, and is clean once the case is tagged."
+expected = "The test fails when it is run, and the trajectory check still reads the case clean: no finding that no test declares it, no Evidence equality finding, and exit 0, since the rule reads declarations, not test outcomes."
 automated = "Yes"
-evidence = "tests/test_trajectory_arch.py::test_the_undeclared_rule_is_vacuous_with_no_tests_root_or_no_registry; tests/test_trajectory_arch.py::test_an_unparseable_registry_stops_the_run_before_the_undeclared_rule; tests/test_trajectory_arch.py::test_a_placeholder_row_owes_no_declaration; tests/test_trajectory_arch.py::test_a_drafted_case_owes_no_declaration_and_its_parts_are_still_held; tests/test_trajectory_arch.py::test_a_case_not_automated_owes_no_declaration; tests/test_trajectory_arch.py::test_an_eligible_case_is_clean_when_tagged_and_named_when_not; tests/test_trajectory_arch.py::test_a_declared_test_that_fails_leaves_its_case_clean; tests/test_trajectory_arch.py::test_a_part_in_an_unreadable_file_adds_no_undeclared_finding; tests/test_trajectory_arch.py::test_an_eligible_untagged_case_is_named_whatever_its_cell_holds; tests/test_trajectory_arch.py::test_a_refused_tag_declares_nothing; tests/test_trajectory_arch.py::test_one_tag_clears_the_part_and_the_declaration_findings; tests/test_trajectory_arch.py::test_a_lanes_order_never_meets_the_undeclared_finding; tests/test_trajectory_arch.py::test_an_accepted_case_with_no_tag_warns_plain_and_errors_strict; tests/test_trajectory_arch.py::test_the_undeclared_finding_on_a_bootstrapped_scaffold"
+evidence = "tests/test_trajectory_arch.py::test_a_declared_test_that_fails_leaves_its_case_clean"
+status = "Drafted"
+phase = 6
+
+[test.TC-480]
+verifies = ["SR-248", "LLR-403"]
+level = "Unit"
+method = "Place design rows over test cases naming interfaces: one case naming two interfaces owned by two components, a second naming one of them for two rows, a case naming an interface an external party owns, a case naming no interface and an example case. Count the unplaced rows, and build the component view from the same rows. Then run the strict check over a project whose design row decomposes a requirement and is verified by no test case, first with the row Drafted and then with it Accepted."
+tier = "Smoke"
+expected = "The first row is placed at both components and the second at the one its case names; the external owner and the interface-free case place nothing, and the example case is not read. The two unplaced rows are counted and named on one line that changes no exit code, and the component view holds each placed row and its requirement in its components and lists the unplaced rows. The Drafted row is not reported as lacking a test case and the check passes; Accepted, it is reported as having no test case, naming the row, and the check fails."
+automated = "Yes"
+evidence = "tests/test_llr_trace_cells.py::test_a_design_row_is_placed_through_the_interfaces_its_cases_name; tests/test_trace.py::test_draft_llr_is_exempt_from_tc_rule"
+status = "Drafted"
+phase = 6
+
+[test.TC-481]
+verifies = ["SR-157", "LLR-404"]
+level = "Unit"
+method = "Read a design-row registry whose row sets a file cell, a system-requirement registry whose example row sets an undeclared key, and a test-case registry with one; then read a declared design row, an interface row with an extra key, an approval snapshot whose accepted design row keeps a retired file cell, and a tree read from history whose design row keeps one, through the stage's loader and the id sweep."
+tier = "Smoke"
+expected = "Each of the first three reads is refused naming the row and the key; the declared row and the interface row read, and the snapshot's row and the history tree's row read with their retired cells."
+automated = "Yes"
+evidence = "tests/test_llr_trace_cells.py::test_the_loader_refuses_a_key_a_requirement_tier_does_not_declare"
+status = "Drafted"
+phase = 6
+
+[test.TC-482]
+verifies = ["LLR-405", "LLR-263"]
+level = "Unit"
+method = "Index a repository whose source root holds a file declaring a design row and a system requirement in its docstring, a nested file declaring two design rows on separate comment lines, and a file naming an id only in prose, beside a listed header file declaring one; list the test files the spine links to each indexed file, resolve a stem, and run the listing command for a stem and for a file no declaration names."
+tier = "Smoke"
+expected = "The index maps each declared id to its files, sorted, the header file included and the prose id absent. The listing follows the design rows the index names for the file and leaves out a case verifying only the system requirement; the command prints the linked test file and exits 0 for the stem, and exits 1 for the other, saying no indexed file matches."
+automated = "Yes"
+evidence = "tests/test_llr_trace_cells.py::test_the_implements_index_feeds_the_module_listing"
+status = "Drafted"
+phase = 6
+
+[test.TC-483]
+verifies = ["SR-157", "LLR-406"]
+level = "Unit"
+method = "Generate evidence cells: one holding a tagged part, a part outside the tests root, a tagged parametrized node, and an untagged part followed by a note, with a declared node missing; one naming only a part in an unreadable file; cells already equal to their declarations under each separator; an empty cell with one declaration. Then regenerate a registry whose first case is current and whose second names a removed test, with a prose cell quoting an evidence assignment, regenerate it again, and regenerate this repository's own registry."
+tier = "Smoke"
+expected = "The untagged part leaves with its separator, the missing node is appended, and every other part and the note stay as written; the unreadable file's part stays; equal cells come back unchanged; the empty cell gains its declaration. The writer changes the stale case's cell alone and leaves the quoted text and every other byte; the second run changes nothing; and every cell of this repository's registry is current."
+automated = "Yes"
+evidence = "tests/test_llr_trace_cells.py::test_the_evidence_column_is_generated_from_the_tags"
+status = "Drafted"
+phase = 6
+
+[test.TC-484]
+verifies = ["SR-036", "LLR-407"]
+level = "Unit"
+method = "Migrate a design-row registry whose first row carries all three retired cells, one with a multi-line value, beside a prose cell quoting a file-cell assignment, and whose second row carries none: once reporting only, once writing, once more, and through the command line. Then migrate a registry written with CRLF line ends whose retired cells include a multi-line value beside a kept multi-line cell, and a registry whose retired cell is a multi-line literal string beside a kept multi-line literal cell quoting the basic-string delimiter and a file-cell assignment."
+tier = "Smoke"
+expected = "The reporting run counts one row and writes nothing; the writing run removes exactly the three cells, keeps the quoted text and every other byte, and its result reads under the loader's key rule; the next run counts none and writes nothing; the command exits 0. The CRLF registry is written back byte for byte less the three cells' lines, every line end still CRLF; the literal value is removed whole, and the kept literal cell and every other byte stay as written."
+automated = "Yes"
+evidence = "tests/test_llr_trace_cells.py::test_the_migration_drops_the_three_cells_and_nothing_else; tests/test_llr_trace_cells.py::test_the_migration_drops_a_multi_line_literal_value; tests/test_llr_trace_cells.py::test_the_migration_keeps_crlf_line_ends"
 status = "Drafted"
 phase = 6
