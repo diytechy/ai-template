@@ -48,6 +48,16 @@ it, that copy is read without the loader's key rule. No status moved, and
 `intake.py snapshot` was not run.
 <!-- fig: cmd="tomllib over docs/requirements/low-level-requirements.toml and its docs/archive/last_accepted copy" rev="8e7d43c6f" -->
 
+**The operator's ruling (2026-11-22, given in the coordinator's session,
+after the merge):** "trace cells removed, requirement text unchanged", over
+the 350 `Accepted` design rows on trunk at `dc907c4c6` (WI-1049's act
+accepted six more since the tip above). It covers the removal of the three
+cells only. The rows whose accepted text this row amended, and the SR-180
+chain's retirement, still go to the third adjudication sitting. The
+operator chose to have that sitting's act carry the ruling, since its copy
+of the design registry drops the cells anyway; no separate batch act is
+run.
+
 **The schema and the loader** (Done-when 1; LLR-404, new). `module`,
 `code_symbol` and `component` leave `kitlib.spine.SPINE_TIER_KEYS["LLR-ID"]`
 and the shipped template's example row (its `detail` guidance now asks for
