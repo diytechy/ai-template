@@ -1,4 +1,4 @@
 brief = combined
 kinds = amendment;first-acceptance
-outcome = pending
+outcome = recorded
 rows = LLR-239=sha256:0c506f1503d2923b;LLR-243=sha256:4f31f6046c67a6d7;LLR-244=sha256:d6a2d950ebfca05d;LLR-263=sha256:49f4412fd6f9bd95;LLR-398=sha256:bade9e51b638d667;SR-212=sha256:7cd69e39b5052dd9;SR-221=sha256:80e882a6278d904d;TC-239=sha256:1893285b599bd539;TC-258=sha256:3be0a3a737f95d52
