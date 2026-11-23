@@ -13,7 +13,7 @@ _Baseline: `docs/requirements/external.toml` copied 2026-11-16 (675f5b7a4)._
 _Baseline: `docs/requirements/components.toml` copied 2026-11-20 (0e67ffffb)._
 _Baseline: `docs/requirements/assumptions.toml` copied 2026-11-20 (46d518b56)._
 
-_Acceptance provenance: the last acceptance act is the act ledger's seq 189, dated 2026-11-22, added by commit fe8db46b289c._
+_Acceptance provenance: the last acceptance act is the act ledger's seq 190, dated 2026-11-22; its commit is not in the available history: no commit adds it yet, so the act is not committed._
 
 ## Off-spine census
 
@@ -30,7 +30,7 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 12 chain(s): SR-036, SR-052, SR-157, SR-159, SR-202, SR-206, SR-212, SR-221, SR-248, SR-249, SR-250, SR-251</summary>
+<summary>Waiting for automated adjudication — 11 chain(s): SR-036, SR-052, SR-157, SR-159, SR-202, SR-206, SR-221, SR-248, SR-249, SR-250, SR-251</summary>
 
 ## SR-036 — Deliberate re-sync integration
 
@@ -39,16 +39,18 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 > **Rationale.** Realizes SN-001 and SN-007 — picking up kit updates is a deliberate diff-and-merge, not a mechanical operation: bootstrap.py supplies the docs/kit-version stamp and --force (SR-011), while the operator makes the overwrite-vs-preserve call, aided by the downstream-resync skill.
 
 
-### TC TC-484, Drafted — never accepted
-- **Expected**
-  - before: The reporting run counts one row and writes nothing; the writing run removes exactly the three cells, keeps the quoted text and every other byte, and its result reads under the loader's key rule; the next run counts none and writes nothing; the command exits 0. The CRLF registry is written back byte for byte less the three cells' lines, every line end still CRLF; the literal value is removed whole, and the kept literal cell and every other byte stay as written.
-  - after: The reporting run counts one row and writes nothing; the writing run removes exactly the three cells, keeps the quoted text and every other byte, and its result reads under the loader's key rule; the next run counts none and writes nothing; the command exits 0. The CRLF registry is written back byte for byte less the three cells' lines, every line end still CRLF; the literal value is removed whole, and the kept literal cell and every other byte stay as written. The absent registry is reported, nothing is written and the command exits 0; the quoted-key registry is refused naming the registry, its bytes unchanged.
-- **Method**
-  - before: Migrate a design-row registry whose first row carries all three retired cells, one with a multi-line value, beside a prose cell quoting a file-cell assignment, and whose second row carries none: once reporting only, once writing, once more, and through the command line. Then migrate a registry written with CRLF line ends whose retired cells include a multi-line value beside a kept multi-line cell, and a registry whose retired cell is a multi-line literal string beside a kept multi-line literal cell quoting the basic-string delimiter and a file-cell assignment.
-  - after: Migrate a design-row registry whose first row carries all three retired cells, one with a multi-line value, beside a prose cell quoting a file-cell assignment, and whose second row carries none: once reporting only, once writing, once more, and through the command line. Then migrate a registry written with CRLF line ends whose retired cells include a multi-line value beside a kept multi-line cell, and a registry whose retired cell is a multi-line literal string beside a kept multi-line literal cell quoting the basic-string delimiter and a file-cell assignment. Then migrate a repository with no design-row registry, through the command line too, and a registry whose file cell's key is written quoted, so the rewrite cannot re-read as the same rows less those cells.
-- **Evidence**
-  - before: tests/test_llr_trace_cells.py::test_the_migration_drops_the_three_cells_and_nothing_else; tests/test_llr_trace_cells.py::test_the_migration_drops_a_multi_line_literal_value; tests/test_llr_trace_cells.py::test_the_migration_keeps_crlf_line_ends
-  - after: tests/test_llr_trace_cells.py::test_the_migration_drops_the_three_cells_and_nothing_else; tests/test_llr_trace_cells.py::test_the_migration_drops_a_multi_line_literal_value; tests/test_llr_trace_cells.py::test_the_migration_keeps_crlf_line_ends; tests/test_llr_trace_cells.py::test_a_migration_that_does_not_re_read_is_refused_and_writes_nothing; tests/test_llr_trace_cells.py::test_an_absent_registry_is_reported_and_nothing_is_written
+### TC TC-484 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
+- **TC-ID**: TC-484
+- **Verifies**: SR-036;LLR-407
+- **Level**: Unit
+- **Method**: Migrate a design-row registry whose first row carries all three retired cells, one with a multi-line value, beside a prose cell quoting a file-cell assignment, and whose second row carries none: once reporting only, once writing, once more, and through the command line. Then migrate a registry written with CRLF line ends whose retired cells include a multi-line value beside a kept multi-line cell, and a registry whose retired cell is a multi-line literal string beside a kept multi-line literal cell quoting the basic-string delimiter and a file-cell assignment. Then migrate a repository with no design-row registry, through the command line too, and a registry whose file cell's key is written quoted, so the rewrite cannot re-read as the same rows less those cells.
+- **Tier**: Smoke
+- **Expected**: The reporting run counts one row and writes nothing; the writing run removes exactly the three cells, keeps the quoted text and every other byte, and its result reads under the loader's key rule; the next run counts none and writes nothing; the command exits 0. The CRLF registry is written back byte for byte less the three cells' lines, every line end still CRLF; the literal value is removed whole, and the kept literal cell and every other byte stay as written. The absent registry is reported, nothing is written and the command exits 0; the quoted-key registry is refused naming the registry, its bytes unchanged.
+- **Automated**: Yes
+- **Evidence**: tests/test_llr_trace_cells.py::test_the_migration_drops_the_three_cells_and_nothing_else; tests/test_llr_trace_cells.py::test_the_migration_drops_a_multi_line_literal_value; tests/test_llr_trace_cells.py::test_the_migration_keeps_crlf_line_ends; tests/test_llr_trace_cells.py::test_a_migration_that_does_not_re_read_is_refused_and_writes_nothing; tests/test_llr_trace_cells.py::test_an_absent_registry_is_reported_and_nothing_is_written
+- **Status**: Drafted
+- **Phase**: 6
 
 ## SR-052 — Dashboard accessibility (rubric-adjudicated)
 
@@ -57,7 +59,8 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 > **Rationale.** Realizes SN-024 and SN-023 — an accessibility standard left unstated silently reads as no standard at all, so the obligation is stated here even though its clauses were not measurable when the row was written. They since became so, one clause at a time, which is why this row's method is mechanical: the thresholds are the child rows' and the acceptance is their chain. Keyboard operability, an accessible name per element, colour never the only channel, and a readable contrast floor are the charter's own subject, and no other lens in the roster names a measurable perceptual threshold — the UX pair reaches robustness (it does not overflow), never legibility. That dependency is CLOSED: the ACCESSIBILITY charter is ruled `always`, so the lens this row derives from is put to every decomposition — and it had already reached this row once SN-023 carried the `a11y` tag, which is why the gap is narrower than the unmeasurable-clauses opening suggests.
 
 
-### TC TC-508 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-508 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-508
 - **Verifies**: SR-052;LLR-113
 - **Level**: Unit
@@ -76,22 +79,18 @@ _Every owing row of these chains sits on a rung `[authority] operator_accepts_th
 > **Rationale.** Realizes SN-002 (the chain is mechanically verified, not asserted — this row is the boundary-level home of the verdict SN-002's acceptance asks for), SN-012 (optional registries and opt-outs cost a non-user nothing) and SN-025 (the tracked work-item graph the loop derives its next work from is kept coherent). One row because the adopter-observable contract is one: registry rules produce named findings at a declared severity; which rules, at which severities, is the component detail the rows below it decompose. Fan-out re-stamp: the delivered contract is one — a named, row-and-cell-attributed finding at a declared severity, gating or advisory — while the rule inventory it ranges over is open by this row's own acceptance ("a rule added at one of those sites is in this row's scope by default"), so the child count tracks the number of declared rules rather than the number of decisions this row makes, and would climb back through any bound a split bought.
 
 
-### TC TC-481, Drafted — never accepted
-- **Expected**
-  - before: Each of the first three reads is refused naming the row and the key; the declared row and the interface row read, and the snapshot's row and the history tree's row read with their retired cells.
-  - after: Each of the first reads is refused naming the registry file, the row and the key; the declared row and the interface row read, and the snapshot's row and the history tree's row read with their retired cells. The three retired cells are classed traced, and the row's accepted text is the same with and without them, so removing them is no accepted-text change.
-- **Method**
-  - before: Read a design-row registry whose row sets a file cell, a system-requirement registry whose example row sets an undeclared key, and a test-case registry with one; then read a declared design row, an interface row with an extra key, an approval snapshot whose accepted design row keeps a retired file cell, and a tree read from history whose design row keeps one, through the stage's loader and the id sweep.
-  - after: Read a design-row registry whose row sets a file cell, one whose row sets a symbol cell and one whose row sets a component cell; a need registry and a system-requirement registry whose example row each set an undeclared key; and a test-case registry with one. Then read a declared design row, an interface row with an extra key, an approval snapshot whose accepted design row keeps a retired file cell, and a tree read from history whose design row keeps one, through the stage's loader and the id sweep. Then compare an accepted design row's cells and accepted text with and without its three retired cells.
-- **Evidence**
-  - before: tests/test_llr_trace_cells.py::test_the_loader_refuses_a_key_a_requirement_tier_does_not_declare
-  - after: tests/test_llr_trace_cells.py::test_the_loader_refuses_a_key_a_requirement_tier_does_not_declare; tests/test_llr_trace_cells.py::test_every_refusal_names_the_file_the_row_and_the_key; tests/test_llr_trace_cells.py::test_the_retired_design_cells_stay_classed_traced
-
-### LLR LLR-406 — REMOVED since the snapshot
-_In this SR's chain in the snapshot, out of it in the working tree — the row was deleted, re-parented, or superseded (a superseded row keeps existing; it leaves the chain)._
-
-### TC TC-483 — REMOVED since the snapshot
-_In this SR's chain in the snapshot, out of it in the working tree — the row was deleted, re-parented, or superseded (a superseded row keeps existing; it leaves the chain)._
+### TC TC-481 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
+- **TC-ID**: TC-481
+- **Verifies**: SR-157;LLR-404
+- **Level**: Unit
+- **Method**: Read a design-row registry whose row sets a file cell, one whose row sets a symbol cell and one whose row sets a component cell; a need registry and a system-requirement registry whose example row each set an undeclared key; and a test-case registry with one. Then read a declared design row, an interface row with an extra key, an approval snapshot whose accepted design row keeps a retired file cell, and a tree read from history whose design row keeps one, through the stage's loader and the id sweep. Then compare an accepted design row's cells and accepted text with and without its three retired cells.
+- **Tier**: Smoke
+- **Expected**: Each of the first reads is refused naming the registry file, the row and the key; the declared row and the interface row read, and the snapshot's row and the history tree's row read with their retired cells. The three retired cells are classed traced, and the row's accepted text is the same with and without them, so removing them is no accepted-text change.
+- **Automated**: Yes
+- **Evidence**: tests/test_llr_trace_cells.py::test_the_loader_refuses_a_key_a_requirement_tier_does_not_declare; tests/test_llr_trace_cells.py::test_every_refusal_names_the_file_the_row_and_the_key; tests/test_llr_trace_cells.py::test_the_retired_design_cells_stay_classed_traced
+- **Status**: Drafted
+- **Phase**: 6
 
 ## SR-159 — Declared-architecture connectivity gaps are reported
 
@@ -100,20 +99,8 @@ _In this SR's chain in the snapshot, out of it in the working tree — the row w
 > **Rationale.** Realizes SN-023 (the parts' connections are as much of the truth as the requirement tree, checked mechanically warn-first — the need's own words), SN-002 (interface rows stay resolvable) and SN-012 (opt-out and vacuity keep the layer free for non-users). One row: the delivered contract is one connectivity verdict; the checkers below it are its decomposition.
 
 
-### LLR LLR-398
-_accepted — re-acceptance owed_
-- **Detail**
-  - before: The scan surface exists only when the scan profile is not in its files mode and the declared source root is present; it is then every file under that root of a type the component grammar carries, a README excluded, and every file the scan profile's declared header list names. In files mode, or with the source root absent, there is no surface, so a file the header list names is not read either. Nothing else is read, so a body quoted in a review record, a plan, the approval snapshot or an example document is never counted. At most one file on the surface states each interface's contract body: zero is valid, the row's data cell being the contract's home until code states it, and two or more is one finding naming every file. Where a body exists, its file's component declaration names the row's owner; for a row owned by an external party it names a component the row lists among its consumers or requestors, and any other component, or none, is a finding. A file declaring an interface it states no body for, and a header the contract grammar refuses, are findings too; bodies are read even in a file with no marker, so a body without one is such a refusal, and a listed Python file is read through its docstring as a module is. The findings warn on a plain run and fail under strict checking, and none appear when the process settings turn the interfaces check off or the scan has no surface.
-  - after: The scan surface exists only when the scan profile is not in its files mode and the declared source root is present; it is then every file under that root of a type the component grammar carries, a README excluded, and every file the scan profile's declared header list names. In files mode, or with the source root absent, there is no surface, so a file the header list names is not read either. Nothing else is read, so a body quoted in a review record, a plan, the approval snapshot or an example document is never counted. At most one file on the surface states each interface's contract body: zero is valid, the row's data cell being the contract's home until code states it, and two or more is one finding naming every file. Where a body exists, its file's component declaration names the row's owner; for a row owned by an external party it names a component the row lists among its consumers or requestors, and any other component, or none, is a finding. A file declaring an interface it states no body for, and a header the contract grammar refuses, are findings too; bodies are read even in a file with no marker, so a body without one is such a refusal, and a listed Python file is read through its docstring as a module is. The findings warn on a plain run and fail under strict checking, and none appear when the process settings turn the interfaces check off or the scan has no surface. With the interfaces check on, no surface and at least one interface row, the check reports itself dormant instead: one warning line, on a plain run and under strict checking alike, counts the interface rows whose bodies went unchecked and names files mode or the absent source root as why, and it changes no exit code.
-- **Rationale**
-  - before: Two copies of a contract are two definitions waiting to disagree, and a contract stated in another component's file puts the definition outside the component that answers for it. Counting only the declared surface keeps every quotation of a contract in the record from reading as a second one, and zero bodies stays valid because a new interface is defined by its row before any code exists.
-  - after: Two copies of a contract are two definitions waiting to disagree, and a contract stated in another component's file puts the definition outside the component that answers for it. Counting only the declared surface keeps every quotation of a contract in the record from reading as a second one, and zero bodies stays valid because a new interface is defined by its row before any code exists. Files mode declares source the scan does not parse, so its tree is not read for contract bodies, and with the source root absent there is none to read; holding the listed headers alone to one body per interface would then certify a partial surface, since a header's body could repeat one in source never read. The check says it is dormant rather than passing in silence, so a project that lists headers sees they went unchecked; with no interface row nothing is left unchecked, and the check stays vacuous, as an absent inventory is.
-_traced — routes to adjudication_
-- **TestRefs**
-  - before: TC-463; TC-474
-  - after: TC-463; TC-474; TC-504
-
-### TC TC-504 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-504 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-504
 - **Verifies**: SR-159;LLR-398
 - **Level**: Integration
@@ -132,12 +119,8 @@ _traced — routes to adjudication_
 > **Rationale.** A recorded accepted risk is a judgment about a particular assumption serving particular needs, so it cannot outlive a change to either, nor a sample showing the assumption failing. Binding the acceptance to the texts as they stood when it was made is what keeps a later, separate re-acceptance of a changed need from silently carrying the old risk forward. A clock would reopen it for no reason and teach readers to re-accept by reflex, so time alone never reopens it. Accepting again is a reviewed acceptance, like the first acceptance.
 
 
-### LLR LLR-239
-- **Detail**
-  - before: risk_acceptance_act(root, da_id) is the latest commit whose acceptance-act record names the assumption, as accepted or re-accepted, while its accepted_risk is non-empty; re-accepting a risk is re-accepting the row in an act, so it moves the anchor even when no byte of the row changes. Where no act names the row, nobody accepted the risk and there is no anchor: it walks no history of the live registry for a commit to stand in for the act, and reports the risk unanchored, with a reason naming the assumption and telling the operator to accept the risk in an acceptance act, and the risk reads unproven with that reason. accepted_risk_state compares, at the act's commit and now, the assumption's cells other than status and accepted_risk, and the need and acceptance cells of each need it served then, derived through that commit's requirements; any difference reads the assumption unproven and is an advisory naming the trigger, and a later re-acceptance of a changed need does not clear it, because the comparison is with the acceptance act, not the latest recorded copy. A failing observation record added in a commit that is not an ancestor of the acceptance act also reads it unproven, ordered by commit ancestry rather than by clock. Time is never read. History too shallow to find the act reads unproven with the reason stated.
-  - after: An assumption's acceptance anchor is the latest commit whose acceptance-act record names the assumption, as accepted or re-accepted, while its accepted_risk is non-empty; re-accepting a risk is re-accepting the row in an act, so it moves the anchor even when no byte of the row changes. Where no act names the row, nobody accepted the risk and there is no anchor: the anchor's reader walks no history of the live registry for a commit to stand in for the act, and reports the risk unanchored, with a reason naming the assumption and telling the operator to accept the risk in an acceptance act, and the risk reads unproven with that reason. The accepted-risk reading compares, at the act's commit and now, the assumption's cells other than status and accepted_risk, and the need and acceptance cells of each need it served then, derived through that commit's requirements; any difference reads the assumption unproven and is an advisory naming the trigger, and a later re-acceptance of a changed need does not clear it, because the comparison is with the acceptance act, not the latest recorded copy. A failing observation record added in a commit that is not an ancestor of the acceptance act also reads it unproven, ordered by commit ancestry rather than by clock. Time is never read. History too shallow to find the act reads unproven with the reason stated. The advisory words an unproven risk by why it reads unproven: for a risk an act accepted and a later difference or failing record undid, it says the risk has reopened and reads unproven until accepted again; for a risk no act accepted, the history and the act records on it read whole, whether no act names the row or none that does recorded a risk, it says the assumption's risk was never accepted and reads unproven until an act accepts it; and where they could not be read whole, as in a shallow clone or with a malformed act record, it states the reason and says neither that the risk reopened nor that the assumption's risk was never accepted.
-
-### TC TC-500 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-500 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-500
 - **Verifies**: SR-202;LLR-239
 - **Level**: Integration
@@ -156,12 +139,8 @@ _traced — routes to adjudication_
 > **Rationale.** A passed observation shows only that a problem was not found in what was observed, so no result proves an assumption holds and the gate asks for none; the one evidence-shaped signal is falsification, and recording an assumption false is a person's or an adjudication's act on its validity. At release the gate therefore reads validity: a falsified premise blocks unless a reviewed acceptance accepted the risk of relying on it and that acceptance still stands. The honest alternatives are to amend the assumption and the requirements relying on it, or to accept the risk on the record.
 
 
-### LLR LLR-243
-- **Detail**
-  - before: release_gate_findings(das, srs, risks) fails each assumption that at least one requirement cites and whose standing reads falsified, unless its accepted risk reads covered by accepted_risk_state; each failure names the assumption, the requirements relying on it and either that it records no accepted risk or the triggers that reopened its risk. An active assumption passes whatever results it has or lacks. The rule itself reads no result, inputs digest or suite record: an observation record reaches it only through an accepted risk's reading. Standing is among the cells an accepted risk is bound to, so a risk accepted while the assumption stood active reopens once it is recorded falsified, and covers it only when accepted again. check.py gains a built-in step `assumption-evidence` at the DevStg-Release threshold, gated by the same setting; the step reads the observation records and each accepted risk's acceptance act to compute those readings. The stage's single release producer, the harness evidence verdict, is left untouched.
-  - after: The release gate fails each assumption that at least one requirement cites and whose standing reads falsified, unless its accepted risk reads covered by the accepted-risk reading; each failure names the assumption, the requirements relying on it and either that it records no accepted risk or why its accepted risk does not cover it: that the risk has reopened, naming the triggers, and covers nothing until it is accepted again; that the assumption's risk was never accepted, and covers nothing until an act accepts it; or, where no act accepting it could be read, the reading's reason alone, saying neither. An active assumption passes whatever results it has or lacks. The rule itself reads no result, inputs digest or suite record: an observation record reaches it only through an accepted risk's reading. Standing is among the cells an accepted risk is bound to, so a risk accepted while the assumption stood active reopens once it is recorded falsified, and covers it only when accepted again. The harness gains a built-in step at the DevStg-Release threshold, gated by the same setting; the step reads the observation records and each accepted risk's acceptance act to compute those readings. The stage's single release producer, the harness evidence verdict, is left untouched.
-
-### TC TC-501 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-501 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-501
 - **Verifies**: SR-206;LLR-243
 - **Level**: Unit
@@ -173,31 +152,6 @@ _traced — routes to adjudication_
 - **Phase**: 6
 - **Evidence**: tests/test_assumption_rules.py::test_the_release_gate_words_an_unproven_risk_by_why_it_reads_unproven
 
-## SR-212 — With the assumption gate on, interface-form requirements are bridged at their crossings and reached and bridged at the architecture rung
-
-> **Requirement.** Where the assumption gate is enabled, the delivered harness shall fail, for each system requirement of interface form, the boundary gate when the requirement is not recorded as coincident and names a crossing on which no assumption it cites lands, and the architecture gate when no boundary interface reaches it or a reaching boundary interface neither records it as coincident nor bridges it by an assumption the requirement also cites.
-
-> **Rationale.** A requirement meant to be met at an interface is not testable until that interface exists and its reading is either the outcome or carried by an assumption the requirement itself relies on. The frame's crossings are the first such interfaces: they are accepted with the frame at the boundary rung, before any interface row exists, and an assumption already names the crossing it lands on, so the requirement is judged against them there. Judging it again at the architecture rung, against the boundary interfaces that realize the crossings, keeps interfaces after the requirements they answer. Minting interface rows to match a count would produce seams with no contract behind them, so the check reports the gap rather than inventing the seam.
-
-
-### SR SR-212
-- **AcceptanceCriteria**
-  - before: At the boundary rung, a requirement of interface form recorded as coincident passes, and any other fails the boundary gate once for each declared crossing its boundary references name on which no assumption it cites lands, naming the requirement and that crossing; a crossing the frame does not declare is not judged here. At the architecture rung, a requirement of interface form reached, through the modules its design rows name, by at least one boundary interface, every such interface coincident or bridged by an assumption the requirement cites, passes; one reached by none fails the architecture gate naming the requirement and stating that no boundary interface reaches it; each reaching interface bridged only by assumptions the requirement does not cite fails it naming the requirement and that interface, however many other reaching interfaces pass; requirements of the other two forms are out of scope; with the gate disabled the same conditions are advisory.
-  - after: At the boundary rung, a requirement of interface form recorded as coincident passes, and any other fails the boundary gate once for each declared crossing its boundary references name on which no assumption it cites lands, naming the requirement and that crossing; a crossing the frame does not declare is not judged here. At the architecture rung, a boundary interface reaches the requirements of the design rows realized in the one file stating its contract body, the files realizing a design row being those its back-link declarations are in, and an interface whose contract body no file states reaches none; where no source is scanned, an interface instead reaches the requirements of the design rows placed in its owner component. A requirement of interface form reached by at least one boundary interface, every such interface coincident or bridged by an assumption the requirement cites, passes; one reached by none fails the architecture gate naming the requirement and stating that no boundary interface reaches it; each reaching interface bridged only by assumptions the requirement does not cite fails it naming the requirement and that interface, however many other reaching interfaces pass; requirements of the other two forms are out of scope; with the gate disabled the same conditions are advisory.
-
-### LLR LLR-244
-- **Detail**
-  - before: module_srs(llrs) maps each normalized design Module to the requirements its rows name in SR-Refs, with norm_module as the one normalizer. if_reached_srs(ifs, llrs) maps each boundary interface, one carrying a from- or to-external tie-back, through its owner to those requirements. interface_form_gate_findings judges each requirement whose form is interface against every boundary interface reaching it: one reached by none fails naming the requirement and stating that no boundary interface reaches it; each reaching interface with no Coincident whose BridgedBy shares no assumption with the requirement's DA-Refs fails naming the requirement and that interface, so one valid interface never excuses another invalid one. check.py gains a built-in step `interface-allocation` at the DevStg-Arch threshold, gated by the same setting. crossing_gate_findings(srs, das, bifs) is the Boundary arm over the frame's crossings: each interface-form requirement with no Coincident fails once for each declared crossing its Boundary-Refs names on which no assumption in its DA-Refs lands (EffectAt), naming the requirement and that crossing; a crossing the frame does not declare is left to the frame's own reference rule. check.py gains a built-in step `crossing-allocation` at the DevStg-Boundary threshold, gated by the same setting. The relation is derived here and never recorded on an interface, and the stage fold gains no interface parameter.
-  - after: Each boundary interface, one carrying a from- or to-external tie-back, reaches the requirements named in SR-Refs by the design rows realized in the one file stating its contract body. That file is the one the definition gate's scan finds; the files realizing a design row are those the back-link index names for it; the two are compared through the one path normalizer. An interface with no contract body yet reaches none. Where no source is scanned, an interface instead reaches the requirements of the design rows placed in its owner component, a design row placed through the interfaces its verifying test cases name. The architecture arm judges each requirement whose form is interface against every boundary interface reaching it: one reached by none fails naming the requirement and stating that no boundary interface reaches it; each reaching interface with no Coincident whose BridgedBy shares no assumption with the requirement's DA-Refs fails naming the requirement and that interface, so one valid interface never excuses another invalid one. The harness gains a built-in step for the architecture arm at the DevStg-Arch threshold, gated by the same setting. The boundary arm judges the frame's crossings: each interface-form requirement with no Coincident fails once for each declared crossing its Boundary-Refs names on which no assumption in its DA-Refs lands (EffectAt), naming the requirement and that crossing; a crossing the frame does not declare is left to the frame's own reference rule. The harness gains a built-in step for the boundary arm at the DevStg-Boundary threshold, gated by the same setting. The relation is derived here and never recorded on an interface, and the stage fold gains no interface parameter.
-
-### TC TC-239
-- **Expected**
-  - before: Satisfies SR-212's acceptance: at the boundary rung, an interface-form requirement not recorded coincident passes only when every declared crossing it names is the landing of an assumption it cites, and each other crossing fails naming both; at the architecture rung, a requirement passes only when at least one boundary interface reaches it and each reaching interface is coincident or bridged by an assumption it cites; an unreached one fails naming it, an invalid reaching interface fails naming both; other forms out of scope; advisory with the gate off.
-  - after: Satisfies SR-212's acceptance: at the boundary rung, an interface-form requirement not recorded coincident passes only when every declared crossing it names is the landing of an assumption it cites, and each other crossing fails naming both; at the architecture rung, a requirement passes only when at least one boundary interface reaches it and each reaching interface is coincident or bridged by an assumption it cites; an unreached one fails naming it, an invalid reaching interface fails naming both; an interface whose contract body no file states reaches none, and where no source is scanned an interface reaches through the design rows placed in its owner component; other forms out of scope; advisory with the gate off.
-- **Method**
-  - before: The interface-allocation step driven on a scaffold with the setting on, in a module registered as slow. An interface-form requirement reached, through its design rows' module, by a boundary interface recorded coincident passes; one reached by an interface bridged by an assumption the requirement cites passes. One reached only by an interface bridged by other assumptions fails naming the requirement and that interface. One reached by no boundary interface fails naming the requirement and stating that none reaches it. One reached by two interfaces, one valid and one bridged only by uncited assumptions, fails naming the invalid interface. Assumption-form and cross-cutting requirements are not judged. The crossing-allocation step, driven the same way, judges each interface-form requirement against the crossings its Boundary-Refs names: one recorded coincident passes; one citing an assumption landing on its crossing passes; one citing only an assumption landing elsewhere fails naming the requirement and the crossing; one naming two crossings and bridged on one fails naming only the other; one citing none fails; an assumption-form requirement, and a crossing the frame does not declare, are not judged. With the setting off the same cases are advisories for both steps. The interface-allocation step lists at the DevStg-Arch threshold and the crossing-allocation step at the DevStg-Boundary threshold, and the stage fold still takes no interface parameter.
-  - after: The architecture arm's step driven on a scaffold with the setting on, in a module registered as slow. An interface-form requirement reached, through the file its design row's back-link is in, by a boundary interface recorded coincident passes; one reached by an interface bridged by an assumption the requirement cites passes. One reached only by an interface bridged by other assumptions fails naming the requirement and that interface. One reached by no boundary interface fails naming the requirement and stating that none reaches it. One reached by two interfaces, one valid and one bridged only by uncited assumptions, fails naming the invalid interface. Assumption-form and cross-cutting requirements are not judged. A boundary interface whose contract body no file states, bridged only by an assumption the requirement does not cite, and owning the component a case places that requirement's design row in, reaches nothing: the requirement fails stating that no boundary interface reaches it, and the interface is not named. Driven again with the scan profile reading files only, so no source is scanned, the same interface reaches the requirement through the design row placed in its owner component, and the requirement fails naming that interface. The boundary arm's step, driven the same way, judges each interface-form requirement against the crossings its Boundary-Refs names: one recorded coincident passes; one citing an assumption landing on its crossing passes; one citing only an assumption landing elsewhere fails naming the requirement and the crossing; one naming two crossings and bridged on one fails naming only the other; one citing none fails; an assumption-form requirement, and a crossing the frame does not declare, are not judged. With the setting off the same cases are advisories for both steps. The architecture arm's step lists at the DevStg-Arch threshold and the boundary arm's at the DevStg-Boundary threshold, and the stage fold still takes no interface parameter.
-
 ## SR-221 — A builder changing a file can list the tests the spine links to it
 
 > **Requirement.** The delivered harness shall list, for a file whose back-link declarations name a design row, the test files the requirement spine links to it through those design rows, the test cases verifying them and those cases' evidence, with no hand-kept map.
@@ -205,55 +159,18 @@ _traced — routes to adjudication_
 > **Rationale.** A DERIVED requirement: SN-012 asks that small changes stay cheap and does not name a test listing, so this obligation arrives through two lenses rather than through the need's text. The performance lens prices operator time: a builder iterating on one file either reruns the whole suite, minutes each time, or guesses which tests matter. The test-engineer lens names what the guess costs: tests picked by file name are a fraction of those exercising a file, because cases are named for the behaviour they drive and driven suites for the script they run, so a pass from them has not examined what the file's design rows claim. The code's back-link declarations already say which design rows a file realizes, and the spine records which tests carry each design row's evidence, so the listing joins the two and keeps no map of its own. It is an inner loop only: the commit checks still run before every commit, and making a file-scoped subset the checks was considered and rejected, since a change that breaks another file through a shared import would then commit with its checks passing.
 
 
-### SR SR-221
-- **AcceptanceCriteria**
-  - before: For a module a design row names, the listing names every test file under the declared test root that the evidence of a test case verifying one of its design rows cites, files not named for the module included, and no other file; a name matching no declared module and one matching several are each refused with a distinct outcome, the latter naming the candidates; the listing reads the registries of the repository it is pointed at; the commit checks are unchanged by it.
-  - after: For a file whose back-link declarations name a design row, the listing names every test file under the declared test root that the evidence of a test case verifying one of those design rows cites, files not named for it included, and no other file; a name matching no such file and one matching several are each refused with a distinct outcome, the latter naming the candidates; the listing reads the test-case registry and stack profile of the docs directory it is pointed at and the back-link declarations of the repository holding that directory; the commit checks are unchanged by it.
-- **Coincident**
-  - before: The need asks for small changes staying cheap; the tests the spine links to a module, listed from the registries with no hand-kept map, are what a builder needs before changing it.
-  - after: The need asks for small changes staying cheap; the tests the spine links to a file, listed through the code's own back-links and the registries with no hand-kept map, are what a builder needs before changing it.
-- **Rationale**
-  - before: A DERIVED requirement: SN-012 asks that small changes stay cheap and does not name a test listing, so this obligation arrives through two lenses rather than through the need's text. The performance lens prices operator time: a builder iterating on one module either reruns the whole suite, minutes each time, or guesses which tests matter. The test-engineer lens names what the guess costs: tests picked by file name are a fraction of those exercising a module, because cases are named for the behaviour they drive and driven suites for the script they run, so a pass from them has not examined what the module's design rows claim. The spine already records which tests carry each design row's evidence, so the listing reads it. It is an inner loop only: the commit checks still runs before every commit, and making a module-scoped subset the checks were considered and rejected, since a change that breaks another module through a shared import would then commit with its checks passing.
-  - after: A DERIVED requirement: SN-012 asks that small changes stay cheap and does not name a test listing, so this obligation arrives through two lenses rather than through the need's text. The performance lens prices operator time: a builder iterating on one file either reruns the whole suite, minutes each time, or guesses which tests matter. The test-engineer lens names what the guess costs: tests picked by file name are a fraction of those exercising a file, because cases are named for the behaviour they drive and driven suites for the script they run, so a pass from them has not examined what the file's design rows claim. The code's back-link declarations already say which design rows a file realizes, and the spine records which tests carry each design row's evidence, so the listing joins the two and keeps no map of its own. It is an inner loop only: the commit checks still run before every commit, and making a file-scoped subset the checks was considered and rejected, since a change that breaks another file through a shared import would then commit with its checks passing.
-- **Requirement**
-  - before: The delivered harness shall list, for a module a design row names, the test files the requirement spine links to it through the design rows naming it, the test cases verifying those rows and those cases' evidence, derived from the registries with no hand-kept map.
-  - after: The delivered harness shall list, for a file whose back-link declarations name a design row, the test files the requirement spine links to it through those design rows, the test cases verifying them and those cases' evidence, with no hand-kept map.
-- **Title**
-  - before: A builder changing a module can list the tests the spine links to it
-  - after: A builder changing a file can list the tests the spine links to it
-
-### LLR LLR-263
-- **Detail**
-  - before: module_tests(llrs, tcs, module, test_root) returns, sorted and distinct, the evidence paths under test_root of every test case, of any status, whose Verifies names a design row whose Module cell names module, each Evidence cell read through evidence_items. resolve_modules(llrs, wanted) returns the declared Module paths that wanted names as the path, a trailing part of it or its stem, compared through norm_module. trace.py --tests-for MODULE prints module_tests for the one module MODULE resolves to, one path per line; the design and test-case registries and stack.ini are read from the directory --docs names, else <root>/docs, and the test root from stack.ini [paths] tests (default tests). It runs no check and exits 0, or 1 when MODULE names no declared module, or 2 naming the candidates when it names several.
-  - after: The listing for a file is, sorted and distinct, the evidence paths under the declared test root of every test case, of any status, whose Verifies names a design row the back-link index names that file for, each Evidence cell read as the evidence rule reads it. A name given for the listing resolves to each file the back-link index names for a design row when the name is that file's path, a trailing part of it or its stem, compared through the one path normalizer. The command-line arm that IF-233 states prints the listing for the one file the name resolves to, one path per line; the test-case registry and the stack profile are read from the docs directory the command is pointed at, else the repository's own, the back-link index from the repository holding that directory, and the test root from the stack profile's declared tests path (default tests). It runs no check and exits 0, or 1 when the name resolves to no indexed file, or 2 naming the candidates when it resolves to several.
-- **Rationale**
-  - before: SR-221 asks for the tests the spine links to a module, derived from the registries. The link already exists as three cells the rows carry, a design row's Module and a test case's Verifies and Evidence, so the listing is a join over them and keeps no second map. A drafted case is included because the builder iterating is often the one writing it. Resolving by stem as well as by path keeps the command usable from a file name, and an ambiguous name is refused with its candidates rather than answered for one of them. It is an act-and-exit arm of the spine checker's command line, which already loads both registries, so it adds no command and no import edge; the pure half sits beside the Evidence cell's reading in the row vocabulary.
-  - after: SR-221 asks for the tests the spine links to a file, read through the code's back-links with no hand-kept map. The link already exists: the code's back-link tags name the design rows a file realizes, read once through the back-link index, and a test case's Verifies and Evidence cells name the rows it verifies and the tests it runs, so the listing is a join of the index with those two cells and keeps no second map. A drafted case is included because the builder iterating is often the one writing it. Resolving by stem as well as by path keeps the command usable from a file name, and an ambiguous name is refused with its candidates rather than answered for one of them. It is an act-and-exit arm of the spine checker's command line, which already loads both registries, so it adds no command and no import edge; the pure half sits beside the Evidence cell's reading in the row vocabulary.
-- **Title**
-  - before: The module listing: a module's design rows, the cases verifying them, their evidence files
-  - after: The file listing: a file's design rows, the cases verifying them, their evidence files
-
-### TC TC-258
-- **Expected**
-  - before: Satisfies LLR-263 and IF-233: the module map through design rows and resolution by path, suffix or stem; --tests-for listing from the registries and stack.ini of the directory --docs names, with exits 0, 1 and 2; and the live map reaching suites not named for their module
-  - after: Satisfies LLR-263 and IF-233: the file map through the design rows the back-link index names and resolution by path, suffix or stem; the listing command reading the registries and stack profile of the docs directory it is pointed at and the back-links of the repository holding it, with exits 0, 1 and 2; and the live map reaching suites not named for their file
-- **Method**
-  - before: In-process, over a synthetic spine and the live registries read as data. THE MAP: a module's tests come through its design row and every case verifying it, a Drafted case included, while a case verifying only the SR, another module's case and a document among the evidence stay out, and a different test root yields none; a module resolves by its path, a trailing part with or without the extension, and its stem, a name matching two modules returns both and an unknown or empty name none. THE COMMAND, driven through trace.py's own entry point: --tests-for prints one path per line and exits 0; it reads the declared test root; pointed by --docs at a docs directory elsewhere while --root names an unrelated empty directory, it lists from that directory's registries and reads its stack.ini; it exits 1 naming the miss for an unknown module and 2 naming both candidates for an ambiguous one. THE LIVE MAP reaches coherence.py's suite, which no test file is named for, and frame_rules.py's driven suite beside its unit module.
-  - after: In-process, over a synthetic spine and the live registries read as data. THE MAP: a file's tests come through the design rows its back-link tags name and every case verifying them, a Drafted case included, while a case verifying only the SR, another file's case and a document among the evidence stay out, and a different test root yields none; a file resolves by its path, a trailing part with or without the extension, and its stem, a name matching two indexed files returns both and an unknown or empty name none. THE COMMAND, driven through the spine checker's own entry point: the listing prints one path per line and exits 0; it reads the declared test root; pointed at a docs directory elsewhere while the repository root it is given is an unrelated empty directory, it lists from that directory's registries, reads its stack profile and reads the back-links of the repository holding it; it exits 1 naming the miss for an unknown name and 2 naming both candidates for an ambiguous one. THE LIVE MAP reaches the suite of the checker's cross-row coherence module, which no test file is named for, and the frame rules' driven suite beside their unit module.
-
-### TC TC-482, Drafted — never accepted
-- **Expected**
-  - before: The index maps each declared id to its files, sorted, the header file included and the prose id absent. The listing follows the design rows the index names for the file and leaves out a case verifying only the system requirement; the command prints the linked test file and exits 0 for the stem, and exits 1 for the other, saying no indexed file matches.
-  - after: The index maps each declared id to its files, sorted, the header file included and the prose id absent. The listing follows the design rows the index names for the file and leaves out a case verifying only the system requirement; the command prints the linked test file and exits 0 for the stem, and exits 1 for the other, saying no indexed file matches. The undecodable file, the failed read and the missing header add nothing and the rest is indexed as before; with the source root removed the index holds the header's id alone. The build brief's code map lists the declared row's file and marks the undeclared row as having none.
-- **Method**
-  - before: Index a repository whose source root holds a file declaring a design row and a system requirement in its docstring, a nested file declaring two design rows on separate comment lines, and a file naming an id only in prose, beside a listed header file declaring one; list the test files the spine links to each indexed file, resolve a stem, and run the listing command for a stem and for a file no declaration names.
-  - after: Index a repository whose source root holds a file declaring a design row and a system requirement in its docstring, a nested file declaring two design rows on separate comment lines, and a file naming an id only in prose, beside a listed header file declaring one; list the test files the spine links to each indexed file, resolve a stem, and run the listing command for a stem and for a file no declaration names. Index it again with a file whose bytes do not decode, a file whose read fails and a listed header that does not exist, and once more with the source root removed. Render the build brief for a work item whose requirement one declared and one undeclared design row decompose.
-- **Evidence**
-  - before: tests/test_llr_trace_cells.py::test_the_implements_index_feeds_the_module_listing
-  - after: tests/test_llr_trace_cells.py::test_the_implements_index_feeds_the_module_listing; tests/test_llr_trace_cells.py::test_the_build_brief_marks_a_design_row_no_declaration_names; tests/test_llr_trace_cells.py::test_the_index_reads_past_what_it_cannot_read
-- **Verifies**
-  - before: LLR-405;LLR-263
-  - after: SR-250;SR-221;LLR-405;LLR-263
+### TC TC-482 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
+- **TC-ID**: TC-482
+- **Verifies**: SR-250;SR-221;LLR-405;LLR-263
+- **Level**: Unit
+- **Method**: Index a repository whose source root holds a file declaring a design row and a system requirement in its docstring, a nested file declaring two design rows on separate comment lines, and a file naming an id only in prose, beside a listed header file declaring one; list the test files the spine links to each indexed file, resolve a stem, and run the listing command for a stem and for a file no declaration names. Index it again with a file whose bytes do not decode, a file whose read fails and a listed header that does not exist, and once more with the source root removed. Render the build brief for a work item whose requirement one declared and one undeclared design row decompose.
+- **Tier**: Smoke
+- **Expected**: The index maps each declared id to its files, sorted, the header file included and the prose id absent. The listing follows the design rows the index names for the file and leaves out a case verifying only the system requirement; the command prints the linked test file and exits 0 for the stem, and exits 1 for the other, saying no indexed file matches. The undecodable file, the failed read and the missing header add nothing and the rest is indexed as before; with the source root removed the index holds the header's id alone. The build brief's code map lists the declared row's file and marks the undeclared row as having none.
+- **Automated**: Yes
+- **Evidence**: tests/test_llr_trace_cells.py::test_the_implements_index_feeds_the_module_listing; tests/test_llr_trace_cells.py::test_the_build_brief_marks_a_design_row_no_declaration_names; tests/test_llr_trace_cells.py::test_the_index_reads_past_what_it_cannot_read
+- **Status**: Drafted
+- **Phase**: 6
 
 ## SR-248 — A design row past Drafted is discharged by a test case verifying it
 
@@ -262,28 +179,25 @@ _traced — routes to adjudication_
 > **Rationale.** Realizes SN-002: the chain from need to test is trustworthy because it is mechanically verified, and its bottom rung is the claim a design row makes that it is delivered. That claim is discharged by the evidence of the row's own kind: a test case verifying it, executable through its declared tests or an inspection, analysis or attestation through its declared evidence. A row still Drafted is being written and makes no such claim yet, so the rule reaches it once it leaves Drafted. Binding discharge to a code symbol the row names pointed down at the code, so every rename reopened an accepted row while the code's own back-links already stated the same link upward. Where a design row sits and which files realize it are obligations of their own (SR-249, SR-250).
 
 
-### SR SR-248, Drafted — never accepted
-- **AcceptanceCriteria**
-  - before: A design row verified by at least one live test case, of any verification kind, is discharged; one past Drafted that none verifies is reported by the orphan rules naming the row, and a Drafted row that none verifies is not reported while it stays Drafted. A design row is placed at the owner component of each interface that a test case verifying it names, once per component; an interface owned by an external party places nothing; a row placed at several components is placed at each. A row placed nowhere is listed and counted by the generated component view and counted by the strict check's report, and its being unplaced never fails a check. No design row states its component, its files or its symbols; the files realizing it are read from the back-links in the code, and a row no back-link names is simply absent from that reading.
-  - after: A design row that at least one live test case verifies, of any verification kind, is discharged and is not reported; one past Drafted that none verifies is reported by the orphan rules naming the row, and the strict check exits nonzero for it; a Drafted row that none verifies is not reported while it stays Drafted.
-- **Rationale**
-  - before: Realizes SN-002: the chain from need to test is trustworthy because it is mechanically verified, and its bottom rung is the claim a design row makes that it is delivered. That claim is discharged by the evidence of the row's own kind: a test case verifying it, executable through its declared tests or an inspection, analysis or attestation through its declared evidence. A row that constrains an interface is also discharged through that interface's realization once the registries record which rows constrain which interface; until they do, the test-case relation is the whole rule. A row still Drafted is being written and makes no such claim yet, so the rule reaches it once it leaves Drafted. Binding discharge to a code symbol the row names pointed down at the code, so every rename reopened an accepted row while the code's own back-links already stated the same link upward.
+### SR SR-248 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
+- **SR-ID**: SR-248
+- **Title**: A design row past Drafted is discharged by a test case verifying it
+- **SN-Refs**: SN-002
+- **Boundary-Refs**: B-09
+- **Hat-Refs**: TEST-ENGINEER
+- **Requirement**: The delivered harness shall report as undischarged each design-tier row past its Drafted status that no live test case verifies.
+- **Rationale**: Realizes SN-002: the chain from need to test is trustworthy because it is mechanically verified, and its bottom rung is the claim a design row makes that it is delivered. That claim is discharged by the evidence of the row's own kind: a test case verifying it, executable through its declared tests or an inspection, analysis or attestation through its declared evidence. A row still Drafted is being written and makes no such claim yet, so the rule reaches it once it leaves Drafted. Binding discharge to a code symbol the row names pointed down at the code, so every rename reopened an accepted row while the code's own back-links already stated the same link upward. Where a design row sits and which files realize it are obligations of their own (SR-249, SR-250).
+- **AcceptanceCriteria**: A design row that at least one live test case verifies, of any verification kind, is discharged and is not reported; one past Drafted that none verifies is reported by the orphan rules naming the row, and the strict check exits nonzero for it; a Drafted row that none verifies is not reported while it stays Drafted.
+- **Priority**: M
+- **VerificationMethod**: Test
+- **Status**: Drafted
+- **Phase**: 6
+- **Coincident**: The needs ask for a chain verified rather than asserted; a design row reported undischarged when no test case verifies it is that verification's verdict.
+- **Aspect**: trajectory
 
-Realizes SN-003 in the row's altitude. Where a row sits follows from what it is verified at: the interfaces its verifying cases name, each owned by a component, so placement is derived and never restated on the row. A row placed nowhere is a decomposition whose interface is not yet named, which is legal and visible, so it is counted and listed rather than refused.
-
-Stated so it cannot be read in: nothing here obliges source code to carry a back-link naming the row it implements. A back-link is encouraged, read where present, and never demanded.
-  - after: Realizes SN-002: the chain from need to test is trustworthy because it is mechanically verified, and its bottom rung is the claim a design row makes that it is delivered. That claim is discharged by the evidence of the row's own kind: a test case verifying it, executable through its declared tests or an inspection, analysis or attestation through its declared evidence. A row still Drafted is being written and makes no such claim yet, so the rule reaches it once it leaves Drafted. Binding discharge to a code symbol the row names pointed down at the code, so every rename reopened an accepted row while the code's own back-links already stated the same link upward. Where a design row sits and which files realize it are obligations of their own (SR-249, SR-250).
-- **Requirement**
-  - before: The delivered harness shall report as undischarged a design-tier row past its Drafted status that no test case verifies, and shall derive the components a design-tier row sits in from the interfaces its verifying test cases name, listing and counting a row placed in none rather than refusing it.
-  - after: The delivered harness shall report as undischarged each design-tier row past its Drafted status that no live test case verifies.
-- **Title**
-  - before: A design row is discharged by the evidence of its kind, and where it sits is derived
-  - after: A design row past Drafted is discharged by a test case verifying it
-- **SN-Refs**
-  - before: SN-002;SN-003
-  - after: SN-002
-
-### LLR LLR-408 — ADDED since the snapshot, Drafted — never accepted
+### LLR LLR-408 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **LLR-ID**: LLR-408
 - **SR-Refs**: SR-248
 - **Title**: A design row past Drafted is discharged by a test case verifying it, and a Drafted one owes none yet
@@ -293,7 +207,8 @@ Stated so it cannot be read in: nothing here obliges source code to carry a back
 - **Status**: Drafted
 - **Phase**: 6
 
-### TC TC-485 — ADDED since the snapshot, Drafted — never accepted
+### TC TC-485 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-485
 - **Verifies**: SR-248;LLR-408
 - **Level**: Unit
@@ -305,27 +220,15 @@ Stated so it cannot be read in: nothing here obliges source code to carry a back
 - **Phase**: 6
 - **Evidence**: tests/test_llr_trace_cells.py::test_a_design_row_is_discharged_by_a_case_of_any_kind; tests/test_trace.py::test_draft_llr_is_exempt_from_tc_rule
 
-### LLR LLR-403 — REMOVED since the snapshot
-_In this SR's chain in the snapshot, out of it in the working tree — the row was deleted, re-parented, or superseded (a superseded row keeps existing; it leaves the chain)._
-
-### LLR LLR-405 — REMOVED since the snapshot
-_In this SR's chain in the snapshot, out of it in the working tree — the row was deleted, re-parented, or superseded (a superseded row keeps existing; it leaves the chain)._
-
-### TC TC-480 — REMOVED since the snapshot
-_In this SR's chain in the snapshot, out of it in the working tree — the row was deleted, re-parented, or superseded (a superseded row keeps existing; it leaves the chain)._
-
-### TC TC-482 — REMOVED since the snapshot
-_In this SR's chain in the snapshot, out of it in the working tree — the row was deleted, re-parented, or superseded (a superseded row keeps existing; it leaves the chain)._
-
 ## SR-249 — Where a design row sits is derived from the interfaces its verifying test cases name
 
 > **Requirement.** The delivered harness shall derive the components each design-tier row sits in from the interfaces its verifying test cases name, counting a row placed in none as unplaced rather than refusing it.
 
 > **Rationale.** Realizes SN-002 and SN-023. Where a row sits follows from what it is verified at: the interfaces its verifying cases name, each owned by a component, so placement is derived and never restated on the row. A row that named its component restated by hand a fact the interfaces and the cases verifying it already hold, and the copy drifted when the code moved; deriving it leaves one home. A row placed nowhere is a decomposition whose interface is not yet named, which is legal and visible, so it is counted and listed rather than refused, and the views a reviewer reads to see how the parts connect show it as unplaced.
 
-_No accepted baseline — absent from the docs/archive/last_accepted snapshot — awaiting its first acceptance; current state only._
 
-### SR SR-249 (current)
+### SR SR-249 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **SR-ID**: SR-249
 - **Title**: Where a design row sits is derived from the interfaces its verifying test cases name
 - **SN-Refs**: SN-002;SN-023
@@ -341,7 +244,8 @@ _No accepted baseline — absent from the docs/archive/last_accepted snapshot �
 - **Coincident**: The needs ask for a chain verified rather than asserted and a view of how the parts connect; each design row shown at the components its verifying cases' interfaces are owned by, derived rather than restated, with an unplaced row counted in view, is that view as the reviewer reads it.
 - **Aspect**: trajectory
 
-### LLR LLR-403 (current)
+### LLR LLR-403 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **LLR-ID**: LLR-403
 - **SR-Refs**: SR-249
 - **Title**: A design row sits where the interfaces its verifying test cases name are owned, and one placed nowhere is counted
@@ -351,7 +255,8 @@ _No accepted baseline — absent from the docs/archive/last_accepted snapshot �
 - **Status**: Drafted
 - **Phase**: 6
 
-### TC TC-480 (current)
+### TC TC-480 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-480
 - **Verifies**: SR-249;LLR-403
 - **Level**: Unit
@@ -369,9 +274,9 @@ _No accepted baseline — absent from the docs/archive/last_accepted snapshot �
 
 > **Rationale.** Realizes SN-002: a trace read from the code that carries it cannot drift from it, where a design row's file and symbol cells pointed down at facts the code's back-links already stated upward, and the two drifted apart, reopening accepted rows when code moved. Realizes SN-003: the declarations are read as text, so the reading holds in any language and needs no parser. Nothing here obliges source code to carry a back-link naming the row it implements: a back-link is read where present, and a row no declaration names is realized by no file in this reading.
 
-_No accepted baseline — absent from the docs/archive/last_accepted snapshot — awaiting its first acceptance; current state only._
 
-### SR SR-250 (current)
+### SR SR-250 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **SR-ID**: SR-250
 - **Title**: The files realizing a design row are read from the code's back-link declarations
 - **SN-Refs**: SN-002;SN-003
@@ -387,7 +292,8 @@ _No accepted baseline — absent from the docs/archive/last_accepted snapshot �
 - **Coincident**: The needs ask for a chain verified rather than hand-maintained and a process that holds on any stack; the files a design row is realized in, read as text from declarations the code itself carries, with no copy kept on the row, is that link as a reader receives it.
 - **Aspect**: trajectory
 
-### LLR LLR-405 (current)
+### LLR LLR-405 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **LLR-ID**: LLR-405
 - **SR-Refs**: SR-250
 - **Title**: The files realizing a design row are read from the code's back-link declarations into one index
@@ -397,7 +303,8 @@ _No accepted baseline — absent from the docs/archive/last_accepted snapshot �
 - **Status**: Drafted
 - **Phase**: 6
 
-### TC TC-482 (current)
+### TC TC-482 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-482
 - **Verifies**: SR-250;SR-221;LLR-405;LLR-263
 - **Level**: Unit
@@ -415,9 +322,9 @@ _No accepted baseline — absent from the docs/archive/last_accepted snapshot �
 
 > **Rationale.** Realizes SN-002: a test case's tests were named in two homes, its evidence cell and the tests' own declarations, held equal by a check that asked a person to edit the cell by hand, and a hand-kept trace rots. Generating the test-file half removes the hand edit; the half no declaration can carry, a workflow, an inspection or a review record, stays authored. Generating is not checking: the evidence rule under SR-157 still reports a cell that differs from the declarations, and this row is the writer that brings it current. A writer that rewrites a registry in place proves it changed nothing else before it writes, or writes nothing.
 
-_No accepted baseline — absent from the docs/archive/last_accepted snapshot — awaiting its first acceptance; current state only._
 
-### SR SR-251 (current)
+### SR SR-251 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **SR-ID**: SR-251
 - **Title**: A test case's evidence parts under the tests root are generated from the test files' declarations
 - **SN-Refs**: SN-002
@@ -433,7 +340,8 @@ _No accepted baseline — absent from the docs/archive/last_accepted snapshot �
 - **Coincident**: The need asks for a chain mechanically verified, not hand-maintained; a test case's evidence written from the test files' own declarations is that trace as the reviewer reads it.
 - **Aspect**: trajectory
 
-### LLR LLR-406 (current)
+### LLR LLR-406 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **LLR-ID**: LLR-406
 - **SR-Refs**: SR-251
 - **Title**: A test case's evidence parts under the tests root are generated from the test files' declarations
@@ -443,7 +351,8 @@ _No accepted baseline — absent from the docs/archive/last_accepted snapshot �
 - **Status**: Drafted
 - **Phase**: 6
 
-### TC TC-483 (current)
+### TC TC-483 — Drafted, never accepted
+_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
 - **TC-ID**: TC-483
 - **Verifies**: SR-251;LLR-406
 - **Level**: Unit
