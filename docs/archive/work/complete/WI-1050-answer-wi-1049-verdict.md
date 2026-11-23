@@ -163,6 +163,21 @@ unreadable module raised); the header reader without its read guard,
 LLR-244's amendment is F-3's (WI-1023), taken at its merge; the same sitting
 judges it beside LLR-257.
 
+**Review** (the coordinator, 2026-11-22; queue-drill HANDOFF §4 step 4).
+Round 1 over `5d3a7c52c..11f981f61`, the generated views and this spec's
+copies withheld and the spec at the tip given whole, each reviewer told to
+judge every changed row as the third sitting will and given LLR-257's text
+at `468c91fd9` and its accepted text to compare clause by clause. Gemini
+Hydrogen (`gemini-4-hydrogen-low`, the Antigravity CLI) read the prose:
+APPROVE, no findings. OpenAI Sol (`gpt-6.1-sol`, low) read the whole diff:
+one MAJOR and one NIT. The MAJOR (TC-457's `evidence` names a test file and
+function, against the no-code-names rule) is dismissed: `evidence` is the
+generated pointer cell whose content is test node ids by definition
+(`trace.py --regen-evidence` writes it from the test files' tags), and the
+rule the sittings apply covers the prose cells; WI-1049's sitting accepted
+sixteen test cases whose evidence names test functions. The NIT (the log
+fragment said one test module changed; two did) is fixed with this record.
+
 ## Context
 
 Filed on trunk on 2026-11-22 by the queue drill's coordinator, to answer

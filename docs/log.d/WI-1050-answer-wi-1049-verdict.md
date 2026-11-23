@@ -1,6 +1,6 @@
 ## 2026-11-22 — WI-1050: WI-1049's verdict answered: LLR-257 re-amended without code names, TC-457, TC-468 and TC-475 made ready
 
-Deferred open items: none. The row changes spine text and one test module
+Deferred open items: none. The row changes spine text and two test modules
 and takes no operator decision; it needed no decisions record.
 
 Built on the maintenance branch `maint/wi-1050` from `5d3a7c52c`, with the
@@ -35,3 +35,7 @@ commit hooks on. The record is in the row's Deliverable
 - **Acts owed:** LLR-257's amendment, TC-428's and TC-429's `Verifies`
   change, and the first acceptance of TC-457, TC-468 and TC-475, beside
   F-3's LLR-244 amendment.
+- **Review**: round 1, Hydrogen APPROVE; Sol one MAJOR, dismissed (TC-457's
+  generated `evidence` cell names its test by definition; the no-code-names
+  rule covers prose cells) and one NIT, fixed here. The record is in the
+  Deliverable.
