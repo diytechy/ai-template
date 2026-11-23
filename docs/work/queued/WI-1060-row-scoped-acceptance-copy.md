@@ -71,7 +71,12 @@ runs the unfiltered suite before it lands.
 - **Traced cells of rows the act does not name** (links such as
   `verifies`, which need no acceptance and ride today's whole-file copy):
   refreshed with the act, or left for each row's own act. State the choice
-  and why.
+  and why. Today every act's copy refreshes every row's traced cells, the
+  ones routed to adjudication included, since only drift in accepted cells
+  refuses the copy. The choice weighs that against how a routed traced
+  change is found owed. The plan writes its rule into this spec's
+  Done-when, in the three items that name it, before any edit, and the
+  coordinator approves the plan before the build.
 - How a retired row leaves the record, and how a new row enters it.
 - The rows' order and every byte between rows, so the record stays
   diffable against live.
@@ -84,6 +89,13 @@ runs the unfiltered suite before it lands.
   LLR-178, SR-207 and LLR-245 (search for others). Its amendment is text
   only and goes to a sitting; SR-207's is shown to the operator.
 
+**Coverage bound.** The writer's and the checks' promises reach the
+records that supported workflows and the kit's own routes produce: acts
+taken through the snapshot command, with the registries as committed.
+Hand-edited kit-written state (a hand-edited record copy or snapshot stamp)
+is outside them (PROCESS.md §6, "Review threat model"), apart from what the
+Done-when names inside: the laundering attempts the checks must refuse.
+
 **Ordering.** WI-1045 moves `acceptance_record.py`'s landing rules into a
 new module. This row changes the snapshot checks in the same file, so the
 two land one after the other, never side by side.
@@ -92,14 +104,17 @@ two land one after the other, never side by side.
 
 - [ ] An act writes into the record only the rows it names, each copied
       byte for byte from live; every other row of the recorded file keeps
-      its recorded text. A drifted row the act does not name stays drifted,
-      is reported as owed, and no longer refuses the act.
+      its recorded text, apart from what the traced-cell rule refreshes. A
+      drifted row the act does not name stays drifted, is reported as owed,
+      and no longer refuses the act.
 - [ ] The writer re-reads its result and refuses, writing nothing, unless
       the result reads as the previous record with exactly the named rows
-      replaced, plus whatever the plan's traced-cell rule allows.
+      replaced, plus what the traced-cell rule refreshes.
 - [ ] The checks that judge a written record judge it at the row: a record
       written at a commit equals the previous record with exactly that
-      act's named rows taken from live at the commit. Tests show refused,
+      act's named rows taken from live at the commit, plus what the
+      traced-cell rule refreshes. (The traced-cell rule is the one the plan
+      settles and writes into these three items.) Tests show refused,
       at the commit hook and on a committed revision: an unnamed row's
       drift carried in, a named row copied with an edit, and a row dropped
       that no act retired.

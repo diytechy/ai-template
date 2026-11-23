@@ -6,6 +6,7 @@ specref = "docs/reviews/wi-1057-adjudicate-fourth-sitting/001-ADJUDICATE-ca5a7d9
 sr_refs = ["SR-251"]
 needs = []
 buildtier = "medium"
+planmode = "none"
 safety_class = "ordinary"
 priority = 2
 +++
@@ -46,6 +47,13 @@ other rows.
 
 Both rows are `Drafted`, so their text may change freely; neither is an
 amendment.
+
+**Why one row.** SR-251's wording and TC-483's two tests could each land
+alone, but they land together as one branch before the fifth sitting. The
+sitting judges SR-251's chain whole, and LLR-406's held flip waits on that
+chain, so a sitting that saw only one of the two repairs would return the
+chain again. **Planning** is `none`: the wording fix and two precisely
+stated tests specify the whole diff.
 
 ## Done-when
 

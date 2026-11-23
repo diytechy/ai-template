@@ -20,9 +20,12 @@ LLR-406's flip under them. **Start at §0.**
 
 A new coordinator session starts with these steps, in this order.
 
-1. **WI-1058, WI-1059 and WI-1060 owe scope critiques** (§4 step 1; Sol
-   and Hydrogen). The first two were filed `a6d447b76`, and WI-1060 just
-   after (see step 4).
+1. **WI-1058, WI-1059 and WI-1060 are critiqued** (fourth session,
+   2026-11-23; Sol and Hydrogen; records in
+   `docs/reviews/2026-11-23-scope-critiques/`). WI-1058 `planmode = "none"`;
+   WI-1059 `single`, with its held-flip outcomes settled; WI-1060's plan
+   writes its traced-cell rule into the Done-when, and the coordinator
+   approves the plan before any build (operator, 2026-11-23).
    - WI-1058 answers the fourth sitting's two returns: SR-251's event
      trigger fronted in EARS form, and TC-483's two gaps (key insertion
      through the registry writer, multi-node sorted append). It goes before
@@ -1240,3 +1243,11 @@ Append one line per step taken: the item, what happened, the commit.
 - 2026-11-23 (third session, end): the operator pushed through `80d64a5f3`
   and ruled the row-scoped copy filed: WI-1060. `docs/status.md`'s resume
   note now points at §0.
+- 2026-11-23 (fourth session): WI-1058, WI-1059 and WI-1060 critiqued.
+  WI-1058: Sol CHANGES-REQUESTED findings=2, Hydrogen findings=1; both
+  adopted (`planmode = "none"`, one row). WI-1059: Sol findings=4,
+  Hydrogen findings=1; all adopted (`single`, a Trust section, the
+  outcomes settled: a hold chains, an all-held verdict refuses, a held
+  flip stays owed and marked, SR-231 unchanged, LLR-338 amended). WI-1060:
+  Sol findings=2, adopted (the MAJOR in part: one traced-cell contract
+  across Done-when 1 to 3, its rule the plan's); Hydrogen APPROVE.
