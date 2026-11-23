@@ -30,7 +30,7 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 4 chain(s): SR-036, SR-157, SR-221, SR-248</summary>
+<summary>Waiting for automated adjudication — 5 chain(s): SR-036, SR-157, SR-159, SR-221, SR-248</summary>
 
 ## SR-036 — Deliberate re-sync integration
 
@@ -95,6 +95,38 @@ _No cell differs from the accepted snapshot; this row owes because its own `Stat
 - **Evidence**: tests/test_llr_trace_cells.py::test_the_evidence_column_is_generated_from_the_tags
 - **Status**: Drafted
 - **Phase**: 6
+
+## SR-159 — Declared-architecture connectivity gaps are reported
+
+> **Requirement.** The delivered harness shall report declared-architecture connectivity gaps — an unresolvable interface row, an undeclared endpoint or direction, a cross-component import no declared interface covers, an invalid spec interface citation, and a top view past its declared bound — warn-first with --strict gating, vacuous where the optional inventories are absent.
+
+> **Rationale.** Realizes SN-023 (the parts' connections are as much of the truth as the requirement tree, checked mechanically warn-first — the need's own words), SN-002 (interface rows stay resolvable) and SN-012 (opt-out and vacuity keep the layer free for non-users). One row: the delivered contract is one connectivity verdict; the checkers below it are its decomposition.
+
+
+### LLR LLR-398
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: The scan surface exists only when the scan profile is not in its files mode and the declared source root is present; it is then every file under that root of a type the component grammar carries, a README excluded, and every file the scan profile's declared header list names. In files mode, or with the source root absent, there is no surface, so a file the header list names is not read either. Nothing else is read, so a body quoted in a review record, a plan, the approval snapshot or an example document is never counted. At most one file on the surface states each interface's contract body: zero is valid, the row's data cell being the contract's home until code states it, and two or more is one finding naming every file. Where a body exists, its file's component declaration names the row's owner; for a row owned by an external party it names a component the row lists among its consumers or requestors, and any other component, or none, is a finding. A file declaring an interface it states no body for, and a header the contract grammar refuses, are findings too; bodies are read even in a file with no marker, so a body without one is such a refusal, and a listed Python file is read through its docstring as a module is. The findings warn on a plain run and fail under strict checking, and none appear when the process settings turn the interfaces check off or the scan has no surface.
+  - after: The scan surface exists only when the scan profile is not in its files mode and the declared source root is present; it is then every file under that root of a type the component grammar carries, a README excluded, and every file the scan profile's declared header list names. In files mode, or with the source root absent, there is no surface, so a file the header list names is not read either. Nothing else is read, so a body quoted in a review record, a plan, the approval snapshot or an example document is never counted. At most one file on the surface states each interface's contract body: zero is valid, the row's data cell being the contract's home until code states it, and two or more is one finding naming every file. Where a body exists, its file's component declaration names the row's owner; for a row owned by an external party it names a component the row lists among its consumers or requestors, and any other component, or none, is a finding. A file declaring an interface it states no body for, and a header the contract grammar refuses, are findings too; bodies are read even in a file with no marker, so a body without one is such a refusal, and a listed Python file is read through its docstring as a module is. The findings warn on a plain run and fail under strict checking, and none appear when the process settings turn the interfaces check off or the scan has no surface. With the interfaces check on, no surface and at least one interface row, the check reports itself dormant instead: one warning line, on a plain run and under strict checking alike, counts the interface rows whose bodies went unchecked and names files mode or the absent source root as why, and it changes no exit code.
+- **Rationale**
+  - before: Two copies of a contract are two definitions waiting to disagree, and a contract stated in another component's file puts the definition outside the component that answers for it. Counting only the declared surface keeps every quotation of a contract in the record from reading as a second one, and zero bodies stays valid because a new interface is defined by its row before any code exists.
+  - after: Two copies of a contract are two definitions waiting to disagree, and a contract stated in another component's file puts the definition outside the component that answers for it. Counting only the declared surface keeps every quotation of a contract in the record from reading as a second one, and zero bodies stays valid because a new interface is defined by its row before any code exists. Files mode declares source the scan does not parse, so its tree is not read for contract bodies, and with the source root absent there is none to read; holding the listed headers alone to one body per interface would then certify a partial surface, since a header's body could repeat one in source never read. The check says it is dormant rather than passing in silence, so a project that lists headers sees they went unchecked; with no interface row nothing is left unchecked, and the check stays vacuous, as an absent inventory is.
+_traced — routes to adjudication_
+- **TestRefs**
+  - before: TC-463; TC-474
+  - after: TC-463; TC-474; TC-504
+
+### TC TC-504 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-504
+- **Verifies**: SR-159;LLR-398
+- **Level**: Integration
+- **Method**: Over a repository of two components with two interface rows, state the first interface's body in its owner's module and again in a configuration file of the same component that the scan profile's header list names. Run the trajectory check under strict checking with the source root scanned; then, plain and under strict checking, with the scan profile in files mode and with the source root pointed at a directory that does not exist. In files mode, run it under strict checking once more with the interfaces check turned off in the process settings, and once with it on and the interface registry emptied.
+- **Tier**: Full
+- **Expected**: With the source root scanned, the two bodies are an error, the exit is 1 and no dormant line appears. In files mode, and with the source root absent, each run prints one warning line saying the contract bodies of 2 interface rows were not checked and naming files mode or the absent source root as why, no finding about the second body appears, and the exit is 0. With the interfaces check off, or with no interface row, no dormant line appears and the exit is 0.
+- **Automated**: Yes
+- **Status**: Drafted
+- **Phase**: 6
+- **Evidence**: tests/test_trajectory_arch.py::test_with_no_scan_surface_the_body_check_reports_itself_dormant
 
 ## SR-221 — A builder changing a module can list the tests the spine links to it
 

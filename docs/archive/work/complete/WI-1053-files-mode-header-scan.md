@@ -1,0 +1,202 @@
++++
+id = "WI-1053"
+title = "In files mode the one-contract-body check reports itself dormant; LLR-398 says why headers are not scanned alone"
+workstream = "process"
+sr_refs = ["SR-159"]
+needs = []
+specref = ""
+buildtier = "medium"
+safety_class = "ordinary"
+priority = 4
+planmode = "none"
++++
+
+## Deliverable
+
+Built on the maintenance branch `maint/wi-1053`, cut from `refactor_again`
+at `3c33b3783`, with the commit hooks on. No code changed: the dormant
+report already existed, so the build is one new test, LLR-398's text and
+one new test case. One id was minted from the lane's range, TC-504, and
+`trace.py --bump-ids` raised the TC mark to 504. The specref (WI-1048's
+archived spec) is cleared at close, as a terminal row's is. No status moved
+and no act was taken.
+
+- `197cb0fb5`: the test, LLR-398's text, TC-504 and the regenerated views.
+- The commit after it: the close-out, this Deliverable, the move to
+  `complete/` and the log fragment.
+
+**The dormant report already exists; where.** The one-body check's
+companion, `unchecked_contract_rows` in
+`project-trajectory/scripts/arch_interfaces.py`, returns one line when the
+scan has no surface (`_no_surface_reason`: files mode, or the declared
+source root absent): `contract bodies not checked for N IF row(s): <why>`,
+the why reading `[arch-map] mode = files reads no source headers` or
+`the scan root '<src>' is absent`. `check_trajectory.py` prints it as a
+`WARN` in its connectivity loop, which runs on a plain run and under
+`--strict` alike and changes no exit code; the `--strict` findings print
+on the same stream. It is silent with `[checks] interfaces_check = false`
+and with no interface row. The test that pinned it
+(`test_the_rows_the_gate_did_not_judge_are_counted_in_one_warn_line`) is
+untagged, covered files mode at the function only, and no row stated the
+report: LLR-398 said only that no finding appears with no surface.
+
+**Why the zero-row case stays silent.** SR-159 makes the layer "vacuous
+where the optional inventories are absent", and an interface registry with
+no row is such an inventory. Reporting the check dormant there would also
+put a new `WARN` on every scaffold or fixture with no source root yet (for
+one, `tests/test_trajectory.py::test_known_sr_ref_does_not_warn` runs with
+no `[paths] src` and asserts no `WARN`). So the report stays bounded to at
+least one interface row, and the row text says so.
+
+- **Done-when 1** (the dormant report, and a test per case). New test
+  `tests/test_trajectory_arch.py::test_with_no_scan_surface_the_body_check_reports_itself_dormant`,
+  tagged TC-504. Over the gate fixture (two components, two interface
+  rows) it states IF-001's body in its owner's module and again in a
+  listed configuration file of the same component. With the source root
+  scanned in symbols mode, `--strict` exits 1 on `IF IF-001 is stated by 2
+  files` and prints no dormant line. In files mode and with the source
+  root pointed at a directory that does not exist, a plain run and
+  `--strict` each exit 0 and print exactly one dormant line, with the
+  count (2) and that case's reason, and the second body is not reported.
+  In files mode with the interfaces check off, and with the registry
+  emptied, `--strict` exits 0 with no dormant line.
+- **Done-when 2** (LLR-398's text; Accepted, so it drifts). The Detail
+  gains one closing sentence: with the interfaces check on, no surface and
+  at least one interface row, the check reports itself dormant instead;
+  one warning line, on a plain run and under strict checking alike, counts
+  the interface rows whose bodies went unchecked and names files mode or
+  the absent source root as why, and it changes no exit code. The
+  Rationale gains why listed headers are not scanned alone: files mode
+  declares source the scan does not parse, so its tree is not read for
+  contract bodies, and with the source root absent there is none to read;
+  holding the listed headers alone to one body per interface would certify
+  a partial surface, since a header's body could repeat one in source
+  never read. The check says it is dormant rather than passing in silence,
+  and with no interface row it stays vacuous, as an absent inventory is.
+  No code name, file name, flag or symbol is added; every carrier in both
+  cells is the accepted text's own vocabulary ("files mode", "source
+  root", "header list", "strict checking", "interfaces check"). Neither
+  cell exceeds SR-159: the report is warn-only and changes no verdict, and
+  the zero-row silence is SR-159's own vacuity. `test_refs` becomes
+  `TC-463; TC-474; TC-504` (traced).
+- **TC-504** (new, Drafted, Integration, Full; verifies SR-159 and
+  LLR-398): the dormant report alone, with its control (symbols mode, the
+  root present) and its two bounds (the check off, no interface row).
+  Every clause of its Method and Expected is driven by the one test it
+  cites; the Evidence cell was generated by `trace.py --regen-evidence`.
+  TC-463 and TC-474 are untouched: TC-474's "no finding appears" with no
+  surface still holds, the dormant line being a warning and not a finding.
+
+**Red first.** The new test passed on its first run, since the behaviour it
+pins exists. Each mutation below, reverted before any commit, turned it red
+(`1 failed, 169 deselected` each):
+
+- `unchecked_contract_rows` returning nothing when there is no surface
+  (the check passing in silence);
+- `_no_surface_reason` without its absent-root arm (no dormant line with
+  the root absent);
+- `unchecked_contract_rows` without its zero-row return (a line with no
+  interface row);
+- `unchecked_contract_rows` without its interfaces-check opt-out.
+
+**Tests.**
+
+- The module holding the new test and TC-474's
+  (`test_trajectory_arch`), TC-463's (`test_if_owner_component`), the
+  registry readers `test_id_watermark`, `test_id_landing`,
+  `test_cell_classes`, `test_check_test_first`, `test_evidence_join`,
+  `test_parent_first`, `test_trace_coherence`, `test_llr_trace_cells`,
+  `test_rule_sync` and `test_trace_rules`, and the whole-tree tests
+  `test_dogfood_sync`, `test_import_layers` and
+  `test_module_size_ratchet`. No kit module changed, so no importer is
+  owed beyond these:
+  `560 passed, 1 skipped, 18 warnings in 756.10s (0:12:36)`.
+  <!-- fig: cmd="python -m pytest -q -p no:cacheprovider -n 12 --basetemp D:/rt1053/t <the 15 modules listed>" rev="197cb0fb5 (its tree before the commit)" -->
+- `trace.py --root . --strict`: `orphans=0 integrity=0`, `drafts=10`.
+  `check_trajectory.py --root . --strict`: clean. The build commit passed
+  the hook, 29 steps, all PASS; its two LLR-398 warnings are the expected
+  ones (an amended accepted row owes re-acceptance; its Hat-Refs did not
+  move, left so deliberately, since the amendment states a report and
+  changes no perspective the row answers to).
+- The commit checks, `run_menu.py smoke`, once at the end over the
+  close-out tree: `3724 passed, 3 skipped, 18 warnings in 353.32s
+  (0:05:53)`. Its budget line reads CPU 913.3 s against 540, a WARN only,
+  not charged to the lane (the new test sits in a Full-tier module, so the
+  tier's count is unchanged).
+  <!-- fig: cmd="python project-trajectory/scripts/run_menu.py smoke" rev="197cb0fb5 (with the close-out's tree, before its commit)" -->
+- `check_docs.py --root .` after the move: `3647 doc(s), 3825 intra-repo
+  link(s), 0 broken`. No shipped path changed, so no RESYNC entry is owed.
+
+**Byte deltas** (none budgeted or watched):
+`docs/requirements/low-level-requirements.toml` 560,663 -> 561,524 (+861);
+`docs/test/test-cases.toml` 693,595 -> 694,930 (+1,335).
+
+**Acts owed for automated adjudication.**
+
+- Amendment (drifted `Accepted` row): LLR-398, Detail and Rationale.
+- Traced change to an `Accepted` row: LLR-398's `test_refs` gains TC-504
+  (the acceptance brief, `docs/ratify/CURRENT.md`, lists it under "traced,
+  routes to adjudication").
+- First acceptance (`Drafted`): TC-504, verifying SR-159 and LLR-398.
+
+**Found and not changed** (outside this row's scope):
+
+- The dormant line's files-mode reason reads "reads no source headers";
+  a project that lists header files may not read that as covering them.
+  The row text now says the listed headers go unchecked; the message is
+  unchanged, since changing it is a shipped-script change this row did not
+  need.
+- `contract_body_findings`' docstring still says only "Vacuous where there
+  is no surface"; it does not point at the companion report.
+
+**Review** (the coordinator, 2026-11-22; queue-drill HANDOFF §4 step 4).
+Round 1 over `3c33b3783..2696ec3c7`, the generated views and this spec's
+copies withheld and the spec at the tip given whole. Each reviewer was told
+to judge every changed row as an adjudication sitting will (no code name,
+nothing past the parent SR, one obligation with every clause tested), and
+was given SR-159's text. Gemini Hydrogen (`gemini-4-hydrogen-low`, the
+Antigravity CLI) read the prose: APPROVE, no findings. OpenAI Sol
+(`gpt-6.1-sol`, low) read the whole diff: one MINOR, dismissed. It said
+TC-504's `evidence` names a test file and function. That cell is generated
+from the test files' tags (`trace.py --regen-evidence`), so it holds test
+node ids by definition, and the rule the sittings apply covers the prose
+cells (the same finding was dismissed at WI-1050's review).
+
+## Context
+
+Filed on trunk on 2026-11-22 by the queue drill's coordinator, from
+WI-1048's Deliverable ("a question for later"). LLR-398 states what the
+one-body check scans: listed header files join the contract-body surface
+only while the scan profile is not in its files mode and the declared
+source root is present. In files mode, or with the source root absent, there
+is no surface at all, so a configuration file or registry header the scan
+profile lists is not held to one body per interface. The header list exists
+to put such files on the surface, and files mode is the profile of a
+project whose source the symbol scan does not read, so a files-mode adopter
+may expect its listed headers checked. Changing that is a code and row
+change; WI-1048 kept to stating what the code does.
+
+**Settled at the scope critique (2026-11-22), from the repository.**
+`stack.ini.template` documents files mode as the declaration "no Python
+source here", seeded by a non-Python bootstrap, which keeps the
+source-scanning layers "dormant rather than passing vacuously". In files
+mode the source tree is not parsed for contract bodies, so holding only the
+listed headers to one body per interface would certify a partial surface:
+a header's body could repeat one in source the scan never read. So this row
+takes the conservative branch. The check says it is dormant, as the other
+layers files mode keeps dormant do, and the rationale says why. Reading
+contract bodies from a non-Python tree's comment headers would be a feature
+of its own, filed if an adopter asks. The row gives no file authority over
+a hold, an act or a gate.
+
+## Done-when
+
+- [x] In files mode, and with the declared source root absent, the
+      one-contract-body check reports itself dormant where the strict
+      check reports its findings, as the layers files mode keeps dormant
+      do, instead of passing in silence; if it already does, the row cites
+      where. A test covers each of the two cases and the symbols mode with
+      the root present.
+- [x] LLR-398's rationale states why listed headers are not scanned alone
+      in files mode, and any text its detail needs for the dormant report.
+      Its amendment is text only and listed as owed to adjudication.

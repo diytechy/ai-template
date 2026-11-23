@@ -1239,6 +1239,61 @@ def test_the_rows_the_gate_did_not_judge_are_counted_in_one_warn_line(tmp_path):
     assert check_trajectory.contract_body_findings(root) == []
 
 
+def test_with_no_scan_surface_the_body_check_reports_itself_dormant(tmp_path):
+    """With the source root scanned, a listed header's second body is an
+    error under strict checking and no dormant line prints; in files mode,
+    and with the source root absent, one warning line counts the interface
+    rows left unchecked and names why, the second body is not read, and the
+    exit is 0 on a plain run and under strict checking alike; with the
+    interfaces check off, or with no interface row, there is no line.
+
+    Implements: TC-504"""
+    root = _gate_repo(
+        tmp_path, '"""A.\n\nContracts: IF-001\n\nContract IF-001: a states it."""\n'
+    )
+    (root / "docs" / "conf.toml").write_text(
+        "# Component: CMP-001\n#\n# Contracts: IF-001\n#\n"
+        "# Contract IF-001: a second body in a listed header.\n",
+        encoding="utf-8",
+    )
+    stack = root / "docs" / "stack.ini"
+    listed = "[arch-map]\nheaders = docs/conf.toml\n"
+
+    def dormant_lines(proc):
+        return [ln for ln in proc.stderr.splitlines() if "not checked for" in ln]
+
+    files_mode = "[paths]\nsrc = scripts\n" + listed + "mode = files\n"
+    stack.write_text("[paths]\nsrc = scripts\n" + listed, encoding="utf-8")
+    proc = run_traj(root, "--strict")
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "ERROR - IF IF-001 is stated by 2 files" in proc.stderr
+    assert dormant_lines(proc) == []
+    for profile, why in (
+        (files_mode, "[arch-map] mode = files reads no source headers"),
+        ("[paths]\nsrc = absent\n" + listed, "the scan root 'absent' is absent"),
+    ):
+        stack.write_text(profile, encoding="utf-8")
+        for extra in ((), ("--strict",)):
+            proc = run_traj(root, *extra)
+            assert proc.returncode == 0, proc.stdout + proc.stderr
+            assert dormant_lines(proc) == [
+                "check_trajectory: WARN - contract bodies not checked for 2 IF "
+                "row(s): " + why
+            ], proc.stderr
+            assert "stated by 2 files" not in proc.stderr
+    stack.write_text(files_mode, encoding="utf-8")
+    process = root / "docs" / "process.toml"
+    process.write_text("[checks]\ninterfaces_check = false\n", encoding="utf-8")
+    proc = run_traj(root, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert dormant_lines(proc) == [], proc.stderr
+    process.unlink()
+    write_ifs(root, "")
+    proc = run_traj(root, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert dormant_lines(proc) == [], proc.stderr
+
+
 def test_if_tc_allow_malformed_line_is_reported_end_to_end(tmp_path):
     # The same fixture `test_a_bare_addition_past_the_seed_suppresses_nothing`
     # uses, proving the new arm rides the real `main()` wiring at the same
