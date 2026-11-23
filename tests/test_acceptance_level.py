@@ -1439,6 +1439,44 @@ def test_the_needs_file_is_accepted_at_the_needs_rung_by_both_predicates(tmp_pat
     assert ac.operator_accepts(below, "stakeholder-needs") is False
 
 
+# The guard's one exemption table, keyed by file name and the exact stripped
+# line, each with its reviewed reason. A line here assigns the accepted value
+# without writing any registry; the same line in any other file still fails.
+ACCEPTANCE_CELL_WRITER_EXEMPT = {
+    ("adjudicate_act.py", 'dict(row, Status="Accepted")'): (
+        "WI-1059: an in-memory copy of a row read as flipped, so the "
+        "parent-first predicate can be asked about the tree an act would "
+        "leave; the module writes no registry"
+    ),
+}
+
+
+def _acceptance_cell_writers(files):
+    """`["<name>:<line>: <stripped line>"]` for each line of `files`
+    (`(name, text)` pairs) that assigns an accepted value to a maturity-shaped
+    key in running code, less the pairs `ACCEPTANCE_CELL_WRITER_EXEMPT` names."""
+    import re as _re
+
+    # `status = "Accepted"`, `status: "Accepted"`, `["status"] = "Accepted"` and
+    # the TOML line an emitter would write — plus the retired `approval` spelling
+    # and the retired `verified`/`built` CMP words, so a writer cannot be smuggled
+    # in under a name this repo has already stopped using.
+    pat = _re.compile(
+        r"""\b(?:status|approval|state)["'\]]*\s*[:=]\s*"""
+        r"""["'](?:accepted|verified|built|founded)["']""",
+        _re.IGNORECASE,
+    )
+    offenders = []
+    for name, text in files:
+        for n, line in enumerate(text.splitlines(), 1):
+            code = line.split("#", 1)[0]
+            if pat.search(code) and (name, line.strip()) not in (
+                ACCEPTANCE_CELL_WRITER_EXEMPT
+            ):
+                offenders.append("{}:{}: {}".format(name, n, line.strip()))
+    return offenders
+
+
 def test_no_shipped_loop_module_WRITES_an_acceptance_cell():
     """THE GUARD THAT ACTUALLY BITES TODAY (OI-30 D3's writer-side contract).
 
@@ -1459,31 +1497,33 @@ def test_no_shipped_loop_module_WRITES_an_acceptance_cell():
 
     Narrow on purpose: an `approval` word in a comment is documentation (these
     modules are full of it). What is forbidden is ASSIGNING the accepted value to
-    a maturity-shaped key in running code."""
-    import re as _re
-    from pathlib import Path as _Path
-
+    a maturity-shaped key in running code. A line that assigns the accepted value
+    without writing a registry is exempt only by name in
+    `ACCEPTANCE_CELL_WRITER_EXEMPT` (its file and exact line, with the reviewed
+    reason), so any new such line elsewhere still fails."""
     scripts = _Path(__file__).resolve().parents[1] / "project-trajectory" / "scripts"
-    # `status = "Accepted"`, `status: "Accepted"`, `["status"] = "Accepted"` and
-    # the TOML line an emitter would write — plus the retired `approval` spelling
-    # and the retired `verified`/`built` CMP words, so a writer cannot be smuggled
-    # in under a name this repo has already stopped using.
-    pat = _re.compile(
-        r"""\b(?:status|approval|state)["'\]]*\s*[:=]\s*"""
-        r"""["'](?:accepted|verified|built|founded)["']""",
-        _re.IGNORECASE,
+    offenders = _acceptance_cell_writers(
+        (path.name, path.read_text(encoding="utf-8"))
+        for path in sorted(scripts.glob("*.py"))
     )
-    offenders = []
-    for path in sorted(scripts.glob("*.py")):
-        for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-            code = line.split("#", 1)[0]
-            if pat.search(code):
-                offenders.append("{}:{}: {}".format(path.name, n, line.strip()))
     assert not offenders, (
         "a shipped script writes an off-spine `approval` cell — route it through "
         "`agent_common.operator_accepts(docs, registry)` and REFUSE when it "
         "answers True (OI-30 D3):\n" + "\n".join(offenders)
     )
+
+
+def test_the_writer_guards_exemption_is_its_file_and_line_alone():
+    """The exemption is keyed by file name and exact line: the exempt line in
+    any other file, or another accepted-value line in the exempt file, is
+    still an offender."""
+    ((name, line),) = ACCEPTANCE_CELL_WRITER_EXEMPT
+    text = "        {}\n".format(line)
+    assert _acceptance_cell_writers([(name, text)]) == []
+    assert _acceptance_cell_writers([("other.py", text)]) == ["other.py:1: " + line]
+    assert _acceptance_cell_writers([(name, 'row["status"] = "Accepted"\n')]) == [
+        '{}:1: row["status"] = "Accepted"'.format(name)
+    ]
 
 
 def test_the_dispatcher_seam_surfaces_on_EITHER_hold():

@@ -26,23 +26,36 @@ spec) is cleared at close, as a terminal row's is.
 - `42ff50467`: the build: tests, code, rows, Flow 6, the act template's
   notes, the coordinator-cycle recipe, the RESYNC entry, regenerated
   evidence and views.
-- `624c2abd0`: the act's in-memory flip status named once (below, "The
-  writer guard"), and views regenerated.
-- The commit after it: this close-out.
+- `624c2abd0`: a first answer to the writer guard (below), since replaced:
+  the flip status as a named constant, and views regenerated.
+- `b137199a6`: this close-out.
+- The commit after it: the coordinator's correction (below): the literal
+  restored, and the guard's one exemption, by name and reviewed.
 
-**The writer guard: for the coordinator to judge.** The first smoke run on
+**The writer guard: an exemption by name, reviewed.** The first smoke run on
 this branch failed one test, `tests/test_acceptance_level.py::test_no_shipped_loop_module_WRITES_an_acceptance_cell`
 (OI-30 D3's lexical guard that no shipped script assigns an accepted value
 to a status key), on `adjudicate_act.py`'s `dict(row, Status="Accepted")`:
-the line that reads a COPY of a flipped row so the parent-first rule can be
-asked about the tree the act would leave. The module writes no registry. I
-did not change the guard (that would sanction the check), and I did not
-restate the parent walk to avoid the copy (the approved plan reuses the
-rule's one predicate). The status is now one named constant,
-`FLIPPED_STATUS`, whose comment says it is set on in-memory copies only and
-why that is not the writer the guard exists to catch. The guard no longer
-sees the line; that is a judgement the coordinator may overrule, in which
-case the guard would need its own reviewed exemption.
+the line that reads an in-memory COPY of a flipped row so the parent-first
+predicate can be asked about the tree the act would leave. The module writes
+no registry. My first answer (`624c2abd0`) named the status as a constant,
+`FLIPPED_STATUS`; the coordinator rejected it, because the guard's
+`\bstatus` cannot match inside that name (`_` is a word character), so the
+constant blinded the guard rather than answering it. On the coordinator's
+instruction the literal is back on its one line, the constant and its
+comment are gone, and the guard carries one narrow exemption,
+`ACCEPTANCE_CELL_WRITER_EXEMPT`, keyed by file name and the exact stripped
+line (`("adjudicate_act.py", 'dict(row, Status="Accepted")')`) with its
+reason: an in-memory copy, so the parent-first predicate can be asked about
+the tree an act would leave; the module writes no registry. The guard's
+docstring says a line that assigns the accepted value without writing a
+registry is exempt only by name in that table, so any new such line
+elsewhere still fails; the rest of the guard is unchanged. Its scan is
+factored into one helper over `(name, text)` pairs, which the guard and a new
+test, `test_the_writer_guards_exemption_is_its_file_and_line_alone`, both
+call: the exempt line in another file, and another accepted-value line in
+the exempt file, are still offenders. Neither test carries a test-case tag,
+as the guard did not.
 
 **Vocabulary: the spec's "held" is "waits" in everything this row wrote.**
 "Held" already names the held rung in LLR-338 ("held MEANING", "held
@@ -238,6 +251,23 @@ LLR-003 to Drafted`, the line WI-1057's act was refused with.
   yet staged, failed `test_disposition_adoption`'s three repository-walk
   cases on the queued path git still listed; staged, they pass.)
   <!-- fig: cmd="python project-trajectory/scripts/run_menu.py smoke" rev="624c2abd0 (with the close-out's tree staged, before its commit)" -->
+- The coordinator's correction (the exemption by name), on its tree over
+  `b137199a6`. The guard's two tests under two mutants, never committed: the
+  table not honoured fails both, `2 failed, 95 deselected in 0.51s`; the
+  exemption keyed by the line alone fails the narrowness test at its
+  other-file case, `1 failed, 1 passed, 95 deselected in 0.49s`; restored,
+  `2 passed, 95 deselected in 0.46s`. Then the guard's module and both act
+  modules: `192 passed in 138.25s (0:02:18)`.
+  <!-- fig: cmd="python -m pytest -q -p no:cacheprovider --basetemp <scratch> tests/test_acceptance_level.py -k 'WRITES_an_acceptance_cell or exemption_is_its_file'" rev="b137199a6 with the correction's tree, each mutant applied then restored" -->
+  <!-- fig: cmd="python -m pytest -q -p no:cacheprovider -n auto --basetemp <scratch> tests/test_acceptance_level.py tests/test_adjudicate_act.py tests/test_coordinator_act.py" rev="b137199a6 with the correction's tree, before its commit" -->
+- The commit checks after the correction, `run_menu.py smoke`, exit 0, on
+  its staged tree over `b137199a6` (both strict lints, the docs check, the
+  RESYNC check, "OK, 3 shipped path(s) changed; entry anchored at
+  8db60ba58967362a448865c72cf0679a51d3014a", then the smoke tier):
+  `3758 passed, 3 skipped, 18 warnings in 131.16s (0:02:11)`, one more than
+  before (the narrowness test). Budget line: CPU 603.0 s against 540, a WARN
+  only; wall 131.9 s against 600.
+  <!-- fig: cmd="python project-trajectory/scripts/run_menu.py smoke" rev="b137199a6 (with the correction's tree staged, before its commit)" -->
 
 **Byte deltas** (none budgeted or watched), base `8db60ba58` to `42ff50467`:
 `docs/requirements/low-level-requirements.toml` 564,152 -> 564,994 (+842);

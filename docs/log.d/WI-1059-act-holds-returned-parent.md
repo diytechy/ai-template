@@ -35,11 +35,14 @@ in the row's Deliverable
 - **Also:** the act template's notes (its instruction text, slots and
   catalogue digest unchanged; a retained adjudicator drains once), the
   coordinator-cycle recipe in its three copies, and a RESYNC entry.
-- **For the coordinator:** OI-30 D3's lexical writer guard
+- **The writer guard:** OI-30 D3's lexical writer guard
   (`test_acceptance_level`) flagged the derivation's in-memory copy of a
-  flipped row (`Status="Accepted"`); no registry is written. The status is
-  now one named constant with that reason beside it (`624c2abd0`); the guard
-  is unchanged. The Deliverable states it for the coordinator to judge.
+  flipped row (`dict(row, Status="Accepted")`); no registry is written. A
+  first answer named the status as a constant (`624c2abd0`), which blinded
+  the guard; on the coordinator's correction the literal is back and the
+  guard carries one exemption by name, reviewed: its file and exact line,
+  with the reason, so the same line anywhere else still fails. A new test
+  pins that narrowness.
 - **Tests:** nine new tests (T1 to T8 in `test_adjudicate_act`, T9 in
   `test_coordinator_act`), all TC-368. Eight failed on the unchanged code;
   T2, and T6's second half, were shown failing under a mutation. The 55
