@@ -34,7 +34,15 @@ A new coordinator session starts with these steps, in this order.
      LLR-406's flip under its returned parent SR-251, which the hook's
      parent-first step refuses. It may build beside WI-1058.
    Then build WI-1058 and WI-1059, review and merge (§4, §7).
-2. **The fifth adjudication sitting**, once WI-1058 lands. Run it as
+2. **Done in the fourth session:** WI-1058 merged (`1204486b6`), and the
+   fifth sitting, WI-1061, returned SR-251's chain whole (§10). Its
+   follow-up is **WI-1062**: critique it, build, review and merge, then
+   hold the **sixth sitting** over SR-251, LLR-406 and TC-483. It is
+   combined if WI-1059 has merged by then, adding LLR-338's and TC-368's
+   amendments. LLR-406's flip held under WI-1057's verdict is **void**,
+   since WI-1061 returned the same text: never take it from that verdict.
+   The notes below are how the fifth ran. The fifth sitting, once WI-1058
+   lands, was run as
    WI-1057 ran (its Context and Deliverable; §3.7). The scope is computed
    as before (`<scratch>/sit/scope.py` prints `refresh_ledger`'s drifted
    rows and the `Drafted` SR, LLR and TC rows). Expect SR-251 and TC-483
@@ -168,8 +176,8 @@ adjudication sittings by Gemini Neon through `agy` (operator, 2026-11-21;
 
 | Item | What | Wave | Notes |
 |---|---|---|---|
-| WI-1058 | WI-1057's verdict answered: SR-251's EARS trigger, TC-483's two gaps | Next (§0 step 1); before the fifth sitting | Filed `a6d447b76`; owes a scope critique |
-| WI-1059 | A derived act holds back a flip whose parent stays Drafted | Beside WI-1058 | Filed `a6d447b76`; owes a scope critique |
+| WI-1062 | WI-1061's verdict answered: SR-251's chain states its live scope, the keyless condition and an all-or-nothing write | Next; before the sixth sitting | Filed with WI-1061's close; owes a scope critique |
+| WI-1059 | A derived act holds back a flip whose parent stays Drafted | Building (plan `50d4d3fbe` approved) | Critiqued; its LLR-338 and TC-368 amendments go to the sixth sitting if it merges first |
 | WI-1060 | An act's copy writes only the rows it names (the revert loop's fix) | After the fifth sitting, or beside F-4 and F-7; one at a time with WI-1045 | Filed on the operator's ruling; owes a scope critique; runs the unfiltered suite |
 | WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6, §3.4) | F, after the N6 stop | Filed and critiqued (round 1, Sol and Argon, all findings applied, `a57782d59`). Order by `needs`: 1021; 1022; 1023; then 1024 and 1027 (either order); 1025; then 1026, 1028 and 1030; then 1029. Built side by side where `needs` allows, landing one at a time (plan revision 37). F-1 merged (`147fed185`), F-2 merged (`b2b0d9476`), F-3 merged (`4335c1a4d`); next 1024 and 1027 |
 | WI-1016 | A repository can switch off the implementation layer | After F | Re-critiqued once F lands; reverses SR-186, so its amendment is drafted for the operator |
@@ -871,6 +879,22 @@ stops and asks.
   trunk before and after its merge (`235 passed`; `308 passed, 1
   skipped`). Re-run a builder's "fails on the base too" on trunk before
   believing it.
+- **A single-kind sitting's preface differs from a combined one's**
+  (WI-1061). A combined verdict opens each part with its `## <kind>`
+  heading and ends with a `SITTING:` line. A single-kind verdict carries
+  neither: row lines, the hat and stopping-boundary lines, one `OUTCOME:`
+  line. `verdict_refusal` refuses the wrong shape. The preface must ask
+  for the brief's own format. A first-acceptance row's `adjudicates`
+  takes bare ids (`"SR-251"`); the `first-acceptance:` and `amendment:`
+  prefixes belong to combined rows. Amendment tokens for IF-312 and
+  CMP-006 alone leave the amendment section empty, since the brief shows
+  no off-spine row, so the compose refuses.
+- **A later RETURN voids an earlier ACCEPT of the same text** (WI-1061).
+  A first-acceptance act does not check that the row's text is still the
+  text the verdict judged (Flow 6: the coordinator confirms that by hand).
+  So an old verdict's ACCEPT can still derive a flip after a later sitting
+  returned the row, or after its text changed. Take a flip only from the
+  latest verdict that judged the row's current text.
 - **An act commit carries the regenerated views:** the hook's
   `acceptance-fresh` and `open-items` steps refuse a snapshot commit whose
   `docs/ratify/CURRENT.md` and `docs/open-items.html` predate the copy. Run
@@ -1251,3 +1275,16 @@ Append one line per step taken: the item, what happened, the commit.
   flip stays owed and marked, SR-231 unchanged, LLR-338 amended). WI-1060:
   Sol findings=2, adopted (the MAJOR in part: one traced-cell contract
   across Done-when 1 to 3, its rule the plan's); Hydrogen APPROVE.
+- 2026-11-23 (fourth session): WI-1059's plan approved (`50d4d3fbe` on its
+  branch; "waits" for "held", the hook's tier reader made public, a
+  fixpoint over the parent-first findings, SR-231 and LLR-306
+  unamended). WI-1058 built (no plan); review round 1 Sol and Hydrogen
+  APPROVE (bare lines; Sol's log shows it read the code and tests).
+  Merged `1204486b6`, regen `6925769b1`; smoke `3751 passed, 3 skipped`
+  (109 s). The fifth sitting, WI-1061 (filed `c3ab6a8ee`, corrected to a
+  first-acceptance sitting `0385b759e`; Neon 321 s): SR-251, LLR-406 and
+  TC-483 all RETURN (live scope, the keyless condition, an all-or-nothing
+  write). Verdict `bba8aeac3` with two launcher-caused wrapper lines
+  removed (§9), recorded `4e3e9bf4b`; no act owed. Closed with WI-1062
+  filed. Not filed: a standing report of verdicts with waiting flips
+  (WI-1059's plan, noticed, not in scope).
