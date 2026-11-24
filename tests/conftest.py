@@ -453,6 +453,8 @@ SLOW_MODULES = frozenset(
         "test_id_landing",  # a tmp git repo and claimed lane per case driven through the merge slot, a hand squash and check.py; its in-process pins are test_id_carrier's landing and fold-lag cases
         # WI-995: the review test set read from real lanes.
         "test_review_set",  # a tmp git repo and lane per case, a bootstrap in one; its in-process pin is test_review_set_walk
+        # WI-1065: the vocabulary migrator over records the snapshot writer wrote.
+        "test_migrate_vocabulary_record",  # a tmp git repo, snapshot acts and the hook's trace.py integrity step per case; its in-process pin is test_migrate_vocabulary
     }
 )
 
