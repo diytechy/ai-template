@@ -52,7 +52,7 @@ One file is renamed rather than rewritten: the operator's scratchpad at the
 root, `OWNER_SCRATCHPAD.md`  ->  `OPERATOR_SCRATCHPAD.md`. The kit's scripts
 protect it by its current name, so a file left under the earlier one would
 lose that protection without a word. It holds a person's private notes, so
-it is moved and never opened.
+it is moved and never opened: the link walk below passes it by.
 
 One directory is moved: the acceptance record, `docs/archive/last_approved/`
 ->  `docs/archive/last_accepted/`. In its act ledger, `acts.toml`, each
@@ -63,9 +63,27 @@ and a renamed directory writes every copy anyway. That absorbs whatever text
 had moved since the last act, so every accepted cell that differed is named
 in the output, for the operator to read. The record's README keeps its words.
 
-Links into the record follow it: in every Markdown file of the repository, a
-link target that names the record's earlier directory as a whole path segment
-names the current one, so `check_docs` does not report it broken. The link
+THE ROW-BY-ROW RECORD. The copies are written equal to live only while no
+`[[act]]` entry of the ledger carries `kept`. The row-by-row writer records
+that key on every act, and once an entry carries it the kit judges each
+later copy at the row: it must equal the previous copy with only an act's
+named rows taken from live. A copy written equal to live would carry a kept
+row's text into the record with no act, and the hook would refuse the
+commit. So in such a record the record step writes no copy, and a run for
+other files lands past the hook. Such a record that still stores an earlier
+spelling (the earlier directory, an act entry under an earlier key, or a
+copy the registry step would rewrite or cannot prove) refuses the whole run
+before its first step, writing no file anywhere (`record_refusal`): the
+registry step walks the record's copies before the record step runs, and
+respelling the live registries alone would leave live and record in two
+vocabularies. The refusal names each such file and the way back, which is to
+run this script before the record's first row-by-row act. Whether an entry
+carries `kept` is read here as the kit's scripts read it, not imported from
+them; `tests/test_migrate_vocabulary.py` holds the two readings together.
+
+Links into the record follow it: in every Markdown file of the repository
+but the scratchpad, a link target that names the record's earlier directory
+as a whole path segment names the current one, so `check_docs` does not report it broken. The link
 text and every other word of the file stay as written.
 
 A registry is a `.toml` or `.csv` file directly under `docs/requirements/` or
@@ -88,8 +106,9 @@ Contract IF-312: `spellings_owed(root)` for `check_vocab`, which reports what
     a repository still stores in an earlier spelling. The answer is a list of
     lines, one per value owed and one per file that cannot be rewritten
     safely, worded as `--check` words them, with the record's copies left
-    out. It writes nothing. The requestor reports each line unchanged as a
-    finding and adds the fix.
+    out; over a row-by-row record that still stores an earlier spelling,
+    the refusal's lines alone. It writes nothing. The requestor reports each
+    line unchanged as a finding and adds the fix.
 
 Usage:
     python scripts/migrate_vocabulary.py [--root .] [--check]
@@ -1213,10 +1232,13 @@ def record(root, check, copies=True):
     `([what moved], [problem])`. Both names present, or a ledger the line
     edit cannot prove, is a problem, and nothing is touched. With `copies`
     false the copies are left out, so only what the record stores in an
-    earlier spelling is named.
+    earlier spelling is named; they are left out too once an act-ledger entry
+    carries `kept`, since the record is then judged at the row and a copy
+    written equal to live would carry a kept row's text in with no act.
 
     Implements: SR-247, LLR-369
     """
+    copies = copies and _kept_ledger(_ledger_readings(root)) is None
     old, new = (root / d for d in RECORD_DIRS)
     if old.is_dir() and new.exists():
         return [], ["{}: {} exists too; merge the two by hand".format(*RECORD_DIRS)]
@@ -1239,6 +1261,103 @@ def record(root, check, copies=True):
     if not check:
         _write_record(home, new, ledger, owed)
     return done + lines, missing
+
+
+# --- a record that holds a row-by-row act -----------------------------------------
+
+# The act-ledger key the row-by-row writer records on every act, an empty list
+# included. Once an entry carries it, the kit judges each later copy at the
+# row, so this script writes no copy, and refuses a record that still stores
+# an earlier spelling (the module docstring, "THE ROW-BY-ROW RECORD").
+ROW_BY_ROW_KEY = "kept"
+# The re-sync entry whose step a refusal points to.
+_RESYNC_ENTRY = (
+    'RESYNC_PACK.md, "An acceptance act records only the rows it names; a '
+    'drifted row no longer blocks its registry"'
+)
+
+
+def _ledger_readings(root):
+    """`[(repo-relative path, [entry])]`: the act ledger under each name of the
+    record's directory that holds one, with its `[[act]]` entries read as the
+    kit's scripts read them, so a ledger that does not decode or parse as it
+    stands (a byte-order mark included) holds none."""
+    out = []
+    for home in RECORD_DIRS:
+        path = root / home / LEDGER_NAME
+        if not path.is_file():
+            continue
+        try:
+            data = tomllib.loads(path.read_bytes().decode("utf-8"))
+        except (UnicodeDecodeError, tomllib.TOMLDecodeError):
+            data = {}
+        out.append((path.relative_to(root).as_posix(), _ledger_entries(data)))
+    return out
+
+
+def _kept_ledger(readings):
+    """The path of the first ledger in `readings` one of whose entries carries
+    `kept`, or None: the record is then judged row by row."""
+    for rel, entries in readings:
+        if any(ROW_BY_ROW_KEY in entry for entry in entries):
+            return rel
+    return None
+
+
+def _copy_spelling(path):
+    """Why the registry copy at `path` holds an earlier spelling, or `""` when
+    it holds none: the registry step's own rewrite, run without writing, so
+    the reading and the step that would write cannot disagree."""
+    raw = path.read_bytes().decode("utf-8")
+    try:
+        new = _CARRIERS[path.suffix](raw)
+    except Unsafe as exc:
+        return str(exc)
+    return "" if new == raw else "a copy storing an earlier spelling"
+
+
+def _earlier_spellings(root, readings):
+    """One line per file or directory of the record holding an earlier
+    spelling: the record's earlier directory, a ledger whose entries carry an
+    earlier key, and each registry copy under either name of the directory
+    that the registry step would rewrite or cannot prove."""
+    lines = []
+    if (root / RECORD_DIRS[0]).is_dir():
+        lines.append("{}: the record's earlier directory name".format(RECORD_DIRS[0]))
+    for rel, entries in readings:
+        keys = sorted({k for entry in entries for k in entry if k in LEDGER_KEYS})
+        if keys:
+            lines.append("{}: act entries keyed {}".format(rel, ", ".join(keys)))
+    for home in RECORD_DIRS:
+        for _rel, path in _record_copies(root / home):
+            why = _copy_spelling(path)
+            if why:
+                lines.append("{}: {}".format(path.relative_to(root).as_posix(), why))
+    return lines
+
+
+def record_refusal(root):
+    """The lines refusing a run, `[]` when there is none: the record holds a
+    row-by-row act (an act-ledger entry carrying `kept`) and still stores an
+    earlier spelling. One line per file or directory holding one, then one
+    naming the ledger and the way back. It only reads, so a caller that asks
+    before its first step has written nothing when it refuses.
+
+    Implements: SR-247, LLR-369
+    """
+    readings = _ledger_readings(root)
+    ledger = _kept_ledger(readings)
+    found = _earlier_spellings(root, readings) if ledger else []
+    if not found:
+        return []
+    return found + [
+        "{}: an act entry lists the rows an act kept, so the record is judged "
+        "row by row and nothing is written; the migrator rewrites a record "
+        "only before its first row-by-row act ({}): restore the record to "
+        "before that act, run the migrator, then take the act again".format(
+            ledger, _RESYNC_ENTRY
+        )
+    ]
 
 
 # --- links into the moved record -------------------------------------------------
@@ -1275,12 +1394,16 @@ def relink_markdown(text):
 
 
 def _markdown_files(root):
-    """Each `.md` file under `root`, outside hidden folders and `_UNWALKED`."""
+    """Each `.md` file under `root`, outside hidden folders and `_UNWALKED`,
+    the scratchpad at the root excepted under either name: it holds a
+    person's private notes, and is never opened."""
+    pads = {root / name for name in SCRATCHPAD_NAMES}
     for folder, dirs, files in os.walk(root):
         dirs[:] = sorted(d for d in dirs if d[0] != "." and d not in _UNWALKED)
         for name in sorted(files):
-            if name.endswith(".md"):
-                yield Path(folder) / name
+            path = Path(folder) / name
+            if name.endswith(".md") and path not in pads:
+                yield path
 
 
 def links(root, check):
@@ -1332,10 +1455,15 @@ def spellings_owed(root):
     file that cannot be rewritten safely, as `--check` names them, with the
     record's copies left out: a copy that differs from its live registry is
     an amendment awaiting its act, and only a run writes it. `check_vocab.py`
-    reports these lines, so the earlier spellings keep this one home.
+    reports these lines, so the earlier spellings keep this one home. Over a
+    record that holds a row-by-row act and still stores an earlier spelling,
+    the answer is the refusal's lines alone, as a run would print them.
 
     Implements: SR-247, LLR-369
     """
+    refused = record_refusal(root)
+    if refused:
+        return ["acceptance record cannot be rewritten: " + line for line in refused]
     lines = []
     for name, step in STEPS:
         if step is record:
@@ -1349,7 +1477,9 @@ def spellings_owed(root):
 
 def main(argv=None):
     """Rewrite (or, with `--check`, report) every stored value in an earlier
-    spelling; exit 0 when nothing is left to do, else 1.
+    spelling; exit 0 when nothing is left to do, else 1. A record that holds
+    a row-by-row act and still stores an earlier spelling refuses the run
+    before its first step, in both modes, and nothing is written.
 
     Implements: SR-247, LLR-369
     """
@@ -1358,6 +1488,11 @@ def main(argv=None):
     ap.add_argument("--check", action="store_true", help="report what owes the rewrite")
     args = ap.parse_args(argv)
     root = Path(args.root).resolve()
+    refused = record_refusal(root)
+    for line in refused:
+        print("migrate_vocabulary: acceptance record NOT rewritten: " + line)
+    if refused:
+        return 1
     verb = "owes the rewrite" if args.check else "rewritten"
     owed, unsafe = 0, 0
     for name, step in STEPS:

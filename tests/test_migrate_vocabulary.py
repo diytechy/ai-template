@@ -1104,7 +1104,6 @@ def _tree_bytes(root):
     }
 
 
-@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))
 def test_a_row_by_row_record_in_the_current_vocabulary_has_no_copy_written(
     tmp_path, capsys
 ):
@@ -1148,7 +1147,6 @@ LEDGER_READINGS = (
 )
 
 
-@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))
 def test_the_record_is_read_as_row_by_row_as_the_kit_reads_its_ledger(tmp_path):
     """The migrator's reading of the act ledger is its own (it imports nothing
     from the kit), so it is held to the kit's: over each ledger, a copy holding
@@ -1220,7 +1218,6 @@ EARLIER_RECORDS = {
 }
 
 
-@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))
 @pytest.mark.parametrize("case", sorted(EARLIER_RECORDS))
 def test_a_row_by_row_record_storing_an_earlier_spelling_refuses_the_whole_run(
     tmp_path, capsys, case
@@ -1256,7 +1253,6 @@ def test_a_row_by_row_record_storing_an_earlier_spelling_refuses_the_whole_run(
     ], owed
 
 
-@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))
 def test_check_vocab_reports_the_refusal(tmp_path):
     """Implements: TC-427"""
     _row_by_row(tmp_path, copy=COPY_SR)
@@ -1303,7 +1299,6 @@ def test_links_into_the_record_follow_it_and_every_other_word_stays(tmp_path, ca
     assert cached.read_text(encoding="utf-8") == LINKED
 
 
-@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))
 @pytest.mark.parametrize("name", migrate.SCRATCHPAD_NAMES)
 def test_the_links_walk_never_reads_the_scratchpad(tmp_path, monkeypatch, name):
     """The scratchpad holds a person's private notes: the run renames it

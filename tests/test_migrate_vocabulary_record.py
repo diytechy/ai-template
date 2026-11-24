@@ -118,7 +118,6 @@ def _run(root, *flags):
     return migrate.main(["--root", str(root), *flags])
 
 
-@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))
 def test_a_run_after_a_row_by_row_act_lands_past_the_hook_and_the_committed_history(
     tmp_path, capsys
 ):
@@ -179,7 +178,6 @@ def _refused(root, capsys, named):
         assert "before its first row-by-row act" in out, out
 
 
-@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))
 def test_a_record_seeded_over_an_earlier_status_refuses_and_writes_nothing(
     tmp_path, capsys
 ):
@@ -203,7 +201,6 @@ def test_a_record_seeded_over_an_earlier_status_refuses_and_writes_nothing(
     assert CT.committed_snapshot_findings(root) == []
 
 
-@pytest.mark.xfail(strict=True, raises=(AssertionError, pytest.fail.Exception))
 def test_a_record_seeded_beside_its_earlier_directory_refuses_and_writes_nothing(
     tmp_path, capsys
 ):

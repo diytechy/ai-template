@@ -578,7 +578,7 @@ _Convert the requirement registries from their `.md` + `.csv` carriers to one_
 ### `scripts/migrate_vocabulary`
 _Rewrite a repository's stored values from the kit's earlier vocabulary to_
 
-**IF-312** — `spellings_owed(root)` for `check_vocab`, which reports what a repository still stores in an earlier spelling. The answer is a list of lines, one per value owed and one per file that cannot be rewritten safely, worded as `--check` words them, with the record's copies left out. It writes nothing. The requestor reports each line unchanged as a finding and adds the fix.
+**IF-312** — `spellings_owed(root)` for `check_vocab`, which reports what a repository still stores in an earlier spelling. The answer is a list of lines, one per value owed and one per file that cannot be rewritten safely, worded as `--check` words them, with the record's copies left out; over a row-by-row record that still stores an earlier spelling, the refusal's lines alone. It writes nothing. The requestor reports each line unchanged as a finding and adds the fix.
 
 ### `scripts/observation_cadence`
 _Observation cadence: closed-work history and declared checkpoint triggers._

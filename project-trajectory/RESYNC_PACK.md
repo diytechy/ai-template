@@ -12650,6 +12650,45 @@ To decompose a row, write each child with `parent = "LLR-###"` and no
 
 **Project-owned files — edit:** none.
 
+### The vocabulary migrator writes no record copy once the record holds a row-by-row act, and refuses a run while that record keeps an earlier spelling [since c7d6bd6f4]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** `migrate_vocabulary.py` now reads the acceptance record's
+act ledger before any step. While no entry carries `kept` (a record from
+before your first act on the row-by-row writer), it behaves as before: it
+moves the record, respells the ledger and writes each copy equal to live.
+Once an entry carries `kept`, an empty list included, the record is judged
+at the row, and a copy written equal to live would carry a kept row's text
+in with no act, which the hook refuses. So, if the record is in the current
+vocabulary (`docs/archive/last_accepted/`, ledger keys `accepted` and
+`reaccepted`, no earlier spelling in a copy), the record step writes no copy:
+`--check` no longer reports a kept or drifted row as owed, and a run for your
+other files leaves the record as it is, so its commit passes the hook. If the
+record still stores an earlier spelling (`docs/archive/last_approved/`
+present, an entry keyed `approved` or `reattested`, or a copy holding one),
+the migrator refuses the whole run before writing anything, names each file
+holding one and the ledger, and exits 1, `--check` included;
+`check_vocab.py` reports the refusal (`spellings_owed`). It refuses the whole
+run rather than only the record's files, because respelling the live
+registries beside an unrespelled record would leave the two in different
+vocabularies. Separately, the Markdown link walk no longer reads your
+`OPERATOR_SCRATCHPAD.md` (or the file under its earlier name): it used to
+read it, and could rewrite a link in it, on every run and every
+`check_vocab.py` run.
+
+**What to do.** Nothing, if you ran the migrator before your first act on
+this kit, as the entry "An acceptance act records only the rows it names; a
+drifted row no longer blocks its registry" asks. If it refuses: return the
+record to its state before the first act whose ledger entry carries `kept`
+(for a record the snapshot command seeded over an unmigrated repository,
+remove that seeded `docs/archive/last_accepted/` so the earlier record
+stands alone), run the migrator, then take again the acts taken since.
+
+**Kit-owned files — overwrite:** `scripts/migrate_vocabulary.py`.
+
+**Project-owned files — edit:** none.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
