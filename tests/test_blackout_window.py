@@ -548,8 +548,12 @@ QUOTED_ALLOWED = [
 ]
 UNREADABLE = [
     ("echo 'unbalanced; claude -p x", "Bash"),
+    ('echo "unbalanced; claude -p x', "Bash"),
+    ("echo $'unbalanced; claude -p x", "Bash"),
+    ("echo `claude -p x", "Bash"),
     ('echo "$(claude -p x"', "Bash"),
     ("Write-Output 'unbalanced", "PowerShell"),
+    ("git commit -m @'\nno end; claude -p x", "PowerShell"),
 ]
 
 
@@ -701,7 +705,7 @@ def test_a_tool_outside_the_matcher_hears_the_close_down_after_the_call(root, ev
 
 
 def test_the_window_check_subcommand_exits_nonzero_inside(root, clock, capsys):
-    """Implements: TC-318, TC-340"""
+    """Implements: TC-318, TC-339, TC-340"""
     assert guard.main(["--root", str(root), "window-check"]) == 1
     assert "blackout window" in capsys.readouterr().err
     clock(AFTER)

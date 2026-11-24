@@ -320,35 +320,76 @@ def _git(root, *args):
     return proc.stdout.strip()
 
 
-def test_a_constrains_change_on_an_accepted_row_is_a_routed_amendment(tmp_path):
-    """Implements: TC-530"""
-    root = _project(
-        tmp_path, {"LLR-001": _llr()}, {"TC-001": _tc(["SR-001", "LLR-001"])}
-    )
+def _two_ranges(tmp_path):
+    """A project committed three times: the requirement and the first design
+    row accepted with no constrains cell and the second constraining IF-001;
+    then a constrains cell alone added to the requirement and the first design
+    row; then a dimensions and an out-of-domain cell alone added to the second.
+    Returns the root and the three commits."""
+    tcs = {"TC-001": _tc(["SR-001", "LLR-001", "LLR-002"])}
+    llr2 = _llr(constrains=["IF-001"])
+    root = _project(tmp_path, {"LLR-001": _llr(), "LLR-002": llr2}, tcs)
     _git(root, "init", "-q")
     _git(root, "config", "user.email", "t@example.invalid")
     _git(root, "config", "user.name", "t")
     _git(root, "config", "core.autocrlf", "false")
-    _git(root, "add", "-A")
-    _git(root, "commit", "-qm", "before")
-    before = _git(root, "rev-parse", "HEAD")
-    _project(
-        root,
-        {"LLR-001": _llr(constrains=["IF-001"], dimensions="a=bool")},
-        {"TC-001": _tc(["SR-001", "LLR-001"])},
-    )
-    _git(root, "add", "-A")
-    _git(root, "commit", "-qm", "after")
-    after = _git(root, "rev-parse", "HEAD")
-    records = acceptance_record.staged_spine_amendments(root, before, after)
-    (rec,) = [r for r in records if r["id"] == "LLR-001"]
-    # The pointer moves no accepted text; its companion amends it.
-    assert set(rec["traced"]) == {"Constrains"}
-    assert set(rec["accepted"]) == {"Dimensions"}
-    routed, refusal = intake._routed_amendments(root, before, after)
+    commits = []
+
+    def commit(message):
+        _git(root, "add", "-A")
+        _git(root, "commit", "-qm", message)
+        commits.append(_git(root, "rev-parse", "HEAD"))
+
+    commit("accepted")
+    llrs = {"LLR-001": _llr(constrains=["IF-001"]), "LLR-002": llr2}
+    srs = {"SR-001": dict(SR, constrains=["IF-002"])}
+    _project(root, llrs, tcs, srs=srs)
+    commit("constrains alone")
+    companions = {"dimensions": "a=bool", "out_of_domain": "A negative is refused."}
+    llrs["LLR-002"] = dict(llr2, **companions)
+    _project(root, llrs, tcs, srs=srs)
+    commit("companions alone")
+    return root, commits
+
+
+def test_a_constrains_only_change_routes_with_no_accepted_cell_moved(tmp_path):
+    """Implements: TC-530"""
+    root, (accepted, constrained, _companions) = _two_ranges(tmp_path)
+    records = acceptance_record.staged_spine_amendments(root, accepted, constrained)
+    by_id = {r["id"]: r for r in records}
+    assert set(by_id) == {"SR-001", "LLR-001"}
+    for rec in by_id.values():
+        # The pointer moves no accepted text, on either tier.
+        assert set(rec["traced"]) == {"Constrains"} and not rec["accepted"], rec
+    routed, refusal = intake._routed_amendments(root, accepted, constrained)
     assert refusal is None
-    (minted,) = [r for r in routed if r["id"] == "LLR-001"]
-    assert set(minted["routed"]) == {"Constrains"}
+    assert {r["id"]: set(r["routed"]) for r in routed} == {
+        "SR-001": {"Constrains"},
+        "LLR-001": {"Constrains"},
+    }
+    drafts, refusal = intake._amendment_drafts(root, accepted, constrained)
+    assert refusal is None
+    (draft,) = drafts
+    assert draft["kind"] == "adjudication"
+    assert draft["adjudicates"] == ["LLR-001", "SR-001"]
+
+
+def test_a_companion_cell_change_amends_accepted_text_alone(tmp_path):
+    """Implements: TC-530"""
+    root, (_accepted, constrained, companions) = _two_ranges(tmp_path)
+    records = acceptance_record.staged_spine_amendments(root, constrained, companions)
+    (rec,) = records
+    assert rec["id"] == "LLR-002"
+    assert set(rec["accepted"]) == {"Dimensions", "OutOfDomain"}
+    assert not rec["traced"], rec
+    routed, refusal = intake._routed_amendments(root, constrained, companions)
+    assert refusal is None
+    (minted,) = routed
+    assert minted["id"] == "LLR-002" and not minted["routed"]
+    drafts, refusal = intake._amendment_drafts(root, constrained, companions)
+    assert refusal is None
+    (draft,) = drafts
+    assert draft["adjudicates"] == ["LLR-002"]
 
 
 # --- LLR-421: interface coverage, warn-first --------------------------------
