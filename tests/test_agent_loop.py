@@ -1474,6 +1474,7 @@ def test_model_map_entry_without_equals_fails_preflight(loop_repo):
 
 
 def test_model_placeholder_without_model_fails_preflight(loop_repo):
+    """Implements: TC-588"""
     # A template carrying {model} with NO model configured (no --model /
     # --model-map / AGENT_MODEL) must exit EXIT_PREFLIGHT naming the missing model.
     # preflight() accepts the launchable template, so the mid-loop guard is what
@@ -1512,6 +1513,7 @@ def test_model_placeholder_without_model_fails_preflight(loop_repo):
     ],
 )
 def test_model_dial_precedence(loop_repo, monkeypatch, env_model, cli_model, expected):
+    """Implements: TC-588"""
     # IF-068 end-to-end through the real worker path (the fake agent records the
     # {model} it was handed): CLI flag > AGENT_MODEL env > docs/stack.ini
     # [agent-loop] model > built-in default. A fresh loop_repo per case keeps the

@@ -355,6 +355,7 @@ def test_extra_step_bad_gate_and_layer_fail_loudly(scaffold):
 
 
 def test_reference_profile_declares_only_the_readability_step():
+    """Implements: TC-249"""
     # The shipped stack.ini's [step:] examples are COMMENTED, so the reference
     # profile still equals the built-in plan (guards the byte-identity contract
     # above against a stray uncommented example line). Its one active step is
@@ -390,6 +391,7 @@ def test_run_step_format_passes_clean_and_fails_unformatted(scaffold):
 
 
 def test_run_step_missing_tool_is_skip_not_block(scaffold):
+    """Implements: TC-006"""
     # The hook must not wedge a not-yet-set-up repo: a missing format tool is
     # SKIP (exit 0), so the commit proceeds. A real failure (above) still blocks.
     (scaffold / "docs" / "stack.ini").write_text(
@@ -401,6 +403,7 @@ def test_run_step_missing_tool_is_skip_not_block(scaffold):
 
 
 def test_run_step_unknown_name_errors(scaffold):
+    """Implements: TC-006"""
     proc = run_py(["scripts/check.py", "--run-step", "no-such-step"], cwd=scaffold)
     assert proc.returncode != 0
     assert "no step named" in (proc.stdout + proc.stderr)

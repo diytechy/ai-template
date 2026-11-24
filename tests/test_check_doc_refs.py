@@ -8,7 +8,9 @@ cleanly without a module-map inventory. Exercised over temp repos.
 Implements: TC-041
 """
 
-from conftest import SCRIPTS, run_py
+import configparser
+
+from conftest import ROOT, SCRIPTS, run_py
 
 # The sym: oracle scans the source AST under the default `[paths] src` root
 # (WI-455 — the committed architecture.md map it once parsed is retired), so
@@ -80,6 +82,35 @@ def test_path_ok_line_is_exempt(tmp_path):
     )
     proc = refs(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_a_generated_marker_block_is_skipped(tmp_path):
+    # A generated block's freshness is its generator's to check, so a dangling
+    # path inside one is not judged; the same token outside the block gates.
+    block = (
+        "<!-- BEGIN GENERATED MAP -->\n"
+        "Built from `scripts/never-here.py`.\n"
+        "<!-- END GENERATED MAP -->\n"
+    )
+    make_repo(tmp_path, block)
+    proc = refs(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "scripts/never-here.py" not in proc.stderr
+    make_repo(tmp_path, block + "Also `scripts/never-here.py`.\n")
+    assert refs(tmp_path, "--strict").returncode == 1
+
+
+def test_the_reference_check_is_a_harness_step_from_devstg_impl_beside_figures():
+    # This repository's stack profile declares the reference check as a project
+    # step run from DevStg-Impl, beside the figure-provenance step.
+    profile = configparser.ConfigParser(interpolation=None)
+    profile.read(ROOT / "docs" / "stack.ini", encoding="utf-8")
+    refs_step = profile["step:doc-refs"]
+    assert "check_doc_refs.py" in refs_step["command"], refs_step["command"]
+    assert refs_step["from-stage"].strip() == "DevStg-Impl"
+    figures = profile["step:figures"]
+    assert "check_figures.py" in figures["command"], figures["command"]
+    assert figures["from-stage"].strip() == "DevStg-Impl"
 
 
 def test_dangling_symbol_is_flagged_against_the_inventory(tmp_path):

@@ -400,6 +400,7 @@ def test_compose_session_prompt_guardrails_missing_core_warns_once(tmp_path, cap
 
 
 def test_read_agent_loop_config_reads_declared_dials(tmp_path):
+    """Implements: TC-588"""
     al = load_script("agent_loop")
     docs = tmp_path / "docs"
     docs.mkdir()
@@ -422,6 +423,7 @@ def test_read_agent_loop_config_reads_declared_dials(tmp_path):
 
 
 def test_resolve_coordinator_dials_precedence(tmp_path):
+    """Implements: TC-588"""
     # (The jobs dial retired with the parallel dispatcher at Phase 5; a
     # declared [agent-loop] jobs value is read but ignored.)
     al = load_script("agent_loop")
@@ -454,6 +456,32 @@ def test_resolve_coordinator_dials_precedence(tmp_path):
         _os.environ.pop("AGENT_MODEL", None)
     # No declared file + nothing else -> the built-in defaults.
     assert al.resolve_coordinator_dials(Args(), tmp_path / "nodocs") == ("", "")
+
+
+def test_the_model_map_resolves_from_the_command_line_then_environment_then_profile(
+    tmp_path, monkeypatch
+):
+    """The per-phase model map takes the model tier's order: the command line,
+    else its environment slot, else the stack profile's declared map.
+
+    Implements: TC-588"""
+    al = load_script("agent_loop")
+
+    class Args:  # a stand-in for the argparse namespace (only the dial fields)
+        def __init__(self, model_map=None):
+            self.model, self.model_map = None, model_map
+
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    (docs / "stack.ini").write_text(
+        "[agent-loop]\nmodel-map = PLAN=declared\n", encoding="utf-8"
+    )
+    monkeypatch.delenv("AGENT_MODEL", raising=False)
+    monkeypatch.delenv("AGENT_MODEL_MAP", raising=False)
+    assert al.resolve_coordinator_dials(Args(), docs)[1] == "PLAN=declared"
+    monkeypatch.setenv("AGENT_MODEL_MAP", "PLAN=env")
+    assert al.resolve_coordinator_dials(Args(), docs)[1] == "PLAN=env"
+    assert al.resolve_coordinator_dials(Args("PLAN=cli"), docs)[1] == "PLAN=cli"
 
 
 # --- WI-080 Slice D/E: the PURE main()-seam units -----------------------------

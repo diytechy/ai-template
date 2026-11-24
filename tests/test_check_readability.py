@@ -349,3 +349,20 @@ def test_an_undeclared_gating_name_is_reported_by_name_and_exits_zero(
     named = [line for line in lines if "'notes'" in line]
     assert len(named) == 1 and "gating" in named[0], lines
     assert len(worsening_lines(lines)) == 1, lines
+
+
+def test_the_stack_profile_contract_names_the_readability_section():
+    # The stack profile's contract states the section the report reads, and
+    # the shipped profile declares it, so an adopter finds the measures where
+    # the report looks for them.
+    root = SCRIPTS.parent.parent
+    lines = (root / "docs" / "stack.ini").read_text(encoding="utf-8").splitlines()
+    start = next(i for i, ln in enumerate(lines) if ln.startswith("# Contract IF-022:"))
+    contract = []
+    for ln in lines[start:]:
+        if not ln.startswith("#") or ln.strip() == "#":
+            break
+        contract.append(ln)
+    assert any("`[readability]`" in ln for ln in contract), contract
+    template = (SCRIPTS.parent / "stack.ini.template").read_text(encoding="utf-8")
+    assert "\n[readability]\n" in template

@@ -30,7 +30,87 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 25 chain(s): SR-010, SR-017, SR-022, SR-024, SR-026, SR-032, SR-033, SR-035, SR-046, SR-049, SR-070, SR-112, SR-144, SR-146, SR-148, SR-157, SR-158, SR-168, SR-170, SR-178, SR-208, SR-218, SR-224, SR-229, SR-238</summary>
+<summary>Waiting for automated adjudication — 39 chain(s): SR-006, SR-007, SR-010, SR-017, SR-018, SR-019, SR-020, SR-022, SR-024, SR-026, SR-031, SR-032, SR-033, SR-035, SR-040, SR-043, SR-046, SR-049, SR-070, SR-112, SR-144, SR-146, SR-148, SR-150, SR-157, SR-158, SR-167, SR-168, SR-170, SR-178, SR-205, SR-208, SR-209, SR-216, SR-217, SR-218, SR-224, SR-229, SR-238</summary>
+
+## SR-006 — Gate/tier harness enforces required steps
+
+> **Requirement.** The delivered harness shall run the required steps of the gate that must next be passed (the strictness selector cached in docs/stage) and fail that gate when a required tool is missing, reporting SKIP(missing) rather than silently passing — and, on a claimed work branch (one whose history holds a docs/work/active/<branch>/ claim), SKIP its generated-artifact freshness steps with a stated trunk-lane reason, generated artifacts being trunk-only, while every non-freshness step still runs.
+
+> **Rationale.** Realizes SN-004 (gates enforce their stage's checks), SN-008 (no false pass) and the dissolved edge expectation that a missing tool fails, never skips. A sanctioned SKIP class of this harness's own step plan is not a second crossing observable, it is the same one qualified. The skip is not a weakening: a work branch cannot commit generated artifacts at all (concurrency-restructure §5.2), so demanding their freshness there would force the very conflict the rule deletes; the skip is reported, never silent, and any signal ambiguity resolves toward the full trunk checks.
+
+
+### LLR LLR-006
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: Builds the required-step plan per gate/tier and reports SKIP(missing) with a nonzero exit when a required tool is absent; the plan listing still names every step. The work-branch lane skip is LLR-141, which decomposes from this same row.
+  - after: Builds the required-step plan per gate and tier and reports SKIP(missing) with a nonzero exit when a required tool is absent; the plan listing still names every step. A gate run reports each step's result and exits 0, ending on its RESULT: PASS line, when no step fails, and nonzero, ending on its RESULT: FAIL line, when any step fails. Run over named steps, as the commit floor runs it, each named step runs leniently: its result is reported, a missing tool reads as a SKIP that does not fail the run, the run exits nonzero when any named step fails and 0 otherwise, and a name no step carries fails the run naming it. The work-branch lane skip is LLR-141, which decomposes from this same row.
+_adjudicated link — goes to a sitting_
+- **Constrains**
+  - before: (empty)
+  - after: IF-013;IF-040
+
+### LLR LLR-014
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: Compares measured metrics (docs/test/perf-metrics.json) to declared budgets and the committed baseline (docs/test/perf-baseline.json) and fails beyond tolerance at the row's block/warn level; --update-baseline is the reviewed acceptance path for an intended regression. The step is wired into the harness at DevStg-Impl, per its declared gates in docs/stack.ini.
+  - after: Compares the measured metrics to the declared budgets and the committed baseline and fails beyond tolerance at the row's block or warn level; the baseline update is the reviewed acceptance path for an intended regression. Each budget that is not clean prints a line naming its status and its budget id, a fail-level budget with no measurement this run reported by name as a skip rather than passing in silence; the run prints an OK or FAIL summary, a project with no budget rows printing an OK line saying so and budgets with no metrics file a SKIP line. A comparison exits 1 only when an in-tier budget fails, and 0 for every other outcome, warnings and skips included. A run that reaches a comparison writes the performance report, naming each failing budget's reason. The step is wired into the harness at DevStg-Impl, per its declared gates in the stack profile.
+_adjudicated link — goes to a sitting_
+- **Constrains**
+  - before: (empty)
+  - after: IF-004;IF-147;IF-167
+
+### LLR LLR-016
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: Walks the AST for stub bodies (pass-only/NotImplemented/ellipsis public functions) at the declared gate. A detected stub fails the run; clean source passes.
+  - after: Walks the syntax tree, at the declared gate, for public functions whose body is only a pass statement, only raises the not-implemented error, or is only an ellipsis. Under its strict mode a detected stub fails the run with exit 1; without it each stub prints a warning line and the run exits 0. Clean source passes.
+_adjudicated link — goes to a sitting_
+- **Constrains**
+  - before: (empty)
+  - after: IF-006
+
+### LLR LLR-098
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: Reads the docs/coverage-floors census (module + min percent; blank and # lines ignored) and coverage.py's JSON report (per-file percent_covered, path-normalized), fails on any module below its floor or absent from the report, SKIPs when the report is absent, is a no-op with an empty census, and fails loudly on a malformed floor line. A failure names the offending module, and all floors holding exits 0 — the per-module floor is what keeps the global aggregate from hiding a thin high-risk module.
+  - after: Reads the declared per-module coverage census (a module path and its minimum percent per line, blank and comment lines ignored) and the coverage tool's JSON report (each file's covered percentage, its path normalized), fails on any module below its floor or absent from the report, SKIPs when the report is absent, is a no-op with an empty census, and fails loudly on a malformed floor line. A failure names the offending module and exits 1, and all floors holding exits 0 — the per-module floor is what keeps the global aggregate from hiding a thin high-risk module.
+_adjudicated link — goes to a sitting_
+- **Constrains**
+  - before: (empty)
+  - after: IF-069;IF-070
+
+### LLR LLR-291
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: A step's optional paths key is a comma/whitespace-separated list of repo-relative case-sensitive fnmatch patterns, where * spans /. Selection is at or above from-stage OR a matching changed path. Staged paths take precedence; with an empty index a claimed lane uses its integration base to HEAD. Failed or empty change reads run all path-declaring steps. Deletions and both rename sides count. Blank or absent paths preserves rung-only selection. The hook invokes --path-triggered, which runs only path-declaring steps except smoke selected by that same rule; smoke stays in the manually run commit checks and remains rung- or path-selected at ordinary gates. The per-stack declaration includes the sensor baseline, script and config.
+  - after: A step's optional declared paths are a comma- or whitespace-separated list of repository-relative, case-sensitive shell-style patterns, where * spans a directory separator. Selection is at or above the step's declared starting rung OR a matching changed path. Staged paths take precedence; with an empty index a claimed lane uses its integration base to its tip. Failed or empty change reads run all path-declaring steps. Deletions and both rename sides count. Blank or absent paths preserve rung-only selection. The commit hook invokes the harness's path-triggered mode, which runs only the path-declaring steps but smoke selected by that same rule; smoke stays in the manually run commit checks and remains rung- or path-selected at ordinary gates. The per-stack declaration includes the sensor baseline, script and config.
+_adjudicated link — goes to a sitting_
+- **Constrains**
+  - before: (empty)
+  - after: IF-267
+
+### TC TC-006
+_other trace cell — owes no act_
+- **Evidence**
+  - before: tests/test_check_harness.py
+  - after: tests/test_check_harness.py; tests/test_stack_profile.py::test_run_step_missing_tool_is_skip_not_block; tests/test_stack_profile.py::test_run_step_unknown_name_errors
+
+## SR-007 — Declared stack profile, refused when it is broken
+
+> **Requirement.** The delivered harness shall read the toolchain (format/lint/test commands, tiers, coverage, arch-map mode) from the declared stack profile so a stack swap edits only that declaration, failing loudly on a malformed profile or a non-integer coverage threshold rather than proceeding on a bad one.
+
+> **Rationale.** Realizes SN-003 — the kit is stack-agnostic; the harness is re-pointed by declaration, not by editing a kit script. Reading a declaration and REFUSING a broken one are one obligation, not two: a reader that proceeds on a malformed profile has not read it. A MISSING DECLARED BINARY is deliberately no part of it — SR-006 already states that verbatim as its own ("fail that gate when a required tool is missing"), which is why LLR-008 decomposes from both rows rather than one.
+
+
+### LLR LLR-007
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: Reads format/lint/test/tiers/coverage/arch-map from docs/stack.ini and resolves each step's command from that profile.
+  - after: Reads the format, lint and test commands, the tier selectors, the coverage settings and the architecture-map mode from the declared stack profile and resolves each step's command from that profile. A project step the profile declares joins the plan with its command, from the stage it names, and an absent profile, section or key falls back to the harness's built-in reference.
+_adjudicated link — goes to a sitting_
+- **Constrains**
+  - before: (empty)
+  - after: IF-022
 
 ## SR-010 — Scaffold passes out of the box
 
@@ -61,6 +141,89 @@ _adjudicated link — goes to a sitting_
 - **Constrains**
   - before: (empty)
   - after: IF-032
+
+### LLR LLR-493 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-493
+- **SR-Refs**: SR-017;SR-018
+- **Title**: The privacy scan names each leak by its location and class, and its exit code reports whether it found one
+- **Detail**: Each leak the privacy scan finds, in the staged diff, a commit message, an outgoing commit range or the sweep over the tracked files, prints on its own line naming its location (a tracked file's path and line, or the commit) and its class label, and the run then prints one summary line counting the findings and naming the scan and the layers that ran; a clean run prints one clean line naming the scan and the layers. With both layers off it scans nothing, says so and exits 0. A scan it runs exits 1 when it printed a finding and 0 when it found none.
+- **Rationale**: The hooks and the harness step read the scan's verdict from its exit code alone, and a person reads the lines to find the leak; naming the layers that ran keeps a run with a layer off from reading as a clean one.
+- **TestRefs**: TC-586
+- **Status**: Drafted
+- **Phase**: 6
+- **Constrains**: IF-005;IF-043;IF-148
+
+### TC TC-586 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-586
+- **Verifies**: SR-017;SR-018;LLR-493
+- **Level**: Integration
+- **Method**: Seed a private key in a tracked file and sweep the tracked files; seed it in an outgoing commit and scan the range; seed a home directory path in a commit message with the privacy layer on and scan the range; sweep a clean scaffold with the privacy layer on, then seed a leak and sweep again; and scan with both layers off.
+- **Tier**: Full
+- **Expected**: Each leak prints on its own line naming its location, the tracked file's path and line or the commit, and its class label, and the run exits 1; the clean sweep prints one clean line naming the scan and both layers and exits 0, and the seeded sweep's summary counts its finding and names the same layers; with both layers off nothing is scanned, the run says so and exits 0.
+- **Automated**: Yes
+- **Status**: Drafted
+- **Phase**: 6
+- **Evidence**: tests/test_check_privacy.py::test_a_sweep_names_the_scan_and_the_layers_that_ran_clean_or_not; tests/test_check_privacy.py::test_range_mode_catches_history_and_messages; tests/test_check_privacy.py::test_repo_sweep_fresh_scaffold_passes_then_seeded_leak_fails; tests/test_check_privacy.py::test_secrets_floor_in_repo_and_range_modes_with_privacy_off; tests/test_check_privacy.py::test_secrets_floor_runs_with_privacy_off; tests/test_check_privacy.py::test_secrets_scan_off_opts_out
+
+## SR-018 — Privacy gate two-axis
+
+> **Requirement.** When the declared privacy_check dial is on, the system shall additionally refuse, at the same hook floor, a commit or push carrying a PII/identity class — exempting configured author identities.
+
+> **Rationale.** Realizes SN-009 — identity and PII classes are a policy choice a repo makes about its own contributors, unlike a leaked credential, which is a defect in every repo. Making them always-on was rejected because the exemption list they need is project-specific: a repo that has not declared its author identities would have the layer firing on its own commit metadata, and the fix would be to silence the scanner rather than to configure it.
+
+
+### LLR LLR-493 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-493
+- **SR-Refs**: SR-017;SR-018
+- **Title**: The privacy scan names each leak by its location and class, and its exit code reports whether it found one
+- **Detail**: Each leak the privacy scan finds, in the staged diff, a commit message, an outgoing commit range or the sweep over the tracked files, prints on its own line naming its location (a tracked file's path and line, or the commit) and its class label, and the run then prints one summary line counting the findings and naming the scan and the layers that ran; a clean run prints one clean line naming the scan and the layers. With both layers off it scans nothing, says so and exits 0. A scan it runs exits 1 when it printed a finding and 0 when it found none.
+- **Rationale**: The hooks and the harness step read the scan's verdict from its exit code alone, and a person reads the lines to find the leak; naming the layers that ran keeps a run with a layer off from reading as a clean one.
+- **TestRefs**: TC-586
+- **Status**: Drafted
+- **Phase**: 6
+- **Constrains**: IF-005;IF-043;IF-148
+
+### TC TC-586 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-586
+- **Verifies**: SR-017;SR-018;LLR-493
+- **Level**: Integration
+- **Method**: Seed a private key in a tracked file and sweep the tracked files; seed it in an outgoing commit and scan the range; seed a home directory path in a commit message with the privacy layer on and scan the range; sweep a clean scaffold with the privacy layer on, then seed a leak and sweep again; and scan with both layers off.
+- **Tier**: Full
+- **Expected**: Each leak prints on its own line naming its location, the tracked file's path and line or the commit, and its class label, and the run exits 1; the clean sweep prints one clean line naming the scan and both layers and exits 0, and the seeded sweep's summary counts its finding and names the same layers; with both layers off nothing is scanned, the run says so and exits 0.
+- **Automated**: Yes
+- **Status**: Drafted
+- **Phase**: 6
+- **Evidence**: tests/test_check_privacy.py::test_a_sweep_names_the_scan_and_the_layers_that_ran_clean_or_not; tests/test_check_privacy.py::test_range_mode_catches_history_and_messages; tests/test_check_privacy.py::test_repo_sweep_fresh_scaffold_passes_then_seeded_leak_fails; tests/test_check_privacy.py::test_secrets_floor_in_repo_and_range_modes_with_privacy_off; tests/test_check_privacy.py::test_secrets_floor_runs_with_privacy_off; tests/test_check_privacy.py::test_secrets_scan_off_opts_out
+
+## SR-019 — Pre-commit hook floor
+
+> **Requirement.** The pre-commit hook shall run the integrity + secrets floor on every commit, agent-neutrally — a LOCAL floor, bypassable by the session (git commit --no-verify), so it discharges "no unchecked write enters governed state" only as a PAIR with the hosted re-run of the same checks (SR-151/SR-152), never alone.
+
+> **Rationale.** Realizes SN-005 and SN-009 — a floor only CI enforces is one the local tree crosses freely, and a secret caught after the commit is already in history. Trusting the agent to run the checks was rejected: a floor exists for the times the agent forgets, so it is git-enforced and agent-neutral. Parents the interpreter probe: a hook that crashes cryptically because no python3 resolves, or because a Windows Store alias exits nonzero, has not run the floor — so probing by RUNNING a candidate and reporting clearly is machinery serving THIS obligation, and it decomposes to LLR-021 rather than standing as a requirement of its own.
+
+
+### LLR LLR-019
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: Runs trace --strict-integrity and the check_privacy secrets scan on staged content and blocks a failing commit. Every built-in check step is classified exactly once as run in the commit floor, run by the hook by name, or not run at commit with a stated reason. When no kit scripts directory is findable, the commit-facing hooks refuse the commit with exit 1, name the available repair steps, and neither run nor skip the floor.
+  - after: Runs the registry integrity check and the secrets scan on staged content and refuses, with a nonzero exit, a commit failing either; a commit passing both is admitted. Every built-in check step is classified exactly once as run in the commit floor, run by the hook by name, or not run at commit with a stated reason. When no kit scripts directory is findable, the commit-facing hooks refuse the commit with exit 1, name the available repair steps, and neither run nor skip the floor.
+_adjudicated link — goes to a sitting_
+- **Constrains**
+  - before: (empty)
+  - after: IF-134
+
+## SR-020 — Pre-push hook outgoing scan
+
+> **Requirement.** The pre-push hook shall scan the outgoing commit range and block a push that publishes a secret or (under privacy-check) a private identity.
+
+> **Rationale.** Realizes SN-005 and SN-009 — the last gate before content leaves the machine. Parents the interpreter probe, with SR-019: pre-push sources the shared probe declared by LLR-021, and a pre-push hook that cannot start scans nothing. The probe is mechanism, not a second obligation.
+
+
+### LLR LLR-020
+_adjudicated link — goes to a sitting_
+- **Constrains**
+  - before: (empty)
+  - after: IF-135
 
 ## SR-022 — Vendored-doc drift
 
@@ -107,6 +270,23 @@ _adjudicated link — goes to a sitting_
 - **Constrains**
   - before: (empty)
   - after: IF-041
+
+## SR-031 — Declared-policy readers agree
+
+> **Requirement.** Every delivered enforcer of a declared policy dial shall read the same value for that dial as every other enforcer — one parse, one answer, across the hooks, the loop and the checkers alike.
+
+> **Rationale.** Realizes SN-028's one readable policy home. A policy answer calculated more than once can diverge across enforcers, leaving the operator unable to know which value governs; one parse gives every enforcer the same answer. SR-137 owns whether a declaration is ambiguous or invalid, while this row owns agreement among the enforcers that consume a valid declaration.
+
+
+### LLR LLR-031
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: All policy enforcers, including the agent layer, obtain a declared policy answer from one parsed representation. A privacy gate declaration the parse holds outside `[policies]` reads as gate on, whatever its value or any direct or legacy gate declaration; a privacy reviewer declaration it holds there reads as reviewer required, whatever its value or any direct or legacy reviewer declaration. A name inside a string declares nothing. An unreadable or unparseable declaration is a distinct outcome, never a default. Only the exact opt-down value directly under the policies table opts the unwired reviewer down; a copy elsewhere or an unreadable declaration requires the reviewer, and the legacy record answers only when that key is absent. The hook answer is one of: the gate off; on with the unwired reviewer required; on with it warned; a mixed declaration; or an unreadable declaration, as IF-298 carries. The hooks no longer read a declared line themselves and instead reach it through that answer.
+  - after: All policy enforcers, including the agent layer, obtain a declared policy answer from one parsed representation. A privacy gate declaration the parse holds outside the policies table reads as gate on, whatever its value or any direct or legacy gate declaration; a privacy reviewer declaration it holds there reads as reviewer required, whatever its value or any direct or legacy reviewer declaration. A name inside a string declares nothing. An unreadable or unparseable declaration is a distinct outcome, never a default. Only the exact opt-down value directly under the policies table opts the unwired reviewer down; a copy elsewhere or an unreadable declaration requires the reviewer, and the legacy record answers only when that key is absent. The hook answer is one of: the gate off; on with the unwired reviewer required; on with it warned; a mixed declaration; or an unreadable declaration, as IF-298 carries. The hooks no longer read a declared line themselves and instead reach it through that answer.
+_adjudicated link — goes to a sitting_
+- **Constrains**
+  - before: (empty)
+  - after: IF-298
 
 ## SR-032 — Onboarding and dev-setup scaffold
 
@@ -158,6 +338,53 @@ _adjudicated link — goes to a sitting_
 - **Constrains**
   - before: (empty)
   - after: IF-039
+
+## SR-040 — Per-phase routing and review dial
+
+> **Requirement.** The delivered coordinator shall route each in-process session phase (PLAN/BUILD/REVIEW-A/REVIEW-B/DESIGN-CHECK/CRITIQUE) through its declared per-phase command template, falling back to the single declared command — surfacing the declared reviewer dial at run start without enforcing it.
+
+> **Rationale.** Realizes SN-026 (several model families selected per job, so that work benefiting from an independent second opinion is routed to a different family wherever that is configured) — two samples of one model share blind spots, so a review by the family that built the change agrees with it for the wrong reasons; cross-family routing is what makes the second opinion independent, and one model for every phase was rejected on that basis. Dispatch stays keyed off the in-process session phase because the alternative, a per-phase code branch, makes adding a phase a code change and so discourages adding one. THIS ROW CARRIED A RESUME-SURFACE SIZE TRIPWIRE AND NO LONGER DOES, and the two lenses that reached it are answered here rather than deleted with it. Both were premised on a session INHERITING a resume surface that grows across runs: a view must stay usable as its content volume grows (hat.UX-ENGINEER), and at 3am the reader of that surface is another automated step, which needs the growth legible from the artifact rather than from a human noticing (hat.UNATTENDED-OPS). Neither premise survives the one-engine coordinator — no session inherits a resume surface any more, and the status page is a generated integrator artifact whose size the generator owns, so there is no growing view to keep usable and no 3am artifact whose growth an automated reader must judge. The lenses are not overruled; their subject is gone. If a per-session resume surface is ever reintroduced, both apply again o… [187 more chars — read the registry row]
+
+
+### LLR LLR-495 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-495
+- **SR-Refs**: SR-040
+- **Title**: The session engine's model dials resolve from the command line, then the environment, then the stack profile
+- **Detail**: The session engine's model tier and its per-phase model map each resolve from the command line, else the environment's slot for that dial, else the stack profile's agent-loop section; with none of them set there is no model, and a session template needing one fails preflight naming it. An absent or malformed profile, a profile without the agent-loop section, and a blank value each read as no declaration.
+- **Rationale**: One declared home for the dials lets the launchers carry no copy of their own, and an operator who sets a dial for one run on the command line or in the environment still overrides the declared value without editing it.
+- **TestRefs**: TC-588
+- **Status**: Drafted
+- **Phase**: 6
+- **Constrains**: IF-068
+
+### TC TC-588 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-588
+- **Verifies**: SR-040;LLR-495
+- **Level**: Integration
+- **Method**: With the stack profile declaring a model tier, run the session engine with neither the environment slot nor the command line set, with the environment slot set, and with both set; resolve the per-phase model map with each of its three sources set and unset; run with no model anywhere and a template needing one; and read the agent-loop section from an absent profile, a malformed one, one without the section and one declaring a dial with a blank value.
+- **Tier**: Full
+- **Expected**: The declared tier reaches the session when nothing else is set, the environment's beats it and the command line's beats both, the model map following the same order; with no model the run fails preflight naming the missing model; and the absent, malformed and section-less profiles and the blank value each read as no declaration of that dial.
+- **Automated**: Yes
+- **Status**: Drafted
+- **Phase**: 6
+- **Evidence**: tests/test_agent_loop.py::test_model_dial_precedence; tests/test_agent_loop.py::test_model_placeholder_without_model_fails_preflight; tests/test_agent_loop_policy.py::test_read_agent_loop_config_reads_declared_dials; tests/test_agent_loop_policy.py::test_resolve_coordinator_dials_precedence; tests/test_agent_loop_policy.py::test_the_model_map_resolves_from_the_command_line_then_environment_then_profile
+
+## SR-043 — Subagent spawn gate
+
+> **Requirement.** While an unattended run is in progress, the delivered subagent-spawn gate shall refuse or defer subagent spawns per the declared subagent-gate dial in the single policy declaration home (off|ask|deny; absent=off; the legacy one-word file is still read through the migration window), honor a launcher-set SUBAGENT_GATE=allow override the model cannot set, and fail open on any error so a broken gate never wedges the tools.
+
+> **Rationale.** Realizes SN-006 (a walk-away run stays safe — bounded, supervised fan-out with the override held by the operator, not the model) and SN-012 (opt-in: absent/off is a vacuous allow, so a non-adopter pays nothing). Supervision, not security — a model that can edit files can remove the hook (adapted from stop-subagent-fanout, MIT; spec docs/archive/INTEGRATION_PLAN.md Phase 4). C-SEC-2 asks that the irreversible actions an unattended run can take be enumerated, each naming the dial or operator authority that permits it — which is this row exactly, for the one action that starts further actors. A direct hit, and the reason this row is not accretion: its parentage was real and lived only in SN-006's `why` cell until the safety half moved into that need's normative text at this same pass. WHY THE FAIL-OPEN ARM IS DELIBERATE: SN-006 asks that the unattended layer keep moving and surface to the operator only where it cannot proceed, so a gate that wedges every tool on its own bug is the failure this clause was written against; what an error never relaxes is the operator-held override itself, which the model cannot set.
+
+
+### LLR LLR-040
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: Pure decide(tool_name, policy, override) -> allow|ask|deny|defer over SPAWN_TOOLS={Task,Agent}; main reads the PreToolUse JSON payload, reads docs/process.toml [checks] subagent_gate (falling back to the legacy one-word docs/subagent-gate through the migration window), applies the SUBAGENT_GATE=allow override, emits permissionDecision (deny -> exit 2), and appends each decision to out/subagent-gate.log; any exception fails OPEN (allow) and logs, so a broken gate never wedges the agent's tools.
+  - after: A pure decision maps a tool call's name, the declared gate policy and an allow override to allow, ask, deny or defer, deferring every call that names neither of the agent tool's two subagent-spawn tools. Run as the agent tool's pre-tool-use hook, the gate reads the call's payload from standard input, reads the gate dial from the process configuration's checks table (falling back to the legacy one-word declaration through the migration window) and applies the allow override set in its environment. It prints the decision as the agent tool's permission-decision payload, a deny exiting 2 and every other decision 0, and prints nothing for a deferred call; each decision but a defer is appended to the gate's decision log as one tab-separated line naming the tool and the decision. Any error fails open, allowing the call and logging why, so a broken gate never wedges the agent's tools.
+_adjudicated link — goes to a sitting_
+- **Constrains**
+  - before: (empty)
+  - after: IF-020;IF-151;IF-169;IF-170
 
 ## SR-046 — Declared runnable capabilities reachable from the repository root
 
@@ -350,12 +577,52 @@ _other trace cell — owes no act_
   - before: tests/test_adjudicate_brief.py::test_a_need_scoped_amendment_row_composes_with_its_before_and_after; tests/test_adjudicate_brief.py::test_assumption_and_surrogate_scoped_amendment_rows_compose_within_their_scope; tests/test_adjudicate_brief.py::test_the_held_aftermath_gives_each_verdict_its_own_arm; tests/test_adjudicate_brief.py;tests/test_adjudicate_brief.py::test_a_first_acceptance_brief_carries_the_questions_for_its_rows_tiers;tests/test_adjudicate_brief.py::test_an_amendment_brief_carries_the_questions_for_its_rows_tiers;tests/test_adjudicate_brief.py::test_each_combined_section_carries_its_own_rows_tier_questions;tests/test_adjudicate_brief.py::test_a_change_to_the_home_changes_the_brief;tests/test_adjudicate_brief.py::test_an_absent_or_unreadable_home_refuses_the_render;tests/test_adjudicate_brief.py::test_a_home_that_cannot_answer_the_rows_tiers_refuses;tests/test_adjudicate_brief.py::test_no_second_copy_of_the_questions_exists; tests/test_adjudicate_brief.py::test_no_judging_brief_orders_an_act; tests/test_adjudicate_brief.py::test_a_removed_scoped_tc_is_briefed_as_a_removal; tests/test_adjudicate_brief.py::test_a_removed_scoped_assumption_is_briefed_as_a_removal; tests/test_adjudicate_brief.py::test_a_combined_sitting_briefs_a_removed_scoped_row; tests/test_adjudicate_brief.py::test_a_scope_token_in_neither_home_refuses_naming_it; tests/test_adjudicate_brief.py::test_a_present_undrifted_scoped_row_still_drops_beside_a_removal
   - after: tests/test_adjudicate_brief.py::test_a_need_scoped_amendment_row_composes_with_its_before_and_after; tests/test_adjudicate_brief.py::test_assumption_and_surrogate_scoped_amendment_rows_compose_within_their_scope; tests/test_adjudicate_brief.py::test_the_held_aftermath_gives_each_verdict_its_own_arm; tests/test_adjudicate_brief.py;tests/test_adjudicate_brief.py::test_a_first_acceptance_brief_carries_the_questions_for_its_rows_tiers;tests/test_adjudicate_brief.py::test_an_amendment_brief_carries_the_questions_for_its_rows_tiers;tests/test_adjudicate_brief.py::test_each_combined_section_carries_its_own_rows_tier_questions;tests/test_adjudicate_brief.py::test_a_change_to_the_home_changes_the_brief;tests/test_adjudicate_brief.py::test_an_absent_or_unreadable_home_refuses_the_render;tests/test_adjudicate_brief.py::test_a_home_that_cannot_answer_the_rows_tiers_refuses;tests/test_adjudicate_brief.py::test_no_second_copy_of_the_questions_exists; tests/test_adjudicate_brief.py::test_no_judging_brief_orders_an_act; tests/test_adjudicate_brief.py::test_a_removed_scoped_tc_is_briefed_as_a_removal; tests/test_adjudicate_brief.py::test_a_removed_scoped_assumption_is_briefed_as_a_removal; tests/test_adjudicate_brief.py::test_a_combined_sitting_briefs_a_removed_scoped_row; tests/test_adjudicate_brief.py::test_a_scope_token_in_neither_home_refuses_naming_it; tests/test_adjudicate_brief.py::test_a_present_undrifted_scoped_row_is_named_not_shown_beside_a_removal; tests/test_amendment_brief_links.py::test_a_combined_sitting_shows_a_link_only_amendment_row; tests/test_amendment_brief_links.py::test_a_link_only_rows_verdict_line_reads_as_any_rows; tests/test_amendment_brief_links.py::test_a_link_only_scope_composes_instead_of_refusing; tests/test_amendment_brief_links.py::test_a_scoped_row_with_nothing_to_judge_is_named_not_dropped; tests/test_amendment_brief_links.py::test_an_unjudged_trace_cell_never_reaches_the_judge; tests/test_amendment_brief_links.py::test_the_brief_asks_the_link_question; tests/test_amendment_brief_links.py::test_the_brief_shows_each_moved_link_beside_its_accepted_cells; tests/test_amendment_brief_links.py::test_the_template_states_the_link_question_once
 
+## SR-150 — Stakeholder-need cells stay in stakeholder language
+
+> **Requirement.** The harness shall report each stakeholder-need `need` cell that contains an internal path, an implementation-only identifier or a process citation, naming the row and the offending phrase — at a severity that warns by default and fails only under --strict, exempting a name declared on a reviewed exception list that ships empty (a name that is itself a user-facing interface belongs in a need), and reporting nothing for acceptance or engineering-requirement cells, which SN-033 exempts by its own text.
+
+> **Rationale.** Realizes SN-033 — its accepted acceptance commissions exactly this check, and until this row it did not exist. The need tier was measured clean when this landed (0 of 27 cells), and the row sits deliberately AHEAD of the SR re-tier's churn: locking the clean state in costs one warn-first step now; trusting a large re-statement pass not to dirty it costs an audit later. Warn-first is the ruled posture, not a softness — a form heuristic over accepted stakeholder prose must not gate without an operator ruling, and that ruling has not been made.
+
+
+### LLR LLR-494 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-494
+- **SR-Refs**: SR-150
+- **Title**: The need-form check exits 0 at its default severity and, in its strict mode, 1 on anything it reports
+- **Detail**: The need-form check exits 0 at its default severity, whatever it reports. In its strict mode it exits 1 when it reports a finding, an exception-list line its grammar cannot read, or a present registry with no need cell to scan, and 0 when its scan is clean.
+- **Rationale**: The requirement fixes the severity, warning by default and failing only in the declared strict mode; the exit code is how the harness and a person's shell read it, so it is stated where the check's output is.
+- **TestRefs**: TC-587
+- **Status**: Drafted
+- **Phase**: 6
+- **Constrains**: IF-121
+
+### TC TC-587 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-587
+- **Verifies**: SR-150;LLR-494
+- **Level**: Integration
+- **Method**: Run the need-form check at both severities over a need cell carrying offending phrases, over an exception list holding lines its grammar cannot read and then a well-formed one, and over a present registry with no need cell; run it at its default severity over the live registry and over a project with no needs registry.
+- **Tier**: Full
+- **Expected**: Every default-severity run exits 0, findings included; the strict run exits 1 on the offending phrases, on the unreadable exception lines and on the empty registry, and 0 once the exception list is well-formed and the scan is clean.
+- **Automated**: Yes
+- **Status**: Drafted
+- **Phase**: 6
+- **Evidence**: tests/test_check_need_form.py::test_a_malformed_allow_line_is_reported_by_name_and_line; tests/test_check_need_form.py::test_a_present_but_vacuous_registry_is_reported_not_clean; tests/test_check_need_form.py::test_an_absent_needs_registry_is_a_clean_skip; tests/test_check_need_form.py::test_dirty_need_cell_names_the_row_and_each_offending_phrase; tests/test_check_need_form.py::test_strict_promotes_the_same_findings_to_exit_1; tests/test_check_need_form.py::test_the_live_registry_is_clean_at_zero_findings
+
 ## SR-157 — Spine and work-registry rules fail the harness verdict
 
 > **Requirement.** The delivered harness shall report every declared spine and work-registry rule violation — broken joins, integrity and schema faults, leftover placeholders, requirement-form findings and work-item coherence contradictions — naming the at-fault row and cell, gating the declared failure set at the declared gate while advisory classes never change the exit code.
 
 > **Rationale.** Realizes SN-002 (the chain is mechanically verified, not asserted — this row is the boundary-level home of the verdict SN-002's acceptance asks for), SN-012 (optional registries and opt-outs cost a non-user nothing) and SN-025 (the tracked work-item graph the loop derives its next work from is kept coherent). One row because the adopter-observable contract is one: registry rules produce named findings at a declared severity; which rules, at which severities, is the component detail the rows below it decompose. Fan-out re-stamp: the delivered contract is one — a named, row-and-cell-attributed finding at a declared severity, gating or advisory — while the rule inventory it ranges over is open by this row's own acceptance ("a rule added at one of those sites is in this row's scope by default"), so the child count tracks the number of declared rules rather than the number of decisions this row makes, and would climb back through any bound a split bought.
 
+
+### LLR LLR-077
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: Enforces Deliverable iff done on every run and resolvable open-WI SpecRef under strict mode.
+  - after: Enforces Deliverable iff done on every run and resolvable open-WI SpecRef under strict mode. A SpecRef's anchor names a heading of its Markdown document, read from the documentation link check's own parse of that document and compared in lower case, so a reference cannot resolve as a SpecRef and dangle as a link; a dangling anchor's finding names the nearest similar heading where there is one, and an anchor into a file that is not Markdown is not judged.
+_adjudicated link — goes to a sitting_
+- **Constrains**
+  - before: (empty)
+  - after: IF-077
 
 ### LLR LLR-421 — Drafted, never accepted
 _No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
@@ -378,6 +645,12 @@ _No cell differs from the accepted snapshot; this row owes because its own `Stat
 - **TestRefs**: TC-532
 - **Status**: Drafted
 - **Phase**: 6
+
+### TC TC-077
+_other trace cell — owes no act_
+- **Evidence**
+  - before: tests/test_trajectory.py::test_ra_open_wi_with_deliverable_fails_plain; tests/test_trajectory.py::test_ra_done_wi_with_empty_deliverable_fails_plain; tests/test_trajectory.py::test_re_empty_specref_warns_plain_fails_strict; tests/test_trajectory.py::test_re_dangling_specref_warns_plain_fails_strict; tests/test_trajectory.py::test_compliant_registry_and_status_passes_strict
+  - after: tests/test_trajectory.py::test_ra_open_wi_with_deliverable_fails_plain; tests/test_trajectory.py::test_ra_done_wi_with_empty_deliverable_fails_plain; tests/test_trajectory.py::test_re_empty_specref_warns_plain_fails_strict; tests/test_trajectory.py::test_re_dangling_specref_warns_plain_fails_strict; tests/test_trajectory.py::test_compliant_registry_and_status_passes_strict; tests/test_trajectory.py::test_specref_anchor_on_a_non_markdown_target_is_not_judged; tests/test_trajectory.py::test_specref_anchor_report_names_the_nearest_heading; tests/test_trajectory.py::test_specref_anchor_that_names_no_heading_warns_plain_fails_strict; tests/test_trajectory.py::test_specref_and_markdown_link_agree_on_the_same_anchor; tests/test_trajectory.py::test_specref_with_anchor_resolves
 
 ### TC TC-531 — Drafted, never accepted
 _No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
@@ -431,6 +704,46 @@ _adjudicated link — goes to a sitting_
 - **Constrains**
   - before: (empty)
   - after: IF-029
+
+### LLR LLR-038
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: Scans root *.md + docs/**/*.md; a backticked token is path-shaped when it carries a separator plus a known extension or top-level prefix (URLs/globs/placeholders excluded); GENERATED marker blocks and path-ok lines are skipped; sym:<module>.<name> is resolved against the public-symbol inventory scanned from the source AST via gen_arch_map.scan_inventory (module tail -> public symbols); warn-first, --strict exits 1. With no scanned inventory (files mode) the symbol tier skips cleanly while the path tier still runs. Declared to the harness as docs/stack.ini's [step:doc-refs] row (from-stage = DevStg-Impl, beside [step:figures] for the figure-provenance checker); docs/declared-absences is the reviewed absence carve-out.
+  - after: Scans the root Markdown files and every Markdown file under the documentation directory. A backticked token is path-shaped when it carries a separator plus a known extension or top-level prefix, URLs, globs and placeholders excluded; generated marker blocks and lines carrying the path exemption marker are skipped. A symbol reference, naming a module and a public name, is resolved against the public-symbol inventory scanned from the source's syntax tree, a module's tail name mapping to its public symbols. Each dangling finding is printed naming the token at fault, and the untraced count is printed on every run. It is warn-first, exiting 0 with its findings printed, and its strict mode exits 1 on a dangling finding, an untraced path never gating. With no scanned inventory (the files mode) the symbol tier skips cleanly while the path tier still runs. It is declared to the harness as the stack profile's document-references step, run from DevStg-Impl, beside the figure-provenance step. The declared-absences file is the reviewed absence carve-out: a reference to a path it lists, one path and its reason per line, is reported untraced with that reason quoted rather than dangling, and a line carrying no reason separator declares nothing.
+- **Title**
+  - before: Path + sym: reference checker
+  - after: Path and symbol reference checker
+_adjudicated link — goes to a sitting_
+- **Constrains**
+  - before: (empty)
+  - after: IF-008;IF-072
+
+### LLR LLR-146
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: Scans root *.md + docs/**/*.md (check_doc_refs.doc_files - the same walk, so the two doc checks agree on the surface and generated trees stay skipped) plus docs/stack.ini, with docs/reviews/ records out of scope (a verdict quotes defective markers as evidence); each opt-in fig: marker is judged on its own attributes and must carry a non-empty, wordful cmd= and rev= pair (rev bare or quoted), or a non-empty derived= derivation; a marker is grammar prose that declares nothing only when every attribute value is wholly a placeholder token (angle-bracket-wrapped, or the bare ellipsis - so the convention text ships scaffold-clean); in a judged marker a placeholder-shaped value counts as absent, never as satisfying (an unfilled rev=<revision> names no revision), while a metacharacter inside a longer value is command text and the marker is judged on its attributes; findings name the missing half and quote the line; GENERATED marker blocks and fig-ok lines are exempt; warn-first, --strict exits 1. Presence only, never truth - re-derivation is rung 2, deliberately not built.
+  - after: Scans the root Markdown files and every Markdown file under the documentation directory, through the reference check's own walk so the two documentation checks agree on the surface and generated trees stay skipped, plus the stack profile, with the review records out of scope (a verdict quotes defective markers as evidence). Each opt-in figure marker is judged on its own attributes and must carry a non-empty, wordful command and revision pair (the revision bare or quoted), or a non-empty derivation; a marker is grammar prose that declares nothing only when every attribute value is wholly a placeholder token (angle-bracket-wrapped, or the bare ellipsis, so the convention text ships scaffold-clean); in a judged marker a placeholder-shaped value counts as absent, never as satisfying (an unfilled revision placeholder names no revision), while a metacharacter inside a longer value is command text and the marker is judged on its attributes. Findings name the missing half and quote the line; generated marker blocks and lines carrying the figure exemption marker are exempt. It is warn-first, exiting 0 with its findings printed, and its strict mode exits 1. Presence only, never truth: re-derivation is rung 2, deliberately not built.
+_adjudicated link — goes to a sitting_
+- **Constrains**
+  - before: (empty)
+  - after: IF-086
+
+## SR-167 — Performance-budget breaches fail their hard-gated rows
+
+> **Requirement.** The delivered harness shall fail the checks it runs exactly when an in-tier hard-gated performance-budget row breaches — its measured metric worse than its absolute Budget, or regressed beyond its declared Tolerance band around the committed baseline — while warn-gated rows and out-of-tier rows only warn, and a metric with no measurement this run is a reported skip, never a silent pass.
+
+> **Rationale.** Realizes SN-008 (a reader can believe a pass — a breach on a row the project chose to hard-gate must fail the run, not ride as a tracked number) and SN-012 (the perf layer is opt-in; a repo declaring no PB rows pays nothing, while one that does gets the same honest-gate discipline as every other check). This row is the requirement home for the perf verdict itself: SR-006 states the step plan and the missing-tool refusal, SR-015 the PB back-link invariant, and SR-033 only the warn-tier, never-fails side, so the exit contract the perf step already implements, decomposes and proves had no requirement stating it. One row for BOTH breach arms deliberately — absolute and regression are one delivered exit contract, the SR-157 one-verdict shape, and a regression-only framing is the symptom, not the boundary. THE REQUIREMENT NAMES NO ARTIFACT: the comparator is not on the declared delivered-artifact list — it is the harness's internal perf step — so the SR states the harness-verdict observable and the comparator is named only in acceptance as the current carrier, the SR-157/SR-158 pattern. Vacuous in THIS repository — no performance-budgets registry exists here and the perf layer is declared absent — but the template ships the layer, and a shipped layer owes a stated, tested obligation even where locally unused. One act is deliberately still owed: LLR-014.sr_refs and TC-014.verifies are NOT re-pointed here — both rows are Accepted, so amending their cells overrides acceptance, which i… [455 more chars — read the registry row]
+
+
+### LLR LLR-014
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: Compares measured metrics (docs/test/perf-metrics.json) to declared budgets and the committed baseline (docs/test/perf-baseline.json) and fails beyond tolerance at the row's block/warn level; --update-baseline is the reviewed acceptance path for an intended regression. The step is wired into the harness at DevStg-Impl, per its declared gates in docs/stack.ini.
+  - after: Compares the measured metrics to the declared budgets and the committed baseline and fails beyond tolerance at the row's block or warn level; the baseline update is the reviewed acceptance path for an intended regression. Each budget that is not clean prints a line naming its status and its budget id, a fail-level budget with no measurement this run reported by name as a skip rather than passing in silence; the run prints an OK or FAIL summary, a project with no budget rows printing an OK line saying so and budgets with no metrics file a SKIP line. A comparison exits 1 only when an in-tier budget fails, and 0 for every other outcome, warnings and skips included. A run that reaches a comparison writes the performance report, naming each failing budget's reason. The step is wired into the harness at DevStg-Impl, per its declared gates in the stack profile.
+_adjudicated link — goes to a sitting_
+- **Constrains**
+  - before: (empty)
+  - after: IF-004;IF-147;IF-167
 
 ## SR-168 — The state view shows current progress and next work
 
@@ -520,6 +833,23 @@ _No cell differs from the accepted snapshot; this row owes because its own `Stat
 - **Phase**: 6
 - **Evidence**: tests/test_routed_link_owed.py::test_a_link_moved_alone_puts_its_chain_in_the_model; tests/test_routed_link_owed.py::test_a_row_moving_only_unjudged_trace_cells_lists_no_chain; tests/test_routed_link_owed.py::test_a_rows_other_trace_cells_come_last; tests/test_routed_link_owed.py::test_both_surfaces_label_the_three_groups_alike; tests/test_routed_link_owed.py::test_each_row_carries_its_accepted_cells_and_links_apart; tests/test_routed_link_owed.py::test_the_acceptance_brief_labels_a_row_with_both; tests/test_routed_link_owed.py::test_the_acceptance_brief_lists_a_link_only_row_naming_its_link; tests/test_routed_link_owed.py::test_the_model_lists_the_moved_chains_and_not_the_unjudged_one; tests/test_routed_link_owed.py::test_the_moved_links_are_the_routing_table; tests/test_routed_link_owed.py::test_the_operator_page_lists_a_link_only_row_naming_its_link
 
+## SR-205 — With the assumption gate on, the boundary rung requires accepted, active assumptions that reach their stakeholders
+
+> **Requirement.** Where the assumption gate is enabled, the delivered harness shall fail the boundary gate for each system requirement not recorded as coincident and not delivered jointly with a sibling that shares one of its needs, that cites no assumption, and for each requirement that cites an assumption which is not accepted, not active, does not reach the stakeholders of its needs, or is a fidelity assumption naming a surrogate that is not accepted.
+
+> **Rationale.** Without a gate the assumption rows are optional documentation: a requirement could cite a draft, a falsified premise or one landing nowhere its stakeholders are, and still pass. At the boundary rung only maturity can be judged, because test results do not exist until the harness has run; evidence is the release rung's question. The gate is opt-in because it asks for a written argument behind every requirement, a cost a small project may rightly decline.
+
+
+### LLR LLR-242
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: boundary_gate_findings(srs, das, surs, reach, have_frame) returns nothing when have_frame is false. With a frame, it fails each requirement with no Coincident whose DA-Refs is empty, unless the requirement is joint (its Delivered-With names a declared sibling sharing one of its SN-Refs, the class `_classify` already gives it), or that cites an assumption which is not Accepted, whose standing is not active, which the reach check reports, or whose realized_by surrogate is not Accepted; each finding names the requirement, the assumption and the unmet condition. A frame with no assumptions registry therefore fails every requirement not recorded coincident, since enabling the gate asks for the argument. assumption_gate_enabled(docs) reads [checks] assumption_gate from the policy file, where an absent or unreadable key reads off. check.py gains a built-in step `assumption-gate` at the DevStg-Boundary threshold, named in BUILTIN_STEP_NAMES; with the gate off the same findings print as advisories and the step passes. The findings never enter the stage derivation. With the gate off, check_assumption_gate's `_fold_reach_caused` passes only the reach-caused advisories (those absent when the same judgement runs with an empty reach map) through held_until_agreed; every other advisory stays listed, and a failure is never folded.
+  - after: The boundary half of the assumption gate reports nothing when the project declares no frame. With a frame, it fails each requirement with no coincident cell whose assumption references are empty, unless the requirement is joint (its delivered-with cell names a declared sibling sharing one of its need references, the class the requirement classifier already gives it), or that cites an assumption which is not Accepted, whose standing is not active, which the reach check reports, or whose realizing surrogate is not Accepted; each finding names the requirement, the assumption and the unmet condition. A frame with no assumptions registry therefore fails every requirement not recorded coincident, since enabling the gate asks for the argument. The gate is on when the policy file's checks table sets its assumption-gate dial, an absent or unreadable key reading off. The harness gains a built-in assumption-gate step at the DevStg-Boundary threshold, named among its built-in steps; with the gate on, each finding prints as a failure line and the step exits 1, and with it off the same findings print as advisories and the step passes, each run ending on a summary line naming the step. The findings never enter the stage derivation. With the gate off, only the reach-caused advisories (those absent when the same judgement runs with an empty reach) are folded into one advisory line counting them while no stakeholder is agreed; every other advisory stays listed, and a failure is never folded.
+_adjudicated link — goes to a sitting_
+- **Constrains**
+  - before: (empty)
+  - after: IF-230
+
 ## SR-208 — Held-rung changes are refused before they land
 
 > **Requirement.** Where the declared acceptance level holds a snapshotted registry's rung for an operator, the delivered harness shall refuse, before it lands on trunk, both a lane's acceptance claim that is not a CLARITY re-acceptance bound to the row's judged text and a marked autonomous commit outside a lane that moves a held status or makes a held acceptance claim.
@@ -539,6 +869,85 @@ _other trace cell — owes no act_
 - **Evidence**
   - before: tests/test_adjudicate_brief.py::test_the_amendment_brief_states_each_shown_rows_digest; tests/test_adjudicate_brief.py::test_bind_pending_records_the_briefs_identities; tests/test_adjudicate_brief.py::test_record_outcome_keeps_the_identity_cell; tests/test_adjudicate_act.py::test_a_held_CLARITY_act_whose_text_changed_after_the_verdict_is_refused; tests/test_adjudicate_act.py::test_a_held_CLARITY_act_whose_binding_has_no_identity_is_refused; tests/test_coordinator_act.py::test_the_act_turn_refuses_before_launch_when_held_text_moved; tests/test_held_status.py::test_the_digest_ignores_the_id_status_and_traced_cells; tests/test_held_status.py::test_the_digest_is_carrier_blind_and_empty_equals_absent; tests/test_held_status.py::test_the_digest_has_the_done_when_shape; tests/test_held_status.py::test_a_binding_round_trips_its_identities; tests/test_held_status.py::test_read_requested_ignores_the_identity_cell; tests/test_held_status.py::test_a_malformed_or_absent_identity_cell_reads_as_no_identity; tests/test_adjudicate_act.py::test_a_held_CLARITY_act_bound_to_the_exact_text_is_owed; tests/test_held_status_git.py::test_a_malformed_identity_cell_refuses_the_held_act_by_row
   - after: tests/test_adjudicate_brief.py::test_the_amendment_brief_states_each_shown_rows_digest; tests/test_adjudicate_brief.py::test_bind_pending_records_the_briefs_identities; tests/test_adjudicate_brief.py::test_record_outcome_keeps_the_identity_cell; tests/test_adjudicate_act.py::test_a_held_CLARITY_act_whose_text_changed_after_the_verdict_is_refused; tests/test_adjudicate_act.py::test_a_held_CLARITY_act_whose_binding_has_no_identity_is_refused; tests/test_coordinator_act.py::test_the_act_turn_refuses_before_launch_when_held_text_moved; tests/test_held_status.py::test_the_digest_is_carrier_blind_and_empty_equals_absent; tests/test_held_status.py::test_the_digest_has_the_done_when_shape; tests/test_held_status.py::test_a_binding_round_trips_its_identities; tests/test_held_status.py::test_read_requested_ignores_the_identity_cell; tests/test_held_status.py::test_a_malformed_or_absent_identity_cell_reads_as_no_identity; tests/test_adjudicate_act.py::test_a_held_CLARITY_act_bound_to_the_exact_text_is_owed; tests/test_held_status_git.py::test_a_malformed_identity_cell_refuses_the_held_act_by_row; tests/test_adjudicate_act.py::test_a_binding_over_accepted_cells_alone_refuses_a_row_carrying_a_link; tests/test_adjudicate_act.py::test_a_held_CLARITY_act_whose_link_moved_after_the_verdict_is_refused; tests/test_adjudicate_act.py::test_a_held_claim_whose_link_moved_after_its_verdict_is_not_excepted; tests/test_amendment_brief_links.py::test_a_shown_link_only_rows_identity_covers_its_link; tests/test_held_status.py::test_the_digest_ignores_the_id_status_and_unjudged_trace_cells
+
+## SR-209 — Every commit the loop makes carries a checked provenance trailer
+
+> **Requirement.** When a commit is made from a process the unattended loop started, or is merged in a lane the loop owns from the point the loop took that lane over, the delivered commit floor shall refuse it unless it carries a valid provenance trailer naming the loop and its session.
+
+> **Rationale.** A status change on an operator-held rung can be told apart from an operator's only if every loop-made commit says it is one. Without a floor that holds every loop commit to it, a trailer could appear on only some of the loop's commits and a missing one would prove nothing. Where a commit is made, the condition is who made it, not when: a person committing in another checkout while the loop runs is not the loop. Where a lane merges, the floor sees commits, not processes, so it reads whose lane it is from the commits and judges every commit of a loop lane, a person's included: there an unmarked commit the loop made cannot be told from a person's, and a person's commit belongs in the person's own lane. The commits made before the loop took a lane over are exempt, since nothing then could have marked them. Refusing the unmarked commit at the floor makes the mark total, which is what lets a later check treat its absence as meaningful. The floor where a commit is made is local and a determined bypass defeats it, which is why the merge re-checks a loop lane and the history check stands behind both.
+
+
+### LLR LLR-247
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: kitlib/provenance.py, importing no sibling script, declares LOOP_TRAILER = "Loop-Session" and LOOP_SESSION_ENV = "KIT_LOOP_SESSION". format_loop_trailer(session) renders the trailer line; parse_loop_trailer(message) returns the last trailer's session or None; loop_trailer_refusal(message, session) names the commit subject when the trailer is missing, malformed, or names another session. dispatch.run and agent_loop.main outside interactive mode set the marker in their own process environment once per run, never in a launcher script, so child sessions inherit it and a person's shell does not.
+  - after: The loop's provenance rule lives in the kit's shared package, which imports no sibling script. It declares the commit-message trailer Loop-Session and the loop marker, one environment variable naming the session. A session's trailer is rendered as one trailer line, and parsing a message returns its last trailer's session or none. The refusal names the commit's subject when the trailer is missing, malformed, or names another session. Given a commit message file, the harness's loop-trailer check exits 0 when the marker is not set or the refusal finds nothing, and exits 1, printing the refusal, when the marker is set and it does. The dispatcher's run and the loop's main entry, outside interactive mode, set the marker in their own process environment once per run, never in a launcher script, so child sessions inherit it and a person's shell does not.
+_adjudicated link — goes to a sitting_
+- **Constrains**
+  - before: (empty)
+  - after: IF-197
+
+### TC TC-242
+_other trace cell — owes no act_
+- **Evidence**
+  - before: tests/test_loop_provenance.py; tests/test_pre_commit_hook.py
+  - after: tests/test_loop_provenance.py; tests/test_pre_commit_hook.py; tests/test_bootstrap.py::test_bootstrap_imports_only_the_common_package
+
+## SR-216 — Each change is measured by the project's declared readability measures, and a worsening is reported with the part it worsens
+
+> **Requirement.** When a change is submitted for acceptance, the delivered harness shall report together every worsening that the project's declared readability and structure measures find in the parts the change touches, naming each measure and part.
+
+> **Rationale.** Code stays readable only if getting worse is visible when it happens; a report after the fact arrives once other work is already built on the worse code. Each measure keeps its own requirement and its own stamped baseline — cognitive complexity against a per-function baseline is one — and this row gathers what they find for the change in front of the reviewer, so no measure's comparison is restated here. A project with no declared measure has nothing to report, and that is itself reported, because the need's promise cannot be met by silence. Reporting rather than refusing keeps the process proportionate: a project opts a measure into gating when it wants that cost.
+
+
+### LLR LLR-256
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: check_readability.py reads the declared measures from a [readability] section of the stack profile, a list of measure names. MEASURES maps each name to an adapter that runs that measure's own comparison over the changed parts only; the complexity adapter reuses check_complexity's census, baseline reader and comparison rather than copying them. A measure cannot join until it can name the part it worsened. changed_parts reads the change as the index against HEAD, or merge-base to tip on a claimed branch. worsened_findings prints one line per worsening naming the measure, the part and the delta; a profile declaring no measure prints one line saying nothing is measured. The exit is nonzero only for a worsening in a measure the profile declares gating. A [step:readability] runs it, bootstrap.MAPPING ships it, and the stack-profile contract names the section.
+  - after: The per-change readability report reads the declared measures from the stack profile's readability section, a list of measure names. Each name maps to an adapter that runs that measure's own comparison over the changed parts only; the complexity adapter calls the complexity census's own census, baseline reader and comparison rather than copying them. A measure cannot join until it can name the part it worsened. The change is read as the index against the current commit, or from the merge base to the tip on a claimed branch. Each worsening prints one line naming the measure, the part and the delta; a profile declaring no measure prints one line saying nothing is measured. The exit is nonzero only for a worsening in a measure the profile declares gating. A readability step in the stack profile runs it, the shipped-file inventory ships it, and the stack-profile contract names the section.
+_adjudicated link — goes to a sitting_
+- **Constrains**
+  - before: (empty)
+  - after: IF-187;IF-188
+
+### LLR LLR-261
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: flag_axis.reading(tree) counts one module's flag functions, each function the complexity census names (check_complexity.functions: module-level functions and Class.method) that takes two or more parameters annotated bool or defaulting to a boolean literal, keyword-only parameters included, and its call sites passing a boolean literal positionally; a literal passed by keyword is not counted. compare(now, row) returns nothing unless a count rose above the module's stamped row in docs/flag-axis-baseline, an absent row reading as zero, and otherwise the delta naming each count that rose and the flag functions by signature. check_readability's flag-axis adapter in MEASURES runs reading and compare over each touched .py module under the profile's [paths] source and test roots, read from the change's new side, and the part it names is the module; a module that cannot be read or parsed prints a SKIP line. The measure is report-only by its own contract: REPORT_ONLY holds it, and a profile naming it in gating gets one WARN line and no refusal. flag_axis.py run directly prints one SKIP line per included file it cannot read or parse and goes on, one line per counted module and one total line against the stamped rows, and exits 0 in every case; --restamp rewrites the baseline, which is downward-only by convention. It walks files through check_complexity.source_paths, and bootstrap.MAPPING ships it because check_readability imports it unguarded.
+  - after: The flag-axis measure reads one module's flag functions: each function the complexity census names (module-level functions and a class's methods, named as the census names them) that takes two or more parameters annotated boolean or defaulting to a boolean literal, keyword-only parameters included; and its call sites passing a boolean literal positionally, a literal passed by keyword not counted. Its comparison returns nothing unless a count rose above the module's stamped row in the flag-axis baseline, an absent row reading as zero, and otherwise the delta naming each count that rose and the flag functions by signature. The readability report's flag-axis adapter runs the reading and the comparison over each touched Python module under the profile's declared source and test roots, read from the change's new side, and the part it names is the module; a module that cannot be read or parsed prints a SKIP line. The measure is report-only by its own contract: a profile naming it gating gets one WARN line and no refusal. Run directly, the flag-axis report prints one SKIP line per included file it cannot read or parse and goes on, one line per counted module and one total line against the stamped rows, and exits 0 in every case; its re-stamp rewrites the baseline, which is downward-only by convention. It walks files through the complexity census's file walk, and the shipped-file inventory ships it because the readability report imports it unguarded.
+_adjudicated link — goes to a sitting_
+- **Constrains**
+  - before: (empty)
+  - after: IF-239;IF-240
+
+### TC TC-249
+_other trace cell — owes no act_
+- **Evidence**
+  - before: tests/test_check_readability.py
+  - after: tests/test_check_readability.py; tests/test_bootstrap.py::test_scaffold_contains_expected_files; tests/test_stack_profile.py::test_reference_profile_declares_only_the_readability_step
+
+### TC TC-256
+_other trace cell — owes no act_
+- **Evidence**
+  - before: tests/test_flag_axis.py
+  - after: tests/test_flag_axis.py; tests/test_bootstrap.py::test_every_sibling_imported_module_is_shipped_by_mapping; tests/test_bootstrap.py::test_scaffold_contains_expected_files
+
+## SR-217 — A requirement implemented before its test cases were accepted is reported
+
+> **Requirement.** The delivered harness shall report each system requirement accepted after the project's declared starting point whose implementation has landed on trunk while any of its test cases was not yet accepted for it, reading the order from the committed history.
+
+> **Rationale.** Tests written after the code tend to describe what the code does rather than what was required, so the order is the evidence that a passing run means the requirement is met. The stage ladder puts test cases before implementation for a project as a whole, but not requirement by requirement, and the committed history is the one record of order that no cell can restate after the fact. Code declaring which requirement or design row it implements is the one event that marks an implementation landing. A requirement's acceptance is its entry into scope, so judging only requirements accepted after a declared starting point keeps a project that adopts the rule from being judged on history written before it; a project that declares none is judged whole. A test case is evidence for a requirement only once it is accepted while it names that requirement: dated from its own acceptance alone, a test case accepted for something else could be re-pointed at code already written and lend it an order it never had. A test case not yet accepted is the same gap at its widest, since its passing run shows only that the code does what unaccepted text says; the report names it with a warning rather than withholding the result, which a reviewer can still weigh.
+
+
+### LLR LLR-257
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: The start is a commit id the process settings declare for this check, read as text. When each requirement, and each pair of a test case and a requirement it names, was first accepted is read from the acceptance record, never by replaying the registries: the commits read are those that wrote the act ledger or the record's copies of the requirement, design and test-case registries at the record's current path, found by the act ledger's one history walk widened to those copies, and each commit's copies are read against every parent's through the shared row reader and acceptance-act rule. A commit that added a ledger entry is an act and dates exactly each row it carried into acceptance and each pair new in its copies, a pair being a test case accepted in a copy while it names the requirement directly or through a design row below the requirement in that same copy's requirement tree (one whose SR-Refs name the requirement, or a child whose parent chain ends at such a row), so a test case accepted earlier and re-pointed at the requirement, or reached through a design row re-pointed at it, is dated at the act that re-accepts it; a row born Accepted counts at its act, and a row's later re-acceptances are not its first. An act made on a side branch is ordered at the first first-parent commit that contains it, as a landing is, and named by its own commit. The record's first commit at its current path is its cut: nothing before it is read, in any earlier spelling of the record, since no reader is kept for a spelling the record has left behind and its history is cut cleanly there rather than translated; each acceptance its copies carry is known only to be at or before the cut while its ledger records an act, and is unread when the cut holds no ledger, an empty one or a malformed one; in this repository the cut is the vocabulary move, which reached trunk at the declared start. A row moved into Accepted from a word outside the status vocabulary is likewise known only to be at or before its act. Such a date settles the order when it falls at or before the landing, and for a requirement's own acceptance at or before the start; otherwise the requirement is reported as unread, never as a pass. A commit that changes the copies with a flip or a new pair and adds no ledger entry, or whose ledger or its parent's is malformed, is a gap: what it carries is unread, never a pass and never dated at a later act, and so is a requirement or test case reading accepted at the tip that no act in the record accepted. The start applies to the requirement's acceptance only, and test-case acceptances are read over the whole record, so a test case accepted after the implementation landed is reported even when both precede the start. Counting a row's occurrences in a commit's diff is not used, because an act accepting one row while withdrawing another nets to zero. A requirement's implementation lands at the earliest first-parent commit adding a back-link line naming it or one of its design rows, read with the one back-link grammar the reverse back-link scan defines. Each requirement accepted after the start whose implementation has landed is judged over the test cases whose Verifies name it or one of its design rows at the tip: the check reports each one accepted for it after the landing, naming the requirement, the implementation commit and each such acceptance commit, and each one that does not read accepted at the tip or that no act has accepted while it names the requirement, by name, on one line carrying the warning that those test cases' results may not reflect the intended behaviour. A shallow clone, a start commit that no longer exists or is not a first-parent ancestor of trunk, a start before the TOML registries, and registries still under an older carrier are reported as unreadable, never as a pass, the design registry held to both carrier rules with the requirement and test-case registries, since a test case reaching a requirement through a design row the TOML reader cannot see would otherwise drop out in silence; a rewrite that keeps the start on trunk is read as the history it now is. The harness's checks gain a warn-only built-in step for this order.
+  - after: The start is a commit id the process settings declare for this check, read as text. When each requirement, and each pair of a test case and a requirement it names, was first accepted is read from the acceptance record, never by replaying the registries: the commits read are those that wrote the act ledger or the record's copies of the requirement, design and test-case registries at the record's current path, found by the act ledger's one history walk widened to those copies, and each commit's copies are read against every parent's through the shared row reader and acceptance-act rule. A commit that added a ledger entry is an act and dates exactly each row it carried into acceptance and each pair new in its copies, a pair being a test case accepted in a copy while it names the requirement directly or through a design row below the requirement in that same copy's requirement tree (one whose SR-Refs name the requirement, or a child whose parent chain ends at such a row), so a test case accepted earlier and re-pointed at the requirement, or reached through a design row re-pointed at it, is dated at the act that re-accepts it; a row born Accepted counts at its act, and a row's later re-acceptances are not its first. An act made on a side branch is ordered at the first first-parent commit that contains it, as a landing is, and named by its own commit. The record's first commit at its current path is its cut: nothing before it is read, in any earlier spelling of the record, since no reader is kept for a spelling the record has left behind and its history is cut cleanly there rather than translated; each acceptance its copies carry is known only to be at or before the cut while its ledger records an act, and is unread when the cut holds no ledger, an empty one or a malformed one; in this repository the cut is the vocabulary move, which reached trunk at the declared start. A row moved into Accepted from a word outside the status vocabulary is likewise known only to be at or before its act. Such a date settles the order when it falls at or before the landing, and for a requirement's own acceptance at or before the start; otherwise the requirement is reported as unread, never as a pass. A commit that changes the copies with a flip or a new pair and adds no ledger entry, or whose ledger or its parent's is malformed, is a gap: what it carries is unread, never a pass and never dated at a later act, and so is a requirement or test case reading accepted at the tip that no act in the record accepted. The start applies to the requirement's acceptance only, and test-case acceptances are read over the whole record, so a test case accepted after the implementation landed is reported even when both precede the start. Counting a row's occurrences in a commit's diff is not used, because an act accepting one row while withdrawing another nets to zero. A requirement's implementation lands at the earliest first-parent commit adding a back-link line naming it or one of its design rows, read with the one back-link grammar the reverse back-link scan defines. Each requirement accepted after the start whose implementation has landed is judged over the test cases whose Verifies name it or one of its design rows at the tip: the check reports each one accepted for it after the landing, naming the requirement, the implementation commit and each such acceptance commit, and each one that does not read accepted at the tip or that no act has accepted while it names the requirement, by name, on one line carrying the warning that those test cases' results may not reflect the intended behaviour. A shallow clone, a start commit that no longer exists or is not a first-parent ancestor of trunk, a start before the TOML registries, and registries still under an older carrier are reported as unreadable, never as a pass, the design registry held to both carrier rules with the requirement and test-case registries, since a test case reaching a requirement through a design row the TOML reader cannot see would otherwise drop out in silence; a rewrite that keeps the start on trunk is read as the history it now is. The harness's checks gain a warn-only built-in step for this order. The check exits 0 whatever it reports; in its strict mode, which that built-in step does not pass, it exits 1 whenever it reports a requirement or a history it cannot read.
+_adjudicated link — goes to a sitting_
+- **Constrains**
+  - before: (empty)
+  - after: IF-198
 
 ## SR-218 — The state view shows, for each need, the assumptions it relies on and whether any has been shown false
 

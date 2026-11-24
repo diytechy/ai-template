@@ -407,6 +407,24 @@ def test_the_derived_stage_is_identical_with_the_gate_on_and_off(scaffold):
     assert (root / "docs" / "stage").read_bytes() == off
 
 
+def test_the_gate_reads_off_from_an_absent_or_unreadable_policy_file(tmp_path):
+    # The gate is opt-in: only a readable `assumption_gate = true` turns it on,
+    # and a policy file that is absent, does not parse or does not decode
+    # reads off rather than failing every requirement.
+    import kitlib.config as CONFIG  # scripts/ is on the path by now
+
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    assert CONFIG.assumption_gate_enabled(docs) is False
+    policy = docs / "process.toml"
+    policy.write_text("[checks]\nassumption_gate = true\n", encoding="utf-8")
+    assert CONFIG.assumption_gate_enabled(docs) is True
+    policy.write_text("[checks\nassumption_gate = true\n", encoding="utf-8")
+    assert CONFIG.assumption_gate_enabled(docs) is False
+    policy.write_bytes(b"[checks]\nassumption_gate = true\n\xff\n")
+    assert CONFIG.assumption_gate_enabled(docs) is False
+
+
 # --- TC-239: the interface-form requirement, both arms (SR-212) ------------------
 # THE ARCH ARM: an interface-form requirement is reached through the files its
 # design rows' back-link tags are in by each boundary interface whose contract

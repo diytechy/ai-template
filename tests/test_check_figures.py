@@ -161,6 +161,15 @@ def test_docs_tree_is_scanned_beside_the_root(tmp_path):
     assert "docs/log.md:1" in proc.stderr
 
 
+def test_the_surface_is_walked_by_the_reference_checks_own_walk():
+    # One walk for the two documentation checks, so they agree on the surface
+    # and a generated tree the reference check skips is skipped here too.
+    from conftest import load_script
+
+    fig = load_script("check_figures")
+    assert fig.doc_files.__module__ == "check_doc_refs", fig.doc_files.__module__
+
+
 # --- REVIEW-A rework (findings 1-2) ------------------------------------------
 
 

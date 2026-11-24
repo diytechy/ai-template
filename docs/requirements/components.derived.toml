@@ -21,11 +21,11 @@
 
 [derived]
 components = 4
-design_rows = 151
-design_rows_unplaced = 238
+design_rows = 166
+design_rows_unplaced = 227
 seam_rows = 239
-requirements_placed = 79
-requirements_unplaced = 62
+requirements_placed = 85
+requirements_unplaced = 56
 seams_unplaced = 0
 
 [component_view.CMP-006]
@@ -73,11 +73,13 @@ sr_refs = [
   "SR-247",
 ]
 sr_shared_refs = [
+  "SR-017",
   "SR-024",
   "SR-070",
   "SR-144",
   "SR-146",
   "SR-148",
+  "SR-157",
   "SR-166",
   "SR-168",
   "SR-174",
@@ -330,11 +332,20 @@ seam_boundary_refs = [
 name = "W2 Gatekeeper"
 sr_refs = [
   "SR-006",
+  "SR-007",
+  "SR-017",
+  "SR-018",
   "SR-019",
   "SR-020",
   "SR-031",
+  "SR-040",
+  "SR-043",
   "SR-148",
+  "SR-150",
   "SR-156",
+  "SR-157",
+  "SR-158",
+  "SR-167",
   "SR-182",
   "SR-183",
   "SR-205",
@@ -343,15 +354,30 @@ sr_refs = [
   "SR-217",
 ]
 sr_shared_refs = [
+  "SR-017",
   "SR-031",
   "SR-148",
   "SR-156",
+  "SR-157",
+  "SR-158",
   "SR-209",
   "SR-216",
   "SR-217",
 ]
 llr_refs = [
+  "LLR-006",
+  "LLR-007",
+  "LLR-014",
+  "LLR-016",
+  "LLR-019",
+  "LLR-020",
   "LLR-021",
+  "LLR-031",
+  "LLR-038",
+  "LLR-040",
+  "LLR-077",
+  "LLR-098",
+  "LLR-146",
   "LLR-195",
   "LLR-206",
   "LLR-242",
@@ -363,13 +389,19 @@ llr_refs = [
   "LLR-291",
   "LLR-368",
   "LLR-370",
+  "LLR-493",
+  "LLR-494",
+  "LLR-495",
 ]
 hat_refs = [
   "CONSISTENCY",
   "CROSS-PLATFORM",
   "DATA-PROTECTION",
+  "FIRST-RUN-ADOPTER",
   "INTEGRITY-RECOVERABILITY",
   "MAINTAINER",
+  "PERFORMANCE",
+  "PRODUCT-FITNESS",
   "SECURITY",
   "TEST-ENGINEER",
   "UNATTENDED-OPS",
@@ -840,6 +872,7 @@ sr_shared_refs = [
   "SR-024",
   "SR-070",
   "SR-148",
+  "SR-158",
   "SR-168",
 ]
 llr_refs = [
@@ -995,18 +1028,14 @@ seam_boundary_refs = [
 
 [unplaced]
 sr_refs = [
-  "SR-007",
   "SR-009",
   "SR-011",
-  "SR-018",
   "SR-022",
   "SR-026",
   "SR-027",
   "SR-028",
   "SR-034",
   "SR-036",
-  "SR-040",
-  "SR-043",
   "SR-052",
   "SR-053",
   "SR-054",
@@ -1017,7 +1046,6 @@ sr_refs = [
   "SR-137",
   "SR-138",
   "SR-149",
-  "SR-150",
   "SR-151",
   "SR-152",
   "SR-155",
@@ -1026,7 +1054,6 @@ sr_refs = [
   "SR-163",
   "SR-164",
   "SR-165",
-  "SR-167",
   "SR-169",
   "SR-171",
   "SR-172",
@@ -1064,17 +1091,11 @@ llr_refs = [
   "LLR-003",
   "LLR-004",
   "LLR-005",
-  "LLR-006",
-  "LLR-007",
   "LLR-008",
   "LLR-009",
   "LLR-011",
-  "LLR-014",
-  "LLR-016",
   "LLR-017",
   "LLR-018",
-  "LLR-019",
-  "LLR-020",
   "LLR-022",
   "LLR-023",
   "LLR-026",
@@ -1086,8 +1107,6 @@ llr_refs = [
   "LLR-034",
   "LLR-035",
   "LLR-037",
-  "LLR-038",
-  "LLR-040",
   "LLR-041",
   "LLR-043",
   "LLR-044",
@@ -1113,7 +1132,6 @@ llr_refs = [
   "LLR-074",
   "LLR-075",
   "LLR-076",
-  "LLR-077",
   "LLR-078",
   "LLR-079",
   "LLR-080",
@@ -1129,7 +1147,6 @@ llr_refs = [
   "LLR-095",
   "LLR-096",
   "LLR-097",
-  "LLR-098",
   "LLR-099",
   "LLR-100",
   "LLR-101",
@@ -1168,7 +1185,6 @@ llr_refs = [
   "LLR-143",
   "LLR-144",
   "LLR-145",
-  "LLR-146",
   "LLR-147",
   "LLR-148",
   "LLR-149",

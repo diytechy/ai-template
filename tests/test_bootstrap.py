@@ -32,6 +32,7 @@ _ACTION_PINS = {
 
 
 def test_scaffold_contains_expected_files(scaffold):
+    """Implements: TC-249, TC-256"""
     for rel in [
         "AGENTS.md",
         "CLAUDE.md",
@@ -1674,7 +1675,7 @@ def test_bootstrap_imports_only_the_common_package():
     because it ships and is import-clean of the rest of `scripts/`; a second
     sibling would not be.
 
-    Implements: TC-176
+    Implements: TC-176, TC-242
     """
     kit_modules = {p.stem for p in SCRIPTS.glob("*.py")} - {"bootstrap"}
     kit_modules |= {p.parent.name for p in SCRIPTS.glob("*/__init__.py")}
@@ -1734,7 +1735,7 @@ def test_every_sibling_imported_module_is_shipped_by_mapping():
     alone added six) that forgets its MAPPING row fails here instead of in an
     adopter's repo.
 
-    Implements: TC-176, TC-199
+    Implements: TC-176, TC-199, TC-256
     """
     # Read the MAPPING LITERAL, not the file text: a whole-file regex also
     # matches script names in docstrings and comments, which would silently

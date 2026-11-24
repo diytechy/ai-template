@@ -38,6 +38,15 @@ def test_unrelated_change_below_rung(monkeypatch):
     assert not selected(monkeypatch, {"docs/notes.md"})
 
 
+def test_patterns_split_on_commas_and_match_case_sensitively(monkeypatch):
+    # A comma separates patterns as whitespace does, and a pattern matches a
+    # changed path only in the path's own letter case.
+    config = profile("SRC/*,docs/baseline")
+    assert selected(monkeypatch, {"docs/baseline"}, config=config)
+    assert selected(monkeypatch, {"SRC/a.py"}, config=config)
+    assert not selected(monkeypatch, {"src/a.py"}, config=config)
+
+
 def test_at_rung_with_no_change(monkeypatch):
     assert selected(monkeypatch, set(), "DevStg-Impl")
 
