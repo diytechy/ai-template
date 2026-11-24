@@ -35,7 +35,7 @@ never opens it). The RESYNC anchor stays `[since c7d6bd6f4]`; trunk has moved
 - `e425d4173`: the close-out (this Deliverable, the move, the log fragment).
 - `809e610f2`: review round 1's three adopted findings (the review record,
   at the end of this Deliverable).
-- The commit after it: review round 2's adopted finding (the escaped
+- `54579f85e`: review round 2's adopted finding (the escaped
   backtick).
 
 **A read of this repository's scratchpad, recorded for the operator.** One
@@ -300,6 +300,9 @@ migrator modules `93 passed in 16.39s`; with the ratchets and
 enforce`: `OK - 168 row(s) over 15, unchanged from baseline.`; `trace.py
 --root . --strict` and `check_trajectory.py --root . --strict` exit 0.
 <!-- fig: cmd="python -m pytest -q -p no:cacheprovider --basetemp <scratch> tests/test_migrate_vocabulary.py tests/test_migrate_vocabulary_record.py" rev="809e610f2 plus the round-2 fix, uncommitted, 2026-11-23" -->
+
+Round 3 (2026-11-24, narrow, over `809e610f2..54579f85e`): Sol and
+Hydrogen `APPROVE findings=0`.
 
 ## Context
 
