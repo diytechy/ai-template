@@ -879,3 +879,7 @@ ac-advisories=1 form-findings=1 paraphrase-advisories=1`.
 `check_trajectory.py --root . --strict`: `check_trajectory: clean (1068 work
 item(s), 940 done (88%), 37 cancelled, graph acyclic).` The views were
 regenerated before the fix commit; every evidence cell was already current.
+
+**Round 2** (narrow, over `e76906162..c9f0dab34`, round 1's findings and the
+coordinator's rulings prepended): Gemini Hydrogen APPROVE findings=0; OpenAI
+Sol APPROVE findings=0.
