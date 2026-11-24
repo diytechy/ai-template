@@ -1,6 +1,6 @@
 +++
 id = "WI-1067"
-title = "WI-1066's verdict answered: SR-207 fronts its event condition and states its retirement rule; TC-560 drives LLR-480's two missing faults"
+title = "WI-1066's verdict answered: SR-207 fronts its event and states its retirement rule; TC-560 drives two more faults"
 workstream = "process"
 specref = "docs/reviews/wi-1066-adjudicate-seventh-sitting/001-ADJUDICATE-123cd20.md"
 sr_refs = ["SR-207", "SR-157"]
