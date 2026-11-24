@@ -4836,7 +4836,7 @@ status = "Drafted"
 phase = 6
 
 [test.TC-533]
-verifies = ["SR-229", "LLR-423"]
+verifies = ["SR-229", "LLR-423", "IF-277"]
 level = "Unit"
 method = "Run a guarded claim whose environment names the lease holder's session under the agent tool's session variable, and again under another variable name."
 tier = "Smoke"

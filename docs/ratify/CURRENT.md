@@ -659,6 +659,9 @@ _other trace cell — owes no act_
   - after: tests/test_blackout_window.py::test_a_claim_inside_the_window_is_refused_with_the_guard_off; tests/test_blackout_window.py::test_the_dispatchers_claim_is_refused_inside_the_window; tests/test_blackout_window.py::test_the_hooks_deny_each_launch_form_with_the_guard_off; tests/test_blackout_window.py::test_the_hooks_allow_everything_else; tests/test_blackout_window.py::test_a_subagents_call_is_never_denied; tests/test_blackout_window.py::test_a_quoted_launch_form_is_denied; tests/test_blackout_window.py::test_a_quoted_operator_is_not_a_command_boundary; tests/test_blackout_window.py::test_an_unreadable_command_line_is_denied_inside_the_window; tests/test_blackout_window.py::test_the_one_reading_keeps_quoted_text_in_its_word; tests/test_blackout_window.py::test_a_json_array_template_names_its_cli; tests/test_blackout_window.py::test_session_start_and_the_monitored_events_tell_the_close_down; tests/test_blackout_window.py::test_the_cli_names_come_from_the_route_registry; tests/test_blackout_window.py::test_every_denied_launch_reaches_the_pre_tool_use_matcher; tests/test_blackout_window.py::test_a_tool_outside_the_matcher_hears_the_close_down_after_the_call; tests/test_blackout_window.py::test_the_window_check_subcommand_exits_nonzero_inside
 
 ### TC TC-533, Drafted — never accepted
+- **Verifies**
+  - before: SR-229;LLR-423
+  - after: SR-229;LLR-423;IF-277
 - **Evidence**
   - before: tests/test_coordinator_guard.py::test_the_guard_reads_its_caller_from_the_agent_tools_session_variable
   - after: tests/test_coordinator_guard.py::test_the_guard_reads_its_caller_from_the_agent_tools_session_variable; tests/test_coordinator_guard.py::test_a_claim_names_its_caller_by_claude_code_session_id
