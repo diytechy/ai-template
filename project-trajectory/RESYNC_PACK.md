@@ -12776,6 +12776,40 @@ stands alone), run the migrator, then take again the acts taken since.
 
 **Project-owned files — edit:** none.
 
+### The amendment brief shows a linked row's whole accepted text and lists the rows its moved links name [since ec188f984]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** For a scoped row with a moved adjudicated link, the
+amendment brief now also shows the row's other nonempty accepted cells, as
+they now read, under an "unmoved" label after its moved cells. After the
+shown rows, a new section lists once each id a moved link names, before or
+after: a need by its statement; a boundary crossing by its direction, entity
+and what it carries; a requirement or design row by its title and
+requirement or detail; an interface by its channel, owner and the
+`Contract IF-###:` body one file states, or its `data` cell when none does.
+Each listed cell is shown on one line, clipped at 2,400 characters with the
+clip stated; an id naming no live row is listed as such, and a row also
+shown for judgement is listed as shown above. The section is labelled
+context: not under judgement and in no `JUDGED-TEXT` identity. The identity
+and every reader of a binding are unchanged.
+
+**What to do.** If you override `adjudicate-amendment.template.md`, add the
+new `{linked}` slot under its heading, and carry the identity heading and
+the LINKS sentence into your copy: the strict fill refuses an override
+without the slot, naming it, and the loop holds the amendment row until it
+is added. Bindings written before the upgrade read as before. The template
+edit moves the retained-session identity, which hashes the template file's
+bytes, so a retained adjudicator whose classes include the amendment brief
+drains once. Composing a brief whose links name interfaces now runs the
+contract harvest once (seconds on a large tree).
+
+**Kit-owned files — overwrite:** `scripts/amendment_brief.py`,
+`scripts/adjudicate_brief.py`, `prompts/adjudicate-amendment.template.md`,
+`prompts/CATALOG.md`.
+
+**Project-owned files — edit:** none.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

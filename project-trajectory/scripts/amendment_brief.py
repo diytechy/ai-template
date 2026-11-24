@@ -23,6 +23,13 @@ imports this module, and nothing here imports the composer (the import graph
 admits no cycle, a deferred import included). `JUDGED_TEXT` is the identity
 line this arm states; the composer's binding reader reads it from here.
 
+THE ROWS A MOVED LINK NAMES (WI-1070). A row with a moved adjudicated link is
+shown with its whole accepted text, and each id its moved links name is
+listed once as context (`_linked_rows`), by its tier's identifying cells
+(`LINKED_TIERS`), clipped at `LINKED_CLIP` and outside every identity. An
+interface's stated contract is read through the architecture component's
+contract harvest, imported where it is read.
+
 Component: CMP-008
 """
 
@@ -38,6 +45,7 @@ import plan_briefs
 import prompts
 import spine_carrier
 from kitlib import sitting as ksitting
+from kitlib import spine as kspine
 
 # The TC registry, one of the tiers `_REGISTRY_OF` joins; the composer's
 # evidence-gap brief reads it from here too.
@@ -168,7 +176,12 @@ def amendment_values(root, row):
     dropped unnamed (`_not_shown_lines`). The need, assumption and surrogate
     tiers, which that model does not hold, are read beside it from the same
     recorded copy (`_unchained_amended_rows`; OI-100 gap 1, WI-791), so a row
-    the widened mint routes is briefed rather than held.
+    the widened mint routes is briefed rather than held. A row with a moved
+    link also lists its unmoved accepted cells (`_unmoved_cells`), since the
+    question a link asks is about the row's whole text.
+
+    `{linked}` lists once each id the shown rows' moved links name, as
+    context outside every identity (`_linked_rows`; WI-1070).
 
     NO SNAPSHOT IS A HOLD, AND IT SAYS WHY. A repo that has never signed has no
     accepted anchor at all, so "did this amendment change the meaning?" is not
@@ -196,9 +209,10 @@ def amendment_values(root, row):
     last wrote ITS copy.
 
     `{identity}` states one `JUDGED-TEXT: <row id> <digest>` line per row the
-    brief shows, the digest of that row's accepted text and adjudicated links
-    as the brief's own reader loads it (`acceptance_record.accepted_text_digest`),
-    so the binding records the text this sitting judged.
+    brief shows for judgement, the digest of that row's accepted text and
+    adjudicated links as the brief's own reader loads it
+    (`acceptance_record.accepted_text_digest`), so the binding records the
+    text this sitting judged; a row `{linked}` lists has none.
 
     Implements: SR-146, SR-178, LLR-167, LLR-359
     """
@@ -223,7 +237,7 @@ def amendment_values(root, row):
         )
     reg = tr.load_registries(root / "docs")
     model = tr.reaccept_model(root, reg.srs, reg.llrs, reg.tcs)
-    lines, tiers, chained = _amended_rows(model, scope)
+    lines, tiers, chained, links = _amended_rows(model, scope)
     more, more_tiers, unchained = _unchained_amended_rows(root, scope)
     gone, gone_tiers, removed, unknown = _removed_amended_rows(root, scope)
     if unknown:
@@ -252,6 +266,7 @@ def amendment_values(root, row):
     return {
         "baseline": _amendment_baseline(root, tiers),
         "rows": "\n".join(lines + _not_shown_lines(scope, shown)),
+        "linked": _linked_rows(root, links, shown),
         "aftermath": _aftermath(root, tiers),
         "questions": questions,
         "identity": _identity(root, chained, unchained + removed),
@@ -262,10 +277,11 @@ def amendment_values(root, row):
 
 
 def _amended_rows(model, scope):
-    """`(lines, tiers, shown)`: the before/after of each moved accepted cell
-    and each moved adjudicated link of every row IN `scope` the model holds,
-    the spine tiers those rows sit in, and the `(tier, row id)` each block
-    shows.
+    """`(lines, tiers, shown, links)`: the before/after of each moved accepted
+    cell and each moved adjudicated link of every row IN `scope` the model
+    holds, the spine tiers those rows sit in, the `(tier, row id)` each block
+    shows, and `[(row id, its moved links)]` for the rows with one, in block
+    order, for the listing of the rows they name (`_linked_rows`).
 
     ONE BLOCK PER ROW, naming every chain it hangs under. The model groups by
     owning SR, so a row with two parents sits in two entries with the same
@@ -276,13 +292,16 @@ def _amended_rows(model, scope):
     for (kind, rid), sids in chains.items():
         head = "- {} {} (chain of {})".format(kind, rid, ", ".join(sids))
         lines += _cell_block(head, *cells_of[(kind, rid)])
-    return lines, {kind for kind, _rid in chains}, list(chains)
+    links = [(rid, cells_of[(k, rid)][1]) for k, rid in chains if cells_of[(k, rid)][1]]
+    return lines, {kind for kind, _rid in chains}, list(chains), links
 
 
-def _cell_block(head, cells, links=()):
+def _cell_block(head, cells, links=(), unmoved=None):
     """One shown row's block: `head`, then each accepted cell's name and its
     before and after, then each moved adjudicated link the same way, its name
-    marked `(link)`; an empty side is shown as `(empty)`.
+    marked `(link)`; an empty side is shown as `(empty)`. A row with a moved
+    link then lists its `unmoved` accepted cells under `UNMOVED`, verbatim as
+    judged text is, `(none)` when every one moved (WI-1070).
 
     Implements: SR-146, LLR-167"""
     lines = [head]
@@ -290,41 +309,74 @@ def _cell_block(head, cells, links=()):
     for name, before, after in named:
         lines += ["  - " + name, "    - before: " + (before or "(empty)")]
         lines.append("    - after: " + (after or "(empty)"))
+    if unmoved is not None:
+        lines.append(UNMOVED)
+        lines += ["    - {}: {}".format(n, t) for n, t in unmoved] or ["    - (none)"]
     return lines
+
+
+# The label over a linked row's unmoved accepted cells, after its moved ones.
+UNMOVED = (
+    "  - Unmoved accepted cells (with the cells above, the row's whole accepted text):"
+)
 
 
 def _scoped_chain_rows(model, scope):
     """`(chains, cells_of)`: each row IN `scope` with a moved accepted cell or
     a moved adjudicated link to show, keyed `(tier, row id)`, mapped to the SR
-    chains it hangs under and to `(accepted cells, links)`. A row whose only
-    moved cells are links is shown: blessing it records the link, so the
-    sitting must see it (WI-1069). Other trace cells are not shown. Split out
-    of `_amended_rows` so the selection and the rendering each stay under the
-    complexity limit.
+    chains it hangs under and to `(accepted cells, links, unmoved cells)`. A
+    row whose only moved cells are links is shown: blessing it records the
+    link, so the sitting must see it (WI-1069). Other trace cells are not
+    shown. Split out of `_amended_rows` so the selection and the rendering
+    each stay under the complexity limit.
 
     Implements: SR-146, LLR-167"""
     chains, cells_of = {}, {}
     for entry in model:
         for chain_row in entry["rows"]:
-            cells, links = _judged_cells(chain_row)
+            cells, links, unmoved = _judged_cells(chain_row)
             if chain_row["id"] not in scope or not (cells or links):
                 continue
             key = (chain_row["kind"], chain_row["id"])
             chains.setdefault(key, []).append(entry["id"])
-            cells_of[key] = (cells, links)
+            cells_of[key] = (cells, links, unmoved)
     return chains, cells_of
 
 
 def _judged_cells(chain_row):
-    """`(accepted cells, links)`: the moved cells of one model row a sitting
-    judges, its accepted cells and its adjudicated links, each as the model's
-    `(name, before, after)` triples.
+    """`(accepted cells, links, unmoved)`: the moved cells of one model row a
+    sitting judges, its accepted cells and its adjudicated links, each as the
+    model's `(name, before, after)` triples, and, for a row with a moved link,
+    its other accepted cells (`_unmoved_cells`), else None.
 
     Implements: SR-146, LLR-167"""
     accepted = chain_row.get("accepted") or frozenset()
     routed = chain_row.get("routed") or frozenset()
     cells = chain_row["cells"]
-    return [c for c in cells if c[0] in accepted], [c for c in cells if c[0] in routed]
+    moved = [c for c in cells if c[0] in accepted]
+    links = [c for c in cells if c[0] in routed]
+    return moved, links, (_unmoved_cells(chain_row, moved) if links else None)
+
+
+def _unmoved_cells(chain_row, moved):
+    """`[(name, text)]`, by name: the nonempty accepted cells of a shown row
+    that did not move, as its live row reads them. With the moved cells'
+    `after`, they are the row's whole accepted text, which a link is judged
+    against (WI-1070): a link-only row's diff alone holds none of it. Classed
+    as the judged-text identity classes them
+    (`acceptance_record.spine_cell_class`), the id and `Status` left out as it
+    leaves them out, so every cell listed is in the row's identity.
+
+    Implements: SR-146, LLR-167"""
+    kind, full = chain_row["kind"], chain_row.get("full") or {}
+    rel, skip = _REGISTRY_OF[kind], {kind + "-ID", "Status"} | {c[0] for c in moved}
+    return [
+        (name, str(value))
+        for name, value in sorted(full.items())
+        if name not in skip
+        and value
+        and acceptance_record.spine_cell_class(rel, name) == "accepted"
+    ]
 
 
 # The line naming the scoped rows a brief does not show, after its blocks. It
@@ -340,6 +392,215 @@ def _not_shown_lines(scope, shown):
     Implements: SR-146, LLR-167"""
     idle = sorted(set(scope) - set(shown))
     return ["", NOT_SHOWN.format(", ".join(idle))] if idle else []
+
+
+# --- the rows the moved links name (WI-1070) ----------------------------------
+
+# The tiers an adjudicated link names, in listing order: `(id prefix, word,
+# registry, id column, identifying cells)`. Measured over every routed cell
+# (`record_rows.ROUTED_TRACED_CELLS`): a link names a need, a boundary
+# crossing, a requirement, a design row or an interface, and no other tier.
+# Each tier's cells are its title where its schema has one and the cell that
+# states what the row is; an interface adds its stated contract
+# (`_stated_contracts`), its `Data` cell standing in when none is stated.
+LINKED_TIERS = (
+    ("SN", "need", "docs/requirements/stakeholder-needs.toml", "SN-ID", ("Need",)),
+    (
+        "B",
+        "boundary crossing",
+        "docs/requirements/external.toml",
+        "B-ID",
+        ("Direction", "Entity", "Carries"),
+    ),
+    (
+        "SR",
+        "requirement",
+        "docs/requirements/system-requirements.toml",
+        "SR-ID",
+        ("Title", "Requirement"),
+    ),
+    (
+        "LLR",
+        "design row",
+        "docs/requirements/low-level-requirements.toml",
+        "LLR-ID",
+        ("Title", "Detail"),
+    ),
+    (
+        "IF",
+        "interface",
+        "docs/requirements/interfaces.toml",
+        "IF-ID",
+        ("Channel", "Owner", "Data"),
+    ),
+)
+# The bound on one listed cell, in characters after its whitespace collapses:
+# every need, crossing, requirement, title and data cell shows whole, and 95%
+# of stated contracts and 92% of design-row details (measured on this kit at
+# WI-1070); a longer cell keeps its opening, where a row states what it is.
+LINKED_CLIP = 2400
+# The listing's one line when the shown rows move no link.
+LINKED_NONE = "(no moved link in this brief names a row)"
+_ID_RE = re.compile(r"^([A-Z]+)-(\d+)$")
+
+
+def _linked_rows(root, links, shown):
+    """`{linked}`: each id the moved `links` name, before or after, listed
+    once in tier then id order, naming the shown rows, cells and sides that
+    name it, with its tier's identifying cells (`_listed_row`); `LINKED_NONE`
+    when no shown row moved a link. `links` is `_amended_rows`' `[(row id,
+    [(cell, before, after)])]`; `shown` the ids shown for judgement.
+
+    CONTEXT, NOT JUDGED. The question a link asks, whether the row's text
+    states what the link now points at, cannot be answered from its ids; the
+    named row's text answers it. It is judged at its own tier, so no listed
+    row has a judged-text identity line, and each listed cell is shown on one
+    line, so none of its text can read as one.
+
+    Implements: SR-146, LLR-167"""
+    named = {}
+    for rid, moved in links:
+        for cell, before, after in moved:
+            sides = {}
+            for side, value in (("before", before), ("after", after)):
+                for target in kspine.refs(value):
+                    sides.setdefault(target, []).append(side)
+            for target, which in sides.items():
+                named.setdefault(target, []).append(
+                    "{} {} ({})".format(rid, cell, ", ".join(which))
+                )
+    if not named:
+        return LINKED_NONE
+    rows = _named_tier_rows(root, named, shown)
+    lines = []
+    for target in sorted(named, key=_listing_order):
+        lines += _listed_row(target, "; ".join(named[target]), rows, shown)
+    return "\n".join(lines)
+
+
+def _listing_order(rid):
+    """A named id's place in the listing: its tier's, then its number."""
+    match = _ID_RE.match(rid)
+    prefixes = [t[0] for t in LINKED_TIERS]
+    if match is None or match.group(1) not in prefixes:
+        return (len(prefixes), 0, rid)
+    return (prefixes.index(match.group(1)), int(match.group(2)), rid)
+
+
+def _tier_of(rid):
+    """The `LINKED_TIERS` entry `rid`'s prefix names, or None."""
+    match = _ID_RE.match(rid)
+    return next((t for t in LINKED_TIERS if match and t[0] == match.group(1)), None)
+
+
+def _named_tier_rows(root, named, shown):
+    """`{id prefix: {row id: live row}}` for each tier a listed id that is not
+    shown for judgement names, each registry loaded once (the needs file
+    through its own tier loader); `EXT` the entities a crossing names, and
+    `CONTRACT` the stated contracts of the named interfaces.
+
+    Implements: SR-146, LLR-167"""
+    wanted = {t[0] for t in map(_tier_of, set(named) - set(shown)) if t}
+    rows = {}
+    for prefix, _word, rel, id_col, _cells in LINKED_TIERS:
+        if prefix in wanted:
+            rows[prefix] = {r.get(id_col): r for r in _load_tier(root, rel, id_col)}
+    if "B" in rows:
+        ext = _load_tier(root, "docs/requirements/external.toml", "EXT-ID")
+        rows["EXT"] = {r.get("EXT-ID"): r for r in ext}
+    if "IF" in rows:
+        rows["CONTRACT"] = _stated_contracts(root, set(named) & set(rows["IF"]))
+    return rows
+
+
+def _load_tier(root, rel, id_col):
+    """One tier's live rows, example rows dropped: the needs file's through
+    its carrier-aware tier loader, every other through the row loader."""
+    path = Path(root) / rel
+    if id_col == "SN-ID":
+        return spine_carrier.load_need_tier(path, id_col, False)
+    return spine_carrier.load(path, id_col, keep_examples=False)
+
+
+def _stated_contracts(root, ids):
+    """`{interface id: contract}` for each of `ids` whose `Contract IF-###:`
+    body exactly one file on the declared surface states, read through the
+    kit's own harvest (`arch_interfaces.contract_homes`, then that file's
+    `gen_arch_map.file_contracts`). An id with no such file is absent, so its
+    `Data` cell, the contract's home until code states one, stands in: no
+    surface (files mode, no scan root), no body, two bodies, or a header the
+    grammar refuses. Imported here, so the harvest runs only when a link names
+    an interface.
+
+    Implements: SR-146, LLR-167"""
+    import arch_interfaces
+    import gen_arch_map
+
+    homes = arch_interfaces.contract_homes(Path(root)) or {}
+    bodies, out = {}, {}
+    for iid in sorted(i for i in ids if i in homes):
+        rel = homes[iid]
+        if rel not in bodies:
+            try:
+                bodies[rel] = gen_arch_map.file_contracts(Path(root) / rel)[1]
+            except (OSError, UnicodeDecodeError, SyntaxError, ValueError):
+                # ValueError covers the grammar's refusal (ContractsGrammarError).
+                bodies[rel] = {}
+        if bodies[rel].get(iid):
+            out[iid] = bodies[rel][iid]
+    return out
+
+
+def _listed_row(rid, namers, rows, shown):
+    """One listed id's lines: its head (the id, its tier's word and the rows
+    naming it), then each identifying cell (`_listed_cells`), or the head
+    alone ending `shown above for judgement` or `names no live row`.
+
+    Implements: SR-146, LLR-167"""
+    tier = _tier_of(rid)
+    head = "- {} ({}), named by {}".format(rid, tier[1] if tier else "row", namers)
+    if rid in shown:
+        return [head + ": shown above for judgement"]
+    row = (rows.get(tier[0]) or {}).get(rid) if tier else None
+    if row is None:
+        return [head + ": names no live row"]
+    return [head] + [
+        "  - {}: {}".format(name, _context_cell(text))
+        for name, text in _listed_cells(tier, rid, row, rows)
+    ]
+
+
+def _listed_cells(tier, rid, row, rows):
+    """`[(label, text)]`: a live named row's identifying cells, its tier's in
+    order; a crossing's entity carries the entity's name when that row is
+    live, and an interface's stated contract replaces its `Data` cell."""
+    cells = [(name, str(row.get(name) or "")) for name in tier[4]]
+    if tier[0] == "B":
+        entity = (rows.get("EXT") or {}).get(row.get("Entity"))
+        if entity and entity.get("Name"):
+            cells[1] = ("Entity", "{} ({})".format(row.get("Entity"), entity["Name"]))
+    contract = (rows.get("CONTRACT") or {}).get(rid)
+    if tier[0] == "IF" and contract:
+        cells[-1] = ("Contract", contract)
+    return cells
+
+
+def _context_cell(text):
+    """A listed cell on ONE line, its whitespace collapsed, so no line of it
+    reads as an identity or verdict line, clipped at `LINKED_CLIP` characters
+    at the last space before the cap, the clip and the full length stated;
+    `(empty)` for an empty cell.
+
+    Implements: SR-146, LLR-167"""
+    flat = " ".join(str(text).split())
+    if len(flat) <= LINKED_CLIP:
+        return flat or "(empty)"
+    head = flat[:LINKED_CLIP]
+    if flat[LINKED_CLIP] != " " and " " in head:
+        head = head.rsplit(" ", 1)[0]
+    return "{} … [clipped at {} of {} characters]".format(
+        head.rstrip(), LINKED_CLIP, len(flat)
+    )
 
 
 # The amended tiers the requirement-chain model does not hold (OI-100 gap 1,

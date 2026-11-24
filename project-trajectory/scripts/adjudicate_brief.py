@@ -104,8 +104,9 @@ Contract IF-115: `compose(root, row, verdict_path, prompt_templates)` returns
     row declaring a brief this cannot compose is HELD for an operator, never
     dispatched as ordinary work, because a judge briefed as a builder ends its
     session done like any other and the miss is silent. The amendment brief
-    states the identity of each row's accepted text it shows, one
-    `JUDGED-TEXT: <row id> <digest>` line per row; `bind_pending` records
+    states the identity of each row's accepted text it shows for judgement,
+    one `JUDGED-TEXT: <row id> <digest>` line per row, and none for a row it
+    lists as context for a moved link; `bind_pending` records
     those lines in the binding (IF-287) and `record_outcome` keeps them when
     it rewrites the outcome, so a held CLARITY act is bound to the text judged.
     The dispute brief names the findings file it was composed over on its

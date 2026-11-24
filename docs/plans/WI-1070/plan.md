@@ -5,6 +5,11 @@ cut from `refactor_again` at `ec188f984`. `planmode = "single"`: this commit
 carries the plan alone, and nothing else changes until the coordinator's
 go-ahead.
 
+**Approved** by the coordinator 2026-11-24 (revision 1, `19572aff6`), D1 to
+D12 confirmed: D9 with no optional IF-131 requestor, and a stop-and-report if
+the strict trace reports an uncovered cross-component edge; D12 filed by the
+coordinator as its own work item; TC-398's wording routed to WI-1071.
+
 Read in full: the spec `docs/work/queued/WI-1070-brief-shows-link-targets.md`;
 its scope critique `docs/reviews/2026-11-24-scope-critiques/WI-1070.md`; the
 specref, the eighth sitting's verdict
