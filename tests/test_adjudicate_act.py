@@ -1065,6 +1065,56 @@ def test_a_test_case_waits_on_a_waiting_design_row_and_names_every_parent(tmp_pa
     assert TC_REL not in values["registries"]
 
 
+#: The design registry with a `Parent` column: LLR-002 under the accepted
+#: SR-001, LLR-003 Drafted under it, and LLR-004 a child naming LLR-003.
+LLRS_WITH_PARENT = (
+    "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Component,"
+    "Phase,Parent\n"
+    "LLR-001,SR-001,add impl,src/demo.py,add,add() returns a + b.,TC-001,"
+    "Accepted,,P1,\n"
+    "LLR-002,SR-001,sub impl,src/demo.py,sub,sub() returns a - b.,TC-002,"
+    "Drafted,,P1,\n"
+    "LLR-003,SR-001,diff impl,src/demo.py,diff,diff() returns a - b.,TC-003,"
+    "Drafted,,P1,\n"
+    "LLR-004,,neg impl,src/demo.py,neg,neg() returns -a.,TC-004,Drafted,,P1,"
+    "LLR-003\n"
+)
+# The child design row's verdict: LLR-002 and the child LLR-004 accepted,
+# LLR-004's parent design row LLR-003 returned.
+CHILD_WAITING = (
+    "- [ACCEPT] LLR-002 -> sub -> chain holds -> ready\n"
+    "- [ACCEPT] LLR-004 -> neg -> chain of LLR-003 -> ready\n"
+    "- [RETURN] LLR-003 -> diff -> no evidence -> not ready\n\n"
+    "OUTCOME: RETURN rows=3\n"
+)
+
+
+def test_a_child_design_row_waits_on_its_returned_parent_design_row(tmp_path):
+    """A child design row's flip waits on the parent design row its `Parent`
+    names, as a design row's waits on its SR: the act lists LLR-002, names
+    LLR-004 waiting on LLR-003, and the listed act, taken, passes the
+    parent-first commit judgement. The act reads the rule's own findings, so
+    it needs no change of its own (`test_the_wait_is_read_from_the_parent_first_rules_one_predicate`)."""
+    repo = _repo(tmp_path)
+    _write(repo, LLRS, LLRS_WITH_PARENT)
+    _commit(repo, "draft LLR-002, LLR-003 and its child LLR-004")
+    _verdict(repo, CHILD_WAITING, "first-acceptance")
+    acts, why = act.owed_acts(repo, VERDICT, "HEAD")
+    assert why is None, why
+    assert acts == {
+        "first-acceptance": {
+            "accepts": {LLR_REL: ["LLR-002"]},
+            "waiting": {"LLR-004": [("LLR-003", "Drafted")]},
+        }
+    }
+    values, why = act.act_values(repo, VERDICT, WI)
+    assert why is None, why
+    waits = "LLR-004 ({}) waiting on LLR-003 (Drafted)".format(LLR_REL)
+    assert waits in values["acceptance_act"], values["acceptance_act"]
+    _take_listed(repo, acts, values)
+    assert acceptance_record.commit_parent_first_lines(repo, "HEAD") == []
+
+
 def test_a_verdict_whose_only_remaining_act_waits_is_refused_naming_each_row_and_parent(
     tmp_path,
 ):
@@ -1134,5 +1184,5 @@ def test_the_wait_is_read_from_the_parent_first_rules_one_predicate():
     source = inspect.getsource(act)
     assert "kspine.parent_first_findings(" in source
     assert "acceptance_record.parent_first_tiers(" in source
-    for edge in ("PARENT_EDGES", '"SR-Refs"', '"Verifies"', '"SN-Refs"'):
+    for edge in ("PARENT_EDGES", '"SR-Refs"', '"Parent"', '"Verifies"', '"SN-Refs"'):
         assert edge not in source, edge

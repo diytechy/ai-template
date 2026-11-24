@@ -1538,14 +1538,16 @@ def missing_cell_findings(tiers):
 
 
 # THE PARENT-FIRST RULE: a spine row is accepted only after the rows
-# it hangs from are. Each child tier, the cell naming its parents, and the
-# tiers a parent is read from: an SR's needs, an LLR's SRs, and a TC's SRs and
-# LLRs. Any other id a cell cites (an IF, B or DA row, or an id no row
-# declares) is not a parent here: unresolved parentage is the orphan rules'.
+# it hangs from are. Each child tier, and each cell naming its parents with
+# the tiers a parent is read from: an SR's needs, an LLR's SRs and the parent
+# LLR a child LLR's `Parent` names (WI-1064; the requirement tree's link,
+# WI-1027), and a TC's SRs and LLRs. Any other id a cell cites (an IF, B or DA
+# row, an id no row declares, or a `Parent` naming no LLR) is not a parent
+# here: unresolved parentage is the orphan rules'.
 PARENT_EDGES = {
-    "SR": ("SN-Refs", ("SN",)),
-    "LLR": ("SR-Refs", ("SR",)),
-    "TC": ("Verifies", ("SR", "LLR")),
+    "SR": (("SN-Refs", ("SN",)),),
+    "LLR": (("SR-Refs", ("SR",)), ("Parent", ("LLR",))),
+    "TC": (("Verifies", ("SR", "LLR")),),
 }
 
 
@@ -1588,26 +1590,28 @@ def parent_first_findings(tiers):
     child (`claims_acceptance`: `Accepted` or `Founded`) citing a declared parent
     that is not accepted, over `PARENT_EDGES`. A parent with no `Status`, or a
     word outside the vocabulary, is not accepted. Statuses are the stripped
-    cells, "" for a missing one. Pure: the standing finding and the commit
-    judgement both read it.
+    cells, "" for a missing one. Pure: the standing finding, the commit
+    judgement and the act's waiting flips all read it.
 
     Implements: SR-245, LLR-357
 
     Contract:
       Inputs:  tiers: {label: rows} over "SN", "SR", "LLR", "TC", each row
-               keyed `<label>-ID`, `Status` and its tier's parent column; a
+               keyed `<label>-ID`, `Status` and its tier's parent columns; a
                missing tier reads as no rows
       Outputs: list[tuple[str, str, str, str]], child tiers in SR, LLR, TC
-               order and rows in registry order
+               order, rows in registry order, and a row's columns in
+               `PARENT_EDGES` order (an LLR's `SR-Refs` before its `Parent`)
     """
     declared = _declared_rows(tiers)
     out = []
-    for label, (column, parent_tiers) in PARENT_EDGES.items():
+    for label, edges in PARENT_EDGES.items():
         for rid, row in declared.get(label, {}).items():
             if not claims_acceptance(row):
                 continue
             out += [
                 (rid, _status_cell(row), ref, _status_cell(parent))
+                for column, parent_tiers in edges
                 for ref, parent in _unaccepted_parents(
                     declared, row, column, parent_tiers
                 )

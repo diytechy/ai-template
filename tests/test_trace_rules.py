@@ -11,7 +11,7 @@ retired the WI-129 LLR/TC status-coherence lint), the WI-146(a)
 Implements: TC-216
 """
 
-from conftest import load_script, make_minimal_project, run_py
+from conftest import load_script, make_minimal_project, record_ids, run_py
 
 
 def test_a_spine_row_states_the_system_not_its_own_history():
@@ -679,6 +679,37 @@ def test_an_accepted_llr_under_a_drafted_sr_reds_strict_integrity(scaffold):
     assert proc.returncode == 1, out
     assert "parent-first:" in out, out
     assert "LLR-001 (Accepted) is accepted under SR-001 (Drafted)" in out, out
+
+
+def test_an_accepted_child_design_row_under_a_drafted_parent_reds_strict_integrity(
+    scaffold,
+):
+    """The parent link is a parent edge too: an Accepted LLR-002 naming the
+    Drafted LLR-001 in `Parent` fails the integrity floor, worded as every
+    edge is. TC-001 verifies the child, so the line is the only parent-first
+    finding. Adequacy witness: a rule that read only `SR-Refs` from a design
+    row leaves this run at exit 0.
+
+    Implements: TC-396
+    """
+    make_minimal_project(scaffold)
+    req = scaffold / "docs" / "requirements"
+    (req / "low-level-requirements.csv").write_text(
+        "LLR-ID,SR-Refs,Parent,Title,Detail,TestRefs,Status\n"
+        'LLR-001,SR-001,,Adder,"Adds two numbers.",(see TC),Drafted\n'
+        'LLR-002,,LLR-001,Pure adder,"Pure function: two numbers -> sum.",'
+        "(see TC),Accepted\n",
+        encoding="utf-8",
+    )
+    tcs = scaffold / "docs" / "test" / "test-cases.csv"
+    _set_status(tcs, "SR-001;LLR-001", "SR-001;LLR-002")
+    record_ids(scaffold)
+    proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+    out = proc.stdout + proc.stderr
+    assert proc.returncode == 1, out
+    found = [ln for ln in out.splitlines() if "parent-first:" in ln]
+    assert len(found) == 1, out
+    assert "LLR-002 (Accepted) is accepted under LLR-001 (Drafted)" in found[0], out
 
 
 def test_a_drafted_llr_whose_citing_tcs_are_accepted_is_an_integrity_finding(

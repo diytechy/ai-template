@@ -270,7 +270,7 @@ and its registry but carries no row.
 |---|---|---|---|
 | `LLR-ID` | ✔ | `LLR-<digits>` | Join key; the same three integrity rules as SR. |
 | `SR-Refs` | ✔ on a top-level row | `;`-joined SR ids | **The canonical SR↔LLR link**, on a top-level row (no `Parent`). Empty there → orphan ("no SR parent"); unknown target → orphan; citing a **superseded** SR → integrity. On a child → orphan ("is a child of … and names SR-Refs"). |
-| `Parent` | ✘ | one LLR id | A child's one parent design row. Not one live design row (missing, an SR or `-000` id, several ids) → orphan; a cycle → orphan for each row on it; a row whose chain breaks there → orphan ("reaches no SR"). Accepted text in the cell split (§12): a re-parent is an amendment of the row. |
+| `Parent` | ✘ | one LLR id | A child's one parent design row. Not one live design row (missing, an SR or `-000` id, several ids) → orphan; a cycle → orphan for each row on it; a row whose chain breaks there → orphan ("reaches no SR"). Accepted text in the cell split (§12): a re-parent is an amendment of the row. A parent-first edge (§4.1): an accepted child under a parent that is not accepted is an integrity finding. |
 | `Title` | ✔ | free text | Node label. |
 | `Detail` | ✔ | decomposition detail, **not** an SR paraphrase | Accepted prose. |
 | `Rationale` | ✘ | free text | **Deliberately not required** — "a short decomposition row's why IS its parent SR's, so requiring one everywhere would manufacture the restatement the column exists to prevent." Accepted when present. |
@@ -294,7 +294,8 @@ floor instead, so one fault is not punished twice).
 What LLR status DOES answer to is **acceptance order**, which is an integrity
 rule, not a stage input: a spine row is accepted only after the rows it hangs
 from are (`kitlib.spine.parent_first_findings`). An accepted child (`Accepted`
-or `Founded`) whose cited SN, SR or LLR parent is not accepted — `Drafted`, no
+or `Founded`) whose cited SN, SR or LLR parent (a child design row's
+`Parent` included) is not accepted — `Drafted`, no
 `Status`, or a word outside the vocabulary — is an integrity finding of
 `trace.py --strict-integrity` (`parent-first: <child> (<status>) is accepted
 under <parent> (<status>) …`, naming both remedies), and `check.py`'s
