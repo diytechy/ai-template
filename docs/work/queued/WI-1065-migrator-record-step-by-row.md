@@ -41,13 +41,41 @@ vocabulary move changes spellings, not meaning. The candidates:
   before the first row-by-row act, and refuse it after with a message
   saying so.
 
-Owes the operator's choice, then a scope critique, before it is built.
+**Operator ruling (2026-11-23): refined (c).** Keep SR-179's mirror
+invariant untouched and keep the vocabulary migrator standalone (no
+compatibility readers in the mirror judge and no forged acceptance acts).
+Once the record's act ledger holds any entry carrying `kept` (even an
+empty list, which turns on the row-by-row judge for every later write):
+- **Record already in the current vocabulary** (current directory name,
+  current ledger keys, no earlier spellings in record copies): skip
+  writing record copies from live, so running the migrator (or `--check`)
+  for non-record files leaves kept and pending-drift rows untouched,
+  exits 0 when nothing else is owed, and lands cleanly past both the
+  commit hook and the committed-history check.
+- **Record still carrying earlier vocabulary** (earlier directory name,
+  earlier ledger keys, or earlier spellings in a record copy): refuse
+  before writing any record file — including in the registry step, which
+  currently walks the record directories before the record step runs —
+  exit 1, and point to WI-1060's RESYNC guidance (run the migrator
+  before the first row-by-row act).
+- **Pre-row-by-row records** (no ledger entry carrying `kept`): keep
+  today's behavior unchanged.
+
+SR-179 and LLR-178 need no amendment; only SR-247, LLR-369 and TC-427
+take text-only amendments.
+
+Operator's choice recorded; owes a scope critique before it is built.
 
 ## Done-when
 
-- [ ] The operator's choice among (a), (b) and (c) is recorded here.
-- [ ] The migrator's record step, run in a record that holds a row-by-row
-      act with a kept row, does what the choice says, and a test shows it
-      at the commit hook and on the committed history.
+- [x] The operator's choice among (a), (b) and (c) is recorded here.
+- [ ] In a record whose act ledger carries `kept` (including with a kept
+      row), the migrator skips record copies when the record is already
+      in the current vocabulary (so non-record rewrites pass the commit
+      hook and the committed-history check, and `--check` does not flag
+      pending drift) and refuses before modifying any record file —
+      including in the registry step — when the record still stores
+      earlier vocabulary; tests cover both paths and verify the commit
+      hook and the committed history.
 - [ ] Any accepted row this changes is amended (text only, no code names)
       and listed as owed to adjudication.

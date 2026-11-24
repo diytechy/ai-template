@@ -79,8 +79,9 @@ A new coordinator session starts with these steps, in this order.
      are safer.
    - The first act after WI-1060 writes the first ledger entry carrying
      `kept`. From then on the record's judges read every write row by
-     row, and the vocabulary migrator's record step is refused while a
-     row is kept (WI-1065).
+     row (even when `kept` is empty), and until WI-1065 lands, the
+     vocabulary migrator's record step overwrites any differing copy
+     (kept row or pending drift) without an act, which the hook refuses.
 4. **F-4 slices 2 to 4 wait for sitting A's verdict.** Its four questions
    (slice record §6) are then answered: whether D9's code-name scrub of
    every touched row continues, whether a clause backed only by a whole
@@ -95,10 +96,15 @@ A new coordinator session starts with these steps, in this order.
    ones included; one obligation with every clause tested; a child within
    its parent).
 6. **For the operator:**
-   - WI-1065's choice: (a) the migrator rewrites spellings inside the
-     record copies in place; (b) its record write becomes an act of its
-     own; (c) nothing beyond WI-1060's RESYNC guidance. The row's Context
-     explains each.
+   - WI-1065's choice is **settled (2026-11-23): refined (c)**, recorded in
+     `docs/work/queued/WI-1065-migrator-record-step-by-row.md`. Once the
+     act ledger holds any entry carrying `kept`, skip overwriting record
+     copies when the record is already in the current vocabulary (so
+     non-record rewrites and `--check` work cleanly over pending drift
+     and kept rows), and refuse before writing any record file —
+     including in the registry step — if the record still carries earlier
+     vocabulary; SR-179 stays unchanged. Owes a scope critique before
+     build (`P3`, does not block steps 1 to 4).
    - A push: trunk is ahead of the remote from `80d64a5f3`.
    - Scratch folders: `D:/rt*`, and `D:/review-tmp/2026-11-23-wi1060`
      (WI-1060's short pytest temp root).
@@ -196,7 +202,7 @@ adjudication sittings by Gemini Neon through `agy` (operator, 2026-11-21;
 | WI-1024 slice 1 | F-4's mechanism and the CMP-009 and `external:` population | Merge next (§0 step 1) | Reviewed, rounds 1 and 2; 39 rows owed to sitting A |
 | WI-1027 | F-7: the parent link and the tree walk | After F-4's slice 1 (§0 step 2) | Round 1 fixed `c319d6b9f`; owes round 2 and the blast-radius move |
 | WI-1064 | The parent-first rule reads a child design row's parent link | After WI-1027 | Filed from F-7's plan; owes a scope critique |
-| WI-1065 | The vocabulary migrator's record step in a record holding a row-by-row act | After WI-1060; **owes the operator's choice (a), (b) or (c)** | Filed from WI-1060's review |
+| WI-1065 | The vocabulary migrator's record step in a record holding a row-by-row act | After WI-1060; choice ruled (refined (c), 2026-11-23); owes a scope critique | Filed from WI-1060's review |
 | WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6, §3.4) | F, after the N6 stop | Filed and critiqued (round 1, Sol and Argon, all findings applied, `a57782d59`). Order by `needs`: 1021; 1022; 1023; then 1024 and 1027 (either order); 1025; then 1026, 1028 and 1030; then 1029. Built side by side where `needs` allows, landing one at a time (plan revision 37). F-1 merged (`147fed185`), F-2 merged (`b2b0d9476`), F-3 merged (`4335c1a4d`); next 1024 and 1027 |
 | WI-1016 | A repository can switch off the implementation layer | After F | Re-critiqued once F lands; reverses SR-186, so its amendment is drafted for the operator |
 | WI-1018 | Row text a lane leaves stale is filed, and the first set is brought up to the code | After F-8 | F-8's text migration takes B1, B7 and B9 and likely more; this row then fixes what is left |
@@ -1357,3 +1363,10 @@ Append one line per step taken: the item, what happened, the commit.
   reviewed: round 1 had Hydrogen APPROVE and Sol six findings, one MAJOR
   (LLR-480's two obligations, split to a new LLR-483 with TC-568), fixed
   `c319d6b9f`.
+- 2026-11-23 (between sessions, operator): ruled WI-1065 as refined (c)
+  and recorded it in the spec and §0 step 6 — keep SR-179 unchanged; in a
+  record whose act ledger carries `kept`, skip copying live over record
+  copies when the record is already in the current vocabulary, and refuse
+  before writing any record file (including in the registry step) when
+  the record still holds earlier vocabulary. Owes its scope critique
+  before build.
