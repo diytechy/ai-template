@@ -58,7 +58,6 @@ try:
         is_founded,
         llr_exempt,
         llr_tree,
-        llrs_under,
         parse_dimensions,
         phase_num,
         refs,
@@ -79,7 +78,6 @@ except ImportError:  # pragma: no cover - in-process fallback
         is_founded,
         llr_exempt,
         llr_tree,
-        llrs_under,
         parse_dimensions,
         phase_num,
         refs,
@@ -674,11 +672,12 @@ def _runs(tc):
 def interface_coverage(srs, llrs, tcs, ifs):
     """`{IF id: route}` for each live interface, the route by which its reach
     (`kitlib.spine.interface_reach`) holds a test case the harness runs:
-    `design row` through a design row constraining it, else `requirement`
-    through a constraining requirement or the design rows under it, else
-    `case` through a case naming it or verifying a row observed at it, else
-    `observation` when its reach holds observation cases alone, else
-    `unreached`.
+    `design row` through a design row constraining it or the design rows
+    below that one, else `requirement` through a constraining requirement or
+    the design rows below it, else `case` through a case naming it or
+    verifying a row observed at it, else `observation` when its reach holds
+    observation cases alone, else `unreached`. The requirement tree is built
+    once per call.
 
     Implements: SR-157, LLR-421
     """
@@ -693,22 +692,21 @@ def interface_coverage(srs, llrs, tcs, ifs):
         for x in refs(t.get("Verifies")):
             by_row.setdefault(x, set()).add(tid)
     constrains = _constrains_by_row(srs, llrs)
+    below = llr_tree(llrs).below
     return {
-        iid: _route(iid, rows, cases, constrains, by_row, runs, llrs)
+        iid: _route(iid, rows, cases, constrains, by_row, runs, below)
         for iid, (rows, cases) in interface_reach(ifs, srs, llrs, tcs).items()
     }
 
 
-def _route(iid, rows, cases, constrains, by_row, runs, llrs):
+def _route(iid, rows, cases, constrains, by_row, runs, below):
     """One interface's route (`interface_coverage`): through the cases of the
-    design rows constraining it, else of the requirements constraining it and
-    the design rows under them, else of its whole reach."""
+    design rows constraining it and the design rows below them, else of the
+    requirements constraining it and the design rows below them, else of its
+    whole reach. `below` is the requirement tree's (`llr_tree`)."""
     named = [r for r in rows if iid in constrains.get(r, ())]
-    via_llr = {c for r in named if r.startswith("LLR-") for c in by_row.get(r, ())}
-    via_sr = set()
-    for r in (r for r in named if r.startswith("SR-")):
-        for x in [r] + [row["LLR-ID"] for row in llrs_under([r], llrs)]:
-            via_sr |= by_row.get(x, set())
+    via_llr = _cases_below(named, "LLR-", below, by_row)
+    via_sr = _cases_below(named, "SR-", below, by_row)
     for route, reached in (
         ("design row", via_llr),
         ("requirement", via_sr),
@@ -717,6 +715,19 @@ def _route(iid, rows, cases, constrains, by_row, runs, llrs):
         if reached & runs:
             return route
     return "observation" if cases else "unreached"
+
+
+def _cases_below(named, prefix, below, by_row):
+    """The cases (`by_row`, `{row id: {TC ids}}`) verifying each row of
+    `named` whose id starts with `prefix`, or a design row below it in the
+    requirement tree (`below`): one of `_route`'s two constraining routes."""
+    return {
+        case
+        for r in named
+        if r.startswith(prefix)
+        for x in [r, *below.get(r, ())]
+        for case in by_row.get(x, ())
+    }
 
 
 def _constrains_by_row(srs, llrs):

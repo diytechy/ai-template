@@ -464,7 +464,7 @@ def test_a_constraining_design_row_brings_the_cases_of_the_design_rows_below_it(
         "LLR-005": _child("LLR-004"),
     }
     tcs = {
-        "TC-001": _tc(["LLR-002"]),
+        "TC-001": _tc(["SR-001", "LLR-002"]),
         "TC-002": _tc(["LLR-005"]),
         "TC-003": _tc(["LLR-001", "LLR-003", "LLR-004"], automated="No"),
     }

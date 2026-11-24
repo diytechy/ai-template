@@ -1034,9 +1034,10 @@ def interface_reach(ifs, srs, llrs, tcs):
     rows and requirements whose `Constrains` cell names it and the design rows
     and requirements a test case naming it verifies (observed at it, per pair);
     `cases` are the test cases naming it and every case verifying one of those
-    rows, a constraining requirement's cases including those of the design
-    rows under it (`llrs_under`, the SR-to-LLR walk's one home). Both sorted.
-    The `-000` example rows are not read, on any tier.
+    rows, a constraining requirement's or design row's cases including those
+    of the design rows below it in the requirement tree (`llr_tree`, built
+    once per call); a row only observed at it brings its own cases alone.
+    Both sorted. The `-000` example rows are not read, on any tier.
 
     Implements: SR-157, LLR-421
 
@@ -1049,10 +1050,11 @@ def interface_reach(ifs, srs, llrs, tcs):
     rows = {i: set() for i in _row_ids(_real_rows(ifs, "IF-ID"), "IF-ID") if i}
     for col, tier in (("SR-ID", srs), ("LLR-ID", llrs)):
         _add_constraining(rows, tier, col)
-    walk = {iid: {r for r in rows[iid] if r.startswith("SR-")} for iid in rows}
+    constraining = {iid: set(reached) for iid, reached in rows.items()}
     cases, verifying = _naming_cases(rows, _real_rows(tcs, "TC-ID"))
+    below = llr_tree(llrs).below
     for iid, reached in rows.items():
-        cases[iid] |= _verifying_cases(reached, llrs, verifying, walk[iid])
+        cases[iid] |= _verifying_cases(reached, constraining[iid], below, verifying)
     return {iid: (sorted(rows[iid]), sorted(cases[iid])) for iid in sorted(rows)}
 
 
@@ -1090,18 +1092,18 @@ def _naming_cases(rows, tcs):
     return cases, verifying
 
 
-def _verifying_cases(reached, llrs, verifying, walk):
+def _verifying_cases(reached, constraining, below, verifying):
     """The cases (`verifying`, `{row id: {TC ids}}`) verifying the rows
-    `reached`, a requirement in `walk` (one constraining the interface)
-    including those of the design rows under it: `interface_reach`'s last
-    step. A requirement only observed at the interface brings its own cases,
-    not its design rows'."""
+    `reached`, a row in `constraining` (one whose `Constrains` names the
+    interface) including those of the design rows below it in the tree
+    (`below`, `llr_tree`'s): `interface_reach`'s last step. A row only
+    observed at the interface brings its own cases, not its design rows'."""
     out = set()
     for rid in reached:
         out |= verifying.get(rid, set())
-    for rid in walk:
-        for row in llrs_under([rid], llrs):
-            out |= verifying.get(str(row.get("LLR-ID")).strip(), set())
+    for rid in constraining:
+        for lid in below.get(rid, ()):
+            out |= verifying.get(lid, set())
     return out
 
 
