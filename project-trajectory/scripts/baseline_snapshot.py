@@ -16,7 +16,8 @@ CONSTRUCTION. The brief would return a clean bill forever, at exit 0, on exactly
 the rows a sitting exists to judge.
 
 So the baseline moves OUT of git history and onto disk: when an acceptance lands,
-the registries are COPIED, byte for byte, into `docs/archive/last_accepted/`.
+the rows it accepts are COPIED, byte for byte, into `docs/archive/last_accepted/`
+(the first signing copies the registries whole).
 Every comparison — the adjudicator, the operator re-accept read, the HTML
 generators — diffs the live registries against that copy. No hashes, no anchor
 columns, no commit-id walk. The baseline becomes something a human can open in
@@ -25,13 +26,16 @@ an editor and diff with `git diff`, which is itself an argument for the design.
 THREE PROPERTIES DO THE WORK, and each is worth stating because each replaces a
 piece of machinery that no longer needs to exist:
 
-  1. **Whole files, never extracted rows.** The copy is byte-for-byte, so
-     "snapshot file == live file at the copy commit" is a DECIDABLE property —
-     `check_trajectory.staged_snapshot_findings` is the guard that makes a
-     hand-edited or partial snapshot fail loudly. Row extraction would destroy
-     that, would re-serialise TOML (normalising away comments and authored
-     ordering, which is the whole reason `intake._flip_status_lines` exists),
-     and would silently drop the normative prose that lives OUTSIDE the rows.
+  1. **Rows copied whole, never re-serialised.** Since WI-1060 an act writes a
+     registry's copy ROW BY ROW (`record_rows`): the rows it names, and the
+     rows that follow live, are each live's own bytes, every other row keeps
+     its recorded bytes, and the copy keeps live's row order and live's bytes
+     around the rows. So "this copy is what this commit's act writes" is a
+     DECIDABLE property — `acceptance_record.staged_snapshot_findings` and
+     `committed_snapshot_findings` re-derive it and make a hand-edited copy
+     fail loudly — and an act that keeps no row writes the live file byte for
+     byte. Re-serialising TOML would normalise away comments and authored
+     ordering, which is the whole reason `intake._flip_status_lines` exists.
   2. **The snapshot keeps each row's own `Status` cell.** That is what makes
      the UNANCHORED rule decidable: a live row claiming acceptance whose snapshot
      copy reads *below* acceptance is an acceptance that never rode a copy — the
@@ -89,26 +93,24 @@ declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-123: the `last_accepted` baseline, write side and whole read side.
     `copy_live(root, seed=False, accepts=None, reaccepts=None, verdict=None)`
-    mirrors ONLY
-    the registries an act authorises byte-for-byte into
-    `docs/archive/last_accepted/` — the seed copies the whole tree once, a
-    refresh copies the registry a `Status` move happened in, every registry
-    `accepts` names and every registry holding a row `reaccepts` names, and
-    leaves the rest byte-identical to what they were (WI-571: the whole-tree
-    copy re-sealed off-spine drift on every spine-only acceptance). It deletes
-    any other-carrier copy of the same stem for a registry it copies, and
-    returns the sorted repo-relative paths written. It REFUSES to create the
-    directory without `seed=True`, and refuses a refresh while any row of a
-    registry it would copy has accepted text drifted from its recorded copy (a
-    recorded accepted row deleted from live counts, as REMOVED) and is neither
-    flipped by the act nor named in `reaccepts` — ROW BY ROW, so naming a
-    registry in `accepts` clears none of its rows — because the copy it takes
-    is the text a signature blesses. That refusal judges THIS ACT'S
-    WRITE SET and not the whole ledger, so an acceptance is not blocked by drift
-    in a registry the copy leaves alone; an act whose write set is empty is
-    judged over the whole ledger, so a refresh that would copy nothing in a
-    drifted tree refuses rather than exiting 0 in silence. It lists every such
-    row and cell, uncapped. `accepts` is `{registry rel: ref}`
+    writes into `docs/archive/last_accepted/` ONLY the registries an act
+    authorises — the seed copies the whole tree once, a refresh writes the
+    registry a `Status` move happened in, every registry `accepts` names and
+    every registry holding a row `reaccepts` names, and leaves the rest
+    byte-identical to what they were (WI-571). It writes each ROW BY ROW
+    (WI-1060, `record_rows`): the rows the act names (its acceptances and the
+    rows `reaccepts` names, a named row gone from live retired) and the rows
+    that follow live are taken byte for byte from live, and every other row
+    keeps its recorded bytes and is reported as owed in the act's summary and
+    its ledger entry (`kept`), so an act never carries a row it does not name
+    and a drifted row beside it no longer refuses it. It composes and re-reads
+    every copy before writing any, and writes nothing unless each reads as the
+    rule requires. It deletes any other-carrier copy of the same stem for a
+    registry it copies, and returns the sorted repo-relative paths written.
+    It REFUSES to create the directory without `seed=True`, and refuses an act
+    whose write set is empty while accepted text stands drifted, listing every
+    such row and cell, uncapped, rather than exiting 0 in silence.
+    `accepts` is `{registry rel: ref}`
     (`parse_accepts` builds it from a `REGISTRY=REF` CLI value) and `reaccepts`
     a set of row ids (`parse_reaccepts`, from comma-joined ids of the
     `SNAPSHOT_TIERS` tiers); `verdict` is the repo path of the verdict file
@@ -137,7 +139,8 @@ Contract IF-124: the anchor read a composed brief takes — `exists`, `stamp` an
     costs a reader one line and nothing more. Named a registry, it answers for
     that registry's copy alone, because a refresh copies only what its act
     authorises and the directory's newest write is one copy's provenance, not
-    every copy's.
+    every copy's; named a row of it too, it answers for the act that accepted
+    that row, whose author is the row's acting reviewer (SR-140).
 Contract IF-125: the drift read — `load_all`, `rows_for`, `is_drifted` and
     `SNAPSHOT_DIR`, and never `copy_live`. Drift is asked only of a row that
     CLAIMS acceptance-or-above and is present in the snapshot; a row below
@@ -190,22 +193,27 @@ Contract IF-220: the act ledger, `ACTS` under `SNAPSHOT_DIR`. A TOML file of
     the sorted canonical `SNAPSHOTTED` paths of the registries the act
     actually wrote, so a traced re-anchor naming no row, a mixed act and a
     re-seed each name every file they copied. A copied file is no evidence
-    that its rows were judged. An entry written before `copied` existed is a
-    legacy entry: it parses unchanged, with no `copied` key, and its copy set
-    is unknown, never empty, never inferred or backfilled. FAILS CLOSED:
+    that its rows were judged. `kept`, the sorted ids of the rows of those
+    files the act left at a recorded text differing from live (or that live no
+    longer carries), `[]` when none: the rows it left owed (WI-1060). An entry
+    written before `copied` existed is a legacy entry: it parses unchanged,
+    with no `copied` key, and its copy set is unknown, never empty, never
+    inferred or backfilled; an entry without `kept` was written before acts
+    wrote row by row, and the first entry carrying it is where the record's
+    mirror rules start judging every later write at the row. FAILS CLOSED:
     `acts_problems(text)` lists every fault (text that does not parse, a field
     missing or mistyped, an id not of the kit's syntax, a `verdict` that is
     not a non-empty string, a `copied` that is not a non-empty sorted list of
-    distinct paths, an entry omitting `copied` after one that carries it,
-    `seq` values not
-    unique and increasing in file order), and `parse_acts(text)` returns the
+    distinct paths, a `kept` that is not a sorted list of distinct ids, an
+    entry omitting `copied` or `kept` after one that carries it, `seq` values
+    not unique and increasing in file order), and `parse_acts(text)` returns the
     entries as dicts in file order, `[]` for no text, or raises
     `ActLedgerError` — it never returns the entries it could read.
     The commit is the boundary for the rest: `added_acts_problems(text,
     parent_texts)` judges only the entries a commit adds (their `seq` in no
     parent's ledger, against HEAD and MERGE_HEAD during a merge, as
     `added_acts_findings(root)` reads the index), which must carry `copied`
-    naming only `SNAPSHOTTED` files. A malformed parent and a hand-edited
+    naming only `SNAPSHOTTED` files, and `kept`. A malformed parent and a hand-edited
     ledger are outside the coverage bound (PROCESS.md §6): no supported route
     produces either.
     `read_acts(root)` reads the working tree's; `acts_findings(root)` reports
@@ -221,8 +229,6 @@ Contract IF-220: the act ledger, `ACTS` under `SNAPSHOT_DIR`. A TOML file of
 from __future__ import annotations
 
 import re
-import shutil
-import subprocess
 import sys
 import tomllib
 from pathlib import Path
@@ -233,12 +239,14 @@ from pathlib import Path
 try:
     import acceptance_record
     import check_trajectory
+    import record_rows
     import spine_rules
     import spine_carrier
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import acceptance_record
     import check_trajectory
+    import record_rows
     import spine_rules
     import spine_carrier
 
@@ -249,10 +257,11 @@ from kitlib.spine import is_drafted, toml_fields
 # The snapshot's root, repo-relative. One generation only, never migrated in
 # place — git holds the history, and a snapshot edited forward would be a second
 # ledger of what was blessed. SCOPED SINCE WI-571: the seed copies the whole
-# tree once, and a refresh REPLACES ONLY the registries the act authorises (the
+# tree once, and a refresh writes ONLY the registries the act authorises (the
 # registry a `Status` move happened in, every registry `accepts` names and
 # every registry holding a row `reaccepts` names), leaving a registry outside
-# the act's scope untouched — see `copy_live`.
+# the act's scope untouched; ROW BY ROW SINCE WI-1060 inside the ones it
+# writes — see `copy_live`.
 SNAPSHOT_DIR = "docs/archive/last_accepted"
 
 # The prose stamp's filename. Rendered for a human (design §F8, repo-lock
@@ -283,9 +292,9 @@ ACTS = "acts.toml"
 _ACTS_HEADER = (
     "# ACCEPTANCE ACTS, appended by `intake.py snapshot` (baseline_snapshot.copy_live).\n"
     "# One entry per act that copied a registry: the rows it carried into acceptance,\n"
-    "# the rows it re-accepted and the registries it copied. Do not edit; accepted\n"
-    "# risks are anchored to these entries, and git holds the commit each act\n"
-    "# landed in.\n"
+    "# the rows it re-accepted, the registries it copied and the rows it kept at\n"
+    "# their recorded text. Do not edit; accepted risks are anchored to these\n"
+    "# entries, and git holds the commit each act landed in.\n"
 )
 
 # The registries a signing copies. FOUR SPINE plus THREE OFF-SPINE, and the
@@ -524,13 +533,13 @@ def parse_reaccepts(spec):
     return frozenset(out)
 
 
-def act_summary(written, seed, accepts, reaccepts, verdict=None):
+def act_summary(written, seed, accepts, reaccepts, verdict=None, kept=()):
     """The one line `intake.py snapshot` prints for an act that landed: how many
     files it copied and, when named, the refs and re-accepted rows it recorded
-    into the snapshot's stamp, and the verdict it recorded in the act ledger.
-    Kept beside the parsers that build its inputs so the CLI edge stays a
-    call."""
-    return "snapshot: {} registry file(s) copied to {}{}{}{}{}".format(
+    into the snapshot's stamp, the verdict it recorded in the act ledger, and
+    the rows it left at their recorded text, owed (WI-1060). Kept beside the
+    parsers that build its inputs so the CLI edge stays a call."""
+    return "snapshot: {} registry file(s) copied to {}{}{}{}{}{}".format(
         len(written),
         SNAPSHOT_DIR,
         " (SEEDED — this is the first snapshot; it blesses the text you just ruled)"
@@ -548,6 +557,11 @@ def act_summary(written, seed, accepts, reaccepts, verdict=None):
         else "",
         " (VERDICT: {} — recorded in the act ledger)".format(verdict)
         if verdict
+        else "",
+        " (LEFT OWED: {} — rows this act did not name keep their recorded text)".format(
+            ", ".join(kept)
+        )
+        if kept
         else "",
     )
 
@@ -579,11 +593,19 @@ _COPY_SUFFIXES = tuple(
 )
 
 
-def stamp(root, registry=None):
+def stamp(root, registry=None, row=None):
     """`(short rev, date)` of the commit that last wrote the snapshot — or, named
     a `registry` (its live path, either carrier), the commit that last wrote
     THAT registry's copy — or `("", "")` when there is none, git cannot answer,
     or this is not a checkout.
+
+    PER ROW WHEN A READER ASKS WHO ACCEPTED ONE (WI-1060). Named a `row` of the
+    registry too, it is the commit of the act that accepted that row
+    (`record_rows.acting_rev`): the latest commit whose act-ledger entry names
+    the row accepted or re-accepted, else the copy's last writing commit before
+    acts began recording the rows they keep. An act now writes a copy row by
+    row, so the copy's last writer may be another reviewer's act that kept the
+    row; this commit's author is the row's acting reviewer (SR-140).
 
     PER REGISTRY WHEN A READER SHOWS ROWS OF ONE. A refresh copies only the
     registries its act authorises (WI-571), so the copies in the directory were
@@ -609,28 +631,13 @@ def stamp(root, registry=None):
             for rel in spine_carrier.carriers(registry, _COPY_SUFFIXES)
         ]
     )
-    try:
-        proc = subprocess.run(
-            [
-                "git",
-                "-C",
-                str(root),
-                "log",
-                "-1",
-                "--format=%h %cs",
-                "--",
-                *paths,
-            ],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-        )
-    except (OSError, ValueError):
-        return "", ""
-    if proc.returncode != 0:
-        return "", ""
-    parts = proc.stdout.strip().split()
+    rev = "HEAD"
+    if row is not None:
+        ledger = SNAPSHOT_DIR + "/" + ACTS
+        added, shallow = acceptance_record.added_ledger_entries, _shallow_commits(root)
+        rev, paths = record_rows.acting_rev(root, ledger, row, paths, shallow, added)
+    out = _git(root, ["log", "-1", "--format=%h %cs", rev, "--", *paths])
+    parts = (out or "").split()
     return (parts[0], parts[1]) if len(parts) >= 2 else ("", "")
 
 
@@ -829,28 +836,27 @@ def removed_rows(root, ids, snapshot):
 
 
 def refresh_ledger(root, snapshot=None):
-    """What a refresh WOULD ABSORB, per registry:
+    """The drift a whole-file copy WOULD ABSORB, per registry:
     `{rel: {"absorbed": {row id: {cell: (before, after)}}, "flips": [row id]}}`.
 
-    The two halves are the two sides of the authority question `copy_live` asks
-    below. `absorbed` is the accepted text a copy would silently re-bless: rows
-    whose SNAPSHOT copy claims acceptance (that is the record that would be
-    overwritten) whose accepted cells have moved, OR which the live registry no
-    longer carries at all. `flips` is the authorising act — an existing row that
-    crossed into an acceptance claim in the reviewed commit, which authorises THAT
-    row and no other (SR-207). A reverse Status move is a de-acceptance, not
-    authority to re-bless anything. Tiers that share a file share one entry,
-    because the file is the unit the copy moves.
+    Since WI-1060 no act absorbs it: an act writes the rows it names and keeps
+    every other drifted row at its recorded text (`record_rows`). This ledger
+    stays the reader of which rows stand drifted and owed — the refusal of an
+    act that would write nothing names them, and the sittings scope from it.
+    `absorbed` is the accepted text that has moved away from the record: rows
+    whose SNAPSHOT copy claims acceptance whose accepted cells have moved, OR
+    which the live registry no longer carries at all. `flips` is the acceptance
+    act — an existing row that crossed into an acceptance claim in the reviewed
+    commit. A reverse Status move is a de-acceptance, not authority to re-bless
+    anything. Tiers that share a file share one entry.
 
     A REMOVED ROW IS ABSORBED TOO, keyed by the single pseudo-cell
-    `ROW_REMOVED`. The copy is the whole file, so refreshing it after a recorded
-    accepted row was deleted drops the text an operator blessed from the record as
-    surely as rewriting it would — and a ledger that walked the live rows alone
-    could not see a row that is not there, so a flip elsewhere in the file
-    carried the deletion in unnamed. The recorded rows are walked as well, and a
-    whole registry file deleted from live reads as every one of its rows removed.
-    No flip can clear a removal (there is no row left to flip); naming the row
-    in `--reaccepts` is how an act blesses it.
+    `ROW_REMOVED`: deleting a recorded accepted row moves the record as surely
+    as rewriting it would, and a ledger that walked the live rows alone could
+    not see a row that is not there. The recorded rows are walked as well, and
+    a whole registry file deleted from live reads as every one of its rows
+    removed. No flip can clear a removal (there is no row left to flip); naming
+    the row in `--reaccepts` is how an act retires it.
 
     A FLIPPED ROW IS NEVER ABSORBED, and that is no allowance: its copy reads
     below acceptance, so its text was never blessed and copying it re-blesses
@@ -904,80 +910,33 @@ def _ledger_live_rows(entry, rel, id_col, before_rows, live_rows):
 
 
 def refresh_refusal(root, accepts=None, snapshot=None, *, seed=False, reaccepts=()):
-    """The refusal text for an unauthorised refresh, or `""` when the copy is
-    authorised — THE AUTHORITY CHECK THE WRITER SHIPPED WITHOUT (adversarial
-    round, 2026-08-20: ROUND-OPUS CRITICAL-2 / ROUND-SOL CRITICAL-1).
+    """The refusal text for an act that would write NOTHING while accepted text
+    stands drifted, or `""` — the one refusal for drift the writer keeps.
 
-    The hole was exact and was executed end to end: `copy_live` refused only to
-    CREATE the directory, so once a repo had signed, `intake.py snapshot`
-    re-blessed whatever text happened to be in the tree. Two commits — rewrite an
-    Accepted requirement, then refresh — left every check passing with the record
-    rewritten to match, and the drift the mechanism exists to render had been
-    absorbed into the baseline.
+    THE HISTORY, BECAUSE IT EXPLAINS THE SHAPE. The writer shipped with no
+    authority check (adversarial round, 2026-08-20: ROUND-OPUS CRITICAL-2 /
+    ROUND-SOL CRITICAL-1): `copy_live` refused only to CREATE the directory, so
+    a two-commit path — rewrite an Accepted requirement, then refresh —
+    re-blessed the rewrite with every check passing. The answer was to refuse a
+    refresh while any row of a registry it would copy had drifted unnamed,
+    decided row by row (SR-207) and scoped to the act's write set (WI-584). It
+    coupled every row of a file: one unblessed amendment held every blessed one
+    in its registry until it was ruled or reverted.
 
-    DECIDED ROW BY ROW (SR-207). The act is refused while any row of a registry
-    it would copy has accepted text drifted from its recorded copy and the act
-    does not itself bless that row (`_unaccepted_rows`). A row is blessed in one
-    of three ways, and the first two need no flag at all:
+    ROW BY ROW SINCE WI-1060, THE REFUSAL IS THE CONSTRUCTION. An act writes the
+    rows it names and keeps every other drifted row at its recorded text
+    (`record_rows`), so it cannot carry an unnamed row's drift by construction,
+    and a drifted row beside the act no longer refuses it: the act names it as
+    owed instead. `--accepts <registry>=<ref>` still names the act and its
+    registry and clears no row.
 
-      1. **It absorbs nothing accepted.** Traced-cell refreshes (a `TestRefs`
-         or `Evidence` change, a ref pointer re-point, a retired trace cell's
-         removal) and Drafted-row work
-         stay exactly as cheap as they were — this is the common case, and the
-         review verified the WI-482/WI-452 class of the same day was clean.
-      2. **Its own `Status` moved into acceptance.** An operator moved THAT row's
-         maturity cell in the reviewed commit the copy rides, over text an
-         earlier commit already carried (WI-806: text first, the act second;
-         amend-plus-flip is no longer acceptance). It blesses that row and no
-         other.
-      3. **`--reaccepts <ROW-ID>` names it.** The escape for the shape the ladder
-         genuinely has — an amendment to an Accepted row that a sitting ruled
-         without moving its Status (the D-9 ladder's own case, and what the
-         2026-08-20 17-cell amendment batch was). The ids land in the snapshot's
-         prose stamp, so the record says which rows the act re-read.
-
-    `--accepts <registry>=<ref>` NAMES THE ACT AND CLEARS NO ROW. It still puts
-    its registry in the act's scope and records the ref — an OPERATOR's citation of
-    the sitting, log fragment or commit, not validated because nothing can
-    validate it. What it no longer does is pass the registry's drift: the record
-    is a copy of the whole file, so refreshing it for one row copies every row
-    as it stands, and a registry-wide pass let one row's acceptance silently bless
-    another row's unreviewed edit. Before WI-571 a bare `--accepts` muted the
-    gate for all seven files; WI-571 narrowed it to the one registry it names;
-    SR-207 narrows it to none.
-
-    PER ROW RATHER THAN PER REGISTRY, reversing the choice this docstring used to
-    defend — that a row-level pairing would demand a flip for each amended row,
-    which is the flip the D-9 ladder deleted. `--reaccepts` names a row without
-    flipping it, so the row-level rule costs no flip. And it holds for any
-    number of tiers in one file: `external.toml`'s three tiers share one ledger
-    entry, so one tier's acceptance can no longer carry another tier's drift, and
-    a tier added to `SNAPSHOT_TIERS` is covered with no edit here — the needs
-    file's needs and stakeholders included (`NEED_TIERS`), so an act copying the
-    needs registry is refused while an accepted need's text moved unread.
-    A recorded accepted row deleted from live is absorbed as REMOVED
-    (`refresh_ledger`) and cleared only by naming it in `--reaccepts`. Whether
-    each re-accepted id names a row at all is `_refuse_reaccepts`'s question,
-    asked before EVERY copy — this gate is skipped on a first signing.
-
-    AND SCOPED TO THE ACT, LIKE THE WRITER (WI-584 ruling (a)). Only registries
-    this act would WRITE are judged. WI-571 scoped `copy_live` and left this
-    gate global, so a per-registry acceptance was refused by drift in registries
-    the copy would never touch: naming the one registry a sitting ruled listed
-    only the ones it did not, under a header claiming nothing authorised the
-    act. A registry the write set excludes cannot be absorbed by the act being
-    refused, so blocking on it protects nothing — it keeps both its stale bytes
-    and its visible drift either way, which is what the re-acceptance brief is
-    for. A registry reaches the list by being WRITTEN — a flip, a ref, a
-    re-accepted row or a row arriving already accepted puts it in scope — or
-    under `seed`, which rewrites all seven.
-
-    ONE ARM STAYS UNSCOPED, deliberately: when the act would write NOTHING and
-    accepted text has drifted, it is still refused. A refresh that copies
-    nothing is a no-op, and a no-op exiting 0 in a tree where an Accepted row's
-    text was quietly rewritten is the laundering scenario answered with silence.
-    The drift survives either way — the writer is already scoped — but the
-    caller is told, which is the whole job of this text.
+    ONE ARM STAYS, deliberately: when the act would write NOTHING (no registry
+    named, no `Status` moved into acceptance, no row re-accepted) and accepted
+    text has drifted, it is refused, naming every row that stays owed. A no-op
+    exiting 0 in a tree where an Accepted row's text was quietly rewritten is
+    the laundering scenario answered with silence; the drift survives either
+    way, but the caller is told. A `seed` over a standing record writes every
+    registry, so it is never refused here.
 
     Implements: SR-207, LLR-245"""
     reaccepts = frozenset(reaccepts or ())
@@ -985,8 +944,7 @@ def refresh_refusal(root, accepts=None, snapshot=None, *, seed=False, reaccepts=
         if snapshot is None:
             # Loaded HERE rather than left to `refresh_ledger`, because the scope
             # decision below reads it too and a `None` would read every accepted
-            # row as newly arrived — which is the widest possible scope, exactly
-            # the direction this function must not fail in.
+            # row as newly arrived — the widest possible scope.
             snapshot = load_all(root)
         ledger = refresh_ledger(root, snapshot)
     except SystemExit:
@@ -998,32 +956,17 @@ def refresh_refusal(root, accepts=None, snapshot=None, *, seed=False, reaccepts=
         # rules — the staged one in the commit that does it, and the committed
         # one on every strict run afterwards.
         return ""
-    # The act's write scope, the same set the writer uses. A `seed` over a
-    # standing record really does rewrite all seven, so its scope is total.
-    scope = (
-        set(SNAPSHOTTED)
-        if seed
-        else _authorised_registries(root, accepts, snapshot, reaccepts)
-    )
-    unaccepted = _unaccepted_rows(ledger, reaccepts)
-    # Scoped when the act writes something; whole-ledger when it writes nothing,
-    # so a no-op refresh over drifted accepted text is refused rather than silent.
-    blocked = [pair for pair in unaccepted if pair[0] in scope] if scope else unaccepted
-    if not blocked:
+    if seed or _authorised_registries(root, accepts, snapshot, reaccepts):
         return ""
-    return _refusal_text(blocked, scope)
+    owed = _unaccepted_rows(ledger, reaccepts)
+    return _refusal_text(owed) if owed else ""
 
 
 def _unaccepted_rows(ledger, reaccepts=frozenset()):
     """`[(registry rel, {row id: {cell: (before, after)}})]`, sorted by registry:
     for each registry, the absorbed rows (accepted text drifted from the
-    recorded copy) minus the rows `reaccepts` names. What is left is every row
-    the copy would re-bless that nobody in this act read, which is exactly what
-    the act must not carry; a registry left with none is dropped.
-
-    A flipped row is never absorbed (its copy reads below acceptance), so no flip
-    is subtracted here: a flip clears no drift, it only puts its registry in
-    the act's scope (WI-806 retired amend-plus-flip as acceptance).
+    recorded copy) minus the rows `reaccepts` names — the rows that stay owed.
+    A registry left with none is dropped.
 
     Implements: SR-207, LLR-245"""
     out = []
@@ -1038,57 +981,35 @@ def _unaccepted_rows(ledger, reaccepts=frozenset()):
     return out
 
 
-def _refusal_text(blocked, scope):
-    """The refusal a caller reads: EVERY unaccepted row and its cells, what this
-    act writes, and the two ways forward.
-
-    UNCAPPED (SR-207). It used to print five rows per registry and a count of
-    the rest, which hid the rows past the cap until the first five were dealt
-    with — and the list is the work a person has to do before the act can land.
-
-    A sibling of `refresh_refusal` rather than a tail inside it, because the
-    scoped rule gave that function a second decision to make and the rendering
-    was what pushed it over the cognitive limit — the check names decomposing
-    OUTWARD as the first escape, and a message builder is the seam that comes
-    apart cleanly (WI-584)."""
+def _refusal_text(owed):
+    """The refusal an act that writes nothing reads: EVERY row that stays
+    drifted and owed, with its cells, uncapped (SR-207: a capped list hid the
+    rows past the cap), and the way forward."""
     lines = [
-        "baseline_snapshot: REFUSED — this refresh would ABSORB accepted text "
-        "into the record of what an operator blessed, for rows this act neither "
-        "accepts nor re-accepts:"
+        "baseline_snapshot: REFUSED — this act would copy NOTHING: no registry is "
+        "named, no `Status` moved into acceptance and no row is re-accepted. These "
+        "rows' accepted text has drifted from the record, and they stay drifted "
+        "and owed:"
     ]
-    for rel, rows in blocked:
+    for rel, rows in owed:
         for rid, cells in sorted(rows.items()):
             lines.append("  {} {}: {}".format(rel, rid, ", ".join(sorted(cells))))
     lines.append(
-        "This act would copy NOTHING — no registry is named, no `Status` moved "
-        "and no row is re-accepted — so the drift above simply stands, and this "
-        "refresh is not what clears it."
-        if not scope
-        else "This act WRITES {}, and each row above sits in a registry it would "
-        "copy: a `Status` move accepts only its own row and an `--accepts` ref "
-        "names the act without clearing any row, so these amendments would ride "
-        "along unread. Registries OUTSIDE the act's scope are not judged here at "
-        "all: they keep their prior snapshot bytes and their visible "
-        "drift.".format(", ".join(sorted(Path(rel).name for rel in scope)))
-    )
-    lines.append(
-        "A snapshot copy IS the acceptance record, so accepted text reaches it only "
-        "through an act that names its row, taken in a commit after the one that "
-        "carried the text. Two ways forward: having read its changed cells, "
-        "re-run with `intake.py snapshot --reaccepts "
-        "<ROW-ID>[,<ROW-ID>...]` naming EACH row above (the ids are recorded into "
-        "the snapshot's README stamp and act ledger, and `--accepts "
-        "<registry>=<ref>` may ride "
-        "beside them to cite the sitting, log fragment or commit that ruled "
-        "them — a row marked removed is blessed as a removal the same way); or "
-        "revert the amendment or restore the removed row and leave the drift "
-        "standing, which is what the re-acceptance brief is for. Traced cells "
-        "(TestRefs, Evidence and the ref pointers) are never blocked here."
+        "An act writes into the record the rows it names and leaves every other "
+        "drifted row at its recorded text, so a row reaches the record only "
+        "through an act that names it, taken in a commit after the one that "
+        "carried the text. Having read a row's changed cells, re-run with "
+        "`intake.py snapshot --reaccepts <ROW-ID>[,<ROW-ID>...]` naming it (the "
+        "ids are recorded into the snapshot's README stamp and act ledger, and "
+        "`--accepts <registry>=<ref>` may ride beside them to cite the sitting, "
+        "log fragment or commit that ruled them — a row marked removed is "
+        "retired the same way); or leave the drift standing for the act that "
+        "owes it, which is what the re-acceptance brief is for."
     )
     return "\n".join(lines)
 
 
-def _record_acceptance(base, accepts, copied_rels, reaccepts=frozenset()):
+def _record_acceptance(base, accepts, copied_rels, reaccepts=frozenset(), kept=()):
     """Append this act's SCOPE to the snapshot's prose stamp, creating the stamp
     when the repo has none: the registries it copied and, for EACH, the
     `--accepts` ref that named it and the rows `--reaccepts` named in it, or
@@ -1096,7 +1017,7 @@ def _record_acceptance(base, accepts, copied_rels, reaccepts=frozenset()):
     records the act's scope, so the next reader sees WHICH registries an
     acceptance touched instead of a whole-tree claim; SR-207 — and which rows it
     re-accepted beside the acceptances, since a re-acceptance moves no cell a
-    later reader could find).
+    later reader could find), and the rows it left owed (WI-1060).
 
     STILL PROSE (design §F8, repo-lock D-10's tripwire) — the line is a
     sentence a human reads, and nothing parses it. The machine facts stay in
@@ -1112,9 +1033,11 @@ def _record_acceptance(base, accepts, copied_rels, reaccepts=frozenset()):
             "{} ({})".format(Path(rel).name, "; ".join(named) or "Status move")
         )
     stamped = (
-        "- {} — refresh under acceptance. Copied: {}. Registries not named by this "
-        "act keep their prior snapshot bytes.\n".format(
-            _today(), "; ".join(reasons) if reasons else "(none)"
+        "- {} — refresh under acceptance. Copied: {}. Registries and rows not "
+        "named by this act keep their recorded text{}.\n".format(
+            _today(),
+            "; ".join(reasons) if reasons else "(none)",
+            "; left owed: " + ", ".join(kept) if kept else "",
         )
     )
     if not path.is_file():
@@ -1166,12 +1089,12 @@ def _authorised_registries(root, accepts, snapshot, reaccepts=frozenset()):
     leaving its registry uncopied would strand the row as an
     `unanchored_findings` ERROR. A de-acceptance is not an accepting transition:
     its Status differs but cannot authorise an unrelated amendment. An amendment
-    that moved no `Status` is deliberately NOT here: that is the case
-    `refresh_refusal` gates, and naming its row in `--reaccepts` is how an operator
+    that moved no `Status` is deliberately NOT here: the act leaves it at its
+    recorded text, and naming its row in `--reaccepts` is how an operator
     re-accepts it — which puts the row's registry in scope here, or a
-    re-acceptance would copy nothing and exit 0 over the drift it names.
-    Being IN scope clears no row; `refresh_refusal` still judges every row of
-    every registry this returns."""
+    re-acceptance would copy nothing over the drift it names. Being IN scope
+    carries no row: inside a registry this returns, the act writes only the rows
+    it names and the rows that follow live (`record_rows`)."""
     out = set(accepts or ()) | {_reaccepted_registry(r) for r in reaccepts}
     out.discard(None)
     for rel, id_col in SNAPSHOT_TIERS:
@@ -1282,8 +1205,8 @@ def _refuse_verdict(root, verdict, reaccepts):
 
 def _refresh_targets(root, accepts, seed, base, reaccepts=frozenset()):
     """`(targets, first_signing)`: the registries a REFRESH of a standing
-    snapshot copies, and whether this refresh is a first signing — or a raised
-    refusal when the copy is unauthorised.
+    snapshot writes, and whether this refresh is a first signing — or a raised
+    refusal when it would write nothing over drifted accepted text.
 
     The whole tree on a first signing (a `--seed`, an unreadable record being
     repaired, or a scaffold that still holds no registry — the vacuous state
@@ -1294,9 +1217,9 @@ def _refresh_targets(root, accepts, seed, base, reaccepts=frozenset()):
     the initial blessing. Split from `copy_live` so the scope decision — a
     self-contained job with its own refusal — does not push the writer's branch
     count over the C901 limit (WI-571). `seed` rides into the refusal because a
-    re-seed over a standing record writes all seven registries, and the gate is
-    scoped to what the act writes (WI-584); `reaccepts` rides into both, since
-    it is both a scope and a blessing (SR-207)."""
+    re-seed over a standing record writes every registry, so it never writes
+    nothing; `reaccepts` rides into both, since it is both a scope and a
+    blessing (SR-207)."""
     try:
         snapshot = load_all(root)
     except SystemExit:
@@ -1316,110 +1239,142 @@ def _refresh_targets(root, accepts, seed, base, reaccepts=frozenset()):
 
 
 def copy_live(root, *, seed=False, accepts=None, reaccepts=None, verdict=None):
-    """Mirror the registries an act AUTHORISES into `docs/archive/last_accepted/`;
-    the sorted list of repo-relative paths written.
+    """Write the registries an act AUTHORISES into `docs/archive/last_accepted/`,
+    row by row; the sorted list of repo-relative paths written.
 
     SCOPED TO THE ACT SINCE WI-571. The seed copies the whole tree once; a
-    refresh copies ONLY the registry a `Status` move happened in, every registry
+    refresh writes ONLY the registry a `Status` move happened in, every registry
     `accepts` names and every registry holding a row `reaccepts` names
-    (`_authorised_registries`), and leaves every other
-    registry byte-identical to what it already was. The whole-tree copy this
-    replaced re-sealed whatever off-spine drift was live at the moment of a
-    spine-only acceptance, silently zeroing the off-spine census the snapshot is
-    the only basis for. An untouched file is not "written", so both mirror rules
-    stay satisfied without touching it.
+    (`_authorised_registries`), and leaves every other registry byte-identical
+    to what it already was. An untouched file is not "written", so both mirror
+    rules stay satisfied without touching it.
 
-    Byte-for-byte (`shutil.copyfile`), the LIVE carrier only — and for a registry
-    it copies, any OTHER-carrier file for the same stem is DELETED in the same
-    act, or `spine_carrier.resolve` raises "exists under BOTH carriers" on the
-    very next read of the snapshot. A copied registry with no live carrier is
-    skipped and its stale snapshot copies removed; a registry OUTSIDE the act's
-    scope is not touched at all.
+    ROW BY ROW SINCE WI-1060 (`record_rows`). Inside a registry it writes, the
+    act takes from live, byte for byte, the rows it names — its acceptances
+    (`_accepted_by_act`) and the rows `reaccepts` names, a named row gone from
+    live retired — and the rows that follow live (a row claiming no acceptance,
+    or one whose accepted and routed traced cells equal its recorded copy);
+    every other row keeps its recorded bytes and is left owed: named in the
+    act's summary and listed in its ledger entry (`kept`), never a refusal. So
+    the act cannot carry a row it does not name, and one unblessed row no longer
+    holds its registry. Every copy is composed and RE-READ (`row_problems`, a
+    parse-level reading independent of the composition) before any byte is
+    written; a copy that does not read as the rule requires refuses the act,
+    writing nothing — no copy, stamp or ledger entry. An act that keeps no row
+    writes the live file byte for byte, the LIVE carrier only, and for a
+    registry it copies any OTHER-carrier file for the same stem is DELETED in
+    the same act, or `spine_carrier.resolve` raises "exists under BOTH carriers"
+    on the very next read of the snapshot. A copied registry with no live
+    carrier has its copy removed when the act retires every accepted row it
+    records, and is left untouched otherwise.
 
     **REFUSES to CREATE the directory unless `seed=True`.** That refusal is the
     bootstrap guard: the FIRST snapshot blesses whatever text it copies, so it
     must ride the operator's own reviewed signing commit and nothing else.
     `--seed` is reachable only from `intake.py snapshot --seed`, and
     `tests/test_baseline_snapshot.py` pins that no loop module, hook or
-    `check.py` contains the flag.
+    `check.py` contains the flag. The seed, and the repair of a record that
+    does not read, copy whole files: there is no previous copy to keep a row
+    from. A re-seed over a standing record is an act over every registry,
+    row by row like any other.
 
-    **AND REFUSES TO REFRESH ONE WITHOUT AUTHORITY** (`refresh_refusal`, 2026-08-20).
-    Creating was guarded and rewriting was not, which made the second act the
-    cheap one: after the first signing this function re-blessed any text it was
-    pointed at. Since SR-207 a refresh that would absorb a row's drifted
-    ACCEPTED text needs that row's own `Status` flip or its id in `reaccepts`;
-    an `accepts` ref names the act and its registry and clears no row. Refs and
-    re-accepted ids are recorded into the snapshot's prose stamp. Traced-cell
-    refreshes are unaffected and need no flag. Since WI-584 that gate is scoped
-    to THIS act's
-    write set, so a per-registry acceptance is no longer refused by drift in a
-    registry the copy leaves alone — with one unscoped arm: an act that would
-    copy nothing in a tree carrying drifted accepted text is still refused, so
-    the laundering attempt meets a message and not a silent exit 0.
+    **AND REFUSES AN ACT THAT WOULD WRITE NOTHING over drifted accepted text**
+    (`refresh_refusal`), naming every row that stays owed, so the laundering
+    attempt meets a message and not a silent exit 0.
 
-    **NOTHING SHOULD EVER WIRE THIS INTO A FRESHNESS STEP.** Exactly two callers
-    are sanctioned: `intake._apply_flips` (the mechanical path, called AFTER the
-    status write so the copy captures the flip — which is what makes the
-    unanchored rule decidable) and `intake.py snapshot` (the reviewed-commit path). Not
+    **NOTHING SHOULD EVER WIRE THIS INTO A FRESHNESS STEP.** The one sanctioned
+    caller is `intake.py snapshot` (the reviewed-commit path). Not
     `agent_loop`, not `dispatch`, not the hooks, not `check.py`. A step that
     REGENERATED the snapshot would defeat the whole mechanism: the snapshot is
     deliberately behind live whenever an amendment is pending, and that lag IS
     the signal.
 
     `verdict`, when given, is the verdict file that ruled the re-accepted rows;
-    the act's ledger entry records it (`_refuse_verdict` judges it first)."""
+    the act's ledger entry records it (`_refuse_verdict` judges it first).
+
+    Implements: SR-140, LLR-173, SR-207, LLR-245"""
     verdict = verdict_rel(root, verdict)
     _refuse_verdict(root, verdict, reaccepts)
+    reaccepts = frozenset(reaccepts or ())
     base = snapshot_root(root)
     if not base.is_dir():
         standing, to_copy, first_signing = _seed_targets(root, base, seed, reaccepts)
     else:
         # The authority gate and the scope decision, keyed on the directory
         # EXISTING rather than on `seed`: creating is seeding and rewriting is
-        # refreshing, whatever flag the caller passed. `--seed` against a
-        # standing record is a mistake, and a mistake is exactly the thing that
-        # must not sail past the check. `_refresh_targets` raises on refusal.
-        # The ledger first: a refusal must leave the record untouched.
+        # refreshing, whatever flag the caller passed. `_refresh_targets` raises
+        # on refusal. The ledger first: a refusal must leave the record untouched.
         standing = _standing_acts(root)
-        to_copy, first_signing = _refresh_targets(
-            root, accepts, seed, base, frozenset(reaccepts or ())
-        )
+        to_copy, first_signing = _refresh_targets(root, accepts, seed, base, reaccepts)
+    rels = [r for r in SNAPSHOTTED if r in to_copy]
     prior = _prior_record(root)
-    written = []
-    copied_rels = []
-    for rel in (r for r in SNAPSHOTTED if r in to_copy):
-        dest = _copy_registry(root, base, rel)
+    accepted = _accepted_by_act(root, rels, prior)
+    copies = _composed_copies(root, base, rels, accepted | reaccepts, prior is None)
+    base.mkdir(parents=True, exist_ok=True)
+    written, copied_rels, kept = [], [], []
+    for rel, copy in copies.items():
+        dest = _copy_registry(base, rel, copy)
         if dest:
             written.append(dest)
             copied_rels.append(rel)
-    written = sorted(written)
+            kept += copy[2]
     # Every non-seed refresh that copied a registry is stamped, so the act's
     # scope is auditable whether a `--accepts` ref or a `Status` move authorised
-    # it (WI-571 rework: a Status-move-only refresh copied its registry but wrote
-    # no stamp, leaving that acceptance unauditable). `accepts or {}` makes the
-    # per-registry reason read "Status move" when neither a ref nor a
-    # re-accepted row named it. The seed and a refresh that copied nothing (a
-    # traced-only re-point) write no line.
+    # it (WI-571 rework). `accepts or {}` makes the per-registry reason read
+    # "Status move" when neither a ref nor a re-accepted row named it. The seed
+    # and a refresh that copied nothing write no line.
     if not first_signing and copied_rels:
-        _record_acceptance(base, accepts or {}, copied_rels, frozenset(reaccepts or ()))
+        _record_acceptance(base, accepts or {}, copied_rels, reaccepts, sorted(kept))
     # Every act that copied a registry, the seed included, is an entry in the
     # typed ledger: the one record of which rows it named that a reader parses.
     if copied_rels:
         _record_act(
-            base,
-            standing,
-            _accepted_by_act(root, copied_rels, prior),
-            reaccepts or (),
-            copied_rels,
-            verdict,
+            base, standing, accepted, reaccepts, copied_rels, verdict, sorted(kept)
         )
-    return written
+    return sorted(written)
+
+
+def _composed_copies(root, base, rels, named, whole):
+    """`{rel: (live file name | None, text | None, kept ids)}` for each
+    registry of `rels`, composed by `record_rows` and re-read before anything
+    is written; a registry with no live carrier whose copy still records an
+    accepted row the act does not retire is left out, untouched. REFUSED,
+    writing nothing, when any copy cannot be composed or does not read as the
+    rows the act names replaced and the other rows placed by the rule. `whole`
+    when there is no record to read (the seed) or it does not read (the
+    repair): then no previous copy is read, every accepted row is one the act
+    carries into acceptance, and the copies are whole files.
+
+    Implements: SR-207, LLR-245"""
+    split, out, problems = acceptance_record.split_changed_cells, {}, []
+    for rel in rels:
+        live = _copy_file(Path(root), rel)
+        prev = None if whole else record_rows.read_file(_copy_file(base, rel))
+        if live is None:
+            if not record_rows.unretired(prev, named):
+                out[rel] = (None, None, [])
+            continue
+        text, kept, faults = record_rows.act_copy(
+            rel, prev, record_rows.read_file(live), named, split
+        )
+        problems += faults
+        out[rel] = (live.name, text, kept)
+    if problems:
+        raise SystemExit(
+            "baseline_snapshot: REFUSED — the act's copy does not read as the "
+            "rows it names taken from live and every other row placed by the "
+            "row rule, so nothing was written:\n{}".format(
+                "\n".join("  " + p for p in problems)
+            )
+        )
+    return out
 
 
 def _seed_targets(root, base, seed, reaccepts):
     """`(standing acts, registries to copy, first_signing)` for an act on a
     repo with no record yet: refused unless `seed`, then the whole tree, once.
-    Extracted from `copy_live` unchanged (WI-791)."""
+    The directory is created only once every copy has been composed, so a
+    refused seed leaves no trace."""
     if not seed:
         raise SystemExit(
             "baseline_snapshot: REFUSED — {} does not exist, and creating it "
@@ -1428,35 +1383,30 @@ def _seed_targets(root, base, seed, reaccepts):
             "`intake.py snapshot --seed` there, after every pending row has "
             "been ruled.".format(base)
         )
-    # Before the directory exists, so a refused seed leaves no trace.
     _refuse_reaccepts(root, frozenset(reaccepts or ()), None, True)
-    base.mkdir(parents=True, exist_ok=True)
     return [], set(SNAPSHOTTED), True  # the seed blesses the whole tree, once
 
 
-def _copy_registry(root, base, rel):
-    """Copy one registry's live carrier into the record under `base`; the
-    repo-relative path written, or None when the registry has no live carrier.
-    Extracted from `copy_live`'s loop body unchanged (WI-791), so the writer
-    stays under the complexity limit as it grows its verdict argument."""
+def _copy_registry(base, rel, copy):
+    """Write one registry's composed copy `(live file name | None, text, kept)`
+    into the record under `base`, bytes untranslated; the repo-relative path
+    written, or None when the registry has no live carrier. Every carrier path
+    for this stem other than the live one is removed first, so a carrier change
+    lands as delete-then-write rather than leaving both."""
+    name, text, _kept = copy
     suffixes = (
         spine_carrier.NEED_CARRIERS if rel == NEEDS_REL else spine_carrier.CARRIERS
     )
-    live = spine_carrier.resolve(Path(root) / rel, suffixes)
-    dest_dir = base / Path(rel).parent
-    # Every carrier path for this stem, so the STALE one is removed whether
-    # or not a live file is being written over it. Done before the copy, so
-    # a carrier change lands as delete-then-write rather than leaving both.
     for cand in spine_carrier.carriers(rel, suffixes):
         stale = base / cand
-        if stale.is_file() and (live is None or stale.name != live.name):
+        if stale.is_file() and stale.name != name:
             stale.unlink()
-    if live is None:
+    if name is None:
         return None
-    dest_dir.mkdir(parents=True, exist_ok=True)
-    dest = dest_dir / live.name
-    shutil.copyfile(live, dest)
-    return dest.relative_to(Path(root)).as_posix()
+    dest = base / Path(rel).parent / name
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_bytes(text.encode("utf-8", "surrogateescape"))
+    return "{}/{}/{}".format(SNAPSHOT_DIR, Path(rel).parent.as_posix(), name)
 
 
 def _prior_record(root):
@@ -1568,29 +1518,29 @@ def _copied_problems(where, entry):
     return []
 
 
-def _copied_order_problems(entries):
-    """The entries that omit `copied` after an earlier entry carried it: the
-    writer records it on every act once it records it on one, so a legacy
-    entry only ever precedes the first recorded one.
+def _copied_order_problems(entries, key="copied"):
+    """The entries that omit `key` (`copied`, or `kept`) after an earlier entry
+    carried it: the writer records it on every act once it records it on one,
+    so a legacy entry only ever precedes the first recorded one.
 
     Implements: SR-178, LLR-361"""
     tables = [(n, e) for n, e in enumerate(entries, 1) if isinstance(e, dict)]
-    first = next((n for n, e in tables if "copied" in e), None)
+    first = next((n for n, e in tables if key in e), None)
     return [
-        "act entry {}: `copied` is missing after act entry {} carried it; every "
-        "entry after the first that records its copied registries records "
-        "them".format(n, first)
+        "act entry {}: `{}` is missing after act entry {} carried it; every "
+        "entry after the first that records it records it too".format(n, key, first)
         for n, e in tables
-        if first is not None and n > first and "copied" not in e
+        if first is not None and n > first and key not in e
     ]
 
 
 def _named_rows_problems(where, entry):
     """The faults of an act entry's row lists and its optional `verdict`:
-    `accepted` and `reaccepted` lists of row ids, and a `verdict`, when the
-    entry has one, naming a file (a non-empty string; OI-100, WI-791)."""
+    `accepted` and `reaccepted` lists of row ids, `kept`, when the entry has
+    it (WI-1060), a list of row ids too, and a `verdict`, when the entry has
+    one, naming a file (a non-empty string; OI-100, WI-791)."""
     out = []
-    for key in ("accepted", "reaccepted"):
+    for key in ("accepted", "reaccepted") + (("kept",) if "kept" in entry else ()):
         ids = entry.get(key)
         if not isinstance(ids, list) or not all(isinstance(r, str) for r in ids):
             out.append("{}: `{}` must be a list of row ids".format(where, key))
@@ -1628,14 +1578,18 @@ def acts_problems(text):
         out += _entry_problems(n, entry, last_seq)
         if isinstance(entry, dict) and type(entry.get("seq")) is int:
             last_seq = entry["seq"] if last_seq is None else max(last_seq, entry["seq"])
-    return out + _copied_order_problems(entries)
+    return (
+        out + _copied_order_problems(entries) + _copied_order_problems(entries, "kept")
+    )
 
 
 def parse_acts(text):
     """The act ledger's entries as `{seq, date, accepted, reaccepted}` dicts in
-    file order, with `verdict` on an entry that names one and `copied` on an
-    entry that records it; `[]` for no text. A legacy entry has no `copied`
-    key, never `[]`: its copy set is unknown, and nothing here infers one.
+    file order, with `verdict` on an entry that names one, and `copied` and
+    `kept` on an entry that records them; `[]` for no text. A legacy entry has
+    no `copied` key, never `[]`: its copy set is unknown, and nothing here
+    infers one; an entry without `kept` was written before acts wrote row by
+    row.
     RAISES `ActLedgerError` on a malformed ledger (`acts_problems`) rather
     than returning the entries it could read.
 
@@ -1653,6 +1607,7 @@ def parse_acts(text):
             },
             **({"verdict": entry["verdict"]} if "verdict" in entry else {}),
             **({"copied": list(entry["copied"])} if "copied" in entry else {}),
+            **({"kept": list(entry["kept"])} if "kept" in entry else {}),
         )
         for entry in tomllib.loads(text or "").get("act", [])
     ]
@@ -1683,11 +1638,19 @@ def acts_findings(root):
     ]
 
 
+# The fields an entry a commit adds must carry, as its refusal names them.
+_ADDED_FIELDS = {
+    "copied": "`copied`, the registries its act copied",
+    "kept": "`kept`, the rows its act left at their recorded text",
+}
+
+
 def added_acts_problems(text, parent_texts):
     """Every fault of the entries the ledger `text` adds over the ledgers in
     `parent_texts` (each None where that parent has none): an added entry
-    without `copied`, or one naming a path outside `SNAPSHOTTED` in its
-    canonical `.toml` spelling. Entries a parent holds are never judged, so a
+    without `copied` or `kept` (one line naming each missing field), or one
+    whose `copied` names a path outside `SNAPSHOTTED` in its canonical `.toml`
+    spelling. Entries a parent holds are never judged, so a
     legacy history stays readable. `[]` when `text` is malformed, which the
     whole-file rule reports, and when a parent is, which no supported route
     commits.
@@ -1702,10 +1665,10 @@ def added_acts_problems(text, parent_texts):
     for entry in added:
         where = "act entry seq {}".format(entry["seq"])
         foreign = [c for c in entry.get("copied", []) if c not in SNAPSHOTTED]
-        if "copied" not in entry:
+        missing = [_ADDED_FIELDS[k] for k in _ADDED_FIELDS if k not in entry]
+        if missing:
             out.append(
-                "{}: the commit adds it without `copied`, the registries its "
-                "act copied".format(where)
+                "{}: the commit adds it without {}".format(where, " or ".join(missing))
             )
         elif foreign:
             out.append(
@@ -1769,13 +1732,15 @@ def _standing_acts(root):
         ) from None
 
 
-def _record_act(base, standing, accepted, reaccepted, copied, verdict=None):
+def _record_act(base, standing, accepted, reaccepted, copied, verdict=None, kept=()):
     """Append one act's entry to the ledger, numbered one above the `standing`
     entries `_standing_acts` read before the act began, creating the file with
     its header when the record has none. `copied` is the registries the act
     actually wrote, by their canonical `SNAPSHOTTED` paths, never a set
-    reconstructed from row ids. `verdict` is written only when the act named
-    one, so an entry without it keeps the shape it always had.
+    reconstructed from row ids; `kept` the rows of those files it left at
+    their recorded text, `[]` when none (WI-1060). `verdict` is written only
+    when the act named one, so an entry without it keeps the shape it always
+    had.
 
     Implements: SR-178, LLR-361"""
     path = base / ACTS
@@ -1788,6 +1753,7 @@ def _record_act(base, standing, accepted, reaccepted, copied, verdict=None):
             ("accepted", sorted(accepted)),
             ("reaccepted", sorted(reaccepted)),
             ("copied", sorted(copied)),
+            ("kept", sorted(set(kept))),
         ]
         + ([("verdict", verdict)] if verdict else [])
     )

@@ -12495,7 +12495,118 @@ exists only during the write.
 
 **Kit-owned files — overwrite:** `scripts/arch_tags.py`.
 
-### A design row may name one parent design row, and every walk from a requirement to its design rows walks the tree [since bba30552f]
+### An acceptance act records only the rows it names; a drifted row no longer blocks its registry [since 121ce2e00]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** `intake.py snapshot` used to copy each registry it wrote
+whole, and refused the act while any accepted row of that file had drifted
+without the act naming it, so one unblessed amendment held every blessed one
+in its registry. It now writes the record row by row (`scripts/record_rows.py`,
+new). A row the act names — a `Status` moved into acceptance, a row born
+accepted, an id in `--reaccepts`, or a retired row (a named id live no longer
+carries) — is copied byte for byte from live. A row it does not name keeps its
+recorded text while its accepted cells, or its `SN-Refs`, `Boundary-Refs`,
+`SR-Refs` or `Verifies` links, differ from live (or live no longer carries it);
+every other row (one claiming no acceptance, or one whose judged cells are
+unchanged, its other trace cells refreshed) follows live. Rows keep live's
+order with live's bytes around them, so an act that keeps nothing writes the
+live file exactly as before. A kept row no longer refuses the act: the command
+prints it as `LEFT OWED`, the stamp line names it, and the act ledger entry
+lists it in a new field, `kept`. An act that would write nothing over drifted
+accepted text is still refused, naming every row that stays owed. The mirror
+checks (`staged_snapshot_findings` at the hook, `committed_snapshot_findings`
+on the history) now judge a copy at the row once the ledger holds an entry
+carrying `kept`: a commit's copy must equal its parent's copy with exactly the
+rows its act names taken from live, each fault named by its row, and deleting
+`acts.toml` while the record stands is refused. A copy written before your
+first act on this kit is judged as it was written (byte-identical to live), so
+**no record needs migration**. The first `--seed` still copies whole files; a
+re-seed over a standing record is an act over every registry, row by row. A
+registry still on the legacy CSV carrier, or a needs file on its markdown
+carrier, is copied whole as before and refused while a drifted row would be
+kept: convert it with `migrate_carrier.py` to get row-by-row acts.
+`refresh_refusal` now answers only for an act that would write nothing.
+`intake.ROUTED_TRACED_CELLS` moved to `record_rows` and stays importable under
+its old name. The trunk mint now mints a routed link restored between two acts
+(the record no longer re-anchors it through another row's act), and a held
+MEANING ruling on a routed link alone still mints its operator row after
+another act on the same registry.
+
+**What to do.** Nothing is forced; take your next act as before. If you still
+owe the vocabulary migration, run `migrate_vocabulary.py` before your first act
+on this kit: its record step copies whole files and absorbs drift, which the
+checks accept only while the record holds no entry carrying `kept`. A script of
+yours that called `refresh_refusal` to preview an act reads the kept rows from
+the act's output or its ledger entry instead. An act brief or prompt of your own
+that told a session to stop on a refusal naming an unlisted row now meets
+`LEFT OWED` for that row instead. The edit to the act template moves the
+retained-session identity, which hashes the template file's bytes, so a
+retained adjudicator holding an actable class drains once, at its next clear
+point. Your record's `README.md` is prose; refresh it from
+`registries/last-accepted-README.template.md` if you like.
+
+**Kit-owned files — overwrite:** `scripts/record_rows.py` (new),
+`scripts/baseline_snapshot.py`, `scripts/acceptance_record.py`,
+`scripts/intake.py`, `scripts/check_trajectory.py`, `scripts/trace.py`,
+`scripts/kitlib/bootstrap_manifest.py`, `prompts/adjudicate-act.template.md`,
+`skills/coordinator-cycle/references/recipes.md`,
+`skills/spine-authoring/references/in-lane.md`,
+`registries/last-accepted-README.template.md`.
+### Requirement rows name the interfaces they constrain, with the behaviour's input set, and interface reach is reported warn-first [since bba30552f]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.
+Variant F's fourth entry, first part; apply it after the design-row entry
+above. A later entry makes the reach strict and retires the direct
+interface-to-test-case check.)*
+
+**What changed.** A design row (`LLR-###`) or a system requirement (`SR-###`)
+may carry `constrains = ["IF-###", ...]`, the interfaces whose behaviour it
+states: the interface row states the form, the requirement what must be true
+of what crosses it. Beside it, and only beside it, a design row may carry
+`dimensions`, the behaviour's input set in the `gen_cases.py` grammar (one
+parser, now in `kitlib/spine.py`, serves both), and `out_of_domain`, one
+sentence saying what the interface does outside that set. `trace.py --strict`
+fails a `constrains` id naming no live interface row, a `dimensions` cell the
+grammar refuses, an `out_of_domain` that is not one sentence, and either
+companion on a row constraining nothing; an empty list is refused on read. A
+constraining row without both companions is counted by channel on one warning
+line, never failing. `constrains` is traced and routed to adjudication when it
+changes on an accepted row; `dimensions` and `out_of_domain` are accepted text.
+A design row is now also placed at the owner of each interface it constrains,
+in every placement reader (the component view, the dashboard's design-row
+detail, the build brief, the knowledge-pack advisory, the interface-form
+gate's fallback reach). `trace.py` prints an `interface coverage:` count line
+and names each interface whose reach (the rows constraining it or observed at
+it, then every test case verifying them or naming it) holds no test case the
+harness runs, and each test case naming an interface every row it verifies
+already constrains; both report warn-first, and `[checks] interfaces_check =
+false` silences the coverage report. The SR template's `permutations` cell is
+for system-boundary dimensions only.
+
+**What to do.**
+
+1. Run `python scripts/trace.py --strict` and read the `interface coverage:`
+   line and the interfaces it names.
+2. For each, add `constrains = ["IF-###"]` to the LLR whose text states the
+   behaviour across it (an SR only at the system boundary, where no LLR states
+   it), or name it in a test case's `verifies`. Each `constrains` added to an
+   accepted row is a routed traced change for adjudication.
+3. Where the behaviour's input is a closed set and a test drives every value,
+   add `dimensions` and `out_of_domain`; each re-opens the row's acceptance.
+
+**Kit-owned files — overwrite:** every file the kit ships under `scripts/`,
+`registries/low-level-requirements.template.toml`,
+`registries/system-requirements.template.toml`,
+`registries/interfaces.template.toml`, `PROCESS.md` and the skills under
+`skills/`.
+
+**Project-owned files — edit:** your own `docs/requirements/interfaces.toml`
+header, if you keep the template's, gains the paragraph on where an
+interface's behaviour is stated; your requirement registries gain the cells as
+step 2 adds them.
+
+### A design row may name one parent design row, and every walk from a requirement to its design rows walks the tree [since 263b319df]
 
 *(Anchored at the preceding commit: the change lands in the commits after it.
 Variant F's entry for the requirement tree; apply it after the design-row

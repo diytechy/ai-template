@@ -419,6 +419,31 @@ def test_a_claim_names_its_caller_by_claude_code_session_id(root, tx):
     assert "unknown" in guard.claim_refusal(root, env={"CLAUDE_SESSION_ID": COORD})
 
 
+def test_the_guard_reads_its_caller_from_the_agent_tools_session_variable(root, tx):
+    """Implements: TC-533"""
+    # The caller: the agent tool's own session variable, and no other name.
+    held(root, tx)
+    assert guard.claim_refusal(root, env={"CLAUDE_CODE_SESSION_ID": COORD}) is None
+    assert "unknown" in guard.claim_refusal(root, env={"SESSION_ID": COORD})
+
+
+def test_a_guard_command_reads_its_root_from_the_agent_tools_project_variable(
+    tmp_path, monkeypatch
+):
+    """Implements: TC-534"""
+    # The root: the one given, else the tool's project-root variable, else the
+    # working directory.
+    given, project, cwd = (tmp_path / n for n in ("given", "project", "cwd"))
+    for d in (given, project, cwd):
+        d.mkdir()
+    monkeypatch.chdir(cwd)
+    monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(project))
+    assert guard._root(str(given)) == given.resolve()
+    assert guard._root(None) == project.resolve()
+    monkeypatch.delenv("CLAUDE_PROJECT_DIR")
+    assert guard._root(None) == cwd.resolve()
+
+
 def test_with_no_lease_held_a_claim_refuses_naming_the_take(root):
     """Implements: TC-316"""
     refusal = guard.claim_refusal(root, env=ENV)

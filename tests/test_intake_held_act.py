@@ -6,7 +6,7 @@ at that landing (`intake.intake_after_merge`, and `intake.py sweep` replaying
 it) files one queued operator row per registry and one pending open item naming the
 rows, their verdicts and the act's command, the row's `needs` citing the item, in
 its one commit, and those rows leave the landing's amendment row (LLR-153,
-LLR-364). The act copies a whole registry, so the grouping is the registry's, and
+LLR-364). The act's `--accepts` names one registry, so the grouping is the registry's, and
 the tests run each minted command through the real `intake.py snapshot`.
 
 The writer's input is a closed set: every state the tests below do not mint for
@@ -262,6 +262,25 @@ def test_a_held_meaning_verdict_mints_one_operator_row_and_one_pending_item(tmp_
     assert {OPEN_ITEMS, rel, trace.WATERMARK} <= set(changed)
 
 
+def test_a_held_meaning_ruling_on_a_routed_link_alone_survives_another_act(tmp_path):
+    """The hole a whole-file copy left (WI-1060): SR-001's routed link alone is
+    re-pointed and ruled MEANING on a held rung, while an act on the same
+    registry re-accepts SR-002. That act writes SR-002 and keeps SR-001's
+    recorded link, so SR-001 still differs from its copy and the operator's row
+    is minted; a copy of the whole file had re-anchored the link and settled
+    the row with no operator act."""
+    root, before = _held_repo(tmp_path, extra=_sr002(SR2_ORIGINAL))
+    _write_srs(root, sn_refs="SN-002", extra=_sr002(SR2_AMENDED))
+    _commit(root, "re-point SR-001's link and amend SR-002")
+    SNAP.copy_live(root, reaccepts=frozenset({"SR-002"}))
+    _sit(root, {"SR-001": "MEANING"})
+    after = _commit(root, "SR-002's act, and SR-001 sat")
+    minted, refusal = _mint(root, before, after)
+    assert refusal is None, refusal
+    _rel, _meta, _oi, cells = _one_operator_row(root)
+    assert "SR-001" in _brief(cells) and "SR-002" not in _brief(cells)
+
+
 def test_each_registry_files_its_own_row_and_item(tmp_path):
     """The act is per registry, so one verdict over two registries files two
     items, and each item's command takes its own registry's act."""
@@ -461,10 +480,11 @@ def test_the_operator_act_is_never_listed_as_a_sessions_own(tmp_path):
     assert "None recorded." in audit.split("</div>")[0], audit
 
 
-def test_two_landings_widen_the_act_as_the_item_states(tmp_path):
+def test_two_landings_each_take_their_own_act(tmp_path):
     """A second landing's row waits in the same registry when the operator acts:
-    each item's own command is refused by name, and the act option (a) states,
-    naming the other row, exits 0."""
+    each item's own command records its own row and leaves the other at its
+    recorded text, named as owed (WI-1060), so the two acts are independent
+    and, taken in either order, anchor both rows."""
     root, first = _held_repo(tmp_path, extra=_sr002(SR2_ORIGINAL))
     _write_srs(root, requirement=AMENDED, extra=_sr002(SR2_ORIGINAL))
     _sit(root, {"SR-001": "MEANING"}, VERDICT)
@@ -477,16 +497,14 @@ def test_two_landings_widen_the_act_as_the_item_states(tmp_path):
     assert _mint(root, second, after)[1] is None
     items = _items(root)
     assert len(items) == 2, items
-    commands = sorted(_command(cells) for cells in items.values())
-    for command, other in zip(commands, ("SR-002", "SR-001"), strict=True):
-        proc = _run_act(root, command)
-        assert proc.returncode == 1, proc.stdout + proc.stderr
-        assert "ABSORB" in proc.stderr and other in proc.stderr, proc.stderr
     for cells in items.values():
-        assert "copies the whole registry" in cells["options"], cells["options"]
+        assert "records these rows alone" in cells["options"], cells["options"]
         assert "--verdict" not in cells["options"], cells["options"]
-    widened = commands[0].replace("SR-001", "SR-001,SR-002")
-    _assert_the_act_anchors(root, widened, "SR-001", "SR-002")
+    commands = sorted(_command(cells) for cells in items.values())
+    first_act = _run_act(root, commands[0])
+    assert first_act.returncode == 0, first_act.stdout + first_act.stderr
+    assert "LEFT OWED: SR-002" in first_act.stdout, first_act.stdout
+    _assert_the_act_anchors(root, commands[1], "SR-001", "SR-002")
     assert "verdict" not in _last_act(root)
 
 

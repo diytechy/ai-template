@@ -368,6 +368,12 @@ SPINE_COLUMN = {
     "delivered_with": "Delivered-With",
     "coincident": "Coincident",
     "form": "Form",
+    # The requirement-to-interface relation (WI-1024): the interfaces a
+    # requirement or design row constrains, and a design row's input set and
+    # out-of-domain rule beside it.
+    "constrains": "Constrains",
+    "dimensions": "Dimensions",
+    "out_of_domain": "OutOfDomain",
     "superseded_by": "SupersededBy",
     "lifecycle": "Lifecycle",
     "detail": "Detail",

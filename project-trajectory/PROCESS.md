@@ -502,12 +502,12 @@ text is later changed stays `Accepted` and the change is caught by DIFFING it
 against the last acceptance. (A transitional `Modified` marked that state until
 2026-08-20; it is retired, and an adopter carrying it migrates —
 `RESYNC_PACK.md`.) A re-accept is a reviewed commit that re-reads the changed
-cells and re-copies the record. The baseline those before/after diffs run against is a
-**byte-for-byte copy** of the registries at the last acceptance —
+cells and re-copies those rows. The baseline those before/after diffs run against is a
+**byte-for-byte copy** of each row at its last acceptance —
 `docs/archive/last_accepted/`, written only by the acceptance act itself
-(`intake.py snapshot`, in the same commit as the `Status` write; a snapshot
-file must always equal its live counterpart), scoped to the registries that act
-authorises. **Text first, the act second:** a commit writing the record
+(`intake.py snapshot`, in the same commit as the `Status` write; a copy must be
+what its act writes: the rows it names taken from live, any other drifted row
+kept as recorded and owed), scoped to the registries that act authorises. **Text first, the act second:** a commit writing the record
 changes no spine cell but `Status` and adds or removes no row (hook- and
 merge-slot-enforced; a lane's squash landing is exempt); amend-plus-flip is
 not acceptance. A row's `Status` answers for its **own cells** — a child
@@ -905,9 +905,11 @@ the **boundaries** of each dimension and in the **interactions** between them.
    `Smoke`/`Full`; expensive integration/hardware combinations use
    boundary-corners in `Release`. Don't run a 4-mode × N-size sweep on every push.
 
-Record each requirement's dimensions in the SR **`Permutations`** column using
-this grammar, so one SR stands in for many near-duplicate rows and the intent is
-machine-readable:
+Record a system-boundary requirement's dimensions in the SR **`Permutations`**
+column, and a behaviour across an interface in the `dimensions` cell of the LLR
+whose `constrains` names that interface, beside its `out_of_domain` sentence
+(what the interface does outside the set); both use this grammar, so one row
+stands in for many near-duplicate rows and the intent is machine-readable:
 
 ```
 field=set{plain,comma,quote,newline}; size=range[0..2GiB]; enc=set{utf8,utf16}; @pairwise

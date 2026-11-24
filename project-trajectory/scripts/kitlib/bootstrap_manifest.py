@@ -747,6 +747,9 @@ MAPPING = [
     # which imports it UNGUARDED and joins its findings to the failure set, so a
     # scaffold without it cannot run the checker — let alone report drift.
     ("scripts/acceptance_record.py", "scripts/acceptance_record.py"),
+    # The record written and judged row by row (WI-1060): `baseline_snapshot.py`,
+    # `acceptance_record.py` and `intake.py` import it unguarded, all in this list.
+    ("scripts/record_rows.py", "scripts/record_rows.py"),
     # Text then act (WI-806), moved out of the acceptance record by WI-892, and
     # the one lane-commit walk: `integrate.py` imports it unguarded and
     # `check.py`'s text-then-act step reads it, both in this list.

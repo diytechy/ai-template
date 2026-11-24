@@ -214,9 +214,11 @@ than the ones somebody remembered to mark. Blessing an amendment is a reviewed
 commit that re-reads the changed cells and runs `intake.py snapshot --reaccepts
 <ROW-ID>` naming each row read — the adjudicator's act since 2026-09-01, never
 the lane's: the lane amends, the adjudication rules on the amendment and
-re-anchors it in the same commit. The refresh is refused while any row it would
-copy carries drifted accepted text that the act neither flips nor names; an
-`--accepts` ref names the act and its registry but clears no row.
+re-anchors it in the same commit. The act writes into the record only the rows
+it flips or names (and the rows that follow live); any other row with drifted
+accepted text keeps its recorded text and is printed as owed, and an act that
+would write nothing over such drift is refused; an `--accepts` ref names the act
+and its registry but carries no row.
 
 ### 3.3 `Phase` — optional phased delivery
 
@@ -262,7 +264,7 @@ copy carries drifted accepted text that the act neither flips nor names; an
 
 ## 4. LLR — Low-Level Requirements
 
-**9 columns.** The decomposition tier: *how* an SR is met. Rows form the requirement tree (WI-1027, `docs/process.md` §4): a top-level row names its SRs in `SR-Refs`; a child names its one parent row in `Parent` instead, and its SRs are read up its chain by the one walk, `kitlib.spine.llr_tree`, which every reader of the SR↔LLR relation takes. A row names no file, symbol or component (WI-1023): the files realizing it are read up from the code's `Implements:` tags (`arch_inputs.implements_index`), and its placement is derived (§4.2). The loader refuses a row carrying a key the tier does not declare.
+**12 columns.** The decomposition tier: *how* an SR is met. Rows form the requirement tree (WI-1027, `docs/process.md` §4): a top-level row names its SRs in `SR-Refs`; a child names its one parent row in `Parent` instead, and its SRs are read up its chain by the one walk, `kitlib.spine.llr_tree`, which every reader of the SR↔LLR relation takes. A row names no file, symbol or component (WI-1023): the files realizing it are read up from the code's `Implements:` tags (`arch_inputs.implements_index`), and its placement is derived (§4.2). The loader refuses a row carrying a key the tier does not declare.
 
 | Column | Required | Vocabulary / default | Effect |
 |---|---|---|---|
@@ -275,6 +277,9 @@ copy carries drifted accepted text that the act neither flips nor names; an
 | `TestRefs` | ✘ | `(see TC)` | **Inert** — see §12.1. |
 | `Status` | ✔ | closed, as SR | `Drafted` HOLDS THE `DevStg-LLReqs` RUNG OPEN (`spine_stage`: `any(is_drafted(r) for r in llrs)`) and exempts the row from "no TC". Otherwise **does not move the stage** — §4.1. |
 | `Phase` | ✘ | digit-parseable | = the parent SR's Phase by convention. Same arming rule. |
+| `Constrains` | ✘ | `IF-###` ids, a list | The interfaces whose behaviour the row states (WI-1024). An id naming no live interface row joins the `--strict` failure set (class `interface`); an empty list is refused on read. **Traced, routed to adjudication.** Places the row (§4.2). An SR carries the same cell, at the system boundary. |
+| `Dimensions` | ✘ | the permutation grammar (`gen_cases.py`) | Beside `Constrains` only: the behaviour's closed input set. A cell the grammar refuses, a strategy outside its three, or the cell on a row constraining nothing is a `--strict` finding (class `interface`). Accepted. |
+| `OutOfDomain` | ✘ | one sentence | Beside `Constrains` only: what the interface does with an input outside the dimensions. Not one line ending in a full stop, or on a row constraining nothing, is a `--strict` finding. Accepted. A constraining row missing either companion is counted by channel on one warning line, never failing (operator, 2026-11-21). |
 
 ### 4.1 LLR Status does not gate — on purpose
 
@@ -309,12 +314,23 @@ retired with the cells, and with it `check_doc_refs.symbol_findings` and its
 oracle `gen_arch_map.module_bindings` (SR-180, LLR-180 and TC-175 retired to
 SR-248, LLR-403 and TC-480). A design row is discharged by the evidence of its
 kind: a test case verifying it, which the orphan rules require. It is
-**placed** at the owner component of each interface a test case verifying it
-names (`kitlib.spine.llr_placement`); one placed nowhere is listed and counted
+**placed** at the owner component of each interface its `Constrains` cell names
+and of each interface a test case verifying it names
+(`kitlib.spine.llr_placement`); one placed nowhere is listed and counted
 (`trace.py`'s `placement:` line, the component view's `[unplaced] llr_refs`),
 never refused. The files realizing a row are the `Implements:` index's, read
 by `--tests-for`, the interface-form gate's reach, the consolidation census
 and the build brief's code map.
+
+**Interface reach (WI-1024).** An interface's reach, its blast radius, is the
+rows constraining it or observed at it and every test case verifying those rows
+or naming it (`kitlib.spine.interface_reach`). `trace.py` counts the
+interfaces reached through a constraining LLR, a constraining SR, a naming test
+case alone, observation cases alone, or not at all, and names each interface
+reaching no test case the harness runs; a test case naming an interface every
+row it verifies already constrains is reported (`coherence.repeat_findings`).
+Both are warn-first until the population lands, and the `[checks]
+interfaces_check` opt-out silences the coverage report.
 
 ---
 
@@ -760,8 +776,8 @@ When an **`Accepted`** spine row is amended, `staged_spine_amendments` in
 
 | Registry | **Traced** (amend freely) | **Accepted** (opens a re-accept window) |
 |---|---|---|
-| SR | `SN-Refs`, `Boundary-Refs`, `Hat-Refs`, `Phase`, `Aspect`, `Lifecycle`, `DA-Refs` | `Title`, `Requirement`, `Rationale`, `AcceptanceCriteria`, `Permutations`, `Priority`, `VerificationMethod`, `Coincident`, `Form` |
-| LLR | `TestRefs`, `Phase`, `SR-Refs`, `Hat-Refs` (and the retired `Module`, `CodeSymbol`, `Component`, still classed traced for the snapshot and history) | `Title`, `Detail`, `Rationale`, `Parent` |
+| SR | `SN-Refs`, `Boundary-Refs`, `Hat-Refs`, `Phase`, `Aspect`, `Lifecycle`, `DA-Refs`, `Constrains` | `Title`, `Requirement`, `Rationale`, `AcceptanceCriteria`, `Permutations`, `Priority`, `VerificationMethod`, `Coincident`, `Form` |
+| LLR | `TestRefs`, `Phase`, `SR-Refs`, `Hat-Refs`, `Constrains` (and the retired `Module`, `CodeSymbol`, `Component`, still classed traced for the snapshot and history) | `Title`, `Detail`, `Rationale`, `Parent`, `Dimensions`, `OutOfDomain` |
 | TC | `Verifies`, `Evidence`, `Automated`, `Phase`, `Assumption-Refs` | `Method`, `Expected`, `Parameters`, `Level`, `Tier`, `Inputs`, `MaxAge`, `Sampling`, `SampleSize`, `AcceptanceRule`, `Trigger`, `Rubric`, `MinWorkItems` |
 | SN | `Stakeholder-Refs`, `Source` | every other need cell (the residual) |
 | IF (off-spine) | `BridgedBy` | every other interface cell, `Coincident` included (the residual) |

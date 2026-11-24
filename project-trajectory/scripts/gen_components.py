@@ -268,7 +268,7 @@ def build(cmps, srs, llrs, ifs, tcs, declared):
 
     Implements: SR-070, LLR-199, LLR-403"""
     view = {r["CMP-ID"]: _blank((r.get("Name") or "").strip()) for r in cmps}
-    placement = _kitspine.llr_placement(tcs, ifs)
+    placement = _kitspine.llr_placement(tcs, ifs, llrs)
     sr_components = _add_members(view, srs, llrs, placement)
     _add_modules(view, declared)
     parents = {r["CMP-ID"]: refs(r.get("PartOf")) for r in cmps}

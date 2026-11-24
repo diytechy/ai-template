@@ -761,23 +761,19 @@ def _restored_between_acts(tmp_path, squashed, later_act):
 
 
 @pytest.mark.parametrize("squashed", [False, True], ids=["unsquashed", "squashed"])
-def test_a_routed_cell_restored_between_two_acts_copying_the_registry_settles(
-    tmp_path, squashed
-):
-    """Pins the arm's documented limit, not a guarantee: a routed traced cell
-    moved before the re-accepting act and restored after it is re-anchored by
-    a later act's copy of the registry, as any traced refresh is, so the row
-    settles. The arm proves only that the routed traced cells are the same at
-    the range's two ends, and here they are.
+def test_a_routed_cell_restored_between_two_acts_still_mints(tmp_path, squashed):
+    """A routed traced cell moved before the re-accepting act A and restored
+    after it: act B, re-accepting another row of the same registry, keeps
+    SR-001's recorded text (WI-1060: a routed link waits for its row's own
+    act), so the copy at `after` is act A's, the restored row differs from it,
+    and it mints — the restore is a routed change no verdict judged.
 
     Implements: TC-403
     """
     root, before, after = _restored_between_acts(tmp_path, squashed, True)
-    walk = acceptance_record.staged_spine_amendments(root, before, after)
-    assert sorted(rec["id"] for rec in walk) == ["SR-001", "SR-002"]
     minted, refusal = intake.intake_after_merge(root, before, after, {}, "")
     assert refusal is None, refusal
-    assert minted == [], minted
+    assert [row["adjudicates"] for row in _amendment_rows(root, minted)] == [["SR-001"]]
 
 
 @pytest.mark.parametrize("squashed", [False, True], ids=["unsquashed", "squashed"])

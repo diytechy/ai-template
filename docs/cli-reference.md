@@ -519,8 +519,8 @@ Contracts (interfaces): IF-229, IF-243, IF-244
 | `--rev` | the commit judged (default: HEAD) |
 | `--rows` | spine row id(s), ;-joined (SR-/LLR-/TC-) |
 | `--seed` | CREATE the snapshot directory. For the FIRST snapshot only, in the operator's signing commit, after every pending row has been ruled — seeding earlier blesses text nobody read. Unreachable from every loop module and hook (pinned by tests/test_baseline_snapshot.py) |
-| `--accepts` | NAME THE ACCEPTANCE ACT this refresh rides, PER REGISTRY: `;`-joined `<registry>=<ref>` pairs. A ref copies the ONE registry it names and lands in the snapshot's prose stamp; it clears none of that registry's drifted rows (name those with --reaccepts) |
-| `--reaccepts` | RE-ACCEPT these rows: comma-joined ids whose drifted accepted text this act blesses without moving their Status. The refresh is refused while any row it would copy has drifted text neither flipped nor named here; the ids land in the snapshot's prose stamp |
+| `--accepts` | NAME THE ACCEPTANCE ACT this refresh rides, PER REGISTRY: `;`-joined `<registry>=<ref>` pairs. A ref writes the ONE registry it names and lands in the snapshot's prose stamp; it carries none of that registry's drifted rows (name those with --reaccepts) |
+| `--reaccepts` | RE-ACCEPT these rows: comma-joined ids whose drifted accepted text this act blesses without moving their Status. A drifted row neither flipped nor named here keeps its recorded text and is printed as LEFT OWED; the ids land in the snapshot's prose stamp |
 | `--verdict` | the verdict file that ruled the --reaccepts rows, recorded in the act ledger. Required at merge for a session's re-acceptance on a held rung, where the verdict must rule each row CLARITY (OI-100) |
 
 ### `scripts/integrate`

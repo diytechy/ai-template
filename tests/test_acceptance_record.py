@@ -92,7 +92,12 @@ def test_the_dependency_surface_is_the_argument_for_the_split():
     # row-text identity (`accepted_text_digest`, IF-129): a digest over the
     # row's accepted cells serialized as sorted JSON, beside the comparison
     # basis it shares, so it is two stdlib modules, not a sibling either.
+    # `record_rows` joins at WI-1060: the one statement of what an act writes
+    # into the record, row by row, which the writer composes with and these
+    # mirror rules re-derive. It imports neither module (the cell comparison
+    # is passed in), so the edge runs one way and no cycle grows.
     assert _imported_roots() == {
+        "record_rows",
         "spine_carrier",
         "kitlib",
         "sys",

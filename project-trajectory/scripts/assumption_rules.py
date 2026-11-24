@@ -1874,14 +1874,15 @@ def if_reached_srs(ifs, llrs, homes, index, tcs):
 
 def component_srs(llrs, tcs, ifs):
     """`{component: [requirement ids]}`: each design row's derived placement
-    (`kitlib.spine.llr_placement`, the owner components of the interfaces its
-    verifying cases name) mapped to the requirements its `SR-Refs` names (a
-    child's read up its parent chain, `llr_tree`), in row order and once each;
-    `if_reached_srs`' reach where no source is scanned.
+    (`kitlib.spine.llr_placement`, the owner components of the interfaces it
+    constrains and those its verifying cases name) mapped to the requirements
+    its `SR-Refs` names (a child's read up its parent chain, `llr_tree`), in
+    row order and once each; `if_reached_srs`' reach where no source is
+    scanned.
 
     Implements: SR-212, LLR-244
     """
-    placement = llr_placement(tcs, ifs)
+    placement = llr_placement(tcs, ifs, llrs)
     srs_of = llr_tree(llrs).srs_of
     out = {}
     for lid, _row in _real(llrs, "LLR-ID"):

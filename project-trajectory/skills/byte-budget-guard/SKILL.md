@@ -31,7 +31,7 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,964 | 2026-11-16 | -35: the vocabulary migration's close (stage, checks, pass and fail), re-stamped to the measured size |
 | `CLAUDE.md` | **8,500** | 8,052 | 2026-11-16 | +15: the vocabulary migration's close (stage, checks, pass and fail), re-stamped to the measured size |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,585 | 2026-11-23 | Restamps the PROCESS.md row below |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,644 | 2026-11-23 | Restamps the PROCESS.md and PROCESS_OPTIONS.md rows below |
 
 **`AGENTS.template.md` has less than 1% free**; `CLAUDE.md` about 6% and this skill
 about 10%. The DOC gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own
@@ -45,8 +45,8 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
-| `project-trajectory/PROCESS.md` | 102,597 | 2026-11-23 | **+537** WI-1027: §4 states decomposition (b), the requirement tree under one `DevStg-LLReqs` rung |
-| `project-trajectory/PROCESS_OPTIONS.md` | 202,593 | 2026-11-22 | **+147** WI-1023: an LLR carries no component; placement is derived |
+| `project-trajectory/PROCESS.md` | 102,865 | 2026-11-23 | **+537** WI-1027: §4 states decomposition (b), the requirement tree under one `DevStg-LLReqs` rung (after WI-1060's +58 and WI-1024's +210) |
+| `project-trajectory/PROCESS_OPTIONS.md` | 202,580 | 2026-11-23 | **-13** WI-1060: the record takes only the rows the act names |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped
 warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in

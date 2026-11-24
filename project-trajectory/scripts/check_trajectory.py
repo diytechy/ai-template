@@ -2364,12 +2364,14 @@ def _placed_sr_components(root, components):
     """`{SR id: {CMP ids}}`: the components among `components` each design row
     is placed in (`kitlib.spine.llr_placement`), keyed by the requirements the
     row decomposes. `knowledge_pack_findings`' join, split out of it."""
+    llrs = spine_carrier.load(root / LLR_CSV, "LLR-ID")
     placement = _kitspine.llr_placement(
         spine_carrier.load(root / TC_CSV, "TC-ID"),
         spine_carrier.load(root / IF_CSV, "IF-ID"),
+        llrs,
     )
     out = {}
-    srs_of = _kitspine.llr_tree(spine_carrier.load(root / LLR_CSV, "LLR-ID")).srs_of
+    srs_of = _kitspine.llr_tree(llrs).srs_of
     for lid, srs in srs_of.items():  # a child's SRs are read up its chain
         placed = set(placement.get(lid, ())) & set(components)
         for sr in srs if placed else ():
@@ -3337,13 +3339,14 @@ def main():
             # the regression the phase-2 backfill measured on a line-blamed
             # neighbour check.
             + staged_hat_refs_findings(root)
-            # The MIRROR INVARIANT (snapshot design §F3): a commit that touches
-            # the `last_accepted` snapshot must leave every touched file
-            # byte-identical to its live counterpart. This is the replacement
-            # for the co-mutation guard D-1's anchor half would have needed —
-            # and it is a stronger rule, because it makes "the only way to write
-            # the snapshot is to copy the live file" a decidable property rather
-            # than a convention. Vacuous until a snapshot exists.
+            # The MIRROR INVARIANT (snapshot design §F3; at the row since
+            # WI-1060): a commit that writes a `last_accepted` copy must leave
+            # it the copy its act writes — the previous copy with exactly the
+            # act's named rows taken from live. This is the replacement for the
+            # co-mutation guard D-1's anchor half would have needed — and it is
+            # a stronger rule, because it makes "the only way to write the
+            # snapshot is to copy live text" a decidable property rather than a
+            # convention. Vacuous until a snapshot exists.
             + staged_snapshot_findings(root)
             + staged_completion_findings(root)
         ):

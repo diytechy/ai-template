@@ -185,13 +185,13 @@ def tree_llrs(llrs):
 
 def placed_llrs(root, llrs, tcs):
     """`llrs`, each with a `Placed` cell: the components a design row sits in,
-    derived by `kitlib.spine.llr_placement` from the interfaces the test cases
-    `tcs` verifying it name, or `unplaced`. The state view's design-row detail
+    derived by `kitlib.spine.llr_placement` from the interfaces it constrains
+    and those the test cases `tcs` verifying it name, or `unplaced`. The state view's design-row detail
     reads it; a row names no component since WI-1023.
 
     Implements: SR-249, LLR-403"""
     ifs = spine_carrier.load(root / "docs/requirements/interfaces.toml", "IF-ID")
-    where = _kitspine.llr_placement(tcs, ifs)
+    where = _kitspine.llr_placement(tcs, ifs, llrs)
     return [
         dict(r, Placed=", ".join(where.get(r["LLR-ID"].strip(), ())) or "unplaced")
         for r in llrs

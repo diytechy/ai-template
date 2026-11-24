@@ -177,6 +177,7 @@ import tomllib
 from pathlib import PurePosixPath
 
 try:
+    import record_rows
     import spine_carrier
     from kitlib import decisions as _kitdecisions
     from kitlib import done_when as _kitdone
@@ -190,6 +191,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     from pathlib import Path
 
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import record_rows
     import spine_carrier
     from kitlib import decisions as _kitdecisions
     from kitlib import done_when as _kitdone
@@ -393,12 +395,21 @@ def _tier_reads(root, prefix, rel_path, id_col, under=""):
 # obligation. If phase 5's amend-without-flip arm ever wants that routing, it is
 # one line — added on evidence, not in advance.
 #
+# `Constrains` (SR and LLR) joins the TRACED half at WI-1024, on `SR-Refs`' own
+# argument: it names the interface whose behaviour the row states, a pointer
+# into another registry carrying no prose. A changed one ROUTES to
+# adjudication (intake.ROUTED_TRACED_CELLS), because whether the row's text
+# states the behaviour across the interface it now names is the sitting's
+# judgement. A design row's `Dimensions` and `OutOfDomain` are statements the
+# row makes, the behaviour's input set and what the interface does outside it,
+# so they join the ACCEPTED half, as the SR tier's `Permutations` did.
+#
 # THE ASSUMPTION TIER'S POINTERS JOIN IT (LLR-225), on the same argument: a
 # requirement's `DA-Refs` and a test case's `Assumption-Refs` name rows in
 # another registry, and a need's `Stakeholder-Refs` and `Source` name the
 # stakeholders it serves and the document it was drawn from. Each re-points
 # without moving anything the row asserts.
-# Implements: SR-189, SR-190, SR-193, SR-197, LLR-225
+# Implements: SR-189, SR-190, SR-193, SR-197, LLR-225, LLR-420
 SPINE_TRACED_CELLS = {
     "docs/requirements/system-requirements.toml": frozenset(
         {
@@ -409,6 +420,7 @@ SPINE_TRACED_CELLS = {
             "Aspect",
             "Lifecycle",
             "DA-Refs",
+            "Constrains",
         }
     ),
     # `SR-Refs` is here BY RULING (WI-388, closing WI-380 REVIEW-A finding 3 —
@@ -434,6 +446,7 @@ SPINE_TRACED_CELLS = {
             "Phase",
             "SR-Refs",
             "Hat-Refs",
+            "Constrains",
         }
     ),
     "docs/test/test-cases.toml": frozenset(
@@ -455,7 +468,7 @@ SPINE_TRACED_CELLS = {
 # An observation case's cadence cells `Trigger`, `Rubric` and `MinWorkItems`
 # join by name too (WI-784), keeping the residual's reading: like `MaxAge` and
 # `Inputs`, each states how the row's claim is judged or kept current.
-# Implements: SR-193, SR-194, SR-198, LLR-222, LLR-225
+# Implements: SR-193, SR-194, SR-198, LLR-222, LLR-225, LLR-420
 SPINE_ACCEPTED_CELLS = {
     "docs/requirements/system-requirements.toml": frozenset(
         {
@@ -475,7 +488,7 @@ SPINE_ACCEPTED_CELLS = {
     # its detail is read against, so a re-parent is an amendment of the row
     # (decisions record maint-wi-1027 D-001).
     "docs/requirements/low-level-requirements.toml": frozenset(
-        {"Title", "Detail", "Rationale", "Parent"}
+        {"Title", "Detail", "Rationale", "Parent", "Dimensions", "OutOfDomain"}
     ),
     "docs/test/test-cases.toml": frozenset(
         {
@@ -1755,6 +1768,7 @@ SNAPSHOT_README = "README.md"
 # the root is a registry copy the mirror rules compare with live.
 SNAPSHOT_ACTS = "acts.toml"
 SNAPSHOT_OWN_FILES = frozenset({SNAPSHOT_README, SNAPSHOT_ACTS})
+_LEDGER = SNAPSHOT_DIR + "/" + SNAPSHOT_ACTS
 
 
 def _snapshot_survives(root, new_rev):
@@ -1781,63 +1795,66 @@ def _mirror_repair(live_rel):
     """The repair a snapshot-mirror finding prescribes, for the registry whose
     copy diverged.
 
-    A bare `intake.py snapshot` is no repair here: it copies only a registry
-    the act authorises, so with no `Status` move it copies nothing, and it
-    refuses any accepted row whose text differs from the recorded copy unless
-    `--reaccepts` names it. So the finding names the two repairs that work:
-    put the blessed copy back, or take a fresh act whose arguments carry the
-    authority for this registry and name the rows it re-accepts. The
-    `--accepts` token is the registry's STEM: `baseline_snapshot.
-    resolve_registry` takes a canonical rel, filename or stem, and a CSV
-    carrier's live path is none of those, so the path itself would refuse."""
+    A bare `intake.py snapshot` is no repair here: it writes only a registry
+    the act authorises, so with no `Status` move it writes nothing, and it
+    carries no drifted row the act does not name. So the finding names the two
+    repairs that work: put the blessed copy back, or take a fresh act whose
+    arguments carry the authority for this registry and name the rows it
+    re-accepts. The `--accepts` token is the registry's STEM:
+    `baseline_snapshot.resolve_registry` takes a canonical rel, filename or
+    stem, and a CSV carrier's live path is none of those, so the path itself
+    would refuse."""
     return (
         "Repair: restore the copy that was blessed, or take a fresh reviewed "
-        'acceptance act that re-copies it — `intake.py snapshot --accepts "{}=<REF>" '
+        'acceptance act that writes it — `intake.py snapshot --accepts "{}=<REF>" '
         "--reaccepts <ROW-ID>[,<ROW-ID>...]`, naming each accepted row whose "
-        "text differs from the copy; a bare `intake.py snapshot` copies nothing "
-        "here or refuses the drift".format(PurePosixPath(live_rel).stem)
+        "text the copy should take from live; a bare `intake.py snapshot` "
+        "writes nothing here".format(PurePosixPath(live_rel).stem)
     )
 
 
 def staged_snapshot_findings(root, base="HEAD", head=None):
-    """THE MIRROR INVARIANT (snapshot design §F3), as warn strings.
+    """THE MIRROR INVARIANT (snapshot design §F3; at the row since WI-1060), as
+    warn strings.
 
-    > In any commit that touches a file under `docs/archive/last_accepted/`,
-    > that file must be byte-identical to its live counterpart in that same
-    > commit.
+    > In any commit that writes a registry's copy under
+    > `docs/archive/last_accepted/`, that copy must be the copy that commit's
+    > acceptance act writes: the previous copy with exactly the rows the act
+    > names taken from the live registry in that same commit, and every other
+    > row placed by the row rule (`record_rows`).
 
     The snapshot is the record of what an operator blessed, and it is just files —
     nothing about a text file stops someone editing it. This is the guard, and
     it is exact rather than heuristic: a legitimate `copy_live` satisfies it
-    ALWAYS, by construction, because the copy is byte-for-byte and rides the
-    same commit as the write. FOUR failures fail it — a hand edit (snapshot
-    differs from live), a partial copy (one file mirrored, its sibling not), a
-    copy-then-amend-live (the copy landed but the live file moved on before the
-    commit closed), and a partial DELETION (one registry removed from the record
-    while the rest of it stands — added at adversarial round 2, 2026-08-15,
-    which found the deletion path exiting silently and so left as an erasure the
-    invariant did not watch).
+    ALWAYS, by construction, because the act's named rows are read from the
+    act-ledger entries the commit adds and the rest from its parent and its own
+    live text. It fails a hand edit, a partial copy, a copy-then-amend-live, an
+    unnamed row's drift carried in, a named row copied with an edit and a row
+    dropped that no act retired, each named by its row; and a partial DELETION —
+    a copy, or the act ledger, removed while the rest of the record stands
+    (adversarial round 2, 2026-08-15: the deletion path exited silently). A
+    record whose act ledger holds no entry carrying `kept` was written whole by
+    the writer before WI-1060, and a copy it writes is judged as it was written:
+    byte-identical to its live counterpart in the same commit, so an existing
+    record needs no migration.
 
     The consequence worth stating plainly: **the only way to write text into
     the snapshot is to write it into the live registry first** — an acceptance,
-    in a reviewed commit, exactly as ruled.
+    in a reviewed commit, naming its rows.
 
-    Index-vs-HEAD by default (the hook's question); `head` takes a commit-ish
-    for the post-commit view, matching `staged_spine_amendments`' shape. Silent
-    no-op when git cannot answer or no snapshot file moved — the same degrade
-    every other scan here takes.
+    Index-vs-HEAD by default (the hook's question; during a merge, the act
+    ledger entries the merge brings in over HEAD name their rows too, so an act
+    the other side took is carried, not refused); `head` takes a
+    commit-ish for the post-commit view, matching `staged_spine_amendments`'
+    shape. Silent no-op when git cannot answer or no snapshot file moved — the
+    same degrade every other scan here takes.
 
     **TWO SEVERITIES SINCE D-9 MIGRATION STEP 7, which is what the design asked
     for** (§F3 risk 3: *"warn at the staged hook, ERROR on the integrity
-    floor"*). This producer is unchanged and returns plain strings; the
-    `--staged` loop below still prints them as warns, AND `trace.py` appends
-    them to `findings.integrity`, so they fail `--strict-integrity` — the
-    always-on floor the pre-commit hook runs at every gate. The staged warn is
-    kept rather than replaced because it is the EARLIER of the two reads: it
-    names the file while the author is still in the commit, where the fix is one
-    `intake.py snapshot` away. The pre-commit hook invokes the staged pass with
-    `|| true`, so the warn alone never blocked anything — which is exactly why
-    the arming had to add a second severity rather than raise this one.
+    floor"*). This producer returns plain strings; the `--staged` loop prints
+    them as warns, AND `trace.py` appends them to `findings.integrity`, so they
+    fail `--strict-integrity` — the always-on floor the pre-commit hook runs at
+    every gate.
 
     Implements: SR-179, LLR-178
     """
@@ -1846,51 +1863,154 @@ def staged_snapshot_findings(root, base="HEAD", head=None):
         return []
     staged_names, _old_rev, new_rev = revs
     prefix = SNAPSHOT_DIR + "/"
+    names = sorted(n for n in staged_names if n.startswith(prefix))
+    if not names:
+        return []
+    # Against the first parent alone, so the entries a merge brings in name
+    # their rows: the other side's act wrote those rows, and the merge carries
+    # them (`added_acts_findings` judged those entries on their own branch).
+    parents = [base]
+    named, by_row = record_rows.tree_acts(
+        root, _LEDGER, {0: (parents, new_rev[:-1])}, added_ledger_entries
+    )[0]
     out = []
-    for name in sorted(n for n in staged_names if n.startswith(prefix)):
-        live_rel = name[len(prefix) :]
-        # The README is PROSE (design §F8) — a stamp for a human, parsed by
-        # nothing — and the act ledger is the snapshot's own record of its
-        # acts; neither has a live counterpart to mirror. Excluding them by
-        # name rather than by "no counterpart exists" keeps a genuinely missing
-        # registry loud.
-        if live_rel in SNAPSHOT_OWN_FILES:
+    for name in names:
+        if name[len(prefix) :] == SNAPSHOT_README:
             continue
-        snap_text = _git(root, ["show", new_rev + name])
-        live_text = _git(root, ["show", new_rev + live_rel])
-        if snap_text is None:
-            # DELETED from the snapshot in this commit. Silent ONLY when the
-            # whole record went with it — retiring the mechanism, or the
-            # wholesale replacement §A1 describes, are both legitimate and
-            # neither leaves a hole. A single registry deleted while the rest of
-            # the record stands IS a hole, and it is the cheapest possible
-            # laundering: `unanchored_findings` reports a row whose copy reads
-            # below it, so removing the copy outright removed the evidence
-            # instead. (Adversarial round 2, 2026-08-15.)
-            if _snapshot_survives(root, new_rev):
-                out.append(
-                    "{} was DELETED from the {} snapshot while the rest of the "
-                    "record still stands — a registry removed from the record of "
-                    "what was accepted is not a smaller record, it is a missing "
-                    "one; the snapshot is replaced WHOLESALE at a signing, never "
-                    "trimmed a file at a time".format(name, SNAPSHOT_DIR)
-                )
-            continue
-        if live_text is None:
-            out.append(
-                "{} is in the {} snapshot but {} does not exist in this commit — "
-                "a snapshot file with no live counterpart is a record of text "
-                "the repo no longer has".format(name, SNAPSHOT_DIR, live_rel)
-            )
-        elif snap_text != live_text:
-            out.append(
-                "{} is NOT byte-identical to {} in this commit — the snapshot is "
-                "the record of what an operator blessed, so it may only ever be "
-                "written by copying the live file (`intake.py snapshot`). A hand "
-                "edit, a partial copy and a copy-then-amend-live all land "
-                "here. {}".format(name, live_rel, _mirror_repair(live_rel))
-            )
+        out += _staged_copy_lines(root, name, parents, new_rev, named, by_row)
     return out
+
+
+def _written(root, name, parents, new_rev, named):
+    """`record_rows.written_problems` over this record, with this module's cell
+    comparison: the faults of the copy `name` tree `new_rev` writes, at the row.
+
+    Implements: SR-179, LLR-178"""
+    args = (root, SNAPSHOT_DIR, name, parents, new_rev, named, split_changed_cells)
+    return record_rows.written_problems(*args)
+
+
+def _staged_copy_lines(root, name, parents, new_rev, named, by_row):
+    """`staged_snapshot_findings`' judgement of one file under the record."""
+    live_rel = name[len(SNAPSHOT_DIR) + 1 :]
+    snap_text = _git(root, ["show", new_rev + name])
+    if snap_text is None:
+        # DELETED from the snapshot in this commit. Silent ONLY when the whole
+        # record went with it — retiring the mechanism, or the wholesale
+        # replacement §A1 describes. A single copy, or the act ledger, deleted
+        # while the rest of the record stands IS a hole: `unanchored_findings`
+        # reads a copy, and the ledger says which acts were taken and where the
+        # row-by-row judgement begins. (Adversarial round 2, 2026-08-15.)
+        if not _snapshot_survives(root, new_rev):
+            return []
+        return [
+            "{} was DELETED from the {} snapshot while the rest of the record "
+            "still stands — a file removed from the record of what was accepted "
+            "is not a smaller record, it is a missing one; the snapshot is "
+            "replaced WHOLESALE at a signing, never trimmed a file at a "
+            "time".format(name, SNAPSHOT_DIR)
+        ]
+    if live_rel == SNAPSHOT_ACTS:
+        return []
+    live_text = _git(root, ["show", new_rev + live_rel])
+    if live_text is None:
+        return [
+            "{} is in the {} snapshot but {} does not exist in this commit — "
+            "a snapshot file with no live counterpart is a record of text the "
+            "repo no longer has".format(name, SNAPSHOT_DIR, live_rel)
+        ]
+    if by_row:
+        problems = _written(root, name, parents, new_rev[:-1], named)
+    else:
+        problems = [] if snap_text == live_text else ["the whole file differs"]
+    return [
+        "{} is NOT byte-identical to what this commit's act writes from {}: {} — "
+        "the snapshot is the record of what an operator blessed, so it may only "
+        "ever be written by an act copying from live the rows it names "
+        "(`intake.py snapshot`). A hand edit, a partial copy and a "
+        "copy-then-amend-live all land here. {}".format(
+            name, live_rel, problem, _mirror_repair(live_rel)
+        )
+        for problem in problems
+    ]
+
+
+def committed_snapshot_findings(root):
+    """THE MIRROR INVARIANT OVER THE COMMITTED TREE — the half `staged_snapshot_
+    findings` cannot reach (adversarial round, 2026-08-20: ROUND-OPUS CRITICAL-3
+    / ROUND-SOL MAJOR-2).
+
+    The staged rule is keyed on a snapshot file being IN THE COMMIT. That makes
+    it exact and cheap, and it makes its blind spot exact too: once a forged or
+    stale copy has LANDED — hooks bypassed, or a commit made outside them — no
+    later run stages a snapshot file, so nothing ever looks at it again.
+
+    So this asks the same question of history rather than of the index: for every
+    registry copy under the snapshot root, **was it, at the commit that last
+    wrote it, the copy that commit's act writes?** — judged at the row when the
+    act ledger at that commit's parent, or an entry the commit adds, carries
+    `kept` (WI-1060), and otherwise as it was written: byte-identical to its
+    live counterpart there. That framing is what makes the rule safe to run
+    ALWAYS, and the alternative shape — comparing the snapshot to live in the
+    WORKING TREE — is the one to refuse: the snapshot is deliberately behind
+    live while an amendment is pending, and that lag IS the signal (see
+    `baseline_snapshot`'s header). Live moving on afterwards changes nothing:
+    the comparison is pinned to the copy's own writing commit, so a legitimate
+    copy keeps passing forever and a forgery keeps failing forever.
+
+    Git is asked in batches: one `cat-file --batch` for every act ledger the
+    judgement reads, one `--batch-check` comparing object ids for the copies
+    judged whole (identical content has the identical id, so comparing ids IS
+    the byte comparison), and one blob read per copy judged at the row.
+
+    Degrades to `[]` off git, on any git failure, and for an untracked snapshot
+    (a scaffold that has committed nothing has no committed state to judge).
+
+    Implements: SR-179, LLR-178"""
+    revs = _snapshot_write_revs(root)
+    if not revs:
+        return []
+    prefix = SNAPSHOT_DIR + "/"
+    pairs = [
+        (name, name[len(prefix) :], rev)
+        for name, rev in sorted(revs.items())
+        if name.startswith(prefix) and name[len(prefix) :] not in SNAPSHOT_OWN_FILES
+    ]
+    trees = {rev: ([rev + "^"], rev) for _n, _l, rev in pairs}
+    acts = record_rows.tree_acts(root, _LEDGER, trees, added_ledger_entries)
+    out = _whole_file_lines(root, [p for p in pairs if not acts[p[2]][1]])
+    for name, live_rel, rev in (p for p in pairs if acts[p[2]][1]):
+        problems = _written(root, name, [rev + "^"], rev, acts[rev][0])
+        out += [
+            "{} is NOT byte-identical to what its act wrote from {} at {}, the "
+            "commit that last wrote it: {} — the snapshot is the record of what an "
+            "operator blessed, so it may only ever be written by an act copying "
+            "from live the rows it names (`intake.py snapshot`). This divergence "
+            "has LANDED. {}".format(
+                name, live_rel, rev[:8], problem, _mirror_repair(live_rel)
+            )
+            for problem in problems
+        ]
+    return out
+
+
+def _whole_file_lines(root, pairs):
+    """The committed rule's wording for copies written whole
+    (`record_rows.whole_file_faults`): each `(name, live rel, rev)` must be
+    byte-identical to its live counterpart at `rev`.
+
+    Implements: SR-179, LLR-178"""
+    return [
+        "{} was written into the {} snapshot at {} where {} did not exist — a "
+        "snapshot file with no live counterpart in its own writing commit is a "
+        "record of text the repo never had".format(name, SNAPSHOT_DIR, rev[:8], live)
+        if fault == "absent"
+        else "{} is NOT byte-identical to {} at {}, the commit that last wrote it "
+        "— the snapshot is the record of what an operator blessed, so it may only "
+        "ever be written by copying the live file (`intake.py snapshot`). This "
+        "divergence has LANDED. {}".format(name, live, rev[:8], _mirror_repair(live))
+        for name, live, rev, fault in record_rows.whole_file_faults(root, pairs)
+    ]
 
 
 def _snapshot_write_revs(root):
@@ -1915,90 +2035,6 @@ def _snapshot_write_revs(root):
         name = line.strip()
         if name and rev and name not in out:
             out[name] = rev
-    return out
-
-
-def committed_snapshot_findings(root):
-    """THE MIRROR INVARIANT OVER THE COMMITTED TREE — the half `staged_snapshot_
-    findings` cannot reach (adversarial round, 2026-08-20: ROUND-OPUS CRITICAL-3
-    / ROUND-SOL MAJOR-2).
-
-    The staged rule is keyed on a snapshot file being IN THE COMMIT. That makes
-    it exact and cheap, and it makes its blind spot exact too: once a forged or
-    stale copy has LANDED — hooks bypassed, or a commit made outside them — no
-    later run stages a snapshot file, so nothing ever looks at it again. The
-    divergence is silent forever, which is the opposite of what a record of what
-    an operator blessed is for.
-
-    So this asks the same question of history rather than of the index: for every
-    file under the snapshot root, **was it a copy of its live counterpart at the
-    commit that last wrote it?** That framing is what makes the rule safe to run
-    ALWAYS, and the alternative shape — comparing the snapshot to live in the
-    WORKING TREE — is the one to refuse: the snapshot is deliberately behind live
-    while an amendment is pending, and that lag IS the signal (see
-    `baseline_snapshot`'s header). A rule that redded every pending amendment
-    would be switched off within a day. Here, live moving on afterwards changes
-    nothing: the comparison is pinned to the snapshot's own writing commit, so a
-    legitimate copy keeps passing forever and a forgery keeps failing forever.
-
-    Blob-identity via `git cat-file --batch-check` rather than two `git show`s
-    per file: git names identical content with the identical object id, so
-    comparing object ids IS the byte comparison, at two subprocesses total.
-
-    Degrades to `[]` off git, on any git failure, and for an untracked snapshot
-    (a scaffold that has committed nothing has no committed state to judge)."""
-    revs = _snapshot_write_revs(root)
-    if not revs:
-        return []
-    prefix = SNAPSHOT_DIR + "/"
-    pairs, specs = [], []
-    for name, rev in sorted(revs.items()):
-        if not name.startswith(prefix):
-            continue
-        live_rel = name[len(prefix) :]
-        # The README and the act ledger have no live counterpart, exactly as in
-        # the staged rule — excluded by name so a genuinely missing registry
-        # stays loud.
-        if live_rel in SNAPSHOT_OWN_FILES:
-            continue
-        pairs.append((name, live_rel, rev))
-        specs += ["{}:{}".format(rev, name), "{}:{}".format(rev, live_rel)]
-    if not pairs:
-        return []
-    batch = _git(
-        root, ["cat-file", "--batch-check=%(objectname)"], stdin="\n".join(specs) + "\n"
-    )
-    if batch is None:
-        return []
-    ids = batch.splitlines()
-    if len(ids) != len(specs):
-        return []  # unparseable batch: an unanswerable question makes no finding
-    out = []
-    for i, (name, live_rel, rev) in enumerate(pairs):
-        snap_id, live_id = ids[2 * i].strip(), ids[2 * i + 1].strip()
-        if snap_id.endswith("missing"):
-            # The commit that last named this path DELETED it. That is the
-            # staged rule's subject (a partial deletion is caught in the commit
-            # that does it) and not a mirror question — there is no copy left to
-            # compare.
-            continue
-        if live_id.endswith("missing"):
-            out.append(
-                "{} was written into the {} snapshot at {} where {} did not "
-                "exist — a snapshot file with no live counterpart in its own "
-                "writing commit is a record of text the repo never had".format(
-                    name, SNAPSHOT_DIR, rev[:8], live_rel
-                )
-            )
-        elif snap_id != live_id:
-            out.append(
-                "{} is NOT byte-identical to {} at {}, the commit that last "
-                "wrote it — the snapshot is the record of what an operator blessed, "
-                "so it may only ever be written by copying the live file "
-                "(`intake.py snapshot`). This divergence has LANDED. {}".format(
-                    name, live_rel, rev[:8], _mirror_repair(live_rel)
-                )
-            )
     return out
 
 

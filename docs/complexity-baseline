@@ -78,7 +78,6 @@ project-trajectory/scripts/gen_arch_map.py	main	40	209
 project-trajectory/scripts/gen_arch_map.py	scan_module	19	44
 project-trajectory/scripts/gen_cases.py	all_pairs	35	35
 project-trajectory/scripts/gen_cases.py	main	23	67
-project-trajectory/scripts/gen_cases.py	parse_spec	25	33
 project-trajectory/scripts/gen_components.py	_add_members	17	18
 project-trajectory/scripts/gen_okf.py	_doc_title_and_summary	31	37
 project-trajectory/scripts/gen_okf.py	emit	67	239

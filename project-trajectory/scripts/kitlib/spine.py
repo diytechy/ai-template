@@ -100,6 +100,7 @@ __all__ = [
     "resolve_modules",
     "module_tests",
     "llr_placement",
+    "interface_reach",
     "unplaced_llrs",
     "module_components",
     "root_prefix",
@@ -127,6 +128,8 @@ __all__ = [
     "FORM_VALUES",
     "SAMPLING_VALUES",
     "MAX_AGE_FLOOR_DAYS",
+    "DIMENSION_STRATEGIES",
+    "parse_dimensions",
     "toml_string",
     "toml_value",
     "toml_fields",
@@ -990,19 +993,21 @@ def module_tests(index, tcs, module, test_root="tests"):
     )
 
 
-def llr_placement(tcs, ifs):
+def llr_placement(tcs, ifs, llrs=()):
     """`{LLR id: sorted CMP ids}`: where each design row sits, derived and never
-    authored. Per (test case, design row) pair, a row a case's `Verifies` names
-    is placed at the owner of each interface the same case names, where that
-    owner is a component id; an `external:` owner places nothing. A row placed
-    at several interfaces is placed at each. A row no case places is absent: it
-    is unplaced, counted, never refused (`unplaced_llrs`). The `-000` example
-    rows are not read.
+    authored. A row is placed at the owner of each interface its `Constrains`
+    cell names (`llrs`), and, per (test case, design row) pair, a row a case's
+    `Verifies` names is placed at the owner of each interface the same case
+    names; either way only where that owner is a component id, so an
+    `external:` owner places nothing. A row placed at several interfaces is
+    placed at each. A row neither places is absent: it is unplaced, counted,
+    never refused (`unplaced_llrs`). The `-000` example rows are not read.
 
     Implements: SR-249, LLR-403
 
     Contract:
-      Inputs:  tcs: iterable of TC row mappings; ifs: iterable of IF row mappings
+      Inputs:  tcs: iterable of TC row mappings; ifs: iterable of IF row
+               mappings; llrs: iterable of LLR row mappings, empty by default
       Outputs: dict[str, list[str]] — each placed design row's components
     """
     owners = {
@@ -1014,7 +1019,90 @@ def llr_placement(tcs, ifs):
     for row in tcs:
         for lid, places in _case_places(row, owners):
             out.setdefault(lid, set()).update(places)
+    for row in llrs:
+        lid = str(row.get("LLR-ID") or "").strip()
+        places = {owners.get(i, "") for i in refs(row.get("Constrains"))}
+        places = {c for c in places if c.startswith("CMP-")}
+        if lid and not is_example(lid) and places:
+            out.setdefault(lid, set()).update(places)
     return {lid: sorted(cmps) for lid, cmps in sorted(out.items())}
+
+
+def interface_reach(ifs, srs, llrs, tcs):
+    """`{IF id: (rows, cases)}` for each live interface: its BLAST RADIUS, the
+    one home of the derivation the pointer rules name. `rows` are the design
+    rows and requirements whose `Constrains` cell names it and the design rows
+    and requirements a test case naming it verifies (observed at it, per pair);
+    `cases` are the test cases naming it and every case verifying one of those
+    rows, a constraining requirement's cases including those of the design
+    rows under it (`llrs_under`, the SR-to-LLR walk's one home). Both sorted.
+    The `-000` example rows are not read, on any tier.
+
+    Implements: SR-157, LLR-421
+
+    Contract:
+      Inputs:  ifs, srs, llrs, tcs: iterables of IF, SR, LLR and TC row mappings
+      Outputs: dict[str, tuple[list[str], list[str]]] — per interface, its rows
+               and its cases
+    """
+    srs, llrs = _real_rows(srs, "SR-ID"), _real_rows(llrs, "LLR-ID")
+    rows = {i: set() for i in _row_ids(_real_rows(ifs, "IF-ID"), "IF-ID") if i}
+    for col, tier in (("SR-ID", srs), ("LLR-ID", llrs)):
+        _add_constraining(rows, tier, col)
+    walk = {iid: {r for r in rows[iid] if r.startswith("SR-")} for iid in rows}
+    cases, verifying = _naming_cases(rows, _real_rows(tcs, "TC-ID"))
+    for iid, reached in rows.items():
+        cases[iid] |= _verifying_cases(reached, llrs, verifying, walk[iid])
+    return {iid: (sorted(rows[iid]), sorted(cases[iid])) for iid in sorted(rows)}
+
+
+def _real_rows(rows, col):
+    """`rows` without the `-000` example rows, read by their id column `col`."""
+    return [r for r in rows if not is_example(_row_ids([r], col)[0])]
+
+
+def _row_ids(rows, col):
+    """Each row's id under `col`, stripped, the empty ones included."""
+    return [str(r.get(col) or "").strip() for r in rows]
+
+
+def _add_constraining(rows, tier, col):
+    """Add to `rows` (`{IF id: {row ids}}`) each row of `tier` whose
+    `Constrains` cell names that interface."""
+    for r in tier:
+        for iid in (i for i in refs(r.get("Constrains")) if i in rows):
+            rows[iid].add(_row_ids([r], col)[0])
+
+
+def _naming_cases(rows, tcs):
+    """`(cases, verifying)`: per interface of `rows`, the cases naming it,
+    each such case's design rows and requirements added to `rows` (observed
+    at it); and `{row id: {TC ids}}` over every case."""
+    cases = {iid: set() for iid in rows}
+    verifying = {}
+    for t in tcs:
+        tid, cited = _row_ids([t], "TC-ID")[0], refs(t.get("Verifies"))
+        for x in cited:
+            verifying.setdefault(x, set()).add(tid)
+        for iid in (x for x in cited if x in rows):
+            cases[iid].add(tid)
+            rows[iid].update(x for x in cited if x.startswith(("LLR-", "SR-")))
+    return cases, verifying
+
+
+def _verifying_cases(reached, llrs, verifying, walk):
+    """The cases (`verifying`, `{row id: {TC ids}}`) verifying the rows
+    `reached`, a requirement in `walk` (one constraining the interface)
+    including those of the design rows under it: `interface_reach`'s last
+    step. A requirement only observed at the interface brings its own cases,
+    not its design rows'."""
+    out = set()
+    for rid in reached:
+        out |= verifying.get(rid, set())
+    for rid in walk:
+        for row in llrs_under([rid], llrs):
+            out |= verifying.get(str(row.get("LLR-ID")).strip(), set())
+    return out
 
 
 def _case_places(row, owners):
@@ -1627,13 +1715,22 @@ SPINE_TIER_KEYS = {
         "delivered_with",
         "coincident",
         "form",
+        # The interfaces whose behaviour the requirement states at the system
+        # boundary (WI-1024, variant F): a POINTER, optional, its ids live
+        # interface rows.
+        "constrains",
     ),
     # The design tier names no file, symbol or component (WI-1023, the
     # review-churn plan's item 5 and revision 35): the files realizing a row
     # are read up from the code's `Implements:` tags, and its placement is
-    # derived from the interfaces its verifying cases name. `parent` (WI-1027)
-    # names a child row's one parent design row; a child carries no `sr_refs`,
-    # its SRs being read up its chain (`llr_tree`).
+    # derived from the interfaces it constrains and those its verifying cases
+    # name. `constrains` (WI-1024) names the interfaces whose behaviour the row
+    # states, a POINTER; beside it, and only beside it, `dimensions` states
+    # that behaviour's input set in the permutation grammar and
+    # `out_of_domain` what the interface does outside it, both statements the
+    # row makes. `parent` (WI-1027) names a child row's one parent design row;
+    # a child carries no `sr_refs`, its SRs being read up its chain
+    # (`llr_tree`).
     "LLR-ID": (
         "sr_refs",
         "parent",
@@ -1644,6 +1741,9 @@ SPINE_TIER_KEYS = {
         "test_refs",
         "status",
         "phase",
+        "constrains",
+        "dimensions",
+        "out_of_domain",
     ),
     "TC-ID": (
         "verifies",
@@ -1879,6 +1979,65 @@ FORM_VALUES = ("interface", "assumption", "cross-cutting")
 SAMPLING_VALUES = ("sampled", "monitored")
 # Implements: SR-198, LLR-232
 MAX_AGE_FLOOR_DAYS = 7
+
+# THE PERMUTATION GRAMMAR (SR-024), one parser for its two readers: the case
+# generator expands a requirement's input set with it, and the design row's
+# `dimensions` cell (WI-1024) is refused where it does not parse. It moved here
+# from `gen_cases.parse_spec`, which now calls it, so the cell refuses exactly
+# what the generator refuses. The combination strategies it names are declared
+# beside it; the parser returns a strategy as written, and the generator and
+# the cell rule each refuse one outside the three.
+DIMENSION_STRATEGIES = ("full", "pairwise", "boundaries")
+_DIMENSION_RANGE = re.compile(r"range\[(.+?)\.\.(.+?)(?:\|(.+))?\]$")
+
+
+def parse_dimensions(spec):
+    """`(dims, strategy or None)` for one grammar string, where `dims` is a
+    list of `(name, values, boundary_flags)`; raises `ValueError` naming what
+    it refuses: a segment with no `=`, a dimension type outside range, set and
+    bool, a dimension with no values, or a spec with no dimension at all.
+
+    Implements: SR-024, LLR-024, LLR-418
+
+    Contract:
+      Inputs:  spec: str — `;`-separated dimensions and an optional `@strategy`
+      Outputs: tuple[list[tuple[str, list[str], list[bool]]], str | None]
+    """
+    strategy = None
+    dims = []
+    for seg in (s.strip() for s in spec.split(";")):
+        if seg.startswith("@"):
+            strategy = seg[1:].strip().lower()
+        elif seg:
+            dims.append(_dimension(seg))
+    if not dims:
+        raise ValueError("no dimensions parsed from spec")
+    return dims, strategy
+
+
+def _dimension(seg):
+    """`(name, values, boundary_flags)` for one `name=...` segment of the
+    permutation grammar, or `ValueError`: `parse_dimensions`' per-segment
+    step."""
+    if "=" not in seg:
+        raise ValueError("bad dimension (no '='): {!r}".format(seg))
+    name, rhs = (part.strip() for part in seg.split("=", 1))
+    m = _DIMENSION_RANGE.match(rhs)
+    if m:
+        interior = [v.strip() for v in (m.group(3) or "").split("|") if v.strip()]
+        values = [m.group(1).strip(), m.group(2).strip()] + interior
+        # boundary = the two extremes; interior points are nominal
+        flags = [True, True] + [False] * len(interior)
+    elif rhs.startswith("set{") and rhs.endswith("}"):
+        values = [v.strip() for v in rhs[4:-1].split(",") if v.strip()]
+        flags = [False] * len(values)
+    elif rhs == "bool":
+        values, flags = ["true", "false"], [True, True]
+    else:
+        raise ValueError("unrecognized dimension type: {!r}".format(seg))
+    if not values:
+        raise ValueError("dimension {!r} has no values".format(name))
+    return name, values, flags
 
 
 # ---------------------------------------------------------------------------
