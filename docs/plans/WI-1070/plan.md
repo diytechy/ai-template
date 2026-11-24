@@ -387,7 +387,7 @@ characters, the number of rows listed and of cells clipped, and the identity
 line count (24 before and after: the listing adds none). At the tip the
 brief also shows LLR-167's and TC-161's new text and, in the 54-token set,
 LLR-359 (amended again, D7); the Deliverable separates that growth from the
-listing's. A `fig:` line carries each figure's command and revision.
+listing's. A provenance marker carries each figure's command and revision.
 
 ## 7. Code, file by file
 
