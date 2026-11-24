@@ -53,7 +53,7 @@ _adjudicated link — goes to a sitting_
 _accepted — re-acceptance owed_
 - **Detail**
   - before: Compares measured metrics (docs/test/perf-metrics.json) to declared budgets and the committed baseline (docs/test/perf-baseline.json) and fails beyond tolerance at the row's block/warn level; --update-baseline is the reviewed acceptance path for an intended regression. The step is wired into the harness at DevStg-Impl, per its declared gates in docs/stack.ini.
-  - after: Compares the measured metrics to the declared budgets and the committed baseline and fails beyond tolerance at the row's block or warn level; the baseline update is the reviewed acceptance path for an intended regression. Each budget that is not clean prints a line naming its status and its budget id, a fail-level budget with no measurement this run reported by name as a skip rather than passing in silence; the run prints an OK or FAIL summary, a project with no budget rows printing an OK line saying so and budgets with no metrics file a SKIP line. A comparison exits 1 only when an in-tier budget fails, and 0 for every other outcome, warnings and skips included. A run that reaches a comparison writes the performance report, naming each failing budget's reason. The step is wired into the harness at DevStg-Impl, per its declared gates in the stack profile.
+  - after: Compares the measured metrics to the declared budgets and the committed baseline and fails beyond tolerance at the row's block or warn level; the baseline update is the reviewed acceptance path for an intended regression. Each in-tier budget that fails or warns prints a line naming its status and its budget id; a fail-level budget with no measurement this run is reported on its own line as a skip rather than passing in silence, while a warn-level budget with no measurement prints no line of its own and is counted among the skips. The run prints an OK or FAIL summary counting the failures, warnings and skips, a project with no budget rows printing an OK line saying so and budgets with no metrics file a SKIP line. A comparison exits 1 only when an in-tier budget fails, and 0 for every other outcome, warnings and skips included. A run that reaches a comparison writes the performance report, naming each failing budget's reason. The step is wired into the harness at DevStg-Impl, per its declared gates in the stack profile.
 _adjudicated link — goes to a sitting_
 - **Constrains**
   - before: (empty)
@@ -157,9 +157,9 @@ _adjudicated link — goes to a sitting_
 - **TC-ID**: TC-586
 - **Verifies**: SR-017;SR-018;LLR-493
 - **Level**: Integration
-- **Method**: Seed a private key in a tracked file and sweep the tracked files; seed it in an outgoing commit and scan the range; seed a home directory path in a commit message with the privacy layer on and scan the range; sweep a clean scaffold with the privacy layer on, then seed a leak and sweep again; and scan with both layers off.
+- **Method**: Stage a private key and scan the staged diff; seed it in a tracked file and sweep the tracked files; seed it in an outgoing commit and scan the range; seed a home directory path in a commit message with the privacy layer on and scan the range; sweep a clean scaffold with the privacy layer on, then seed a leak and sweep again; and scan with both layers off.
 - **Tier**: Full
-- **Expected**: Each leak prints on its own line naming its location, the tracked file's path and line or the commit, and its class label, and the run exits 1; the clean sweep prints one clean line naming the scan and both layers and exits 0, and the seeded sweep's summary counts its finding and names the same layers; with both layers off nothing is scanned, the run says so and exits 0.
+- **Expected**: Each leak prints on its own line naming its location, the file's path and line or the commit, and its class label, and the run exits 1; the clean sweep prints one clean line naming the scan and both layers and exits 0, and the seeded sweep's summary counts its finding and names the same layers; with both layers off nothing is scanned, the run says so and exits 0.
 - **Automated**: Yes
 - **Status**: Drafted
 - **Phase**: 6
@@ -187,9 +187,9 @@ _adjudicated link — goes to a sitting_
 - **TC-ID**: TC-586
 - **Verifies**: SR-017;SR-018;LLR-493
 - **Level**: Integration
-- **Method**: Seed a private key in a tracked file and sweep the tracked files; seed it in an outgoing commit and scan the range; seed a home directory path in a commit message with the privacy layer on and scan the range; sweep a clean scaffold with the privacy layer on, then seed a leak and sweep again; and scan with both layers off.
+- **Method**: Stage a private key and scan the staged diff; seed it in a tracked file and sweep the tracked files; seed it in an outgoing commit and scan the range; seed a home directory path in a commit message with the privacy layer on and scan the range; sweep a clean scaffold with the privacy layer on, then seed a leak and sweep again; and scan with both layers off.
 - **Tier**: Full
-- **Expected**: Each leak prints on its own line naming its location, the tracked file's path and line or the commit, and its class label, and the run exits 1; the clean sweep prints one clean line naming the scan and both layers and exits 0, and the seeded sweep's summary counts its finding and names the same layers; with both layers off nothing is scanned, the run says so and exits 0.
+- **Expected**: Each leak prints on its own line naming its location, the file's path and line or the commit, and its class label, and the run exits 1; the clean sweep prints one clean line naming the scan and both layers and exits 0, and the seeded sweep's summary counts its finding and names the same layers; with both layers off nothing is scanned, the run says so and exits 0.
 - **Automated**: Yes
 - **Status**: Drafted
 - **Phase**: 6
@@ -206,7 +206,7 @@ _adjudicated link — goes to a sitting_
 _accepted — re-acceptance owed_
 - **Detail**
   - before: Runs trace --strict-integrity and the check_privacy secrets scan on staged content and blocks a failing commit. Every built-in check step is classified exactly once as run in the commit floor, run by the hook by name, or not run at commit with a stated reason. When no kit scripts directory is findable, the commit-facing hooks refuse the commit with exit 1, name the available repair steps, and neither run nor skip the floor.
-  - after: Runs the registry integrity check and the secrets scan on staged content and refuses, with a nonzero exit, a commit failing either; a commit passing both is admitted. Every built-in check step is classified exactly once as run in the commit floor, run by the hook by name, or not run at commit with a stated reason. When no kit scripts directory is findable, the commit-facing hooks refuse the commit with exit 1, name the available repair steps, and neither run nor skip the floor.
+  - after: Runs the registry integrity check and the secrets scan on staged content and refuses, with a nonzero exit, a commit failing either; a commit passing both clears those two checks, and whether it is admitted rests on the floor's other steps. Every built-in check step is classified exactly once as run in the commit floor, run by the hook by name, or not run at commit with a stated reason. When no kit scripts directory is findable, the commit-facing hooks refuse the commit with exit 1, name the available repair steps, and neither run nor skip the floor.
 _adjudicated link — goes to a sitting_
 - **Constrains**
   - before: (empty)
@@ -743,7 +743,7 @@ _adjudicated link — goes to a sitting_
 _accepted — re-acceptance owed_
 - **Detail**
   - before: Compares measured metrics (docs/test/perf-metrics.json) to declared budgets and the committed baseline (docs/test/perf-baseline.json) and fails beyond tolerance at the row's block/warn level; --update-baseline is the reviewed acceptance path for an intended regression. The step is wired into the harness at DevStg-Impl, per its declared gates in docs/stack.ini.
-  - after: Compares the measured metrics to the declared budgets and the committed baseline and fails beyond tolerance at the row's block or warn level; the baseline update is the reviewed acceptance path for an intended regression. Each budget that is not clean prints a line naming its status and its budget id, a fail-level budget with no measurement this run reported by name as a skip rather than passing in silence; the run prints an OK or FAIL summary, a project with no budget rows printing an OK line saying so and budgets with no metrics file a SKIP line. A comparison exits 1 only when an in-tier budget fails, and 0 for every other outcome, warnings and skips included. A run that reaches a comparison writes the performance report, naming each failing budget's reason. The step is wired into the harness at DevStg-Impl, per its declared gates in the stack profile.
+  - after: Compares the measured metrics to the declared budgets and the committed baseline and fails beyond tolerance at the row's block or warn level; the baseline update is the reviewed acceptance path for an intended regression. Each in-tier budget that fails or warns prints a line naming its status and its budget id; a fail-level budget with no measurement this run is reported on its own line as a skip rather than passing in silence, while a warn-level budget with no measurement prints no line of its own and is counted among the skips. The run prints an OK or FAIL summary counting the failures, warnings and skips, a project with no budget rows printing an OK line saying so and budgets with no metrics file a SKIP line. A comparison exits 1 only when an in-tier budget fails, and 0 for every other outcome, warnings and skips included. A run that reaches a comparison writes the performance report, naming each failing budget's reason. The step is wired into the harness at DevStg-Impl, per its declared gates in the stack profile.
 _adjudicated link — goes to a sitting_
 - **Constrains**
   - before: (empty)

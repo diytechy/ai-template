@@ -150,6 +150,24 @@ def test_gated_skip_prints_per_row_warn_line(scaffold):
     assert "no measurement" in proc.stdout and "SKIP" in proc.stdout
 
 
+def test_an_unmeasured_budget_gets_its_own_line_only_when_fail_level(scaffold):
+    # Of two in-tier budgets with no measurement this run, the fail-level one
+    # is announced on its own line; the warn-level one prints no line of its
+    # own and is only counted among the summary's skips.
+    write_budgets(
+        scaffold,
+        pb_row("PB-001", 500, gate="fail", tier="Full"),
+        pb_row("PB-002", 500, gate="warn", tier="Full"),
+    )
+    write_metrics(scaffold, {"PB-999": 1})
+    proc = run_py(["scripts/check_perf.py", "--tier", "full"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    lines = proc.stdout.strip().splitlines()
+    assert [ln for ln in lines if "PB-001" in ln and "no measurement" in ln], lines
+    assert not [ln for ln in lines if "PB-002" in ln], lines
+    assert "0 fail, 0 warn, 2 skip(no metric)" in lines[-1], lines
+
+
 def test_update_baseline_writes_file(scaffold):
     write_budgets(scaffold, pb_row("PB-001", 500))
     write_metrics(scaffold, {"PB-001": 488, "PB-002": 12})

@@ -113,7 +113,7 @@ constrains = ["IF-003", "IF-029"]
 [design.LLR-014]
 sr_refs = ["SR-006", "SR-167"]
 title = "Budget comparator"
-detail = "Compares the measured metrics to the declared budgets and the committed baseline and fails beyond tolerance at the row's block or warn level; the baseline update is the reviewed acceptance path for an intended regression. Each budget that is not clean prints a line naming its status and its budget id, a fail-level budget with no measurement this run reported by name as a skip rather than passing in silence; the run prints an OK or FAIL summary, a project with no budget rows printing an OK line saying so and budgets with no metrics file a SKIP line. A comparison exits 1 only when an in-tier budget fails, and 0 for every other outcome, warnings and skips included. A run that reaches a comparison writes the performance report, naming each failing budget's reason. The step is wired into the harness at DevStg-Impl, per its declared gates in the stack profile."
+detail = "Compares the measured metrics to the declared budgets and the committed baseline and fails beyond tolerance at the row's block or warn level; the baseline update is the reviewed acceptance path for an intended regression. Each in-tier budget that fails or warns prints a line naming its status and its budget id; a fail-level budget with no measurement this run is reported on its own line as a skip rather than passing in silence, while a warn-level budget with no measurement prints no line of its own and is counted among the skips. The run prints an OK or FAIL summary counting the failures, warnings and skips, a project with no budget rows printing an OK line saying so and budgets with no metrics file a SKIP line. A comparison exits 1 only when an in-tier budget fails, and 0 for every other outcome, warnings and skips included. A run that reaches a comparison writes the performance report, naming each failing budget's reason. The step is wired into the harness at DevStg-Impl, per its declared gates in the stack profile."
 test_refs = "(see TC-014)"
 status = "Accepted"
 phase = 1
@@ -148,7 +148,7 @@ phase = 1
 [design.LLR-019]
 sr_refs = ["SR-019"]
 title = "Pre-commit floor"
-detail = "Runs the registry integrity check and the secrets scan on staged content and refuses, with a nonzero exit, a commit failing either; a commit passing both is admitted. Every built-in check step is classified exactly once as run in the commit floor, run by the hook by name, or not run at commit with a stated reason. When no kit scripts directory is findable, the commit-facing hooks refuse the commit with exit 1, name the available repair steps, and neither run nor skip the floor."
+detail = "Runs the registry integrity check and the secrets scan on staged content and refuses, with a nonzero exit, a commit failing either; a commit passing both clears those two checks, and whether it is admitted rests on the floor's other steps. Every built-in check step is classified exactly once as run in the commit floor, run by the hook by name, or not run at commit with a stated reason. When no kit scripts directory is findable, the commit-facing hooks refuse the commit with exit 1, name the available repair steps, and neither run nor skip the floor."
 test_refs = "(see TC-019)"
 status = "Accepted"
 phase = 1

@@ -114,6 +114,8 @@ def test_secrets_floor_runs_with_privacy_off(scaffold):
     proc = run_lint(scaffold)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert "private key header" in proc.stdout
+    # The finding names the staged file and the line it sits on.
+    assert "cfg.txt:1: [private key header]" in proc.stdout, proc.stdout
 
     stage(scaffold, "cfg.txt", "aws = AKIA" + "A" * 16 + "\n")  # privacy-ok
     proc = run_lint(scaffold)
@@ -176,6 +178,8 @@ def test_secrets_floor_in_repo_and_range_modes_with_privacy_off(scaffold):
     proc = run_lint(scaffold, "--range", base + "..HEAD")
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert "private key header" in proc.stdout
+    # A range finding names the file and line in the commit that added it.
+    assert "cfg.txt:1: [private key header]" in proc.stdout, proc.stdout
 
 
 @needs_git

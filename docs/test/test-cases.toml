@@ -4970,9 +4970,9 @@ evidence = "tests/test_routed_link_owed.py::test_a_link_moved_alone_puts_its_cha
 [test.TC-586]
 verifies = ["SR-017", "SR-018", "LLR-493"]
 level = "Integration"
-method = "Seed a private key in a tracked file and sweep the tracked files; seed it in an outgoing commit and scan the range; seed a home directory path in a commit message with the privacy layer on and scan the range; sweep a clean scaffold with the privacy layer on, then seed a leak and sweep again; and scan with both layers off."
+method = "Stage a private key and scan the staged diff; seed it in a tracked file and sweep the tracked files; seed it in an outgoing commit and scan the range; seed a home directory path in a commit message with the privacy layer on and scan the range; sweep a clean scaffold with the privacy layer on, then seed a leak and sweep again; and scan with both layers off."
 tier = "Full"
-expected = "Each leak prints on its own line naming its location, the tracked file's path and line or the commit, and its class label, and the run exits 1; the clean sweep prints one clean line naming the scan and both layers and exits 0, and the seeded sweep's summary counts its finding and names the same layers; with both layers off nothing is scanned, the run says so and exits 0."
+expected = "Each leak prints on its own line naming its location, the file's path and line or the commit, and its class label, and the run exits 1; the clean sweep prints one clean line naming the scan and both layers and exits 0, and the seeded sweep's summary counts its finding and names the same layers; with both layers off nothing is scanned, the run says so and exits 0."
 automated = "Yes"
 status = "Drafted"
 phase = 6
