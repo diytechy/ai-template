@@ -8,6 +8,7 @@ needs = ["WI-1070"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
+planmode = "single"
 +++
 
 ## Context
@@ -38,6 +39,31 @@ draws. WI-1070's new context listing collapses each listed cell to one
 line and is tested against such a line; the rows' own cells are not.
 
 **Order.** After WI-1070, which changes the same brief and template.
+
+Critiqued 2026-11-24 (Sol and Hydrogen;
+`docs/reviews/2026-11-24-scope-critiques/WI-1072.md`): `planmode` is
+`single`, and the row carries a `## Trust` section.
+
+## Trust
+
+PROCESS.md §3, "When a guard is owed". The binding beside a verdict decides
+whether an act may take a row on a held rung, so what enters it is
+authority; this row narrows what enters it, and changes nothing else.
+
+- **Producer.** Unchanged from WI-1069's `## Trust`
+  (`docs/archive/work/complete/WI-1069-brief-shows-routed-links.md`): the
+  binding is written when a sitting's request is bound, and records one
+  judged-text identity per row the composed brief shows for judgement. This
+  row adds that only the identity lines the composer itself writes for
+  those rows enter it; text a judged cell carries never does.
+- **A failed or missing write.** Unchanged: a binding absent, unreadable,
+  carrying no identity, not naming the row, or naming another digest than
+  the committed row's, fails closed in each consumer. A brief the plan's
+  mechanism cannot compose safely is refused at compose, never bound with
+  a guess.
+- **Consumers.** Unchanged: the held act, the held-claim exception and the
+  record's kept-row reading each take a row only while the committed row's
+  identity equals the bound one, through the one identity function.
 
 ## Done-when
 

@@ -8,6 +8,7 @@ needs = ["WI-1071"]
 buildtier = "light"
 safety_class = "ordinary"
 priority = 4
+planmode = "none"
 +++
 
 ## Context
@@ -25,6 +26,9 @@ rows as LLR-403 states; only the explanatory text is stale. WI-1071
 restates LLR-199's header clause by the header's four elements (generated,
 not to be hand-edited, cite the registries, the regeneration command), so
 no spine row carries the stale sentence.
+
+Critiqued 2026-11-24 (Sol and Hydrogen;
+`docs/reviews/2026-11-24-scope-critiques/WI-1073.md`): `planmode` is `none`.
 
 ## Done-when
 
