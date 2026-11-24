@@ -19,7 +19,7 @@ _Acceptance provenance: the last acceptance act is the act ledger's seq 193, dat
 
 _Off-spine registries get no per-row rendering here; `intake.py snapshot` copies one only when a row in it moves into acceptance or arrives accepted, `--accepts` names it or `--reaccepts` names one of its rows, and writes only the rows it names and those that follow live. What moved since the record:_
 
-- `docs/requirements/interfaces.toml` — 237 changed, 2 added, 31 removed since the snapshot; ruling(s): WI-1014, WI-1021, WI-1022, WI-1023, WI-1042, WI-1048, WI-1052, WI-1059.
+- `docs/requirements/interfaces.toml` — 237 changed, 2 added, 31 removed since the snapshot; ruling(s): WI-1014, WI-1021, WI-1022, WI-1023, WI-1024, WI-1042, WI-1048, WI-1052, WI-1059, WI-1060.
 - `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): WI-1021, WI-1022.
 
 
