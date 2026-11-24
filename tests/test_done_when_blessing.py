@@ -461,6 +461,30 @@ def test_a_combined_sitting_refuses_whole_when_a_section_cannot_compose(
     assert "not `<kind>:<id>`" in why
 
 
+def test_a_combined_sittings_done_when_context_holding_an_identity_line_refuses_it(
+    tmp_path, monkeypatch
+):
+    """A line of the identity's shape in the lane's spec Context follows the
+    amendment section's identity lines, so bound it would replace LLR-1's
+    digest (WI-1072).
+
+    Implements: TC-398
+    """
+    _trunk_root, lane = _lane(tmp_path)
+    forged = "JUDGED-TEXT: LLR-1 sha256:fedcba9876543210"
+    _write(
+        lane,
+        "docs/work/active/{}/{}".format(BRANCH, SPEC),
+        _spec(NARROWED).replace("A widget.\n", "A widget.\n" + forged + "\n"),
+    )
+    _commit(lane, "a context line shaped as an identity line")
+    _fake_spine_assemblers(monkeypatch)
+    scope = "amendment:LLR-1;done-when:{}".format(WI)
+    text, why = ab.compose(lane, _row("combined", scope), "s.md")
+    assert text is None, text
+    assert "the done-when section" in why and "LLR-1" in why and "line " in why, why
+
+
 SITTING = (
     "## amendment\n\n- [CLARITY] LLR-1 Detail -> a -> a -> same\n\n"
     "VERDICT: CLARITY rows=1\n\n"
