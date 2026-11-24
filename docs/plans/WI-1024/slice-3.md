@@ -2048,6 +2048,10 @@ advisories as the build's tip, the coverage and placement lines unchanged
 graph acyclic).` The views and the `evidence` cells were regenerated before
 the fix commit, which the hook passed.
 
+**Round 2** (narrow, over `6485760ca..aabf8f0d4`, round 1's findings and the
+coordinator's rulings prepended): Gemini Hydrogen APPROVE findings=0; OpenAI
+Sol APPROVE findings=0.
+
 ## 8. The ninth sitting's LLR-014 disposition, answered
 
 The ninth sitting (WI-1074,
