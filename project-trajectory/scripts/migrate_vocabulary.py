@@ -83,8 +83,11 @@ them; `tests/test_migrate_vocabulary.py` holds the two readings together.
 
 Links into the record follow it: in every Markdown file of the repository
 but the scratchpad, a link target that names the record's earlier directory
-as a whole path segment names the current one, so `check_docs` does not report it broken. The link
-text and every other word of the file stay as written.
+as a whole path segment names the current one, so `check_docs` does not
+report it broken. The link text and every other word of the file stay as
+written, and so does code: a link written inside an inline code span or a
+fenced code block is code, not a link (an indented code block is not
+recognised).
 
 A registry is a `.toml` or `.csv` file directly under `docs/requirements/` or
 `docs/test/`, and the acceptance record's copy of each. A registry is rewritten
@@ -1373,19 +1376,88 @@ _OLD_RECORD, _NEW_RECORD = (d.rsplit("/", 1)[1] for d in RECORD_DIRS)
 _OLD_SEGMENT = re.compile(r"(?<![\w.-]){}(?![\w.-])".format(re.escape(_OLD_RECORD)))
 # Folders whose Markdown is not the repository's own.
 _UNWALKED = frozenset({"node_modules", "__pycache__"})
+# A fenced code block's opening line: up to three spaces, then a run of three
+# or more backticks with no backtick after it on the line, or of tildes. A
+# backtick run with more backticks on its line opens an inline span instead.
+_CODE_FENCE = re.compile(r"^ {0,3}(?P<fence>`{3,}(?=[^`\n]*$)|~{3,})", re.M)
+# A blank line, which ends a paragraph and so any inline code span in it.
+_BLANK = re.compile(r"\n[ \t]*\r?\n")
+# A run of backticks, which opens an inline code span or closes one.
+_TICKS = re.compile(r"`+")
+
+
+def _fenced_blocks(text):
+    """`[(start, end)]` of each fenced code block in Markdown `text`, its
+    fence lines included. A block closes at the first line holding only a run
+    of its fence's character at least as long, and an unclosed one runs to
+    the end of the text."""
+    blocks, pos = [], 0
+    while (opened := _CODE_FENCE.search(text, pos)) is not None:
+        fence = opened["fence"]
+        closing = re.compile(
+            r"^ {0,3}%s{%d,}[ \t]*\r?$" % (re.escape(fence[0]), len(fence)), re.M
+        )
+        line_end = text.find("\n", opened.end())
+        closed = closing.search(text, line_end + 1) if line_end >= 0 else None
+        pos = len(text) if closed is None else closed.end()
+        blocks.append((opened.start(), pos))
+    return blocks
+
+
+def _inline_spans(text, start, end):
+    """`[(start, end)]` of each inline code span in `text[start:end]`: a run
+    of backticks up to the next run of the same length in its paragraph. A
+    run that nothing closes there is a literal backtick."""
+    spans = []
+    for para_start, para_end in _paragraphs(text, start, end):
+        runs = list(_TICKS.finditer(text, para_start, para_end))
+        i = 0
+        while i < len(runs):
+            width = len(runs[i].group())
+            close = next(
+                (j for j in range(i + 1, len(runs)) if len(runs[j].group()) == width),
+                None,
+            )
+            if close is not None:
+                spans.append((runs[i].start(), runs[close].end()))
+            i = i + 1 if close is None else close + 1
+    return spans
+
+
+def _paragraphs(text, start, end):
+    """`[(start, end)]` of the runs of `text[start:end]` between blank lines."""
+    cuts = [m.span() for m in _BLANK.finditer(text, start, end)]
+    edges = [start] + [e for cut in cuts for e in cut] + [end]
+    return list(zip(edges[::2], edges[1::2]))
+
+
+def _code(text):
+    """`[(start, end)]` of the code in Markdown `text`: its fenced blocks, and
+    the inline spans of the prose between them."""
+    code, pos = [], 0
+    for start, end in _fenced_blocks(text) + [(len(text), len(text))]:
+        code += _inline_spans(text, pos, start) + [(start, end)]
+        pos = end
+    return code
 
 
 def relink_markdown(text):
     """`(text, count)`: Markdown `text` with each link target naming the
     record's earlier directory re-based onto the current one, and how many
-    moved. The link text and the prose around it keep their words.
+    moved. The link text, the prose around it and the code keep their words:
+    a link written inside an inline code span or a fenced code block is code,
+    not a link. An indented code block is not recognised.
 
     Implements: SR-247, LLR-369
     """
     count = 0
+    code = _code(text)
 
     def rebased(match):
         nonlocal count
+        at = match.start("target")
+        if any(start <= at < end for start, end in code):
+            return match.group()
         target, n = _OLD_SEGMENT.subn(_NEW_RECORD, match["target"])
         count += n
         return match["lead"] + target

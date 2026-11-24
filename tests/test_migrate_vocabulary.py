@@ -1282,14 +1282,50 @@ LINKED = (
 )
 
 
+# Links into the record written inside code, which keep their words: inline
+# spans of one and of two backticks (the second holding a backtick), a fenced
+# block of backticks holding a link and a reference definition, one of tildes,
+# and a run of three backticks with more on its line, which opens an inline
+# span and not a fence. Beside them, a stray backtick no run closes in its
+# paragraph, and one link in prose, the only one that moves.
+CODED = (
+    "Write `[the ledger](docs/archive/last_approved/acts.toml)` to link it,\n"
+    "or ``[a `tick`](last_approved/acts.toml)`` with a backtick inside.\n"
+    "\n"
+    "```markdown\n"
+    "[the stamp](docs/archive/last_approved/README.md)\n"
+    "[s]: docs/archive/last_approved/README.md\n"
+    "```\n"
+    "\n"
+    "~~~~\n"
+    "[the ledger](../archive/last_approved/acts.toml)\n"
+    "~~~~\n"
+    "\n"
+    "```[x](last_approved/acts.toml)``` stays inline code.\n"
+    "\n"
+    "A stray ` backtick, then [a real one](docs/archive/last_approved/acts.toml).\n"
+    "\n"
+    "Its paragraph ended, so ` this one closes nothing either.\n"
+)
+
+
 def test_links_into_the_record_follow_it_and_every_other_word_stays(tmp_path, capsys):
     """Implements: TC-427"""
     page = _write(tmp_path, "docs/reviews/old.md", LINKED.replace("\n", "\r\n"))
+    coded = _write(tmp_path, "docs/reviews/code.md", CODED.replace("\n", "\r\n"))
     hidden = _write(tmp_path, ".claude/notes.md", LINKED)
     vendored = _write(tmp_path, "node_modules/pkg/README.md", LINKED)
     cached = _write(tmp_path, "pkg/__pycache__/notes.md", LINKED)
     assert _run(tmp_path) == 0
-    assert "docs/reviews/old.md: 2 link(s)" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "docs/reviews/old.md: 2 link(s)" in out, out
+    assert "docs/reviews/code.md: 1 link(s)" in out, out
+    # A link written inside code is code, and keeps its words.
+    moved = CODED.replace(
+        "[a real one](docs/archive/last_approved/acts.toml)",
+        "[a real one](docs/archive/last_accepted/acts.toml)",
+    )
+    assert coded.read_bytes() == moved.replace("\n", "\r\n").encode("utf-8")
     expected = LINKED.replace(
         "../archive/last_approved/acts", "../archive/last_accepted/acts"
     ).replace("docs/archive/last_approved/README", "docs/archive/last_accepted/README")

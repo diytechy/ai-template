@@ -45,3 +45,13 @@ per-item record, the approval and the acts owed.
 - Deferred open items: none — the operator's design call was ruled before
   filing (refined (c)), and the three amended rows go to the next sitting as
   owed acts.
+- **Review:** round 1 (over `c7d6bd6f4..e425d4173`): Hydrogen APPROVE; Sol
+  three MINORs, adopted by the coordinator: a link written inside an inline
+  code span or a fenced code block is no longer rewritten (the links test
+  extended; red before the fix, `code.md: 7 link(s)` where 1 was due);
+  SR-247's acceptance states the scratchpad exception, and that code keeps
+  its words; LLR-369 states the current-vocabulary skip once. LLR-369 is not
+  decomposed here: it stated every step of the migrator before this branch,
+  and its re-cut is the coordinator's stale-text item. After the fixes: the
+  two migrator modules `93 passed in 16.17s`; `trace.py --strict` and
+  `check_trajectory.py --strict` exit 0; no smoke-tier test added.

@@ -12675,7 +12675,9 @@ registries beside an unrespelled record would leave the two in different
 vocabularies. Separately, the Markdown link walk no longer reads your
 `OPERATOR_SCRATCHPAD.md` (or the file under its earlier name): it used to
 read it, and could rewrite a link in it, on every run and every
-`check_vocab.py` run.
+`check_vocab.py` run. It also leaves a link written inside an inline code
+span or a fenced code block as it is: such a link is code, and it used to be
+rewritten.
 
 **What to do.** Nothing, if you ran the migrator before your first act on
 this kit, as the entry "An acceptance act records only the rows it names; a

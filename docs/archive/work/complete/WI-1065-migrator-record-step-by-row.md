@@ -32,8 +32,9 @@ never opens it). The RESYNC anchor stays `[since c7d6bd6f4]`; trunk has moved
 - `b92a67bfc`: the red tests, under the declared expected-failure marker.
 - `47e762418`: the build: the record reading, the refusal, the skip, the link walk,
   the rows, the RESYNC entry, regenerated evidence and views.
-- The commit after it: the close-out (this Deliverable, the move, the log
-  fragment).
+- `e425d4173`: the close-out (this Deliverable, the move, the log fragment).
+- The commit after it: review round 1's three adopted findings (the review
+  record, at the end of this Deliverable).
 
 **A read of this repository's scratchpad, recorded for the operator.** One
 measuring run before the fix, `migrate_vocabulary.py --root . --check` over
@@ -190,6 +191,88 @@ scratch `--basetemp` under `D:/review-tmp/2026-11-23-wi1065/`):
     trace cell, owing no act.
 - Routed traced changes to `Accepted` rows: none.
 - New or rewritten `Drafted` rows owed a first acceptance: none.
+
+**Review record.**
+
+Round 1 (2026-11-23, over `c7d6bd6f4..e425d4173`): Gemini Hydrogen `APPROVE
+findings=0`; OpenAI Sol three MINORs. The coordinator's rulings, each fixed on
+this branch with the hooks on:
+
+1. **Adopted** (Sol, confirmed by execution): the link step rewrote a link
+   written inside an inline code span, against LLR-369's inherited clause
+   "the link text, prose and code spans keep their words"; TC-427's fixture
+   tested only a bare directory name inside code. Fixed: `relink_markdown`
+   leaves a link target alone when it lies inside code, which it reads in two
+   forms. An inline code span is a run of one or more backticks up to the
+   next run of the same length in its paragraph; a run nothing closes there
+   is a literal backtick. A fenced code block is opened by a line of three or
+   more backticks (with no backtick after them on the line) or tildes, behind
+   up to three spaces, and closed by a line of at least as many of the same
+   character, or the end of the file. The walk meets fenced blocks (any
+   Markdown page can hold one), so both are handled; an indented code block
+   is not recognised, as the docstrings say. The regression is the existing
+   links test, which gains a CRLF page holding links in inline spans of one
+   and of two backticks, a fenced block of backticks (a link and a reference
+   definition), one of tildes, a backtick run with more on its line, a stray
+   backtick and one link in prose. Red before the fix:
+   `FAILED tests/test_migrate_vocabulary.py::test_links_into_the_record_follow_it_and_every_other_word_stays`,
+   on `assert 'docs/reviews/code.md: 1 link(s)' in 'migrate_vocabulary:
+   acceptance-record link rewritten: docs/reviews/code.md: 7 link(s) into
+   docs/archive/last_accepted ...'`. The test was extended rather than a new
+   one added, so no smoke-tier test was added: the tier stays at 3,890 items,
+   on its `max-tests` ceiling (`test_smoke_budget.py` passes).
+   - LLR-369 `detail`, the link sentence's close, was "the link text, prose
+     and code spans keep their words, and a file that is not UTF-8 is left
+     untouched and named." It is now "the link text, prose and code keep their
+     words, so a link inside an inline code span, a run of backticks up to the
+     next run of the same length in its paragraph, or inside a fenced code
+     block, opened by a line of three or more backticks or tildes and closed
+     by a line of at least as many of the same, is not rewritten; and a file
+     that is not UTF-8 is left untouched and named."
+   - TC-427 `method` names the new page.
+2. **Adopted** (Sol): SR-247 stated the link rewrite in every Markdown file
+   outside the skipped folders, while LLR-369 and the code except the
+   operator's scratchpad, so the child exceeded its parent. SR-247
+   `acceptance_criteria`, its link sentence, was "In a Markdown file outside
+   hidden, vendored-package and cache folders it re-bases a link target naming
+   the record's earlier directory onto the current one, and changes no link
+   text and no prose." It is now "In a Markdown file outside hidden,
+   vendored-package and cache folders, the operator's scratchpad at the
+   repository root excepted, it re-bases a link target naming the record's
+   earlier directory onto the current one, and changes no link text, no prose
+   and no text inside an inline code span or a fenced code block." The
+   scratchpad exception is driven by D7's test, the code clause by finding
+   1's; the code clause makes the parent state what LLR-369 now states.
+3. **Adopted in part** (Sol): LLR-369 stated the current-vocabulary skip
+   twice. The first statement, in the reading paragraph, was "Finding none,
+   the steps run, and the record step writes no registry copy." It is now
+   "Finding none, the steps run."; the skip is stated once, in the record
+   step's paragraph ("In a record whose ledger lists kept rows, with no
+   earlier spelling found, it writes no copy, ..."). LLR-369 still states
+   every step of the migrator in one row, as it did before this branch;
+   decomposing it is a separate re-cut, which the coordinator notes for the
+   stale-text list.
+
+The cells these fixes move were already owed (SR-247 `acceptance_criteria`,
+LLR-369 `detail`, TC-427 `method`), so the acts owed above are unchanged.
+The absolute-term rule still finds nothing in SR-247's acceptance or
+LLR-369's detail.
+
+Tests of the round-1 fixes:
+- `tests/test_migrate_vocabulary.py tests/test_migrate_vocabulary_record.py`:
+  `93 passed in 16.17s` (the same 93 items as before the round).
+
+<!-- fig: cmd="python -m pytest -q -p no:cacheprovider --basetemp <scratch> tests/test_migrate_vocabulary.py tests/test_migrate_vocabulary_record.py" rev="e425d4173 plus the round-1 fixes, uncommitted, 2026-11-23" -->
+
+- `test_complexity_ratchet`, `test_module_size_ratchet`, `test_import_layers`
+  and `test_smoke_budget`: `16 passed in 13.91s`; `check_complexity.py
+  --mode enforce`: `OK - 168 row(s) over 15, unchanged from baseline.` The
+  migrator is 926 SLOC against the 1,000 threshold.
+- `trace.py --root . --strict`: exit 0, `Traceability: SN=31 SR=141 LLR=368
+  TC=444 orphans=0 integrity=0 ...`; `check_trajectory.py --root . --strict`:
+  exit 0, `check_trajectory: clean (1066 work item(s), 936 done (88%), 37
+  cancelled, graph acyclic).`
+- No smoke rerun: no smoke-tier test was added.
 
 ## Context
 
