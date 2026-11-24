@@ -208,7 +208,7 @@ clause accounting is section 4.
 | IF-077 | call | LLR-077 | amended `detail` | the anchor read from the link check's parse, lower case, the nearest heading, a non-Markdown target not judged: TC-077, five tagged `tests/test_trajectory.py` tests |
 | IF-086 | exit-code | LLR-146 | amended `detail` | warn-first exit 0, strict exit 1: TC-140 `test_findings_gate_only_under_strict`; one new test |
 | IF-121 | exit-code | LLR-494 (new) | new, Drafted | exit 0 at the default severity, strict 1 on a finding, an unreadable exception line and a vacuous registry, 0 on a clean scan: TC-587 |
-| IF-134 | exit-code | LLR-019 | amended `detail` | refused on a failing floor, admitted on a passing one: TC-019 `test_hook_runs_end_to_end_when_sh_available`, `test_hook_secrets_floor_blocks_staged_key_with_privacy_off` |
+| IF-134 | exit-code | LLR-019 | amended `detail` | refused, nonzero, on a failing integrity check or secrets scan; passing both clears those two, admission resting on the floor's other steps (review round 1): TC-019 `test_hook_blocks_duplicate_id_but_not_orphan`, `test_hook_secrets_floor_blocks_staged_key_with_privacy_off`, `test_hook_runs_end_to_end_when_sh_available` |
 | IF-135 | exit-code | LLR-020 | link | a push publishing a secret, or an identity under the privacy dial, blocked: TC-020 `tests/test_pre_push_hook.py` (`test_secrets_floor_blocks_a_key_in_range`, `test_lint_layer_blocks_before_reviewer`) |
 | IF-144 | exit-code | none: carried to slice 3 (section 6) | left unreached | |
 | IF-187, IF-188 | exit-code, call | LLR-256 | amended `detail` | the exit only on a gating measure, the complexity adapter calling the census's own parts: TC-249 tests by name; one new test, two tagged |
@@ -359,9 +359,13 @@ clauses kept verbatim:
 4. "The step is wired into the harness at DevStg-Impl, per its declared gates
    in the stack profile file": kept; `test_harness_runs_perf_at_g3`,
    `test_perf_step_is_process_layer_in_list`.
-- Added: a line per budget not clean, a fail-level budget with no measurement
-  reported as a skip, `test_absolute_breach_fails_when_gate_fail`,
-  `test_gated_skip_prints_per_row_warn_line`; the summary, no budget rows, no
+- Added: a line for each in-tier budget that fails or warns,
+  `test_absolute_breach_fails_when_gate_fail`,
+  `test_absolute_breach_only_warns_when_gate_warn`; a fail-level budget with
+  no measurement reported on its own line as a skip, a warn-level one only
+  counted among the summary's skips, `test_gated_skip_prints_per_row_warn_line`
+  and (review round 1) `test_an_unmeasured_budget_gets_its_own_line_only_when_fail_level`;
+  the summary counting failures, warnings and skips, no budget rows, no
   metrics, `test_within_tolerance_regression_passes`,
   `test_no_real_budgets_passes`, `test_budgets_present_but_no_metrics_skips`;
   a comparison's exit, `test_tier_scopes_which_budgets_gate`,
@@ -394,8 +398,14 @@ clauses kept verbatim:
    `tests/test_commit_floor_census.py`.
 4. "When no kit scripts directory is findable, ...": verbatim;
    `test_each_hook_refuses_when_the_kit_scripts_cannot_be_found`.
-- Added: a commit passing both is admitted,
-  `test_hook_runs_end_to_end_when_sh_available`.
+- Added: a commit passing both clears those two checks, whether it is
+  admitted resting on the floor's other steps,
+  `test_hook_runs_end_to_end_when_sh_available` (a clean project's hook
+  exits 0, a staled generated artifact's exits nonzero). Review round 1
+  corrected this clause: slice 2 first wrote "a commit passing both is
+  admitted", which the floor's other steps contradict. The accepted text
+  never said "admitted" (it said "blocks a failing commit"), so this
+  corrects slice 2's own addition, not a recorded clause.
 
 **LLR-031** (SR-031; TC-031). Every clause verbatim; the one code name,
 "outside `[policies]`", reads "outside the policies table", as the row's own
@@ -802,7 +812,70 @@ Items 2, 4 and 5 are accepted by the coordinator as recorded.
    is the closest parent, but the SR states no dial precedence. If the sitting
    reads that as exceeding the parent, the answer is an SR-040 amendment
    naming the declared dials, not a different parent.
+   **The coordinator's ruling** (review round 1, Sol's fourth MINOR,
+   dismissed): SR-040 routes each phase through its declared template, and
+   LLR-495 states where that declaration is read from, which breaks SR-040's
+   "declared" down rather than adding an obligation; amending SR-040 would
+   send an accepted requirement to a sitting over a design detail. No change.
+   If the sitting returns LLR-495 for it, an SR-040 amendment follows then.
 6. **No companion cells** (answer 4) and no RESYNC entry (registries and
    tests only). The absolute-term advisory count moved 253 -> 257 on design
    rows (heuristic, warn-only), and the perspective coverage advisory counts
    LLR-495 unattributed, as its sibling LLR-037 under SR-040 already is.
+
+## 7. Review record
+
+**Round 1** (over `ec188f984..e76906162`): Gemini Hydrogen APPROVE
+findings=0; OpenAI Sol four MINORs. The coordinator's rulings, fixed in one
+commit, `7d50a10a0`:
+
+1. ADOPTED. LLR-019's added "a commit passing both is admitted" contradicted
+   the hook, whose formatting, freshness and path-triggered steps can still
+   refuse a commit that passes the integrity check and the secrets scan. It
+   now says a commit passing both clears those two checks and whether it is
+   admitted rests on the floor's other steps; every other clause kept
+   (section 4: a correction of slice 2's own addition, the accepted text
+   having never said "admitted").
+2. ADOPTED. LLR-014's "Each budget that is not clean prints a line"
+   exceeded the code: the comparator prints a line for each in-tier budget
+   that fails or warns, a line of its own for a fail-level budget with no
+   measurement, and none for a warn-level budget with no measurement, which
+   is only counted among the summary's skips. The row now states that rule,
+   and `tests/test_check_perf.py::test_an_unmeasured_budget_gets_its_own_line_only_when_fail_level`
+   drives the two side by side. Against the gate condition dropped (every
+   unmeasured budget printed its own line) it failed:
+
+   ```
+   E       assert not ['check_perf: WARN - PB-002 Metric PB-002: Gate=fail but no measurement this run - budget not checked (SKIP)']
+   FAILED tests/test_check_perf.py::test_an_unmeasured_budget_gets_its_own_line_only_when_fail_level
+   1 failed in 7.38s
+   ```
+
+3. DISMISSED, no change. LLR-495 "exceeds SR-040": the ruling is recorded
+   in section 6 beside note 5.
+4. ADOPTED. TC-586's expected promised each leak's location, but its staged
+   and range tests asserted labels and exit codes alone. Both now assert the
+   finding's file and line (`cfg.txt:1: [private key header]`), and TC-586's
+   method names the staged scan. Against the location dropped from the diff
+   scan's findings both failed (the seeded key line elided below, since the
+   commit's own secrets floor refuses it):
+
+   ```
+   E       assert 'cfg.txt:1: [private key header]' in '(diff): [private key header] <the seeded key line>\ncheck_privacy: 1 finding(s) in staged diff [secrets flo...'
+   E       assert 'cfg.txt:1: [private key header]' in '(diff): [private key header] <the seeded key line>\ncheck_privacy: 1 finding(s) in range ff717925c2354638cc...'
+   FAILED tests/test_check_privacy.py::test_secrets_floor_runs_with_privacy_off
+   FAILED tests/test_check_privacy.py::test_secrets_floor_in_repo_and_range_modes_with_privacy_off
+   2 failed in 15.89s
+   ```
+
+**Round 1's tests:** the touched modules (`tests/test_check_perf.py`,
+`tests/test_check_privacy.py`, and LLR-019's `tests/test_pre_commit_hook.py`
+and `tests/test_commit_floor_census.py`) with the four ratchet and sync
+modules: `131 passed, 1 skipped in 113.40s (0:01:53)`. `trace.py --root .
+--strict`: exit 1 on LLR-484's finding alone (fixed on trunk at `855b4388f`,
+resolving at the merge), `Traceability: SN=31 SR=141 LLR=372 TC=448
+orphans=0 integrity=0 ... interfaces=239 interface-findings=0
+ac-advisories=1 form-findings=1 paraphrase-advisories=1`.
+`check_trajectory.py --root . --strict`: `check_trajectory: clean (1068 work
+item(s), 940 done (88%), 37 cancelled, graph acyclic).` The views were
+regenerated before the fix commit; every evidence cell was already current.
