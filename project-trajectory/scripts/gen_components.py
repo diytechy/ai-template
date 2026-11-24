@@ -34,10 +34,11 @@ over (the brief demanded that; a generator that silently drops rows is
 indistinguishable from one with a bug):
 
   * A DESIGN ROW IS PLACED, NEVER TAGGED (WI-1023, variant F): it sits at the
-    owner component of each interface a test case verifying it names
-    (`kitlib.spine.llr_placement`), at each when there are several, and one
-    placed nowhere is listed in `[unplaced] llr_refs` and counted, never
-    refused. A row names no component of its own.
+    owner component of each interface its `constrains` cell names and of each
+    interface a test case verifying it names (`kitlib.spine.llr_placement`),
+    at each when there are several, and one placed by neither is listed in
+    `[unplaced] llr_refs` and counted, never refused. A row names no component
+    of its own.
   * AN SR THAT REACHES NO COMPONENT IS LISTED, ONCE, in `[unplaced]`. An SR
     carries no `Component` cell, so its components are derived through its
     placed LLR children, and an SR with none has none. Some of those are decompositions not yet written; some are CONSTRAINTS
@@ -129,8 +130,9 @@ BANNER = (
     "# hand-authored components.toml row, and nothing in this file is evidence\n"
     "# that an operator blessed anything.\n"
     "#\n"
-    "# A design row sits at the owner component of each interface a test case\n"
-    "# verifying it names; `[unplaced] llr_refs` lists the rows placed nowhere.\n"
+    "# A design row sits at the owner component of each interface its\n"
+    "# `constrains` cell names and of each interface a test case verifying it\n"
+    "# names; `[unplaced] llr_refs` lists the rows placed by neither.\n"
     "#\n"
     "# An `[unplaced] sr_refs` entry reaches no component because it has no placed\n"
     "# design child — a decomposition not yet written or placed, or a constraint\n"
@@ -262,8 +264,9 @@ def build(cmps, srs, llrs, ifs, tcs, declared):
     `declared` is each file's component as its `Component:` header declares it
     (`arch_inputs.component_headers`), which places the files. A seam is placed
     from its endpoint cells and the components' `part_of` (`seam_placement`).
-    A design row is placed through the interfaces the test cases `tcs`
-    verifying it name (`kitlib.spine.llr_placement`); one placed nowhere is in
+    A design row is placed through the interfaces its `constrains` cell names
+    and those the test cases `tcs` verifying it name
+    (`kitlib.spine.llr_placement`); one placed by neither is in
     `unplaced["llr_refs"]`.
 
     Implements: SR-070, LLR-199, LLR-403"""
