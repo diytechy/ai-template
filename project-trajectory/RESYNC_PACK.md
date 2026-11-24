@@ -12810,6 +12810,29 @@ contract harvest once (seconds on a large tree).
 
 **Project-owned files — edit:** none.
 
+### The component view's header states placement through `constrains` too [since d1571e8fc]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** The generated component view's header said a design row
+sits at the owner component of each interface a test case verifying it
+names, the placement before `constrains` existed. It now says a design row
+sits at the owner component of each interface its `constrains` cell names
+and of each interface a test case verifying it names, and that `[unplaced]
+llr_refs` lists the rows placed by neither. The generator's own description
+says the same. Only that explanatory text moved: where each row is placed,
+the view's tables and the freshness check are unchanged.
+
+**What to do.** After overwriting the generator, run
+`python scripts/gen_components.py` once and commit the regenerated
+`docs/requirements/components.derived.toml`: until then its `--check`
+reports the committed view stale, since the header is part of the compared
+bytes. Only the header's lines change.
+
+**Kit-owned files — overwrite:** `scripts/gen_components.py`.
+
+**Project-owned files — edit:** none.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

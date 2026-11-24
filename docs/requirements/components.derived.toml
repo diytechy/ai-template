@@ -10,8 +10,9 @@
 # hand-authored components.toml row, and nothing in this file is evidence
 # that an operator blessed anything.
 #
-# A design row sits at the owner component of each interface a test case
-# verifying it names; `[unplaced] llr_refs` lists the rows placed nowhere.
+# A design row sits at the owner component of each interface its
+# `constrains` cell names and of each interface a test case verifying it
+# names; `[unplaced] llr_refs` lists the rows placed by neither.
 #
 # An `[unplaced] sr_refs` entry reaches no component because it has no placed
 # design child — a decomposition not yet written or placed, or a constraint

@@ -2,11 +2,11 @@
 
 The claims this module holds, one per thing the ruling actually decided:
 
-  * the JOIN — design rows placed through the interfaces their verifying
-    test cases name (a row names no component since WI-1023), the requirement
-    tier reached THROUGH them, the perspectives DERIVED (never copied), each
-    file's membership from its `Component:` header, the seams placed by their
-    endpoints;
+  * the JOIN — design rows placed through the interfaces their `constrains`
+    cell names and those their verifying test cases name (a row names no
+    component since WI-1023), the requirement tier reached THROUGH them, the
+    perspectives DERIVED (never copied), each file's membership from its
+    `Component:` header, the seams placed by their endpoints;
   * the THREE COVERAGE EDGES the brief refused to let the execution paper
     over — a requirement that reaches no component, one that reaches several,
     and whether seams enter the view at all. Each is asserted as a VISIBLE
@@ -374,6 +374,15 @@ def test_the_view_opens_with_the_generated_file_header(repo):
         "Regenerate: python scripts/gen_components.py",
     ):
         assert phrase in head, phrase
+    # Its placement sentence says where a design row sits as the placement
+    # rule does: through the interfaces its constrains cell names, through
+    # those a test case verifying it names, and in the unplaced table otherwise.
+    prose = " ".join(line.lstrip("#").strip() for line in head.splitlines())
+    assert (
+        "A design row sits at the owner component of each interface its "
+        "`constrains` cell names and of each interface a test case verifying it "
+        "names; `[unplaced] llr_refs` lists the rows placed by neither."
+    ) in prose, prose
 
 
 def test_the_view_is_declared_generated_and_the_trunk_regeneration_re_derives_it(
