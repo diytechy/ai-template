@@ -191,6 +191,44 @@ def test_a_row_below_a_missing_parent_names_where_its_chain_breaks(status):
     assert breaks == ["LLR LLR-071 reaches no SR: its parent chain breaks at LLR-070"]
 
 
+def _example_parent(status):
+    """A well-formed example row (an id ending -000) and a row naming it as its
+    parent: an example row is no live design row, so the child hangs from
+    nothing though the row it names would itself reach SR-001."""
+    return [
+        {"LLR-ID": "LLR-000", "SR-Refs": fx.SR1, "Status": status},
+        {"LLR-ID": "LLR-056", "Parent": "LLR-000", "Status": status},
+    ]
+
+
+def _below_cycle(status):
+    """A row below the two-row cycle, not on it, listed before the cycle so the
+    walk enters the cycle from below."""
+    return [{"LLR-ID": "LLR-062", "Parent": "LLR-061", "Status": status}] + _cycle(
+        status
+    )
+
+
+@pytest.mark.parametrize("status", ["Drafted", "Accepted"])
+def test_a_row_naming_an_example_row_as_its_parent_is_reported_once(status):
+    """Implements: TC-560"""
+    tcs = fx.tcs() + [{"TC-ID": "TC-050", "Verifies": "LLR-056"}]
+    findings = _orphans(fx.llrs() + _example_parent(status), tcs)
+    assert [f for f in findings if "LLR-056" in f] == [
+        "LLR LLR-056 names parent LLR-000, which is no live design row"
+    ], findings
+
+
+@pytest.mark.parametrize("status", ["Drafted", "Accepted"])
+def test_a_row_below_a_cycle_names_where_its_chain_breaks(status):
+    """Implements: TC-560"""
+    tcs = fx.tcs() + [{"TC-ID": "TC-050", "Verifies": "LLR-062"}]
+    findings = _orphans(fx.llrs() + _below_cycle(status), tcs)
+    assert [f for f in findings if "LLR-062" in f] == [
+        "LLR LLR-062 reaches no SR: its parent chain breaks at LLR-061"
+    ], findings
+
+
 STRICT = argparse.Namespace(strict=True, strict_integrity=False)
 
 
@@ -208,6 +246,8 @@ def _filled(rows, status):
 STRICT_FAULTS = [(fault, text) for fault, text in FAULTS] + [
     (_cycle, "LLR LLR-060 is on a parent cycle"),
     (_below_missing, "LLR LLR-071 reaches no SR"),
+    (_example_parent, "LLR LLR-056 names parent LLR-000, which is no live design row"),
+    (_below_cycle, "LLR LLR-062 reaches no SR: its parent chain breaks at LLR-061"),
 ]
 
 
