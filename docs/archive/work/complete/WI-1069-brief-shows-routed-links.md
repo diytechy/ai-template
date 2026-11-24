@@ -206,9 +206,11 @@ rows and this record, `APPROVE findings=0`. The coordinator's rulings:
    condition this branch adds one to; Hydrogen judged it not a finding
    against this branch.
 
-Fixed in the commit after `c277c4185`: the RESYNC entry, LLR-484 `detail`
-and TC-571 `expected` (both `Drafted`, still owed a first acceptance). No
-code changed.
+Fixed in `a8d4baad9`: the RESYNC entry, LLR-484 `detail` and TC-571
+`expected` (both `Drafted`, still owed a first acceptance). No code changed.
+
+Round 2 (2026-11-23, narrow, over `c277c4185..a8d4baad9`): Sol and
+Hydrogen `APPROVE findings=0`.
 
 ## Context
 

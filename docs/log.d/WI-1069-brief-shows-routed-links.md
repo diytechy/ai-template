@@ -53,3 +53,4 @@ Deliverable holds the per-item record, the approval and the acts owed.
   adopted (LLR-484 states that a lone accepted group stays unlabelled;
   TC-571's expected names it). The builder's smoke re-stamp and new module
   confirmed.
+- Review round 2 (narrow): Sol and Hydrogen APPROVE, no findings.
