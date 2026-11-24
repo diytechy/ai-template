@@ -18,7 +18,7 @@ Registries and tests only: no shipped file changed, so no RESYNC entry.
 | 1. The cells | Unchanged (slice 1). |
 | 2. The derived check | Unchanged; its count line moves (section 3). |
 | 3. The repeat check | Unchanged; no repeated name is reported at the tip. |
-| 4. Every interface reached | CMP-007: 33 of its 38 interfaces now reached through a constraining design row; five left for the coordinator (section 6). 60 of 239 overall. |
+| 4. Every interface reached | CMP-007: 36 of its 38 interfaces now reached through a constraining design row; IF-049 and IF-144 carried to slice 3 (section 6). 63 of 239 overall. |
 | 5. Strict, OI-43 retired | Not in this slice (slice 5). |
 | 6. The readers | Unchanged. |
 | 7. RESYNC | None owed: no shipped file changed. |
@@ -29,6 +29,9 @@ with their text amended under rule 1 and answer 5, one link only); three new
 `Drafted` design rows (LLR-493 to LLR-495) and their three `Drafted` test cases
 (TC-586 to TC-588); five accepted test cases gain tagged tests in `evidence`
 (TC-006, TC-077, TC-242, TC-249, TC-256), a traced cell no act is owed for.
+On the coordinator's answers to section 6, three slice-1 rows gain one link
+each: LLR-012 IF-002, LLR-013 IF-003 and LLR-022 IF-016, LLR-022's `detail`
+amended to state the report it prints (section 4).
 No `dimensions` or `out_of_domain` cell (answer 4). Ids minted LLR-493 to
 LLR-495 and TC-586 to TC-588, inside the brief's ranges, then
 `trace.py --root . --bump-ids` (watermark LLR 484 -> 495, TC 571 -> 588; the
@@ -95,6 +98,26 @@ quoted as it came.
   LLR-291 (phase 5) is drifted, and the settled stage is unchanged. The commit
   hook passed; it warned that amended rows kept their `Hat-Refs`, left
   deliberately, since the rewording moved no row's perspective.
+
+- **After the coordinator's answers** (the three slice-1 links): two tests
+  of `tests/test_check_vendored.py` extended for LLR-022's report, each
+  failing against a deliberate breakage and passing restored.
+  `test_drift_warns_and_strict_fails` now asserts the drift line names the
+  copy and the summary line counts the findings, or is a FAIL line under
+  strict: it failed against the count dropped from the summary and against
+  the copy's path dropped from the drift line.
+  `test_missing_vendored_file_warns` now asserts a missing copy fails under
+  strict: it failed against a missing copy no longer counted. The modules
+  of the three rows' test cases (TC-012, TC-013, TC-022) with the four
+  ratchet and sync modules: `140 passed, 1 skipped in 107.15s (0:01:47)`.
+  `trace.py --root . --strict` at that tip: exit 1 on LLR-484's finding
+  alone (fixed on trunk at `855b4388f`, resolving at the merge), no other
+  finding: `Traceability: SN=31 SR=141 LLR=372 TC=448 orphans=0
+  integrity=0 ... interfaces=239 interface-findings=0 ac-advisories=1
+  form-findings=1 paraphrase-advisories=1`. `check_trajectory.py --root .
+  --strict`: `check_trajectory: clean (1068 work item(s), 940 done (88%), 37
+  cancelled, graph acyclic).` No shipped file changed, so the smoke tier was
+  not rerun.
 
 - `run_menu.py smoke`, once, after the build commit: exit 1, stopped at its
   first step, `trace.py --strict`, on the same LLR-484 finding, before the
@@ -169,17 +192,17 @@ clause accounting is section 4.
 
 | Interface | Channel | Constraining row | Change | Clause-to-test |
 |---|---|---|---|---|
-| IF-002 | exit-code | none (section 6) | left unreached | |
-| IF-003 | exit-code | none (section 6) | left unreached | |
+| IF-002 | exit-code | LLR-012 | link (the coordinator's answer 1) | a dead link or an absent vision tag exits 1, a clean set 0, an orphan 1 only when made strict, staleness a warning: TC-012 `test_broken_file_link_fails`, `test_missing_vision_tag_fails`, `test_clean_scaffold_passes`, `test_orphan_warns_by_default_and_fails_when_strict`, `test_staleness_prints_hint_not_warn` |
+| IF-003 | exit-code | LLR-013 | link (answer 1) | a malformed flow exits 1, a conformant document 0: TC-013 `test_missing_section_fails`, `test_diagram_without_ids_fails`, `test_unknown_id_fails`, `test_real_flow_with_known_ids_passes` |
 | IF-004, IF-147, IF-167 | stdout, exit-code, file | LLR-014 | amended `detail` | the per-budget line and summary, the exit, the report: TC-014 `tests/test_check_perf.py` tests by name (section 4) |
 | IF-005, IF-043, IF-148 | stdout, exit-code, exit-code | LLR-493 (new) | new, Drafted | the leak lines, the summary naming the layers, both layers off, the exit: TC-586 |
 | IF-006 | exit-code | LLR-016 | amended `detail` | warn-first exit 0, strict exit 1: TC-016 `test_stub_flagged_but_warn_first`, `test_strict_gates_when_stubs_present` |
 | IF-008, IF-072 | stdout, file | LLR-038 | amended `title`, `detail` | the token named, the untraced count, warn-first and strict on dangling alone, the declared-absences carve-out: TC-041 tests by name; two new tests |
 | IF-013, IF-040 | exit-code, exit-code | LLR-006 | amended `detail` | the gate run's result line and exit, the named-step lenient run: TC-006 `tests/test_check_harness.py` tests by name and two tagged `tests/test_stack_profile.py` tests |
-| IF-016 | stdout | none (section 6) | left unreached | |
+| IF-016 | stdout | LLR-022 | amended `detail` (answer 1) | the warning line naming each missing or differing copy, the OK or counting summary, strict's FAIL line and exit, an unfetchable source skipped, nothing vendored: TC-022 `tests/test_check_vendored.py` tests by name; two extended |
 | IF-020, IF-151, IF-169, IF-170 | exit-code, cli, stdout, file | LLR-040 | amended `detail` | the payload, the exits, nothing on a defer, the log line: TC-043 `tests/test_subagent_gate.py` tests by name, one assertion added |
 | IF-022 | file | LLR-007 | amended `detail` | the sections read, project steps, the built-in fallback: TC-007 `tests/test_stack_profile.py` tests by name |
-| IF-049 | file | none (section 6) | left as reached by its naming case TC-431 | |
+| IF-049 | file | none: carried to slice 3 (section 6) | reached by its naming case TC-431 | |
 | IF-068 | file | LLR-495 (new) | new, Drafted | the order of the three sources, no model refused at preflight, the absent, malformed and section-less profile and a blank value: TC-588 |
 | IF-069, IF-070 | exit-code, file | LLR-098 | amended `detail` | the census and report read, each failure exiting 1, all holding 0: TC-101 `tests/test_check_coverage.py` tests by name |
 | IF-077 | call | LLR-077 | amended `detail` | the anchor read from the link check's parse, lower case, the nearest heading, a non-Markdown target not judged: TC-077, five tagged `tests/test_trajectory.py` tests |
@@ -187,7 +210,7 @@ clause accounting is section 4.
 | IF-121 | exit-code | LLR-494 (new) | new, Drafted | exit 0 at the default severity, strict 1 on a finding, an unreadable exception line and a vacuous registry, 0 on a clean scan: TC-587 |
 | IF-134 | exit-code | LLR-019 | amended `detail` | refused on a failing floor, admitted on a passing one: TC-019 `test_hook_runs_end_to_end_when_sh_available`, `test_hook_secrets_floor_blocks_staged_key_with_privacy_off` |
 | IF-135 | exit-code | LLR-020 | link | a push publishing a secret, or an identity under the privacy dial, blocked: TC-020 `tests/test_pre_push_hook.py` (`test_secrets_floor_blocks_a_key_in_range`, `test_lint_layer_blocks_before_reviewer`) |
-| IF-144 | exit-code | none (section 6) | left unreached | |
+| IF-144 | exit-code | none: carried to slice 3 (section 6) | left unreached | |
 | IF-187, IF-188 | exit-code, call | LLR-256 | amended `detail` | the exit only on a gating measure, the complexity adapter calling the census's own parts: TC-249 tests by name; one new test, two tagged |
 | IF-197 | exit-code | LLR-247 | amended `detail` | the loop-trailer check's exit: TC-242 `tests/test_pre_commit_hook.py::test_commit_msg_hook_holds_a_loop_commit_to_its_provenance_trailer` |
 | IF-198 | exit-code | LLR-257 | amended `detail` (one sentence appended) | exit 0 whatever it reports, strict 1: TC-250 `test_the_step_lists_as_warn_only_in_the_harness_plan`, `test_a_shallow_clone_is_reported_unreadable_never_passing`, `test_a_drafted_test_case_of_a_landed_requirement_is_warned` |
@@ -224,21 +247,23 @@ pair is "without"; slice 2's own pairs in brackets):
 | call | 5 (3) | 0 | 5 |
 | cli | 6 (3) | 0 | 6 |
 | env | 2 (0) | 0 | 2 |
-| exit-code | 22 (16) | 0 | 22 |
+| exit-code | 24 (18) | 0 | 24 |
 | file | 15 (6) | 0 | 15 |
 | git | 1 (0) | 0 | 1 |
-| stdout | 7 (5) | 0 | 7 |
+| stdout | 8 (6) | 0 | 8 |
 
 No companion cells (answer 4): the counts are the evidence for the later
 strictness call.
 
-The tip's lines: `placement: 145 design row(s) placed, 227 unplaced`;
-`interface coverage: 239 interface(s): 60 through a constraining design row, 0
-through a constraining requirement, 108 through a naming test case, 0 by
-observation alone, 71 unreached`; no repeated name is reported. Against slice
-1's tip (27, 0, 118, 0, 94), the 33 interfaces this slice links moved into the
-first count: 10 of them from the naming-case count, 23 from unreached.
-<!-- fig: cmd="python project-trajectory/scripts/trace.py --root . --strict" rev="401f0b343" -->
+The tip's lines, after the coordinator's answers: `placement: 146 design
+row(s) placed, 226 unplaced`; `interface coverage: 239 interface(s): 63
+through a constraining design row, 0 through a constraining requirement, 108
+through a naming test case, 0 by observation alone, 68 unreached`; no
+repeated name is reported. Against slice 1's tip (27, 0, 118, 0, 94), the 36
+interfaces this slice links moved into the first count: 10 of them from the
+naming-case count, 26 from unreached. LLR-022, placed nowhere while it
+constrained only an external party's interface, is now placed at CMP-007.
+<!-- fig: cmd="python project-trajectory/scripts/trace.py --root . --strict" rev="b4e45d837" -->
 
 ## 4. The clause accounting (answer 1)
 
@@ -278,6 +303,46 @@ section 6.
   `test_extra_step_is_stage_scoped`; an absent profile, section or key falls
   back, `test_absent_profile_list_matches_reference_profile`,
   `test_list_reflects_a_swapped_command`.
+
+**LLR-012** (SR-158; TC-012, `tests/test_check_docs.py`; slice 1's row,
+answer 1). A link only: the recorded text (slice 1's amendment) is kept
+verbatim, every clause, and already states the behaviour across IF-002's
+exit code: "A dead intra-repository link or an absent project-vision tag
+fails, and a clean document set passes" (`test_broken_file_link_fails`,
+`test_broken_anchor_fails`, `test_missing_vision_tag_fails`, exit 1;
+`test_clean_scaffold_passes`, exit 0); "an orphaned document warns unless
+orphans are made strict" (`test_orphan_warns_by_default_and_fails_when_strict`,
+0 then 1); "the staleness mode only warns" (`test_staleness_prints_hint_not_warn`).
+Its other clauses keep slice 1's tests (slice 1's table, IF-030's line).
+
+**LLR-013** (SR-158; TC-013, `tests/test_check_flows.py`; slice 1's row,
+answer 1). A link only, the recorded text verbatim: "a malformed flow fails
+and a conformant document passes" states IF-003's exit code
+(`test_missing_section_fails`, `test_diagram_without_ids_fails`,
+`test_unknown_id_fails`, exit 1; `test_real_flow_with_known_ids_passes`,
+exit 0); "Its default input is the project's authored runtime-flows
+document" keeps `test_fresh_scaffold_template_section_passes`. IF-003's
+usage code (2) is the argument parser's and is not stated.
+
+**LLR-022** (SR-022; TC-022, `tests/test_check_vendored.py`; slice 1's
+link-only row, answer 1). The recorded text was one sentence, both of its
+clauses kept verbatim:
+1. "Compares a vendored doc copy against its recorded upstream source":
+   `test_matching_copy_is_ok`, `test_drift_warns_and_strict_fails`, and the
+   content comparison's tests (`test_the_same_content_matches_across_line_endings`,
+   `test_genuinely_different_content_still_differs`).
+2. "and reports drift": kept, the report it prints across IF-016 spelled
+   out after it.
+- Added: a warning line naming each missing or differing copy, then an OK
+  or counting summary line and exit 0, `test_matching_copy_is_ok`,
+  `test_missing_vendored_file_warns`, `test_drift_warns_and_strict_fails`
+  (extended: the line names the copy, the summary counts the finding);
+  under strict a FAIL summary and exit 1 for a differing or a missing copy,
+  `test_drift_warns_and_strict_fails`, `test_missing_vendored_file_warns`
+  (extended); an unfetchable source skipped, `test_offline_degrades_to_skip`;
+  nothing declared, exit 0, `test_no_manifest_is_a_noop`. Rule 3: SR-022
+  asks that a drifted copy be a finding and an in-sync one pass, which the
+  added report states.
 
 **LLR-014** (SR-006, SR-167; TC-014, `tests/test_check_perf.py`).
 1. "Compares measured metrics (the metrics file) to declared budgets and the
@@ -659,51 +724,71 @@ id and cell; "routed" marks the `constrains` cell, a routed traced change:
 | LLR-291 | `detail` | `constrains` IF-267 |
 
 18 design rows, 18 routed `constrains` changes, one of them on a row whose text
-did not change (LLR-020). TC-006, TC-077, TC-242, TC-249 and TC-256 gained
+did not change (LLR-020).
+
+**Rows already owed from slice 1** (sitting A's MEANING rows, to be re-sat),
+now also carrying a slice-2 routed change, so the sitting judges each whole
+change once (the coordinator's answer 1):
+
+| Row | Accepted cells amended in slice 2 | Routed traced change in slice 2 |
+|---|---|---|
+| LLR-012 | none (slice 1's `detail` amendment stays owed) | `constrains` IF-002, beside slice 1's IF-030 |
+| LLR-013 | none (slice 1's `detail` amendment stays owed) | `constrains` IF-003, beside slice 1's IF-029 |
+| LLR-022 | `detail` | `constrains` IF-016, beside slice 1's IF-036 |
+
+Three rows, three routed `constrains` changes, one accepted-cell amendment
+(LLR-022's, its first). TC-006, TC-077, TC-242, TC-249 and TC-256 gained
 tests in `evidence` (traced, not routed): no act owed.
 
 **New `Drafted` rows owed a first acceptance:** LLR-493, LLR-494, LLR-495;
 TC-586 (verifies SR-017, SR-018, LLR-493), TC-587 (SR-150, LLR-494), TC-588
 (SR-040, LLR-495). Six rows.
 
-Sitting B's total: 24 rows.
+Sitting B's total: 24 rows new to it, and the three rows above, already owed
+from slice 1, judged with their slice-2 links: 27.
 
 ## 6. For the coordinator, before slice 3
 
-1. **Five CMP-007 interfaces left unreached, a call that is yours.** The brief
-   bars touching slice 1's rows, but slice 1 did not give its rows every link
-   (the parenthetical in the brief's "Where"): four CMP-007 interfaces have
-   only a slice-1 row as their sensible constraining row, and a focused new
-   row would duplicate that row's clause (answer 2).
-   - IF-002 (the link check's exit code): LLR-012 states it ("a dead
-     intra-repository link or an absent project-vision tag fails ...; an
-     orphaned document warns unless orphans are made strict").
-   - IF-003 (the flow check's exit code): LLR-013 ("a malformed flow fails and
-     a conformant document passes").
-   - IF-016 (the vendored-copy check's output): LLR-022 ("reports drift").
-   - IF-049 (the stack profile's run section): LLR-047 states its parsing, and
-     LLR-047 is also WI-1071's to amend; IF-049 stays reached through its
-     naming case TC-431, unconstrained.
-   Each needs one routed link added to a slice-1 row (LLR-012 gaining IF-002,
-   LLR-013 IF-003, LLR-022 IF-016, LLR-047 IF-049), with whatever text the
-   link needs, in whichever lane next amends those rows (WI-1071 holds
-   LLR-047). The fifth is different:
-   - IF-144 (the severity protocol every delivered checker honours: the four
-     severities, an advisory never reaching the exit code, a strict flag the
-     only promotion, an absent optional input exiting 0): no row states it and
-     no test drives it as a protocol; only per-checker tests drive its parts.
-     Reaching it means a new row with a census test over the shipped checkers,
-     or retiring the row as a delivered property (its own notes call it one).
+1. **The five unreached interfaces, as the coordinator answered them.**
+   - IF-002, IF-003 and IF-016 are linked in this slice to slice 1's rows
+     LLR-012, LLR-013 and LLR-022, which are already owed to the next
+     sitting and no other builder touches (sections 3, 4 and 5).
+   - **IF-049 is carried to slice 3.** Its row is LLR-047, which WI-1071
+     holds and which merges first; slice 3 links IF-049 to LLR-047 as
+     WI-1071 leaves it, with whatever text the link needs. Until then IF-049
+     is reached through its naming case TC-431.
+   - **IF-144 is carried to slice 3**, nothing built for it here. Slice 3
+     measures first, then decides between a new row with a census test and
+     retiring the interface row. What it measures:
+     (a) the shipped checkers that claim the protocol: those whose output
+     or exit the harness or an adopter reads, the population IF-144's notes
+     counted at fourteen checkers and 158 per-finding emission sites;
+     (b) for each of the protocol's four parts, whether a census test over
+     those checkers can drive it on every one: a finding names its location
+     unless it is population-level (the notes found 141 of 158 sites naming
+     one, 11 population-level, 6 thin); a finding carries one of the four
+     severities, the closed set of dispositions the checkers spell with
+     twelve labels; an advisory class never reaches the exit code and a
+     declared strict flag is the only promotion; an absent optional input
+     exits 0 and names the absence (the notes found 12 of 14 checkers doing
+     so).
+     The parts whose measured exceptions stand (the thin sites, the two
+     checkers that do not exit 0 on an absent input) are the ones a census
+     test would fail on today: slice 3 names them, and whether each is a
+     defect to fix or a carve-out, before it chooses.
+
+Items 2, 4 and 5 are accepted by the coordinator as recorded.
+
 2. **Two clauses narrowed to what the code enforces, no clause cut.** LLR-016's
    "A detected stub fails the run" now says it fails the run under the
    checker's strict mode (the checker is warn-first; IF-006 and its module
    docstring say so). LLR-040's "appends each decision" now says each decision
    but a defer (the gate returns before logging a defer; IF-170 says so), with
    a test assertion added. Each is a MEANING change for the sitting to judge.
-3. **A red on the base, outside this slice.** `trace.py --root . --strict`
-   exits 1 at `ec188f984` (and at this tip) on one finding: `LLR LLR-484 Detail
-   uses 'such as' — the scope cannot be closed`. LLR-484 was accepted at the
-   eighth sitting's act (`d4554561b`); no slice-2 row carries it.
+3. **The base's red.** `trace.py --root . --strict` exits 1 on one finding,
+   `LLR LLR-484 Detail uses 'such as'`, at `ec188f984` and at this tip. It is
+   fixed on trunk at `855b4388f` and resolves at the merge (trunk not merged
+   in, as the coordinator directed). At this tip it is the only finding.
 4. **The overlap the focused rows leave.** LLR-494 states the need-form
    check's exit code beside LLR-170, which states its wiring with no strict
    promotion; LLR-247 now states the loop-trailer check's exit beside LLR-248,
