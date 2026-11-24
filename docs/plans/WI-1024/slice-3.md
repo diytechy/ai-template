@@ -8,9 +8,10 @@ slice 1's four questions (the brief, after the eighth sitting's verdict,
 [001-ADJUDICATE-fbd50be.md](../../reviews/wi-1068-adjudicate-eighth-sitting/001-ADJUDICATE-fbd50be.md)).
 It also carries the two items slice 2 handed on (IF-049 and IF-144, its
 section 6) and, in its own commit, the answer to the ninth sitting's LLR-014
-disposition (section 7). The spec stays in `docs/work/queued/` until slice 5
+disposition (section 8). The spec stays in `docs/work/queued/` until slice 5
 (D10); this file stands in for the Deliverable until then, as
-[slice-1.md](slice-1.md) and [slice-2.md](slice-2.md) do.
+[slice-1.md](slice-1.md) and [slice-2.md](slice-2.md) do. Review round 1's
+fixes are folded into the sections below and recorded in section 7.
 
 Registries and tests only: no shipped file changed, so no RESYNC entry.
 
@@ -35,20 +36,25 @@ set over the whole (section 2).
 The registry changes: 45 accepted design rows gain `constrains`, 35 of them
 with `detail` amended under rule 1 and answers 1 and 5 (every recorded clause
 kept, code names scrubbed, and the behaviour across the named interface written
-in and tested where the text did not yet state it) and 10 a link only. No
-other cell of a design row changed: no `title`, no `rationale`. Of the 45,
+in and tested where the text did not yet state it) and 10 a link only;
+review round 1 (section 7) amended one of the ten, LLR-339, so 36 amend
+`detail` and nine are links only. No `title` changed; round 1 amended one
+`rationale` (LLR-306) and added a parent to two requirements cells
+(LLR-137 gains SR-173, LLR-301 SR-229, both routed). Of the 45,
 four are rows slices 1 and 2 linked and the ninth sitting re-accepted on
 trunk (LLR-031, LLR-040, LLR-047, LLR-247), each gaining a further routed
 link (LLR-040 a sentence too). No new row and no id minted: every CMP-008
 interface whose behaviour a row could state already had a row stating it
 (answer 2), so the brief's ranges (LLR-496 to LLR-510, TC-589 to TC-605) are
-unused and there was no mint for `trace.py --bump-ids` to follow. 25 test cases gain
-tagged tests in `evidence` (traced, no act owed). No `dimensions` or
+unused and there was no mint for `trace.py --bump-ids` to follow. 25 test
+cases gain tagged tests in `evidence` (traced, no act owed), and round 1
+tagged more for TC-028, TC-046, TC-058, TC-321 and TC-369 and amended
+TC-028's `method` and `expected`. No `dimensions` or
 `out_of_domain` cell (answer 4).
 
 In its own commit, the ninth sitting's LLR-014 disposition: LLR-014's
 `detail` and TC-014's `method` and `expected` amended, three tests of
-`tests/test_check_perf.py` added and two extended (section 7).
+`tests/test_check_perf.py` added and two extended (section 8).
 
 ## 2. The tests added and run
 
@@ -153,7 +159,7 @@ ratchet and sync modules and the stage test, 94 modules, `-n 6`:
 The one failure, `tests/test_agent_loop.py::test_budget_ceiling`, was the
 session loop's own restart guard: `agent_loop: RESTART - coordinator Python
 changed after this process imported it`, exit 11 where 6 was asserted. LLR-014's
-breakage runs (section 7) edited the budget comparator for about ten seconds
+breakage runs (section 8) edited the budget comparator for about ten seconds
 each while this run was going, and the loop saw a kit file change under it. Run
 alone with the tree restored: `1 passed in 43.81s`. The parallel passes'
 own breakage windows had all closed before this run started.
@@ -303,16 +309,16 @@ sitting record and act, and the blackout reading (46 interfaces).
 
 | Interface | Channel | Constraining row | Change | Clause-to-test |
 |---|---|---|---|---|
-| IF-015 | git | LLR-028 | amended `detail` (one sentence appended) | the coordinator stops with the exit code assigned to its end state: TC-028 (module tag on `tests/test_agent_loop.py`) `test_blocked_exit` 3, `test_stall_guard_aborts_after_no_commit_sessions` 4, `test_limit_hit_backs_off_without_counting_stall` 5, `test_budget_ceiling` 6 |
+| IF-015 | git | LLR-028 | amended `detail` (one sentence appended) | the coordinator stops with the exit code assigned to its end state: TC-028 (module tag on `tests/test_agent_loop.py`) `test_blocked_exit` 3, `test_stall_guard_aborts_after_no_commit_sessions` 4, `test_limit_hit_backs_off_without_counting_stall` 5, `test_budget_ceiling` 6; the other codes' tests tagged to TC-028, whose `method` and `expected` now state every code (round 1) |
 | IF-037 | file | LLR-031 | link (routed; slice 2's row) | the privacy keys read outside and inside the policies table, one parse, an unreadable file refused: TC-031 `tests/test_process_config.py` tests by name |
 | IF-038 | file | LLR-040 | amended `detail` (slice 2's row; one sentence added) | off or none declared allows, ask asks, deny refuses, any other value asks, an unparseable configuration asks or keeps a legacy deny: TC-043 `tests/test_subagent_gate.py` tests by name |
-| IF-045, IF-162 | file, file | LLR-044 | amended `detail` | the pair rows, the enable list in preference order as the consent surface, entries and qualified entries: TC-046 `tests/test_agent_route.py` tests by name, five tagged; two `tests/test_agent_loop_env.py` tests and one `tests/test_agent_loop_review.py` test tagged |
+| IF-045, IF-162 | file, file | LLR-044 | amended `detail` | the pair rows, the enable list in preference order as the consent surface, entries and qualified entries: TC-046 `tests/test_agent_route.py` tests by name, five tagged; two `tests/test_agent_loop_env.py` tests and one `tests/test_agent_loop_review.py` test tagged; an existing unreadable enable list refused (round 1): `tests/test_accounts.py::test_an_unreadable_enable_list_is_an_error_and_an_absent_one_is_routing_off`, tagged TC-046 |
 | IF-163 | file | LLR-075 | amended `detail` | done ids in the hand-authored part warn plain and fail strict; the generated block, open and unknown ids, the opt-out and an absent page stand down: TC-075 tests by name; one new test, one tagged |
 | IF-253 | file | LLR-280 | amended `detail` | longest substring, then name order, the policy's matcher, the default core, the KIT CORE block, an unreadable chosen payload read as no core and reported once: TC-290 tests by name; two new tests |
-| IF-071, IF-085, IF-171, IF-172 | call, call, cli, stdout | LLR-058 | amended `detail` | the command's frontier, explanation and simulation as text or JSON, the worker-count refusal, the status page's frontier block drawn from the derivation and omitted without the scheduler: TC-058 (module tag) tests by name; two new tests |
+| IF-071, IF-085, IF-171, IF-172 | call, call, cli, stdout | LLR-058 | amended `detail` | the command's frontier, explanation and simulation as text or JSON, the worker-count refusal, the status page's frontier block drawn from the derivation and omitted without the scheduler: TC-058 (module tag) tests by name; two new tests; no command prints the usage and exits 2, an empty text answer says so (round 1): `test_no_command_prints_the_usage_and_an_empty_text_answer_says_so` (new) |
 | IF-093, IF-094 | call, call | LLR-056 | amended `detail` | the outcome cards and their directories from the outcome vocabulary, the refresh card's passed-checks label, the spine barrier's exclusive kinds in rank order: TC-056 `tests/test_traj_panels.py` tests by name; one tagged |
 | IF-264 | call | LLR-288 | link | each row's holding items with their titles in its readiness record: TC-301 `tests/test_open_item_readiness.py` (file level) |
-| IF-081, IF-155, IF-156, IF-168 | exit-code, cli, file, file | LLR-137 | amended `detail` | the fragment grammar and order, the all-or-nothing compile, the invocation forms and dry run, the exit and the name on the error stream: TC-130 `tests/test_trunk_step.py` tests by name (eleven tagged), four new tests |
+| IF-081, IF-155, IF-156, IF-168 | exit-code, cli, file, file | LLR-137 | amended `detail`; `sr_refs` gains SR-173 (round 1) | the fragment grammar and order, the all-or-nothing compile, the invocation forms and dry run, the exit and the name on the error stream: TC-130 `tests/test_trunk_step.py` tests by name (eleven tagged), four new tests |
 | IF-049 | file | LLR-047 | link (routed; slice 1's row, WI-1071's restored text) | the run section read into name, command and description in declaration order, no interpolation, each name's case kept, a description row attached and an orphan or empty one dropped: TC-047 `tests/test_run_menu.py::test_list_is_stable_name_tab_desc`, `::test_the_run_section_reads_values_literally_and_keeps_a_names_case`, `::test_an_orphan_description_and_an_empty_command_are_dropped` |
 
 **The integrator, verdict record, bookkeeping, trunk helpers, provenance, Done-when and hooks refusal**
@@ -322,7 +328,7 @@ sitting record and act, and the blackout reading (46 interfaces).
 | IF-080, IF-154 | exit-code, cli | LLR-140 | amended `detail` | every recorded clause kept in contract terms (TC-132 file-level, TC-205, TC-317, TC-370 by name); added: the command line's six commands, each refusing with its reason printed and a nonzero exit: `test_a_lowercase_wi_id_is_normalized_before_any_rung_runs` (claim), `test_the_refresh_cli_is_the_lane_side_entry_point`, `test_the_record_checks_cli_is_the_route_a_builder_calls`, `test_integrate_refuses_and_holds_the_trunk_when_the_checks_are_undeclared`, `test_an_edit_with_no_verdict_holds_the_dispatch_and_the_close` (extended, tagged TC-132), `test_audit_flags_a_non_merge_trunk_commit_touching_product_paths` |
 | IF-175 | call | LLR-207 | amended `detail` | every clause kept, code names scrubbed: TC-205's named tests (section below), TC-132, TC-417, TC-424 |
 | IF-186 | call | LLR-151 | amended `detail` | every recorded clause kept (TC-145, `tests/test_integrate.py` by name; the queue restriction by a new test); added: the shared bookkeeping commit's planning, isolation, drift, install and clean-up contract, `tests/test_bookkeeping.py` (TC-145) by name |
-| IF-179, IF-189 | call, call | LLR-339 | link | the declared trunk read and refused naming the declaration; a lane's integration base its merge base with the declared trunk: TC-369 `tests/test_trunk_name.py` tests, `test_default_base_keeps_the_trunk_boundary_after_a_single_checkout_resume`, `test_default_base_lets_an_undeclared_trunk_refusal_through` |
+| IF-179, IF-189 | call, call | LLR-339 | amended `detail` (round 1) | the declared trunk read and refused naming the declaration; a lane's integration base its merge base with the declared trunk: TC-369 `tests/test_trunk_name.py` tests, `test_default_base_keeps_the_trunk_boundary_after_a_single_checkout_resume`, `test_default_base_lets_an_undeclared_trunk_refusal_through`; with no merge base the checkout's own tip, with no commit none (round 1): `test_default_base_is_the_tip_without_a_merge_base_and_none_with_no_commit` (new) |
 | IF-194 | call | LLR-247 | link (routed; slice 2's row) | the trailer key, the marker, rendering, parsing (last trailer wins) and the refusal naming the subject: TC-242 `tests/test_loop_provenance.py` (file-level), `test_format_and_parse_round_trip`, `test_the_last_trailer_wins`, `test_a_missing_trailer_is_refused_naming_the_subject` |
 | IF-224 | call | LLR-259 | amended `detail` | the brief asks the shared acceptance-dial predicate per spine tier and sets apart the released chains: TC-252 `tests/test_trace_briefs.py` by name |
 | IF-242 | call | LLR-262 | amended `detail` | every clause kept, code names scrubbed; the Done-when items and the comparison: TC-259 `tests/test_done_when.py` (file-level); four existing tests tagged TC-257 for the loop's adjudication-call clause |
@@ -373,8 +379,8 @@ states one; neither restates the other (answer 2).
 | IF-271 | call | none: carried, LLR-300 the only row (section 6, item 3) | stays reached through its naming cases TC-317, TC-339 | |
 | IF-274 | cli | none: carried, LLR-300 the only row (section 6, item 3) | stays reached through TC-316, TC-317, TC-339 | |
 | IF-275 | stdout | none: carried, LLR-300 the only row (section 6, item 3) | stays reached through TC-316, TC-317, TC-339 | |
-| IF-278, IF-279, IF-280, IF-281 | env, cli, cli, exit-code | LLR-301 | amended `detail` | the launcher exporting the successor token, its root, prompt file and token arguments, the command line's dispatch and exits: TC-318 tests by name; three new tests, one assertion-free tag pair |
-| IF-283, IF-284, IF-285, IF-321 | cli, exit-code, stdout, file | LLR-306 | amended `detail` (three code names) | the lane admission, the refusals, the exclusive reservation and binding, the outcomes, the readings, the act turn: TC-321 and TC-365 tests by name; two new tests, two assertions added, four tags |
+| IF-278, IF-279, IF-280, IF-281 | env, cli, cli, exit-code | LLR-301 | amended `detail`; `sr_refs` gains SR-229 (round 1) | the launcher exporting the successor token, its root, prompt file and token arguments, the command line's dispatch and exits: TC-318 tests by name; three new tests, one assertion-free tag pair |
+| IF-283, IF-284, IF-285, IF-321 | cli, exit-code, stdout, file | LLR-306 | amended `detail` (three code names; round 1, the printed reading), `rationale` (round 1) | the lane admission, the refusals, the exclusive reservation and binding, the outcomes, the readings, the act turn: TC-321 and TC-365 tests by name; two new tests, two assertions added, four tags; the reading (round 1): `test_the_adjudicate_reading_names_the_keep_the_exit_and_the_verdict` (new) and an act-turn exit assertion |
 | IF-115, IF-287 | call, call | LLR-310 | amended `detail` (seven code names) | the combined composition, the one parser, the review-line reader, the binding and its outcome rewrite, the recorded-verdict and blessed-row readers: TC-327, TC-331, TC-368 tests by name; four new tests, three tags |
 | IF-296 | call | LLR-338 | link | the act derivation, its refusals, the brief in full or not at all, the later-act report, the retained class: TC-368 tests by name |
 | IF-291 | call | LLR-316 | amended `detail` (one code name) | the one reader, the reading at an instant, disabled forms, weekdays, the wrap: TC-335 tests by name; two new tests |
@@ -443,6 +449,7 @@ tags TC-028).
 3. "the zero-commit HEAD guard": verbatim; `test_zero_commit_repo_is_guarded`.
 4. "the stall fork whose all-ERROR verdict is an unavailable agent rather than a work stall": verbatim; `test_all_error_stall_names_an_agent_error`, `test_mixed_no_commit_and_error_stall_stays_generic`.
 - Added: "The coordinator stops with the exit code assigned to the end state it reached, so its caller reads why it stopped from the code alone": `test_blocked_exit` (3), `test_stall_guard_aborts_after_no_commit_sessions` (4), `test_limit_hit_backs_off_without_counting_stall` (5), `test_budget_ceiling` (6). The row names no code (the alphabet is IF-015's form); the other codes (2, 7, 8, 9, 11, 12) are driven in `test_agent_loop_worker.py`, `test_agent_loop_review.py`, `test_agent_loop_review_gate.py`, `test_dispatch.py` and `test_coordinator_code_drift.py`, none tagged TC-028.
+- Round 1: the other codes' tests are tagged TC-028: done, `tests/test_agent_loop_worker.py::test_worker_builds_assignment_and_exits_done`; preflight, `test_cmd_map_broken_entry_fails_preflight` (already in the module); needs operator, `tests/test_agent_loop_review.py::test_two_top_tier_failures_page_the_operator`; paused, the dispatcher's `tests/test_dispatch.py::test_a_pause_with_nothing_in_flight_exits_paused_at_once`; review owed, `tests/test_agent_loop_review.py::test_reviewer_outage_parks_review_owed_then_resume_draws_the_round`; restart, `tests/test_coordinator_code_drift.py::test_worker_rechecks_after_a_blackout_wait`; check-failure cap, `tests/test_agent_loop_review_gate.py::test_the_failure_count_survives_a_resume_to_the_cap_and_exits_12`. TC-028's `method` and `expected` now state each end state and its code (section 7).
 - Rule 3: SR-028 "shall end each session in a typed outcome code", its criterion "every declared end state returns its assigned outcome code": the added sentence is that, at the coordinator's exit.
 
 **LLR-031** (SR-031; TC-031; slice 2's row, re-accepted by the ninth sitting). Link only, the recorded text
@@ -481,6 +488,7 @@ which is IF-038's form:
 12. "Each enable-list line is one entry": verbatim, "in preference order" added; `test_enable_list_is_ordered_and_skips_comments`, `test_select_honors_preference_order_and_tier`.
 13. "selection, preference and cooldowns carry that entry rather than its bare route id, and a registry row is read only through the entry's route": verbatim; `test_selection_and_preference_return_entries`, `test_cooldowns_key_on_the_entry_not_its_route`.
 14. "An unqualified entry key is its route id; a qualified entry key is ROUTE@ACCOUNT": kept, the spelling said in words ("the route id joined to an account id by an at sign"); `test_an_unqualified_entry_is_keyed_by_its_route_id`, `test_acct2_row_cools_down_independently`.
+- Added (round 1, IF-162): "An absent enable list holds no entry, so managed selection is off; one that exists but cannot be read is refused as an error rather than read as absent": `tests/test_accounts.py::test_an_unreadable_enable_list_is_an_error_and_an_absent_one_is_routing_off` (an absent list reads as no entry, a directory in its place raises the refusal; tagged TC-046 beside TC-361).
 - Rule 3: SR-154 names the registry's pair rows and the consent surface whose presence turns managed selection on; nothing added beyond it.
 
 **LLR-056** (SR-168; TC-056, `tests/test_traj_panels.py`).
@@ -504,6 +512,7 @@ which is IF-038's form:
 4. "The ready set contains exactly the work items whose hard work-item predecessors are done and whose OI-### edges name only items present in the open-items registry and not pending": kept ("open-item edges"); `test_oi_edge_satisfied_once_ruled`, `test_absent_oi_edge_fails_closed`, `test_mixed_wi_and_oi_edges_both_gate`, `test_hard_pred_satisfied_by_done_predecessor`.
 5. "A lane stopped early leaves the frontier through its terminal partial move": verbatim; `test_partial_predecessor_is_a_dead_edge_with_its_own_reason` (the partial row is not ready).
 - Added: "The status page's generated frontier block is drawn from this derivation, in its order, and a generator that finds no scheduler renders no frontier block rather than failing": `test_a_generated_view_projects_the_frontier_and_omits_it_without_the_scheduler` (new).
+- Added (round 1, IF-171 and IF-172): "Given no command, it prints its usage and exits 2, and a text answer with nothing in it is one line saying so: that no work item is ready, that the registry is empty, or that there is nothing to schedule": `test_no_command_prints_the_usage_and_an_empty_text_answer_says_so` (new, section 7).
 - Rule 3: SR-148 asks the ordering and exclusion reasons exposed for replay and the status surface generated; the added clauses are those.
 
 **LLR-075** (SR-157; TC-075, `tests/test_trajectory.py`, `tests/test_trajectory_forward_only.py`).
@@ -532,7 +541,7 @@ which is IF-038's form:
 - Added (IF-168): "Dotfiles and the directory's own readme are not fragments and are never removed": `test_fragments_compile_in_git_order_and_are_deleted` (the marker stays), `test_the_directorys_readme_is_its_declaration_home_not_a_fragment` (tagged).
 - Added (IF-155): the compile, the regeneration or neither (both, compile first) and the dry run writing nothing: `test_the_step_runs_the_operations_it_is_asked_for_compile_first` (new), `test_dry_run_plans_both_operations_without_writing` (tagged).
 - Added (IF-081): "exits 0 when every selected operation finished or found nothing to do, and 1 on any failure, naming the offending fragment or generator on its error stream; a failed compile stops the step before the regeneration": `test_no_fragments_is_a_clean_idempotent_noop` (0), `test_uncommitted_fragment_is_a_loud_error` and `test_missing_heading_is_rejected` (1, the fragment named on the error stream), `test_the_step_runs_the_operations_it_is_asked_for_compile_first` (the step exits 1 naming the fragment, no regeneration), `test_regen_fails_loudly_on_a_broken_generator` (1, `regen FAILED at okf`; tagged TC-130 beside TC-135).
-- Rule 3: SR-170 (the shared records written only by the serial step). The added failure clauses also sit under SR-173's partial-result arm, which the compile's code already cites as its requirement while the row's `sr_refs` names SR-170 alone (section 6, item 7); nothing added exceeds either.
+- Rule 3: SR-170 (the shared records written only by the serial step) and, since round 1, SR-173 (ordered regeneration, stopping at the first failure, committing no partial set), which the added order and failure clauses decompose and the compile's code already cited; nothing added exceeds either.
 
 **LLR-280** (SR-223; TC-290, `tests/test_guardrails_payload.py`).
 1. "guardrails_core(root, model) lists the vendored core.<substring>.md payloads beside docs/guardrails/core.md": kept ("The guardrails payload reader lists the payloads a repository vendors beside its default guardrails core, each a core file named for a model-name substring"); `test_the_longest_matching_substring_selects_the_payload`.
@@ -696,7 +705,8 @@ rationale unchanged (both clean).
 
 **LLR-340** (SR-240; TC-370). One phrase: "the checkout's or primary checkout's .githooks directory" reads "the hooks directory at the top of the checkout or of the primary checkout" (a directory name scrubbed; the module defines it so). Every other word verbatim; `tests/test_commit_hooks.py::test_a_relative_githooks_is_on`, `::test_an_absolute_githooks_is_on`, `::test_a_linked_worktree_is_on_with_a_tracked_relative_githooks`, `::test_another_directory_is_not_on`, `::test_unset_hooks_path_is_not_on`, `::test_a_missing_hook_is_not_on`, `::test_a_non_executable_hook_is_not_on`, `::test_an_unanswering_git_is_not_on`; the routes, `tests/test_hooks_on_routes.py` by name. It already stated IF-297's call: none when the hooks are on, else the cause and its repair.
 
-**LLR-339** (SR-156; TC-369). Link only; the recorded text states both crossings: "an absent, non-text or empty declaration, or one that names no local branch, is refused naming the declaration by every reader that judges or writes against the trunk" (IF-179's trunk name; `tests/test_trunk_name.py::test_a_repository_with_the_key_reads_it_and_one_without_refuses`, `::test_each_undeclared_shape_is_refused_naming_the_key`, `::test_the_reader_reads_no_worktree_list_and_no_current_branch`) and "A lane's integration base is its merge base with the declared trunk, in a single checkout as in a linked worktree" with "the readability report skips each declared measure naming the declaration" (IF-189's base; `test_default_base_keeps_the_trunk_boundary_after_a_single_checkout_resume`, `test_default_base_lets_an_undeclared_trunk_refusal_through`, `test_an_undeclared_trunk_on_a_claimed_lane_skips_naming_the_declaration`). IF-179's plain git runner (code and output) and IF-189's two fallbacks (an unrelated history, an unborn checkout) are form, not stated.
+**LLR-339** (SR-156; TC-369). A link in the slice's build; in round 1 one clause added (below). The recorded text states both crossings: "an absent, non-text or empty declaration, or one that names no local branch, is refused naming the declaration by every reader that judges or writes against the trunk" (IF-179's trunk name; `tests/test_trunk_name.py::test_a_repository_with_the_key_reads_it_and_one_without_refuses`, `::test_each_undeclared_shape_is_refused_naming_the_key`, `::test_the_reader_reads_no_worktree_list_and_no_current_branch`) and "A lane's integration base is its merge base with the declared trunk, in a single checkout as in a linked worktree" with "the readability report skips each declared measure naming the declaration" (IF-189's base; `test_default_base_keeps_the_trunk_boundary_after_a_single_checkout_resume`, `test_default_base_lets_an_undeclared_trunk_refusal_through`, `test_an_undeclared_trunk_on_a_claimed_lane_skips_naming_the_declaration`). IF-179's plain git runner (code and output) and IF-189's two fallbacks (an unrelated history, an unborn checkout) are form, not stated.
+- Added (round 1, IF-189's fallbacks): "with no merge base, as on a history sharing no commit with the trunk, it is the checkout's own tip, and a checkout with no commit has none": `tests/test_agent_loop_review.py::test_default_base_is_the_tip_without_a_merge_base_and_none_with_no_commit` (new, tagged TC-369). Read in the code: the tip is named by its abbreviated id, the merge base by a full one (section 6, item 16). Rule 3: SR-156's one trunk boundary; nothing beyond it.
 
 **LLR-247** (SR-209; TC-242; slice 2's row, re-accepted by the ninth sitting). Link only, a routed change; the recorded text states IF-194's vocabulary: the trailer key and the marker ("declares the commit-message trailer Loop-Session and the loop marker"), rendering ("rendered as one trailer line"), parsing ("returns its last trailer's session or none"), the refusal ("names the commit's subject when the trailer is missing, malformed, or names another session") and the marking ("set the marker in their own process environment once per run"); TC-242 `tests/test_loop_provenance.py` (file-level), `test_format_and_parse_round_trip`, `test_the_last_trailer_wins`, `test_a_missing_trailer_is_refused_naming_the_subject`, `test_a_child_the_dispatcher_starts_sees_the_marker`. The lane window and loop-writer commit IF-194 also carries are stated by LLR-248 (not touched).
 
@@ -1325,7 +1335,10 @@ Title and rationale unchanged (clean).
 - Rule 3: SR-230's request, acquisition, launch and blackout cancellation are
   what clauses 1 to 7 decompose; "starting nothing when it refuses"
   decomposes SR-230's "Inside the window, no relaunch is requested or
-  launched". The exit sentence is the judgement call: section 6, item 7.
+  launched". Round 1: the exit sentence's lease take, release, clear and
+  status operations serve SR-229, which the requirements cell now names
+  beside SR-230 (section 7); no row under SR-229 this slice may touch states
+  those operations (LLR-300 is WI-1071's, LLR-423 states the caller alone).
 
 **LLR-306** (SR-227, SR-231, SR-209; TC-321, TC-365;
 `tests/test_coordinator_adjudicate.py`, `tests/test_coordinator_act.py`,
@@ -1390,8 +1403,12 @@ Title and rationale unchanged (clean).
     drove it (this module's fixture stubs the commit),
     `tests/test_done_when_blessing.py::test_the_entry_point_commits_its_recorded_binding_in_its_own_telemetry_commit`
     added.
-11. "and prints the IF-285 reading": verbatim;
-    `test_a_missing_or_malformed_verdict_is_reported_and_fails`,
+11. "and prints the IF-285 reading": restated in round 1 as the reading it
+    prints: the call's retention (a fresh session, a retained session minted
+    or one resumed) and its exit, then, for a successful call, the verdict
+    with its validity or that it wrote none, and, for a failed call, that its
+    verdict is not read; `test_the_adjudicate_reading_names_the_keep_the_exit_and_the_verdict`
+    (new), with `test_a_missing_or_malformed_verdict_is_reported_and_fails`,
     `test_two_calls_naming_one_verdict_path_never_share_its_verdict`,
     `test_a_failed_call_reusing_a_verdict_path_does_not_return_success`.
 12. "A non-zero exit, timeout or reported error result returns the
@@ -1437,8 +1454,23 @@ Title and rationale unchanged (clean).
     above apply to the judging turn; the act turn instead uses the later
     completion conditions stated here": verbatim (the scope of 4 to 14 and 18
     to 21); `::test_the_act_turn_writes_no_binding_and_reserves_no_path`.
-- Rationale unchanged (no code name). Its "IF-283, IF-284 and IF-285 each own
-  the command contract they expose" now has the `constrains` cell beside it.
+- Added (round 1): the act turn "prints the call's retention and exit, then
+  the acts still owed after the call and the review records the call
+  changed, or that the act is complete";
+  `tests/test_coordinator_act.py::test_a_retained_and_a_fresh_act_turn_take_the_same_act_from_one_verdict`
+  (a fresh session and a minted one, the exit, asserted in round 1, and
+  completion), `::test_an_act_turn_resumes_the_session_its_sitting_keyed_under_the_entrys_account`
+  (a resumed one), `::test_the_act_turn_reports_success_only_when_no_listed_act_is_left`
+  and `::test_an_act_turn_that_leaves_a_waiting_flip_owes_it_and_does_not_read_complete`
+  (the acts still owed), `::test_an_act_turn_that_writes_under_docs_reviews_does_not_succeed`
+  (the changed review records).
+- Rationale (round 1): its sentence "IF-283, IF-284 and IF-285 each own the
+  command contract they expose; copying those contracts here was rejected
+  because two homes for the same route or exit condition would drift" now
+  reads "The command's interfaces state its form, its default route and its
+  exit codes, and this row states the behaviour a caller observes across
+  them: the refusals, the recorded outcome and the reading it prints", which
+  is what the `constrains` cell beside it asserts. The rest is unchanged.
 - Rule 3: no meaning moved; SR-231's lane admission, exclusive reservation,
   in-deadline success and act-turn conditions, SR-227's sign-in and SR-209's
   provenance are what the clauses decompose.
@@ -1636,7 +1668,7 @@ Amended accepted rows keep `Accepted` and show as drift; "routed" marks the
 | LLR-056 | `detail` | `constrains` IF-093, IF-094 |
 | LLR-058 | `detail` | `constrains` IF-071, IF-085, IF-171, IF-172 |
 | LLR-075 | `detail` | `constrains` IF-163 |
-| LLR-137 | `detail` | `constrains` IF-081, IF-155, IF-156, IF-168 |
+| LLR-137 | `detail` | `constrains` IF-081, IF-155, IF-156, IF-168; `sr_refs` gains SR-173 (round 1) |
 | LLR-280 | `detail` | `constrains` IF-253 |
 | LLR-288 | none | `constrains` IF-264 |
 | LLR-140 | `detail` | `constrains` IF-080, IF-154 |
@@ -1646,14 +1678,16 @@ Amended accepted rows keep `Accepted` and show as drift; "routed" marks the
 | LLR-259 | `detail` | `constrains` IF-224 |
 | LLR-262 | `detail` | `constrains` IF-242 |
 | LLR-307 | `detail` | `constrains` IF-286, IF-326 |
-| LLR-339 | none | `constrains` IF-179, IF-189 |
+| LLR-339 | `detail` (round 1) | `constrains` IF-179, IF-189 |
 | LLR-340 | `detail` (one phrase) | `constrains` IF-297 |
 | LLR-014 | `detail` | none (its slice-2 `constrains` IF-004, IF-147, IF-167 stays owed with it) |
 | TC-014 | `method`, `expected` | none |
+| TC-028 | `method`, `expected` (round 1) | none (its `evidence` gains the other codes' tests, traced) |
 
-22 rows: 21 design rows (20 with a routed `constrains` change, 16 with `detail`
-amended, five link only) and one test case. LLR-014 is the ninth sitting's
-MEANING row, owed until its answer (section 7) is judged; TC-014 is amended
+23 rows: 21 design rows (20 with a routed `constrains` change, one with a
+routed `sr_refs` change, 17 with `detail` amended, four link only) and two
+test cases. LLR-014 is the ninth sitting's
+MEANING row, owed until its answer (section 8) is judged; TC-014 is amended
 with it.
 
 **Sitting C2**
@@ -1680,19 +1714,20 @@ with it.
 | LLR-290 | `detail` | `constrains` IF-247, IF-248, IF-266 |
 | LLR-269 | `detail` | `constrains` IF-246 |
 | LLR-305 | `detail` | `constrains` IF-282 |
-| LLR-301 | `detail` | `constrains` IF-278, IF-279, IF-280, IF-281 |
-| LLR-306 | `detail` | `constrains` IF-283, IF-284, IF-285, IF-321 |
+| LLR-301 | `detail` | `constrains` IF-278, IF-279, IF-280, IF-281; `sr_refs` gains SR-229 (round 1) |
+| LLR-306 | `detail`, `rationale` (round 1) | `constrains` IF-283, IF-284, IF-285, IF-321 |
 | LLR-310 | `detail` | `constrains` IF-115, IF-287 |
 | LLR-316 | `detail` | `constrains` IF-291 |
 | LLR-338 | none | `constrains` IF-296 |
 
-25 design rows, 25 routed `constrains` changes, 20 with `detail` amended,
-five link only.
+25 design rows, 25 routed `constrains` changes and one routed `sr_refs`
+change, 20 with `detail` amended (LLR-306 its `rationale` too), five link
+only.
 
 **No new `Drafted` row** is owed a first acceptance. The 25 test cases whose
 `evidence` gained tests (section 2) changed a traced cell only: no act owed.
 
-Both sittings' total: 47 rows (46 design rows and one test case), each new to
+Both sittings' total: 48 rows (46 design rows and two test cases), each new to
 its sitting.
 
 ## 6. For the coordinator, before slice 4
@@ -1769,6 +1804,8 @@ its sitting.
      of which (part 4) has already drifted in the complexity census. The two
      complexity-census defects would be the census test's red, fixed in the
      same row. Not built; the coordinator's call.
+   - **The coordinator's answer (review round 1):** IF-144 becomes WI-1075,
+     filed on trunk at `e12781779`. Nothing is built for it here.
 3. **Carried, LLR-300 the only row: IF-271, IF-274, IF-275** (the claim
    refusal call, the hook event read from standard input, the hook's JSON
    answer). Every behaviour across them is LLR-300's (the claim refusal's
@@ -1783,6 +1820,9 @@ its sitting.
    For LLR-300's next amendment: no row states IF-274's "input that does not
    parse is reported on standard error and answered with nothing" (driven by
    `tests/test_coordinator_guard_e2e.py::test_the_hook_cli_reads_stdin_and_prints_its_output`).
+   **The coordinator's answer (review round 1):** the three stay reached
+   through their naming test cases, and IF-274's unstated parse failure goes
+   to LLR-300's next amendment.
 4. **Carried, LLR-270 the only row: IF-272, IF-273** (the primary checkout's
    output directory, the keep store's directory lock and its busy refusal).
    LLR-270 resolves the directory from the git common directory and names the
@@ -1796,6 +1836,9 @@ its sitting.
    IF-247, IF-248, IF-272 and IF-273 there; or (b) leave the two reached
    through their naming cases (TC-317; TC-267, TC-317) until LLR-270's next
    amendment. Under (a), IF-247 and IF-248 move from LLR-290 (item 5).
+   **The coordinator's answer (review round 1):** option (b). IF-272 and
+   IF-273 stay reached through their naming cases until LLR-270's next
+   amendment, and IF-247 and IF-248 stay on LLR-290.
 5. **IF-247 and IF-248 rest on LLR-290, a partial statement.** LLR-290 states
    the compaction flag, source, cursor and baseline the retained record
    carries and the bookkeeping that folds them; the record's name, identity,
@@ -1826,7 +1869,9 @@ its sitting.
      obligations. LLR-140's added exit clause states the refusal side only:
      an integrate run that merged a branch it could not unload exits 1 while
      refusing nothing, and no test drives that.
-7. **Rule-3 judgement calls a sitting may raise.**
+7. **Rule-3 judgement calls a sitting may raise.** Round 1 resolved the
+   first two (section 7): LLR-301's requirements cell now names SR-229
+   beside SR-230, and LLR-137's names SR-173 beside SR-170.
    - LLR-301's added exit sentence gives the lease take, release, clear and
      status operations' exits, which serve SR-229, beside LLR-301's parent
      SR-230. TC-318, accepted and verifying SR-230 and LLR-301, already
@@ -1879,12 +1924,13 @@ its sitting.
     checkers (item 2).
 12. **Parts of a form no row states, left to the form** (none is a row clause
     today; each would need a test before a row could say it): IF-162's draw
-    weights and "an existing unreadable file is an error"; IF-171's "no
-    write, no spawn, no git" and its no-subcommand exit 2; IF-172's sorted
-    JSON keys and empty-answer sentences; IF-179's plain git runner; IF-189's
-    two fallbacks (an unrelated history, an unborn checkout); IF-266's empty
-    answer for other runners; IF-296's held-text identity refusal (LLR-359's,
-    untouched); IF-043's third code, as slice 2 left it.
+    weights; IF-171's "no write, no spawn, no git"; IF-172's sorted JSON
+    keys; IF-179's plain git runner; IF-266's empty answer for other
+    runners; IF-296's held-text identity refusal (LLR-359's, untouched);
+    IF-043's third code, as slice 2 left it. Round 1 wrote four that the
+    first build had listed here into their rows, each with its test: IF-162's
+    unreadable enable list (LLR-044), IF-171's no-command exit 2 and IF-172's
+    empty-answer sentences (LLR-058), and IF-189's two fallbacks (LLR-339).
 13. **Shared test modules.** `tests/test_done_when_blessing.py` carries tags
     for TC-132, TC-257 (the integrator's surface) and TC-321, TC-327 (the
     coordinator's), one docstring line holding both surfaces' tags;
@@ -1898,8 +1944,111 @@ its sitting.
     open, which passed on rerun. The module run in section 2 ran after every
     window had closed, over the integrated tree.
 15. **Ids:** none minted; the brief's ranges are untouched.
+16. **Found in round 1, not fixed here (a design smell, surfaced):** the
+    lane's integration base names the tip by its abbreviated id when there is
+    no merge base, and by a full id otherwise (the merge-base answer is the
+    full id git prints, the fallback the short tip id). A caller that hands
+    the base to git as a revision is unaffected; one comparing bases as text
+    would see two spellings of one kind of value. Readers not audited here.
+    LLR-339 states the tip without naming the spelling.
 
-## 7. The ninth sitting's LLR-014 disposition, answered
+## 7. Review record
+
+**Round 1**, in five sessions: Gemini Hydrogen `APPROVE findings=0` on C1 and
+on C2; OpenAI Sol, the code half over C1 and C2, seven distinct MINORs, all
+adopted by the coordinator and fixed in one commit, `42d9c8bac`, every
+recorded clause kept and the three row rules held:
+
+1. **LLR-137's parent.** Its compile-first and stop-on-failure clauses sit
+   under SR-173 (ordered regeneration, stopping at the first failure,
+   committing no partial set), which its code already cited, while its
+   requirements cell named SR-170 alone. The cell now names SR-170 and
+   SR-173, a routed change. SR-173 is Accepted, so parent-first holds
+   (`trace.py --strict`: `integrity=0`).
+2. **LLR-301's parent.** Its added exit sentence covers the lease take,
+   release, clear and status operations, which serve SR-229, beyond SR-230's
+   successor relaunch. SR-229 is added to its requirements cell (routed),
+   rather than the sentence moved: the rows under SR-229 are LLR-300, which
+   states those operations but is WI-1071's and this slice may not touch, and
+   LLR-423, which states the caller identification alone. SR-229 is Accepted.
+3. **LLR-044 and IF-162's unreadable file.** The row now states "An absent
+   enable list holds no entry, so managed selection is off; one that exists
+   but cannot be read is refused as an error rather than read as absent".
+   The test that drives it exists,
+   `tests/test_accounts.py::test_an_unreadable_enable_list_is_an_error_and_an_absent_one_is_routing_off`
+   (TC-361's), now tagged TC-046 beside it.
+4. **LLR-339 and IF-189's fallbacks.** The row now states "with no merge
+   base, as on a history sharing no commit with the trunk, it is the
+   checkout's own tip, and a checkout with no commit has none". No test drove
+   either: `tests/test_agent_loop_review.py::test_default_base_is_the_tip_without_a_merge_base_and_none_with_no_commit`
+   (tagged TC-369) is added. Writing it found that the fallback names the tip
+   by its abbreviated id (section 6, item 16); the test resolves both ids.
+5. **LLR-058 and the scheduler's command line.** The row now states "Given
+   no command, it prints its usage and exits 2, and a text answer with
+   nothing in it is one line saying so: that no work item is ready, that the
+   registry is empty, or that there is nothing to schedule".
+   `tests/test_schedule.py::test_no_command_prints_the_usage_and_an_empty_text_answer_says_so`
+   (tagged TC-058) is added. IF-172's sorted JSON keys and IF-171's "no write,
+   no spawn, no git" stay form (section 6, item 12).
+6. **TC-028 and the exit codes.** The tests driving the codes outside its
+   module are tagged TC-028 (done, needs operator, paused through the
+   dispatcher, review owed, restart, check-failure cap; preflight sits in its
+   module already), and its `method` and `expected` now state each end state
+   and its code: an accepted-cell amendment, owed to C1. Its recorded content
+   is kept: the zero-commit guard, the all-ERROR region read as an
+   unavailable agent, and its satisfying SR-028's acceptance criteria; "the
+   agent-loop suite" (a module's name) is scrubbed.
+7. **LLR-306 and IF-285.** "and prints the IF-285 reading" named an
+   interface rather than stating the behaviour. The row now states the
+   judging turn's reading (the call's retention, a fresh session, a retained
+   session minted or one resumed, and its exit, then, for a successful call,
+   the verdict with its validity or that it wrote none, and, for a failed
+   call, that its verdict is not read) and the act turn's (its retention and
+   exit, then the acts still owed and the review records changed, or that
+   the act is complete). Its rationale's sentence giving the interfaces the
+   command contract now says the interfaces state the form, the default route
+   and the exit codes, and the row the behaviour a caller observes across
+   them. `tests/test_coordinator_adjudicate.py::test_the_adjudicate_reading_names_the_keep_the_exit_and_the_verdict`
+   (tagged TC-321) is added, and the act turn's exit line is asserted in
+   `tests/test_coordinator_act.py::test_a_retained_and_a_fresh_act_turn_take_the_same_act_from_one_verdict`.
+
+**Breakage runs.** Each new test or assertion failed against a deliberate
+breakage of the code and passed restored, by a scratch runner outside the
+repository (byte-exact replace, one test by node id, restore in the same
+process, `git status` clean after each):
+
+| Breakage | Test that caught it | Failing assertion (`1 failed` each) |
+|---|---|---|
+| no merge base read as none | the base fallback test | `TypeError: expected str, bytes or os.PathLike object, not NoneType`, `1 failed in 1.84s` |
+| a checkout with no commit falling back to the trunk's name | the same | `AssertionError: assert 'main' is None`, `1 failed in 1.13s` |
+| no command exiting 0 | the scheduler test | `AssertionError: assert 0 == 2`, `1 failed in 0.22s` |
+| an empty frontier printing an empty line | the same | `assert [''] == ['schedule: n...y work items']`, `1 failed in 0.48s` |
+| an empty simulation printing an empty line | the same | `assert [''] == ['schedule: n... to schedule']`, `1 failed in 0.35s` |
+| the judging turn's retention line dropped | the adjudicate reading test | `assert 'keep: minting a retained session' in [...]`, `1 failed in 3.19s` |
+| its exit line dropped | the same | `assert 'adjudicate: exit 0' in [...]`, `1 failed in 3.12s` |
+| the failed call's line dropped | the same | `assert 'adjudicate: the call failed; its verdict is not read' in [...]`, `1 failed in 2.55s` |
+| the missing verdict's line dropped | the same | the missing line absent from the output, `1 failed in 3.19s` |
+| the act turn's exit line dropped | the act turn test | `assert 'act: exit 0' in 'keep: minting a retained session\nact: complete\n'`, `1 failed in 18.11s` |
+
+The first pass of the two scheduler cases ran over stale bytecode (each
+breakage left the module the same size within the same second, so the
+interpreter kept the first's compiled copy); both reran with the bytecode
+cleared, and those are the lines above.
+
+**Round 1's tests:** the modules holding the tests of every test case
+verifying the seven rows, with every test module the fix touched, the four
+ratchet and sync modules and the stage test, 31 modules, `-n 6`, with a
+short `--basetemp` outside the repository: `1480 passed, 17 skipped in 1598.86s
+(0:26:38)`. `trace.py --root . --strict`: exit 0, `Traceability: SN=31
+SR=141 LLR=372 TC=448 orphans=0 integrity=0 ... interfaces=239
+interface-findings=0 ac-advisories=1 paraphrase-advisories=1`, the same
+advisories as the build's tip, the coverage and placement lines unchanged
+(135, 0, 51, 0, 53; 152 placed). `check_trajectory.py --root . --strict`:
+`check_trajectory: clean (1070 work item(s), 941 done (88%), 37 cancelled,
+graph acyclic).` The views and the `evidence` cells were regenerated before
+the fix commit, which the hook passed.
+
+## 8. The ninth sitting's LLR-014 disposition, answered
 
 The ninth sitting (WI-1074,
 `docs/reviews/wi-1074-adjudicate-ninth-sitting/001-ADJUDICATE-ee3f528.md`, on
