@@ -5,8 +5,18 @@ current spellings only (the operator's ruling: no compatibility readers). A
 repository that stores an earlier spelling runs `migrate_vocabulary.py` once at
 its re-sync. These tests hold what that run may touch: a whole value in a known
 place, with every other byte kept, checked by parsing the file again.
+
+Once the acceptance record holds a row-by-row act (an act-ledger entry
+carrying `kept`), the record is judged at the row, so the migrator writes no
+copy into a record in the current vocabulary and refuses the whole run while
+the record still stores an earlier spelling (WI-1065). The cases that build
+such a record in a real git repository, through the snapshot writer, live in
+`test_migrate_vocabulary_record.py`.
 """
 
+import ast
+import pathlib
+import sys
 import tomllib
 
 import pytest
@@ -14,6 +24,7 @@ import pytest
 from conftest import SCRIPTS, load_script, run_py
 
 migrate = load_script("migrate_vocabulary")
+record_rows = load_script("record_rows")
 
 BINDING = "brief = amendment\nkinds = amendment\noutcome = {}\nrows = SR-001=sha256:0123456789abcdef\n"
 
@@ -812,6 +823,9 @@ note = "Approved"
 
 [requirement.SR-003]
 status = "Drafted"
+
+[requirement.SR-004]
+status = "APPROVED"
 """
 
 STATUS_CSV = (
@@ -826,10 +840,13 @@ def test_a_rows_earlier_status_is_respelled_in_both_carriers(tmp_path):
     toml = _write(tmp_path, "docs/requirements/system-requirements.toml", STATUS_TOML)
     csv_ = _write(tmp_path, "docs/test/test-cases.csv", STATUS_CSV)
     assert _run(tmp_path) == 0
-    # Only the status cell moves: the word in a title or another key stays.
+    # Only the status cell moves, in each letter case a reader folds: the word
+    # in a title or another key stays.
     assert toml.read_bytes() == STATUS_TOML.replace(
         'status = "Approved"', 'status = "Accepted"'
-    ).replace("status = 'approved'", "status = 'accepted'").encode("utf-8")
+    ).replace("status = 'approved'", "status = 'accepted'").replace(
+        'status = "APPROVED"', 'status = "ACCEPTED"'
+    ).encode("utf-8")
     assert csv_.read_bytes() == STATUS_CSV.replace(
         'in prose",Approved', 'in prose",Accepted'
     ).encode("utf-8")
@@ -942,6 +959,22 @@ def test_a_ledger_the_line_edit_cannot_prove_leaves_the_record_untouched(
     assert not (tmp_path / migrate.RECORD_DIRS[1]).exists()
 
 
+def test_a_record_copy_whose_live_registry_is_gone_is_named_and_left(tmp_path, capsys):
+    """Implements: TC-427"""
+    _record(tmp_path)
+    orphan = '[test.TC-001]\nmethod = "Run it."\nstatus = "Accepted"\n'
+    _write(tmp_path, migrate.RECORD_DIRS[0] + "/docs/test/test-cases.toml", orphan)
+    assert _run(tmp_path) == 1
+    where = migrate.RECORD_DIRS[1] + "/docs/test/test-cases.toml"
+    assert (
+        "{}: no live docs/test/test-cases.toml to write it from; left untouched".format(
+            where
+        )
+        in capsys.readouterr().out
+    )
+    assert (tmp_path / where).read_bytes() == orphan.encode("utf-8")
+
+
 def _current(text):
     """`text` with the earlier spellings this module's fixtures hold respelled."""
     return (
@@ -1013,6 +1046,230 @@ def test_check_vocab_reports_what_the_migrator_owes_until_it_has_run(tmp_path):
     assert "nothing stored in an earlier spelling" in clean.stdout
 
 
+# --- a record that holds a row-by-row act ----------------------------------------
+
+# An act ledger the row-by-row writer wrote: every entry carries `kept`, the
+# seed's empty, a later act's naming the row it left owed.
+KEPT_LEDGER = """# ACCEPTANCE ACTS, appended by the snapshot command. Do not edit.
+
+[[act]]
+seq = 1
+date = "2026-11-23"
+accepted = ["SR-001", "SR-009"]
+reaccepted = []
+copied = ["docs/requirements/system-requirements.toml"]
+kept = []
+
+[[act]]
+seq = 2
+date = "2026-11-23"
+accepted = []
+reaccepted = []
+copied = ["docs/requirements/system-requirements.toml"]
+kept = ["SR-001", "SR-009"]
+"""
+
+# An entry the earlier kit keyed by its earlier names.
+EARLIER_ENTRY = """
+[[act]]
+seq = 3
+date = "2026-09-27"
+approved = ["SR-001"]
+reattested = []
+"""
+
+COPY_REL = "docs/requirements/system-requirements.toml"
+# The guidance a refusal carries.
+FIRST_ACT = "before its first row-by-row act"
+
+
+def _row_by_row(root, ledger=KEPT_LEDGER, copy=None, home=None):
+    """A repository whose acceptance record, under `home` (the current name by
+    default), holds `ledger` and a copy of one registry (`copy`, by default the
+    current spelling of a copy that differs from live in an accepted row, a
+    draft row and an accepted row live no longer holds). Live is current."""
+    home = home or migrate.RECORD_DIRS[1]
+    _write(root, COPY_REL, _current(LIVE_SR))
+    _write(root, home + "/README.md", "# `last_accepted` - the record\n")
+    _write(root, home + "/acts.toml", ledger)
+    _write(root, home + "/" + COPY_REL, _current(COPY_SR) if copy is None else copy)
+
+
+def _tree_bytes(root):
+    """`{repo-relative path: bytes}` of every file under `root`."""
+    return {
+        p.relative_to(root).as_posix(): p.read_bytes()
+        for p in sorted(root.rglob("*"))
+        if p.is_file()
+    }
+
+
+def test_a_row_by_row_record_in_the_current_vocabulary_has_no_copy_written(
+    tmp_path, capsys
+):
+    """Implements: TC-427"""
+    _row_by_row(tmp_path)
+    binding = _write(
+        tmp_path,
+        "docs/reviews/wi-1/001-ADJUDICATE-a.md.requested",
+        BINDING.format("accepted"),
+    )
+    record = tmp_path / migrate.RECORD_DIRS[1]
+    before = _tree_bytes(record)
+    assert _run(tmp_path, "--check") == 1
+    out = capsys.readouterr().out
+    assert "verdict binding owes the rewrite: docs/reviews/wi-1/" in out, out
+    # Neither the kept row's drift nor the draft's is owed, and nothing absorbs.
+    assert "acceptance record" not in out, out
+    assert _run(tmp_path) == 0
+    capsys.readouterr()
+    assert binding.read_text(encoding="utf-8") == BINDING.format("recorded")
+    assert _tree_bytes(record) == before
+    assert _run(tmp_path, "--check") == 0
+    assert "nothing stored in an earlier spelling" in capsys.readouterr().out
+    assert migrate.spellings_owed(tmp_path) == []
+
+
+# Act ledgers, each read by the kit as row by row or not: no entry; an entry
+# without `kept`; `kept` outside an act entry, at the top and in another
+# table array; an empty and a non-empty `kept`; a byte-order mark the kit's
+# reader does not strip; and a ledger that does not parse.
+_PLAIN_ENTRY = '\n[[act]]\nseq = 1\ndate = "2026-11-23"\naccepted = ["SR-001"]\n'
+LEDGER_READINGS = (
+    "",
+    _PLAIN_ENTRY,
+    "kept = []\n" + _PLAIN_ENTRY,
+    _PLAIN_ENTRY + "\n[[other]]\nkept = []\n",
+    _PLAIN_ENTRY + "kept = []\n",
+    KEPT_LEDGER,
+    "﻿" + KEPT_LEDGER,
+    KEPT_LEDGER + "\n[[act\n",
+)
+
+
+def test_the_record_is_read_as_row_by_row_as_the_kit_reads_its_ledger(tmp_path):
+    """The migrator's reading of the act ledger is its own (it imports nothing
+    from the kit), so it is held to the kit's: over each ledger, a copy holding
+    an earlier spelling is left as it is (the run refuses) exactly when the
+    kit's reading calls the record row by row, and rewritten otherwise.
+
+    Implements: TC-427
+    """
+    readings = []
+    for i, ledger in enumerate(LEDGER_READINGS):
+        root = tmp_path / str(i)
+        _row_by_row(root, ledger, copy=COPY_SR)
+        copy = root / migrate.RECORD_DIRS[1] / COPY_REL
+        _run(root)
+        kit = record_rows.act_rows([ledger], ledger, lambda new, sides: [])[1]
+        readings.append((i, kit, copy.read_bytes() == COPY_SR.encode("utf-8")))
+    assert [kit for _i, kit, _left in readings] == [
+        False,
+        False,
+        False,
+        False,
+        True,
+        True,
+        False,
+        False,
+    ]
+    assert all(kit == left for _i, kit, left in readings), readings
+
+
+# Each way a record that holds a row-by-row act can still store an earlier
+# spelling, and the path its refusal names.
+EARLIER_RECORDS = {
+    "earlier-directory-holding-the-ledger": (
+        lambda root: _row_by_row(root, home=migrate.RECORD_DIRS[0]),
+        migrate.RECORD_DIRS[0] + ": the record's earlier directory name",
+    ),
+    "earlier-directory-beside-the-record": (
+        # The earlier kit's record left standing beside the current one.
+        lambda root: (_record(root), _row_by_row(root)),
+        migrate.RECORD_DIRS[0] + ": the record's earlier directory name",
+    ),
+    "earlier-ledger-key": (
+        lambda root: _row_by_row(root, KEPT_LEDGER + EARLIER_ENTRY),
+        migrate.RECORD_DIRS[1] + "/acts.toml: act entries keyed approved, reattested",
+    ),
+    "earlier-status-in-a-copy": (
+        lambda root: _row_by_row(root, copy=COPY_SR),
+        migrate.RECORD_DIRS[1]
+        + "/"
+        + COPY_REL
+        + ": a copy storing an earlier spelling",
+    ),
+    "earlier-field-in-a-copy": (
+        lambda root: _row_by_row(
+            root,
+            copy=_current(COPY_SR).replace(
+                '\nstatus = "Drafted"', '\nverification = "Test"\nstatus = "Drafted"'
+            ),
+        ),
+        migrate.RECORD_DIRS[1]
+        + "/"
+        + COPY_REL
+        + ": a copy storing an earlier spelling",
+    ),
+    "copy-that-does-not-parse": (
+        lambda root: _row_by_row(root, copy="[requirement.SR-001\n"),
+        migrate.RECORD_DIRS[1] + "/" + COPY_REL + ": it does not parse",
+    ),
+}
+
+
+@pytest.mark.parametrize("case", sorted(EARLIER_RECORDS))
+def test_a_row_by_row_record_storing_an_earlier_spelling_refuses_the_whole_run(
+    tmp_path, capsys, case
+):
+    """Implements: TC-427"""
+    build, named = EARLIER_RECORDS[case]
+    build(tmp_path)
+    # Beside it, a binding and a live registry in an earlier spelling, which a
+    # run that went ahead would rewrite.
+    _write(tmp_path, "docs/reviews/x.md.requested", BINDING.format("accepted"))
+    _write(
+        tmp_path, "docs/test/test-cases.toml", '[test.TC-001]\nstatus = "Approved"\n'
+    )
+    before = _tree_bytes(tmp_path)
+    for flags in (("--check",), ()):
+        assert _run(tmp_path, *flags) == 1
+        out = capsys.readouterr().out
+        lines = out.splitlines()
+        assert all(
+            line.startswith("migrate_vocabulary: acceptance record NOT rewritten: ")
+            for line in lines
+        ), out
+        assert any(named in line for line in lines), out
+        assert "nothing is written" in out and FIRST_ACT in out, out
+        assert _tree_bytes(tmp_path) == before
+    owed = migrate.spellings_owed(tmp_path)
+    assert owed == [
+        line.replace(
+            "migrate_vocabulary: acceptance record NOT rewritten: ",
+            "acceptance record cannot be rewritten: ",
+        )
+        for line in lines
+    ], owed
+
+
+def test_check_vocab_reports_the_refusal(tmp_path):
+    """Implements: TC-427"""
+    _row_by_row(tmp_path, copy=COPY_SR)
+    warn = _check_vocab(tmp_path)
+    assert warn.returncode == 0, warn.stdout + warn.stderr
+    assert (
+        "check_vocab: WARN - acceptance record cannot be rewritten: {}/{}: ".format(
+            migrate.RECORD_DIRS[1], COPY_REL
+        )
+        in warn.stdout
+    ), warn.stdout
+    assert FIRST_ACT in warn.stdout, warn.stdout
+    assert "registry owes the rewrite" not in warn.stdout, warn.stdout
+    strict = _check_vocab(tmp_path, "--strict")
+    assert strict.returncode == 1, strict.stdout + strict.stderr
+
+
 # A page linking into the record by its earlier directory, inline and by a
 # reference definition, beside the name in a label, in prose, in a code span
 # and inside a longer path segment, none of which is a link target.
@@ -1025,19 +1282,101 @@ LINKED = (
 )
 
 
+# Links into the record written inside code, which keep their words: inline
+# spans of one and of two backticks (the second holding a backtick), a fenced
+# block of backticks holding a link and a reference definition, one of tildes,
+# and a run of three backticks with more on its line, which opens an inline
+# span and not a fence. Beside them, a stray backtick no run closes in its
+# paragraph, and one link in prose, which moves. Then the backslash: a
+# backtick escaped where a span would open is literal, so the link between
+# two escaped ones moves; an escaped backslash leaves the backtick after it a
+# span; and a span's closing run reads no escape, so the link after it moves.
+CODED = (
+    "Write `[the ledger](docs/archive/last_approved/acts.toml)` to link it,\n"
+    "or ``[a `tick`](last_approved/acts.toml)`` with a backtick inside.\n"
+    "\n"
+    "```markdown\n"
+    "[the stamp](docs/archive/last_approved/README.md)\n"
+    "[s]: docs/archive/last_approved/README.md\n"
+    "```\n"
+    "\n"
+    "~~~~\n"
+    "[the ledger](../archive/last_approved/acts.toml)\n"
+    "~~~~\n"
+    "\n"
+    "```[x](last_approved/acts.toml)``` stays inline code.\n"
+    "\n"
+    "A stray ` backtick, then [a real one](docs/archive/last_approved/acts.toml).\n"
+    "\n"
+    "Its paragraph ended, so ` this one closes nothing either.\n"
+    "\n"
+    "Escaped \\` ticks around [an escaped one](docs/archive/last_approved/acts.toml) open nothing \\`.\n"
+    "\n"
+    "A doubled \\\\`[x](last_approved/acts.toml)` backslash leaves its tick a span.\n"
+    "\n"
+    "`a span ends at \\` and [after it](docs/archive/last_approved/acts.toml) moves.\n"
+)
+
+
 def test_links_into_the_record_follow_it_and_every_other_word_stays(tmp_path, capsys):
     """Implements: TC-427"""
     page = _write(tmp_path, "docs/reviews/old.md", LINKED.replace("\n", "\r\n"))
+    coded = _write(tmp_path, "docs/reviews/code.md", CODED.replace("\n", "\r\n"))
     hidden = _write(tmp_path, ".claude/notes.md", LINKED)
     vendored = _write(tmp_path, "node_modules/pkg/README.md", LINKED)
+    cached = _write(tmp_path, "pkg/__pycache__/notes.md", LINKED)
     assert _run(tmp_path) == 0
-    assert "docs/reviews/old.md: 2 link(s)" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "docs/reviews/old.md: 2 link(s)" in out, out
+    assert "docs/reviews/code.md: 3 link(s)" in out, out
+    # A link written inside code is code, and keeps its words.
+    moved = CODED
+    for label in ("a real one", "an escaped one", "after it"):
+        moved = moved.replace(
+            "[{}](docs/archive/last_approved/acts.toml)".format(label),
+            "[{}](docs/archive/last_accepted/acts.toml)".format(label),
+        )
+    assert coded.read_bytes() == moved.replace("\n", "\r\n").encode("utf-8")
     expected = LINKED.replace(
         "../archive/last_approved/acts", "../archive/last_accepted/acts"
     ).replace("docs/archive/last_approved/README", "docs/archive/last_accepted/README")
     assert page.read_bytes() == expected.replace("\n", "\r\n").encode("utf-8")
     assert hidden.read_text(encoding="utf-8") == LINKED
     assert vendored.read_text(encoding="utf-8") == LINKED
+    assert cached.read_text(encoding="utf-8") == LINKED
+
+
+@pytest.mark.parametrize("name", migrate.SCRATCHPAD_NAMES)
+def test_the_links_walk_never_reads_the_scratchpad(tmp_path, monkeypatch, name):
+    """The scratchpad holds a person's private notes: the run renames it
+    without opening it, and the link walk passes it by, a link into the
+    record's earlier directory inside it included.
+
+    Implements: TC-427
+    """
+    notes = "# notes\n[the ledger](docs/archive/last_approved/acts.toml)\n"
+    _write(tmp_path, name, notes)
+    page = _write(tmp_path, "docs/page.md", notes)
+    opened = []
+
+    def spy(method):
+        real = getattr(pathlib.Path, method)
+
+        def read(self, *args, **kwargs):
+            opened.append(self.name)
+            return real(self, *args, **kwargs)
+
+        return read
+
+    for method in ("read_bytes", "read_text", "open"):
+        monkeypatch.setattr(pathlib.Path, method, spy(method))
+    assert _run(tmp_path) == 0
+    monkeypatch.undo()
+    pad = tmp_path / migrate.SCRATCHPAD_NAMES[1]
+    assert pad.read_text(encoding="utf-8") == notes
+    assert not set(migrate.SCRATCHPAD_NAMES) & set(opened), opened
+    # The walk ran: the page beside it moved.
+    assert "last_accepted/acts.toml" in page.read_text(encoding="utf-8")
 
 
 def test_links_owed_are_reported_under_check_and_a_page_not_utf8_is_named(
@@ -1108,3 +1447,28 @@ def test_a_repository_with_nothing_to_migrate_is_clean(tmp_path, capsys):
     """Implements: TC-427"""
     assert _run(tmp_path, "--check") == 0
     assert "nothing stored in an earlier spelling" in capsys.readouterr().out
+
+
+def test_the_migrator_imports_from_the_kit_only_the_stack_profile_parse():
+    """It runs while the kit's own scripts cannot yet read the repository, so
+    its module-level imports are the standard library's, and its one import
+    from the kit sits inside the stack profile step.
+
+    Implements: TC-427
+    """
+    tree = ast.parse((SCRIPTS / "migrate_vocabulary.py").read_text(encoding="utf-8"))
+    top = set()
+    for node in tree.body:
+        if isinstance(node, ast.Import):
+            top |= {alias.name.split(".")[0] for alias in node.names}
+        elif isinstance(node, ast.ImportFrom):
+            top.add((node.module or "").split(".")[0])
+    assert top <= set(sys.stdlib_module_names), top
+    nested = [
+        (fn.name, getattr(node, "module", None))
+        for fn in ast.walk(tree)
+        if isinstance(fn, ast.FunctionDef)
+        for node in ast.walk(fn)
+        if isinstance(node, (ast.Import, ast.ImportFrom))
+    ]
+    assert nested == [("_stack_parse", "kitlib.config")], nested
