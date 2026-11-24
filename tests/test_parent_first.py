@@ -3,8 +3,9 @@
 The rule's one home is a pure function over the four tiers' rows
 (`kitlib.spine.parent_first_findings`): one entry per accepted child, `Accepted`
 or `Founded`, citing a declared parent that is not accepted, over an SR's
-`SN-Refs` to SNs, an LLR's `SR-Refs` to SRs and a TC's `Verifies` to SRs and
-LLRs. `parent_first_line` words each entry once. The commit judgement
+`SN-Refs` to SNs, an LLR's `SR-Refs` to SRs, a child LLR's `Parent` to its
+parent LLR and a TC's `Verifies` to SRs and LLRs. `parent_first_line` words
+each entry once. The commit judgement
 (`acceptance_record.parent_first_lines`) reads a tree against its parents; its
 arms that need a git failure are driven here with the git reads replaced, and
 the real-repository cases live in `test_parent_first_git.py` (slow tier), whose
@@ -49,6 +50,14 @@ def tier_of(rid):
     return rid.split("-", 1)[0]
 
 
+def ref_column(tier, parents):
+    """The column a row of `tier` names `parents` in: a child LLR's parent LLR
+    in `Parent`, every other parent in its tier's `REF_COLUMN` (None for SN)."""
+    if tier == "LLR" and parents and all(tier_of(p) == "LLR" for p in parents):
+        return "Parent"
+    return REF_COLUMN.get(tier)
+
+
 def row(rid, status, *parents):
     """One registry row under the readers' column names; `status` None leaves
     the cell out."""
@@ -56,8 +65,9 @@ def row(rid, status, *parents):
     out = {tier + "-ID": rid}
     if status is not None:
         out["Status"] = status
-    if tier in REF_COLUMN:
-        out[REF_COLUMN[tier]] = ";".join(parents)
+    column = ref_column(tier, parents)
+    if column:
+        out[column] = ";".join(parents)
     return out
 
 
@@ -75,7 +85,9 @@ def registry_text(*specs):
     for rid, status, *parents in specs:
         _path, table, key = TIERS[tier_of(rid)]
         lines = ["[{}.{}]".format(table, rid)]
-        if key:
+        if ref_column(tier_of(rid), parents) == "Parent":
+            lines.append('parent = "{}"'.format(parents[0]))
+        elif key and parents:  # no parent: the key absent, as the carrier asks
             lines.append(
                 "{} = [{}]".format(key, ", ".join('"%s"' % p for p in parents))
             )
@@ -92,10 +104,12 @@ def registries(*specs):
     return {TIERS[t][0]: registry_text(*s) for t, s in grouped.items()}
 
 
-#: The four parent edges, as (child, parent) id pairs.
+#: The five parent edges, as (child, parent) id pairs; `LLR-LLR` is a child
+#: design row under the parent design row its `Parent` names.
 PAIRS = {
     "SR-SN": ("SR-001", "SN-001"),
     "LLR-SR": ("LLR-001", "SR-001"),
+    "LLR-LLR": ("LLR-002", "LLR-001"),
     "TC-SR": ("TC-001", "SR-001"),
     "TC-LLR": ("TC-001", "LLR-001"),
 }
@@ -174,6 +188,31 @@ def test_only_declared_tier_parents_are_judged():
         )
     )
     assert found == [("LLR-001", "Accepted", "SR-002", "Drafted")]
+
+
+def test_a_parent_cell_is_judged_only_against_declared_design_rows():
+    """One real violation beside every `Parent` cell the rule must not judge:
+    one naming a Drafted SR (a design row's parent is a design row), one naming
+    an id no row declares, one naming the `-000` example row, and a child of a
+    Founded parent. Exactly the one real entry, so an over-reporting rule fails
+    too; each fault of the cell itself is the orphan rules'.
+
+    Implements: TC-396
+    """
+    found = spine.parent_first_findings(
+        tiers(
+            row("SR-001", "Drafted"),
+            row("LLR-000", "Drafted", "SR-000"),
+            row("LLR-001", "Drafted", "SR-001"),
+            row("LLR-002", "Accepted", "LLR-001"),
+            dict(row("LLR-003", "Accepted"), Parent="SR-001"),
+            row("LLR-004", "Accepted", "LLR-999"),
+            row("LLR-005", "Accepted", "LLR-000"),
+            row("LLR-006", "Founded"),
+            row("LLR-007", "Accepted", "LLR-006"),
+        )
+    )
+    assert found == [("LLR-002", "Accepted", "LLR-001", "Drafted")]
 
 
 def test_the_shipped_templates_example_rows_raise_no_finding():
@@ -268,6 +307,33 @@ def test_a_parent_side_that_does_not_parse_counts_every_status_as_moved(
     # The control: the same standing case over a parent that parses moved
     # neither status, so it is not this judgement's to refuse.
     _fake_git(monkeypatch, {"BASE:": dict(index), ":": index}, [SR_PATH])
+    assert ar.parent_first_lines(tmp_path, ["BASE"]) == []
+
+
+def test_a_child_design_row_is_refused_at_the_commit_only_where_a_status_moved(
+    tmp_path, monkeypatch
+):
+    """The commit judgement over a child design row: flipping LLR-002 to
+    Accepted under its Drafted parent LLR-001 is one line naming the index;
+    the same standing case under a change that moves neither status is not
+    this judgement's (the standing finding reports it).
+
+    Implements: TC-397
+    """
+    drafts = registries(("LLR-001", "Drafted"), ("LLR-002", "Drafted", "LLR-001"))
+    flipped = registries(("LLR-001", "Drafted"), ("LLR-002", "Accepted", "LLR-001"))
+    _fake_git(monkeypatch, {"BASE:": drafts, ":": flipped}, [LLR_PATH])
+    assert ar.parent_first_lines(tmp_path, ["BASE"]) == [
+        "the index: LLR-002 (Accepted) is accepted under LLR-001 (Drafted), which "
+        "is not: accept LLR-001 in its own acceptance act, or return LLR-002 to "
+        "Drafted"
+    ]
+    unmoved = registries(
+        ("LLR-001", "Drafted"),
+        ("LLR-002", "Accepted", "LLR-001"),
+        ("LLR-003", "Drafted"),
+    )
+    _fake_git(monkeypatch, {"BASE:": flipped, ":": unmoved}, [LLR_PATH])
     assert ar.parent_first_lines(tmp_path, ["BASE"]) == []
 
 

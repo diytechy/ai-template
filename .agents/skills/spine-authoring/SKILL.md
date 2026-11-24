@@ -114,9 +114,10 @@ Choose the mode before writing. The `operator_accepts_through` dial in
 | **In a lane, a held rung** | The change touches a held rung | Split at the dial: the lane lands held first drafts and MEANING changes, and their act is ruled on trunk; the sitting may re-accept only held amendments ruled CLARITY in its verdict |
 
 **In every mode, a child is accepted only after its parent.** An SR waits for
-every SN it cites, an LLR for every SR, and a TC for every SR and LLR it
-verifies. An accepted child under a `Drafted` parent claims a chain nobody has
-blessed. The enforcers: `check.py`'s `parent-first` step refuses the commit
+every SN it cites, an LLR for every SR it cites and a child LLR for the
+parent LLR it names, and a TC for every SR and LLR it verifies. An accepted
+child under a `Drafted` parent claims a chain nobody has blessed.
+The enforcers: `check.py`'s `parent-first` step refuses the commit
 that moves either status into such a case, the merge slot's lane-commit walk
 refuses it on each lane commit, and `trace.py --strict-integrity` reports a
 standing case. Accept parent and child in one act, or the parent first.

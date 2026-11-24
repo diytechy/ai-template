@@ -12650,6 +12650,38 @@ To decompose a row, write each child with `parent = "LLR-###"` and no
 
 **Project-owned files — edit:** none.
 
+### The parent-first rule reads a child design row's parent link [since c7d6bd6f4]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** The parent-first rule (`scripts/kitlib/spine.py`) judged
+three kinds of parent: a requirement's needs, a design row's requirements
+(`sr_refs`) and a test case's verified rows. A child design row's `parent`
+(the requirement-tree entry above) is now a fourth: an accepted (`Accepted`
+or `Founded`) child design row whose `parent` names a declared design row
+that is not accepted is one parent-first finding, worded as the others.
+Every route that reads the rule takes it with no change of its own:
+`trace.py --strict-integrity` (and `--strict`) reports a standing case; the
+pre-commit `parent-first` step and the merge slot's lane-commit walk refuse a
+commit that moves either status into one; a derived act names such a child's
+flip as waiting while its parent stays unaccepted after the act. The edge
+keeps the rule's exclusions and the commit judgement's status-movement
+condition: a `parent` naming an SR, an undeclared id or a `-000` row is not
+judged here (the orphan rules report it), and a commit that moves neither
+status is not refused. The `spine-authoring` skill's statement of the rule
+names the edge.
+
+**What to do.** Nothing for a registry whose design rows carry no `parent`.
+Where one does, run `python scripts/trace.py --strict-integrity`: each child
+accepted under a parent design row that is not accepted is now a finding,
+cleared by accepting the parent in its own acceptance act or returning the
+child to `Drafted`.
+
+**Kit-owned files — overwrite:** `scripts/kitlib/spine.py`,
+`skills/spine-authoring/SKILL.md`.
+
+**Project-owned files — edit:** none.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

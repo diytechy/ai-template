@@ -109,11 +109,18 @@ def test_a_founded_child_flipped_under_a_drafted_parent_is_refused(tmp_path):
     assert "LLR-001" in out and "Founded" in out, out
 
 
-def test_an_act_accepting_parent_and_child_together_passes(tmp_path):
-    """Implements: TC-397"""
+@pytest.mark.parametrize("pair", sorted(PAIRS), ids=sorted(PAIRS))
+def test_an_act_accepting_parent_and_child_together_passes(tmp_path, pair):
+    """On every edge, a child design row under its parent design row among
+    them. Adequacy witness: a judgement that read the parent's status from the
+    parent tree instead of the staged one refuses each.
+
+    Implements: TC-397
+    """
+    child, parent = PAIRS[pair]
     root = _repo(tmp_path)
-    _commit(root, "drafts", ("SR-001", "Drafted"), ("LLR-001", "Drafted", "SR-001"))
-    _stage(root, ("SR-001", "Accepted"), ("LLR-001", "Accepted", "SR-001"))
+    _commit(root, "drafts", (parent, "Drafted"), (child, "Drafted", parent))
+    _stage(root, (parent, "Accepted"), (child, "Accepted", parent))
     code, out = _step(root)
     assert code == 0, out
 
@@ -125,6 +132,55 @@ def test_a_commit_moving_neither_row_passes_over_a_standing_case(tmp_path):
     _stage(root, ("LLR-001", "Accepted", "SR-001"), ("LLR-002", "Drafted", "SR-001"))
     code, out = _step(root)
     assert code == 0, out
+
+
+#: Re-pointing an accepted design row from an accepted parent to a Drafted
+#: one, by the cell each edge reads: (the parent it leaves, the parent it
+#: takes), each with its status.
+REPOINTS = {
+    "SR-Refs": (("SR-001", "Accepted"), ("SR-002", "Drafted")),
+    "Parent": (("LLR-001", "Accepted"), ("LLR-003", "Drafted")),
+}
+
+
+@pytest.mark.parametrize("cell", sorted(REPOINTS))
+def test_re_pointing_an_accepted_design_row_at_a_drafted_parent_is_refused_as_standing(
+    tmp_path, cell
+):
+    """An accepted LLR-002 moved from an accepted parent to a Drafted one moves
+    neither status, so the `parent-first` step passes it; the hook's
+    `registry-integrity` step refuses the same commit with the standing
+    finding. The parent link inherits this from `SR-Refs` unchanged. Adequacy
+    witness: a rule that did not read the parent link passes the `Parent` case
+    at both steps.
+
+    Implements: TC-396, TC-397
+    """
+    left, taken = REPOINTS[cell]
+    root = _repo(tmp_path)
+    _write(root, registries(left, taken, ("LLR-002", "Accepted", left[0])))
+    proc = run_py([SCRIPTS / "trace.py", "--bump-ids"], root)  # allocate, record
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    _commit(root, "accepted")
+    steps = [SCRIPTS / "check.py", "--run-steps", "parent-first,registry-integrity"]
+    clean = run_py(steps, root)  # the control: both steps pass before the move
+    assert clean.returncode == 0, clean.stdout + clean.stderr
+    _stage(root, left, taken, ("LLR-002", "Accepted", taken[0]))
+    proc = run_py(steps, root)
+    out = proc.stdout + proc.stderr
+    assert proc.returncode == 1, out
+    verdicts = {
+        ln.split()[1]: ln.split()[0]
+        for ln in out.splitlines()
+        if ln.startswith(("  PASS", "  FAIL"))
+    }
+    assert verdicts == {"parent-first": "PASS", "registry-integrity": "FAIL"}, out
+    assert (
+        "parent-first: LLR-002 (Accepted) is accepted under {} (Drafted)".format(
+            taken[0]
+        )
+        in out
+    ), out
 
 
 def test_a_commit_touching_no_registry_is_not_read(tmp_path):
@@ -209,17 +265,27 @@ def test_a_merge_bringing_a_standing_case_to_the_other_side_is_refused(tmp_path)
     assert "LLR-001" in out and "SR-001" in out, out
 
 
-def test_a_no_verify_lane_commit_with_a_violation_is_refused_at_the_slot(tmp_path):
-    """Implements: TC-397"""
+@pytest.mark.parametrize("pair", sorted(PAIRS), ids=sorted(PAIRS))
+def test_a_no_verify_lane_commit_with_a_violation_is_refused_at_the_slot(
+    tmp_path, pair
+):
+    """On every edge, a child design row under its parent design row among
+    them: the lane commit accepting the child alone is refused at the slot.
+
+    Implements: TC-397
+    """
+    child, parent = PAIRS[pair]
     root = _repo(tmp_path)
-    _commit(root, "drafts", ("SR-001", "Drafted"), ("LLR-001", "Drafted", "SR-001"))
+    _commit(root, "drafts", (parent, "Drafted"), (child, "Drafted", parent))
     fixture_git(root, "checkout", "-q", "-b", "wi-001")
-    bad = _commit(root, "accept the child alone", ("LLR-001", "Accepted", "SR-001"))
+    bad = _commit(
+        root, "accept the child alone", (parent, "Drafted"), (child, "Accepted", parent)
+    )
     fixture_git(root, "checkout", "-q", "main")
     refusal = integrate._text_then_act_refusal(root, "wi-001")
-    assert refusal is not None
-    assert bad[:10] in refusal and "LLR-001" in refusal and "SR-001" in refusal
-    assert "return LLR-001 to Drafted" in refusal
+    assert refusal is not None, pair
+    assert bad[:10] in refusal and child in refusal and parent in refusal
+    assert "return {} to Drafted".format(child) in refusal
     assert tta.TEXT_THEN_ACT_REMEDY not in refusal
 
 
