@@ -157,9 +157,11 @@ Contract IF-101: `read_watermark(root) -> {space: int}` reads
     `landing_fold_lag(root, rev) -> lines` names how the watermark at a
     commit or the index's tree lags the carrier's fold: a recorded carrier
     mark above its own, or a carrier record it lacks; [] with no carrier.
-Contract IF-141: `effective_hats(row, sr_by_id) -> sorted hat names` — one
-    design row's effective perspective set: its own `Hat-Refs` unioned with
-    those of its SR parents, derived on every read instead of copied down at
+Contract IF-141: `effective_hats(row, sr_by_id, srs_of=None) -> sorted hat
+    names` — one design row's effective perspective set: its own `Hat-Refs`
+    unioned with those of its SR parents (a child's read up its parent chain
+    when `srs_of`, the requirement tree's up map, is given), derived on every
+    read instead of copied down at
     authoring time, so a re-ruled parent propagates with no child edit. A
     dangling `SR-Refs` contributes nothing and does not raise; unresolved
     parentage is the orphan pass's finding, not this derivation's.
@@ -1787,12 +1789,12 @@ def triangle_findings(tcs, llrs):
     stage, so it joins the integrity floor, not the gate-scoped orphan set. A TC
     that cites only LLRs (no SR) has no SR to contradict — the orphan rules cover
     it. An LLR with no SR-Refs is already an orphan, so it is not double-reported.
+    A child design row's SRs are read up its parent chain (`kitlib.spine.llr_tree`).
 
     Implements: SR-157, LLR-002
     """
-    llr_parents = {
-        r["LLR-ID"]: set(refs(r.get("SR-Refs"))) for r in llrs if r.get("LLR-ID")
-    }
+    tree = _spine.llr_tree(llrs)
+    llr_parents = {lid: set(srs) for lid, srs in tree.srs_of.items()}
     out = []
     for r in tcs:
         tid = r.get("TC-ID")
@@ -1805,18 +1807,27 @@ def triangle_findings(tcs, llrs):
         for x in cited:
             parents = llr_parents.get(x)
             if parents and not (parents & cited_srs):
-                out.append(
-                    "TC {} cites {} alongside SR {} but {} decomposes {} (its "
-                    "SR-Refs) — an SR/LLR pair in one TC must share the parent "
-                    "link recorded on the LLR".format(
-                        tid,
-                        x,
-                        ", ".join(sorted(cited_srs)),
-                        x,
-                        ", ".join(sorted(parents)),
-                    )
-                )
+                out.append(_triangle_line(tid, x, cited_srs, parents, tree))
     return out
+
+
+def _triangle_line(tid, llr, cited_srs, parents, tree):
+    """The triangle rule's one line for a TC pairing `llr` with SRs it does not
+    decompose; a child's SRs are named as read up its parent chain.
+
+    Implements: SR-157, LLR-002"""
+    source = "read up its parent chain" if llr in tree.parent_of else "its SR-Refs"
+    return (
+        "TC {} cites {} alongside SR {} but {} decomposes {} ({}) — an SR/LLR "
+        "pair in one TC must share the parent link recorded on the LLR".format(
+            tid,
+            llr,
+            ", ".join(sorted(cited_srs)),
+            llr,
+            ", ".join(sorted(parents)),
+            source,
+        )
+    )
 
 
 # The module-path normalizer MOVED TO trace_text.py at re-tier v2 S5 (WI-464),
@@ -2078,6 +2089,17 @@ def _tc_verifies_required(row):
     return not refs(row.get("Assumption-Refs"))
 
 
+def _required_fields(label, row):
+    """The cells `row` must fill: its tier's `REQUIRED_FIELDS`, less `SR-Refs`
+    on a child design row, whose SRs are read up its parent chain.
+
+    Implements: SR-157, LLR-483
+    """
+    if label == "LLR" and refs(row.get("Parent")):
+        return [col for col in REQUIRED_FIELDS[label] if col != "SR-Refs"]
+    return REQUIRED_FIELDS[label]
+
+
 def schema_findings(label, rows):
     """Empty required fields and out-of-vocabulary VerificationMethod/Tier values, over
     the real (non-placeholder) rows of one registry.
@@ -2088,7 +2110,7 @@ def schema_findings(label, rows):
     out = []
     for r in rows:
         rid = r[key]
-        for col in REQUIRED_FIELDS[label]:
+        for col in _required_fields(label, r):
             if not (r.get(col) or "").strip():
                 out.append(f"{label} {rid} has empty required field {col}")
         for col, allowed in ENUM_FIELDS.get(label, {}).items():
@@ -2343,9 +2365,11 @@ def load_hat_names(root):
     return set(table), speaks_for
 
 
-def effective_hats(row, sr_by_id):
+def effective_hats(row, sr_by_id, srs_of=None):
     """One design row's EFFECTIVE hat set: its own `Hat-Refs` unioned with those
-    of its SR parents. Returns a sorted list.
+    of its SR parents. Returns a sorted list. `srs_of` is the requirement tree's
+    up map (`kitlib.spine.llr_tree`), which reads a child's SR parents up its
+    chain; without it a row's parents are its own `SR-Refs`.
 
     THIS FUNCTION IS THE ANTI-STALENESS DECISION, and it is the whole reason the
     LLR cell is defined as "raised AT this decomposition" rather than "everything
@@ -2359,7 +2383,9 @@ def effective_hats(row, sr_by_id):
     already a reported finding of its own, and a derivation that crashed on it
     would report the same defect twice, the second time as a stack trace."""
     own = set(refs(row.get("Hat-Refs")))
-    for pid in refs(row.get("SR-Refs")):
+    lid = str(row.get("LLR-ID") or "").strip()
+    up = srs_of.get(lid) if srs_of is not None and lid in srs_of else None
+    for pid in refs(row.get("SR-Refs")) if up is None else list(up):
         parent = sr_by_id.get(pid)
         if parent:
             own.update(refs(parent.get("Hat-Refs")))
@@ -2424,6 +2450,7 @@ def hat_findings(
     if not hat_names:
         return findings, advisories
     parents = sr_by_id or {}
+    srs_of = _spine.llr_tree(llrs).srs_of
     named = set()
     for label, id_col, rows in (("SR", "SR-ID", srs), ("LLR", "LLR-ID", llrs)):
         for r in rows:
@@ -2442,7 +2469,7 @@ def hat_findings(
         for r in rows
         # An SR has no parent tier here, so `effective_hats` reduces to its own
         # cell; an LLR picks its parents' up. One expression, both tiers.
-        if not effective_hats(r, parents)
+        if not effective_hats(r, parents, srs_of)
     )
     # BOTH advisories below are gated on the cell being IN USE — at least one row
     # carrying an attribution — and that gate is not a convenience. A freshly
@@ -3248,18 +3275,19 @@ def _bucket_by_ref(rows, ref_col):
 
 
 def chain_buckets(llrs, tcs):
-    """`(llrs_by_sr, tcs_by_ref)` — the two indexes `spine_chain` reads.
+    """`(llrs_by_sr, tcs_by_ref)` — the two indexes `spine_chain` reads, an
+    SR's design rows being every row below it in the requirement tree.
 
     Built ONCE by a caller that walks many SRs, because bucketing inside the
     per-SR call is exactly the quadratic join `_bucket_by_ref` exists to
     replace."""
-    return _bucket_by_ref(llrs, "SR-Refs"), _bucket_by_ref(tcs, "Verifies")
+    return _spine.llr_tree_rows(llrs).below, _bucket_by_ref(tcs, "Verifies")
 
 
 def spine_chain(sr_id, srs, llrs_by_sr, tcs_by_ref):
-    """One SR's WHOLE CHAIN as `[(kind, id, row)]` — the SR itself, its child
-    LLRs in id order, then every TC that verifies the SR or one of those LLRs,
-    deduped and in id order.
+    """One SR's WHOLE CHAIN as `[(kind, id, row)]` — the SR itself, every LLR
+    below it in the requirement tree in id order, then every TC that verifies
+    the SR or one of those LLRs, deduped and in id order.
 
     THE ONE ANSWER TO "WHAT IS THIS REQUIREMENT'S CHAIN", public since WI-572
     rather than a closure inside `reaccept_model`. Two readers need it now and
@@ -3317,6 +3345,41 @@ def evidence_metric_rows(tcs):
     ]
 
 
+def _llr_forest_node(lr, children, tcs_by_ref, tc_node, orphan_ids):
+    """One design row's forest node: its test cases (`tc_node` over
+    `tcs_by_ref`), then the nodes of its child rows (`children`, the
+    requirement tree's).
+
+    Recursive, one frame per level of the requirement tree. The walk never
+    links a cycle, so the recursion ends; its depth is the tree's, a few levels
+    in a real spine and far under the interpreter's recursion limit (1000
+    frames by default). An acyclic chain of design rows near that limit would
+    raise RecursionError, failing the report loudly rather than rendering a
+    truncated outline.
+
+    Implements: SR-157, SR-049, LLR-481"""
+    lid = lr["LLR-ID"]
+    kids = [tc_node(t) for t in tcs_by_ref.get(lid, [])] + [
+        _llr_forest_node(child, children, tcs_by_ref, tc_node, orphan_ids)
+        for child in children.get(lid, [])
+    ]
+    return _node(lid, _cell(lr, "Status"), _cell(lr, "Title"), orphan_ids, kids)
+
+
+def _rootless_llrs(llrs, tree, sr_ids):
+    """The design rows the forest lists with no SR parent: a top-level row
+    reaching no live SR, and a row whose chain is broken; a child whose chain
+    reaches a top-level row nests under that row wherever it is listed.
+
+    Implements: SR-157, SR-049, LLR-481"""
+    out = []
+    for lr in llrs:
+        lid = lr["LLR-ID"]
+        if tree.depth.get(lid, 0) == 0 and not sr_ids & set(tree.srs_of.get(lid, ())):
+            out.append(lr)
+    return out
+
+
 def build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft=frozenset()):
     """The SN -> SR -> LLR -> TC chain as nested nodes, plus synthetic groups for
     rows with no valid parent. Shared by the text outline and the HTML tree.
@@ -3326,8 +3389,12 @@ def build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft=frozenset()):
     A case evidencing only assumptions has no requirement to hang under, and it
     is not verifying nothing: it gets a group of its own (SR-197).
 
-    Implements: SR-197, LLR-231"""
-    llrs_by_sr = _bucket_by_ref(llrs, "SR-Refs")
+    A child design row nests under its parent row, after the parent's own test
+    cases (the requirement tree, `kitlib.spine.llr_tree`), and a row reaching
+    no live SR is listed in the no-parent group.
+
+    Implements: SR-197, LLR-231, SR-157, SR-049, LLR-481"""
+    tree, _below, tops, children = _spine.llr_tree_rows(llrs)
     tcs_by_ref = _bucket_by_ref(tcs, "Verifies")
     srs_by_sn = _bucket_by_ref(srs, "SN-Refs")
     tc_verifies = {t["TC-ID"]: set(refs(t.get("Verifies"))) for t in tcs}
@@ -3336,14 +3403,12 @@ def build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft=frozenset()):
         return _node(t["TC-ID"], _cell(t, "Status"), _cell(t, "Method"), orphan_ids)
 
     def llr_node(lr):
-        lid = lr["LLR-ID"]
-        kids = [tc_node(t) for t in tcs_by_ref.get(lid, [])]
-        return _node(lid, _cell(lr, "Status"), _cell(lr, "Title"), orphan_ids, kids)
+        return _llr_forest_node(lr, children, tcs_by_ref, tc_node, orphan_ids)
 
     def sr_node(s):
         sid = s["SR-ID"]
-        own = llrs_by_sr.get(sid, [])
-        own_llrs = {lr["LLR-ID"] for lr in own}
+        own = tops.get(sid, [])
+        own_llrs = set(tree.below.get(sid, []))
         kids = [llr_node(lr) for lr in own]
         # TCs verifying the SR directly but none of its LLRs (so a TC that already
         # appears under an LLR of this SR is not also repeated under the SR).
@@ -3368,7 +3433,7 @@ def build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft=frozenset()):
             else "(system specifications)"
         )
         roots.append(_group(label, [sr_node(s) for s in rootless_srs]))
-    rootless_llrs = [lr for lr in llrs if not sr_ids & set(refs(lr.get("SR-Refs")))]
+    rootless_llrs = _rootless_llrs(llrs, tree, sr_ids)
     if rootless_llrs:
         roots.append(
             _group("(LLRs with no SR parent)", [llr_node(lr) for lr in rootless_llrs])
@@ -3879,8 +3944,9 @@ def reaccept_model(root, srs, llrs, tcs, snapshot=_UNSET):
         for kind, ix in _KIND_IX.items()
     }
     base_srs = list(snap_rows["SR"].values())
-    base_llrs_by_sr = _bucket_by_ref(list(snap_rows["LLR"].values()), "SR-Refs")
-    base_tcs_by_ref = _bucket_by_ref(list(snap_rows["TC"].values()), "Verifies")
+    base_llrs_by_sr, base_tcs_by_ref = chain_buckets(
+        list(snap_rows["LLR"].values()), list(snap_rows["TC"].values())
+    )
 
     model = []
     for sr in pending_srs:
@@ -4783,17 +4849,48 @@ def reaccept_lines(root, srs, llrs, tcs):
     return lines
 
 
+def _tree_order(tops, children):
+    """`tops` and every design row below them, each row before its children
+    (pre-order over `children`, `{LLR id: [child rows]}`): the order the
+    acceptance hierarchy renders a requirement's rows in.
+
+    Implements: SR-157, SR-049, LLR-481"""
+    out, stack = [], list(reversed(tops))
+    while stack:
+        row = stack.pop()
+        out.append(row)
+        stack += reversed(children.get(row["LLR-ID"].strip(), []))
+    return out
+
+
+def _below_marks(tree):
+    """`{child LLR id: " (below <its parent>)"}`, the acceptance hierarchy's
+    heading mark for a row the requirement tree nests.
+
+    Implements: SR-157, SR-049, LLR-481"""
+    return {
+        rid: " (below {})".format(tree.parent_of[rid])
+        for rid, level in tree.depth.items()
+        if level
+    }
+
+
 def acceptance_lines(scope, sn_ids, srs, llrs, tcs, sn_meta=None):
     """Markdown for the batch-scoped acceptance hierarchy (WI-146a). Groups the
     in-scope SRs under their primary (first-listed) stakeholder need — rendering
     that need's own prose (Need/Why/Acceptance from `sn_meta`, WI-146 REVIEW-A) —
-    then nests each SR's LLRs and TCs with their prose. Deterministic, stdlib-only."""
+    then nests each SR's LLRs and TCs with their prose, a child design row after
+    its parent's block (the requirement tree, `kitlib.spine.llr_tree`).
+    Deterministic, stdlib-only.
+
+    Implements: SR-157, SR-049, LLR-481"""
     sn_meta = sn_meta or {}
     in_scope = _scope_srs(scope, srs)
     # Bucketed joins (WI-081's _bucket_by_ref), not per-parent refs() rescans —
     # a phase-scoped accept over a large registry was the one path still doing
     # the quadratic O(SR×LLR + LLR×TC) scans the report path already dropped.
-    llrs_by_sr = _bucket_by_ref(llrs, "SR-Refs")
+    tree, _below, tops, children = _spine.llr_tree_rows(llrs)
+    marks = _below_marks(tree)
     tcs_by_ref = _bucket_by_ref(tcs, "Verifies")
 
     def tc_block(t):
@@ -4806,16 +4903,18 @@ def acceptance_lines(scope, sn_ids, srs, llrs, tcs, sn_meta=None):
         return out
 
     def llr_block(lr):
+        lid = lr["LLR-ID"]
         out = [
-            "#### {} — {} [{}]".format(
-                lr["LLR-ID"],
+            "#### {} — {} [{}]{}".format(
+                lid,
                 _cell(lr, "Title") or "(untitled)",
                 _cell(lr, "Status") or "?",
+                marks.get(lid, ""),
             )
         ]
         if _cell(lr, "Detail"):
             out.append(_cell(lr, "Detail"))
-        for t in tcs_by_ref.get(lr["LLR-ID"], []):
+        for t in tcs_by_ref.get(lid, []):
             out += tc_block(t)
         return out
 
@@ -4842,9 +4941,9 @@ def acceptance_lines(scope, sn_ids, srs, llrs, tcs, sn_meta=None):
         )
         if rubrics:
             out.append("**Rubrics.** {}".format("; ".join(rubrics)))
-        own_llrs = llrs_by_sr.get(sid, [])
-        own_ids = {lr["LLR-ID"] for lr in own_llrs}
-        for lr in own_llrs:
+        own_llrs = tops.get(sid, [])
+        own_ids = set(tree.below.get(sid, []))
+        for lr in _tree_order(own_llrs, children):
             out += llr_block(lr)
         # TCs verifying the SR directly (not via one of its LLRs).
         for t in tcs_by_ref.get(sid, []):
@@ -4893,6 +4992,23 @@ def acceptance_lines(scope, sn_ids, srs, llrs, tcs, sn_meta=None):
     return lines
 
 
+def matrix_lines(srs, llrs, tcs):
+    """The report's SR -> LLR -> TC matrix rows: each SR with every design row
+    below it in the requirement tree (`kitlib.spine.llr_tree`) and the test
+    cases verifying it directly.
+
+    Implements: SR-157, SR-049, LLR-481"""
+    below = _spine.llr_tree_rows(llrs).below
+    tcs_by_sr = _bucket_by_ref(tcs, "Verifies")
+    out = []
+    for r in srs:
+        sid = r["SR-ID"]
+        kids = " ".join(x["LLR-ID"] for x in below.get(sid, []))
+        tests = " ".join(x["TC-ID"] for x in tcs_by_sr.get(sid, []))
+        out.append(f"| {sid} | {kids} | {tests} | {r.get('Status', '')} |")
+    return out
+
+
 MERMAID_CLASSDEFS = [
     "    classDef orphan fill:#ffd6d6,stroke:#cc0000,color:#000;",
     "    classDef draft fill:#fff3cd,stroke:#cc9900,color:#000;",
@@ -4911,10 +5027,26 @@ def _mermaid_label(rid, title):
     return "{} — {}".format(rid, short).replace('"', "'")
 
 
+def _design_up_edges(lr, sr_ids, llr_ids):
+    """The graph's edges into one design row: from the parent its `Parent`
+    names, or, on a top-level row, from each SR its `SR-Refs` names, among the
+    ids the graph draws.
+
+    Implements: SR-157, SR-049, LLR-481"""
+    lid = lr["LLR-ID"]
+    named = refs(lr.get("Parent"))
+    if named:
+        return [(p, lid) for p in named if p in llr_ids]
+    return [(p, lid) for p in refs(lr.get("SR-Refs")) if p in sr_ids]
+
+
 def mermaid_graph(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft=frozenset()):
     """A `graph LR` DAG of the chain (a TC verifies its SR *and* its LLR), colored
     by orphan/draft state via classDef. Kept small/diff-friendly on purpose — the
-    HTML view is the one that scales. `sn_draft` colors unaccepted SNs (§4a)."""
+    HTML view is the one that scales. `sn_draft` colors unaccepted SNs (§4a). A
+    child design row's edge comes from the parent its `Parent` names.
+
+    Implements: SR-157, SR-049, LLR-481"""
     sr_ids = {s["SR-ID"] for s in srs}
     llr_ids = {lr["LLR-ID"] for lr in llrs}
     nodes = {}  # rid -> (label, cls); dict insertion order keeps output stable
@@ -4940,9 +5072,7 @@ def mermaid_graph(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft=frozenset()):
         lid = lr["LLR-ID"]
         add(lid, _mermaid_label(lid, _cell(lr, "Title")),
             _node_class(lid, _cell(lr, "Status"), orphan_ids))  # fmt: skip
-        for p in refs(lr.get("SR-Refs")):
-            if p in sr_ids:
-                edges.add((p, lid))
+        edges.update(_design_up_edges(lr, sr_ids, llr_ids))
     for t in tcs:
         tid = t["TC-ID"]
         add(tid, tid, _node_class(tid, _cell(t, "Status"), orphan_ids))
@@ -5965,13 +6095,7 @@ def render_report(reg, findings, args, forest):
             "|---|---|---|---|",
         ]
     )
-    llrs_by_sr = _bucket_by_ref(llrs, "SR-Refs")
-    tcs_by_sr = _bucket_by_ref(tcs, "Verifies")
-    for r in srs:
-        sid = r["SR-ID"]
-        kids = " ".join(x["LLR-ID"] for x in llrs_by_sr.get(sid, []))
-        tests = " ".join(x["TC-ID"] for x in tcs_by_sr.get(sid, []))
-        lines.append(f"| {sid} | {kids} | {tests} | {r.get('Status', '')} |")
+    lines += matrix_lines(srs, llrs, tcs)
 
     lines += [
         "",

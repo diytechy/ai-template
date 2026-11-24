@@ -165,6 +165,24 @@ def _spine(root, skip_example=False):
     )
 
 
+def tree_llrs(llrs):
+    """`(rows, depth)`: `llrs`, each with an `Up` cell naming where the spine
+    view hangs it in the requirement tree (`kitlib.spine.llr_tree`) — a
+    top-level row's `SR-Refs`, a child's parent design row, nothing for a row
+    whose chain is broken — and the tree's `{LLR id: depth}`.
+
+    Implements: SR-168, LLR-482"""
+    tree = _kitspine.llr_tree(llrs)
+
+    def up(row):
+        rid = row["LLR-ID"].strip()
+        if rid not in tree.depth:
+            return ""
+        return tree.parent_of[rid] if tree.depth[rid] else row.get("SR-Refs") or ""
+
+    return [dict(r, Up=up(r)) for r in llrs], tree.depth
+
+
 def placed_llrs(root, llrs, tcs):
     """`llrs`, each with a `Placed` cell: the components a design row sits in,
     derived by `kitlib.spine.llr_placement` from the interfaces it constrains

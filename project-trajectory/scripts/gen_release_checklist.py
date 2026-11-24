@@ -262,11 +262,12 @@ def _tc_in_scope(tc_row, phases, in_scope_ids):
 
 
 def _scope_ids(srs, llrs, phases, foundation_phase):
-    """Resolve LLR-only test targets through any in-scope parent requirement."""
+    """Resolve LLR-only test targets through any in-scope parent requirement,
+    a child design row's read up its parent chain (`kitlib.spine.llr_tree`)."""
     ids = {r["SR-ID"] for r in srs if _in_phase(r, phases, foundation_phase)}
+    srs_of = _kitspine.llr_tree(llrs).srs_of
     for r in llrs:
-        parents = [p for p in re.split(r"[;,\s]+", r.get("SR-Refs", "")) if p]
-        if any(p in ids for p in parents):
+        if any(p in ids for p in srs_of.get(r["LLR-ID"].strip(), ())):
             ids.add(r["LLR-ID"])
     return ids
 

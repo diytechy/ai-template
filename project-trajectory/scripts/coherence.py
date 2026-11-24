@@ -57,7 +57,7 @@ try:
         is_example,
         is_founded,
         llr_exempt,
-        llrs_under,
+        llr_tree,
         parse_dimensions,
         phase_num,
         refs,
@@ -77,7 +77,7 @@ except ImportError:  # pragma: no cover - in-process fallback
         is_example,
         is_founded,
         llr_exempt,
-        llrs_under,
+        llr_tree,
         parse_dimensions,
         phase_num,
         refs,
@@ -180,25 +180,72 @@ def _sr_orphan_findings(srs, llr_sr_refs, tc_refs, sn_ids):
     return out
 
 
-def _llr_orphan_findings(llrs, sr_ids, tc_refs):
+def _broken_finding(lid, broken):
+    """The one line for a design row whose parent chain is broken (`llr_tree`'s
+    `broken` entry), naming the row and where the chain breaks.
+
+    Implements: SR-157, LLR-480"""
+    kind, at, detail = broken
+    if kind == "missing":
+        return f"LLR {lid} names parent {detail}, which is no live design row"
+    if kind == "several":
+        return f"LLR {lid} names {len(detail)} parents ({', '.join(detail)})"
+    if kind == "cycle":
+        return f"LLR {lid} is on a parent cycle ({' -> '.join(detail + detail[:1])})"
+    return f"LLR {lid} reaches no SR: its parent chain breaks at {at}"
+
+
+def _llr_parentage_findings(r, sr_ids, tree):
+    """One design row's parentage, as ``[(at_fault_id, finding), ...]``: a
+    top-level row names at least one live SR; a child names none, its SRs read
+    up a chain that ends at a top-level row (`kitlib.spine.llr_tree`).
+
+    Implements: SR-157, LLR-480"""
+    lid = r["LLR-ID"]
+    own = refs(r.get("SR-Refs"))
+    if not refs(r.get("Parent")):
+        if not own:
+            return [(lid, f"LLR {lid} has no SR parent")]
+        return [
+            (lid, f"LLR {lid} references unknown {p}") for p in own if p not in sr_ids
+        ]
+    out = []
+    if own:
+        parent = tree.parent_of.get(lid, refs(r.get("Parent"))[0])
+        out.append(
+            (
+                lid,
+                f"LLR {lid} is a child of {parent} and names SR-Refs ({', '.join(own)})"
+                " - a child's SRs are read up its parent chain; remove them",
+            )
+        )
+    if lid in tree.broken:
+        out.append((lid, _broken_finding(lid, tree.broken[lid])))
+    return out
+
+
+def _llr_orphan_findings(llrs, sr_ids, tc_refs, tree):
     """The LLR tier's rules, as ``[(at_fault_id, finding), ...]``. Its no-test
     rule is a design row's discharge: any live case naming the row in
     `Verifies` discharges it, whatever its kind, and a Drafted row owes none.
+    A parent row is discharged the same way, by a case naming it: its
+    children's cases name the children.
 
     Implements: SR-248, LLR-408"""
+    parents = set(tree.parent_of.values())
     out = []
     for r in llrs:
         lid = r["LLR-ID"]
-        parents = refs(r.get("SR-Refs"))
-        if not parents:
-            out.append((lid, f"LLR {lid} has no SR parent"))
-        for p in parents:
-            if p not in sr_ids:
-                out.append((lid, f"LLR {lid} references unknown {p}"))
+        out += _llr_parentage_findings(r, sr_ids, tree)
         # A Drafted LLR is exempt from the child-completeness (no TC) rule, like a
         # Drafted SR — its SR parent + id integrity still apply (derived-gate §3).
         if not is_drafted(r) and lid not in tc_refs:
-            out.append((lid, f"LLR {lid} has no test (TC)"))
+            note = (
+                " - a parent: its children's test cases do not discharge it"
+                if lid in parents
+                else ""
+            )
+            out.append((lid, f"LLR {lid} has no test (TC){note}"))
     return out
 
 
@@ -221,8 +268,9 @@ def spine_orphan_findings(
     srs, llrs, tcs, ifs, sr_ids, llr_ids, sn_ids, sn_draft, da_ids=frozenset()
 ):
     """The child-completeness and parent-resolution rules over the four spine
-    tiers: an SR with no LLR / no TC / no SN, an LLR with no SR parent / no TC,
-    a TC citing an id that does not exist, and an SN nothing cites. Pure.
+    tiers: an SR with no LLR / no TC / no SN, an LLR with no SR parent / no TC
+    or a broken place in the requirement tree (`_llr_parentage_findings`), a
+    TC citing an id that does not exist, and an SN nothing cites. Pure.
 
     Returns `(findings, at-fault ids)` — the id set is what the rendered views
     (outline / graph / HTML) flag, so they mark the same nodes the text lists.
@@ -244,7 +292,7 @@ def spine_orphan_findings(
     tc_refs = {x for r in tcs for x in refs(r.get("Verifies"))}
     pairs = (
         _sr_orphan_findings(srs, llr_sr_refs, tc_refs, sn_ids)
-        + _llr_orphan_findings(llrs, sr_ids, tc_refs)
+        + _llr_orphan_findings(llrs, sr_ids, tc_refs, llr_tree(llrs))
         + tc_citation_findings(tcs, sr_ids | llr_ids, ifs, da_ids)
         + _sn_orphan_findings(sn_ids, sn_cited_ids(srs), sn_draft)
     )
@@ -624,11 +672,13 @@ def _runs(tc):
 def interface_coverage(srs, llrs, tcs, ifs):
     """`{IF id: route}` for each live interface, the route by which its reach
     (`kitlib.spine.interface_reach`) holds a test case the harness runs:
-    `design row` through a design row constraining it, else `requirement`
-    through a constraining requirement or the design rows under it, else
-    `case` through a case naming it or verifying a row observed at it, else
-    `observation` when its reach holds observation cases alone, else
-    `unreached`.
+    `design row` through a design row constraining it or the design rows
+    below that one, else `requirement` through a constraining requirement or
+    the design rows below it, else `case` through a case naming it or
+    verifying a row observed at it, else `observation` when its reach holds
+    observation cases alone, else `unreached`. The routes read one
+    requirement tree built per call, not per interface (`interface_reach`
+    builds its own, once per its call).
 
     Implements: SR-157, LLR-421
     """
@@ -643,22 +693,21 @@ def interface_coverage(srs, llrs, tcs, ifs):
         for x in refs(t.get("Verifies")):
             by_row.setdefault(x, set()).add(tid)
     constrains = _constrains_by_row(srs, llrs)
+    below = llr_tree(llrs).below
     return {
-        iid: _route(iid, rows, cases, constrains, by_row, runs, llrs)
+        iid: _route(iid, rows, cases, constrains, by_row, runs, below)
         for iid, (rows, cases) in interface_reach(ifs, srs, llrs, tcs).items()
     }
 
 
-def _route(iid, rows, cases, constrains, by_row, runs, llrs):
+def _route(iid, rows, cases, constrains, by_row, runs, below):
     """One interface's route (`interface_coverage`): through the cases of the
-    design rows constraining it, else of the requirements constraining it and
-    the design rows under them, else of its whole reach."""
+    design rows constraining it and the design rows below them, else of the
+    requirements constraining it and the design rows below them, else of its
+    whole reach. `below` is the requirement tree's (`llr_tree`)."""
     named = [r for r in rows if iid in constrains.get(r, ())]
-    via_llr = {c for r in named if r.startswith("LLR-") for c in by_row.get(r, ())}
-    via_sr = set()
-    for r in (r for r in named if r.startswith("SR-")):
-        for x in [r] + [row["LLR-ID"] for row in llrs_under([r], llrs)]:
-            via_sr |= by_row.get(x, set())
+    via_llr = _cases_below(named, "LLR-", below, by_row)
+    via_sr = _cases_below(named, "SR-", below, by_row)
     for route, reached in (
         ("design row", via_llr),
         ("requirement", via_sr),
@@ -667,6 +716,19 @@ def _route(iid, rows, cases, constrains, by_row, runs, llrs):
         if reached & runs:
             return route
     return "observation" if cases else "unreached"
+
+
+def _cases_below(named, prefix, below, by_row):
+    """The cases (`by_row`, `{row id: {TC ids}}`) verifying each row of
+    `named` whose id starts with `prefix`, or a design row below it in the
+    requirement tree (`below`): one of `_route`'s two constraining routes."""
+    return {
+        case
+        for r in named
+        if r.startswith(prefix)
+        for x in [r, *below.get(r, ())]
+        for case in by_row.get(x, ())
+    }
 
 
 def _constrains_by_row(srs, llrs):

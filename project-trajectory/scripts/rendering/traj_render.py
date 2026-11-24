@@ -47,6 +47,28 @@ TIER_FILL = {"sn": "#4338ca", "sr": "#0e7490", "llr": "#64748b", "tc": "#0f766e"
 TIER_COL = {"sn": 0, "sr": 1, "llr": 2, "tc": 3}
 
 
+def icicle_offsets(tier, depth):
+    """`({node id: columns past its tier's own}, deep)` for the spine icicle:
+    a design row sits `depth` columns past the first design column, every test
+    case past the deepest one (`deep`), the other tiers where `TIER_COL` puts
+    them. `tier` is `{node id: tier}`; `depth` the requirement tree's.
+
+    Implements: SR-168, LLR-482"""
+    deep = max(depth.values(), default=0)
+    out = {nid: depth.get(nid, 0) for nid, t in tier.items() if t == "llr"}
+    out.update({nid: deep for nid, t in tier.items() if t == "tc"})
+    return out, deep
+
+
+def icicle_columns(deep):
+    """`[(column, label)]` of the spine icicle: SN, SR, one design-row column
+    per requirement-tree depth `0..deep`, then TC (`TIER_COL` when `deep` is 0).
+
+    Implements: SR-168, LLR-482"""
+    llr = [(TIER_COL["llr"] + d, "LLR") for d in range(deep + 1)]
+    return [(0, "SN"), (1, "SR")] + llr + [(TIER_COL["tc"] + deep, "TC")]
+
+
 # A focusable descendant, for `_svg_role`. Two shapes, because focusability is NOT
 # only `tabindex`: an SVG `<a>` with an href is in the sequential tab order natively
 # and therefore carries none. A `tabindex`-only predicate reported the loops diagram

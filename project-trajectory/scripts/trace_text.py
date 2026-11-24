@@ -969,11 +969,13 @@ def paraphrase_advisories(srs, llrs):
     'decompose, don't paraphrase'). Lexical overlap is a heuristic and is labelled
     as one — it never gates. Measured at 38 of 118 LLRs, which is exactly why: a
     short `Detail` legitimately shares vocabulary with the SR it decomposes, so a
-    gating version would cry wolf on correct rows and get scrolled past.
+    gating version would cry wolf on correct rows and get scrolled past. A child
+    design row's parent SRs are read up its chain (`kitlib.spine.llr_tree`).
 
     Implements: SR-157, LLR-135
     """
     out = []
+    srs_of = _spine.llr_tree(llrs).srs_of
 
     def words(s):
         return {w for w in re.findall(r"[a-z_]{4,}", (s or "").lower())}
@@ -989,7 +991,7 @@ def paraphrase_advisories(srs, llrs):
     by_id = {rid: r for rid, r in _real(srs, "SR-ID")}
     for rid, r in _real(llrs, "LLR-ID"):
         det = words(r.get("Detail"))
-        for p in refs(r.get("SR-Refs")):
+        for p in srs_of.get(rid, []):
             parent = by_id.get(p)
             if parent and det:
                 req = words(parent.get("Requirement"))

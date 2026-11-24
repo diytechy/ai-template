@@ -2,7 +2,7 @@
 id = "WI-1064"
 title = "The parent-first rule reads a child design row's authored parent link, as it reads a design row's requirements"
 workstream = "process"
-specref = "docs/work/queued/WI-1027-parent-llr-link.md"
+specref = "docs/archive/work/complete/WI-1027-parent-llr-link.md"
 sr_refs = ["SR-245", "SR-246"]
 needs = ["WI-1027"]
 buildtier = "medium"

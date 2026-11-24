@@ -65,6 +65,7 @@ Component: CMP-006
 import csv
 import io
 import re
+from collections import namedtuple
 from pathlib import PurePath
 
 from . import config as _kitconfig
@@ -104,6 +105,10 @@ __all__ = [
     "module_components",
     "root_prefix",
     "declared_roots",
+    "LlrTree",
+    "llr_tree",
+    "LlrRows",
+    "llr_tree_rows",
     "llrs_under",
     "review_scope",
     "tier_findings",
@@ -1029,9 +1034,10 @@ def interface_reach(ifs, srs, llrs, tcs):
     rows and requirements whose `Constrains` cell names it and the design rows
     and requirements a test case naming it verifies (observed at it, per pair);
     `cases` are the test cases naming it and every case verifying one of those
-    rows, a constraining requirement's cases including those of the design
-    rows under it (`llrs_under`, the SR-to-LLR walk's one home). Both sorted.
-    The `-000` example rows are not read, on any tier.
+    rows, a constraining requirement's or design row's cases including those
+    of the design rows below it in the requirement tree (`llr_tree`, built
+    once per call); a row only observed at it brings its own cases alone.
+    Both sorted. The `-000` example rows are not read, on any tier.
 
     Implements: SR-157, LLR-421
 
@@ -1044,10 +1050,11 @@ def interface_reach(ifs, srs, llrs, tcs):
     rows = {i: set() for i in _row_ids(_real_rows(ifs, "IF-ID"), "IF-ID") if i}
     for col, tier in (("SR-ID", srs), ("LLR-ID", llrs)):
         _add_constraining(rows, tier, col)
-    walk = {iid: {r for r in rows[iid] if r.startswith("SR-")} for iid in rows}
+    constraining = {iid: set(reached) for iid, reached in rows.items()}
     cases, verifying = _naming_cases(rows, _real_rows(tcs, "TC-ID"))
+    below = llr_tree(llrs).below
     for iid, reached in rows.items():
-        cases[iid] |= _verifying_cases(reached, llrs, verifying, walk[iid])
+        cases[iid] |= _verifying_cases(reached, constraining[iid], below, verifying)
     return {iid: (sorted(rows[iid]), sorted(cases[iid])) for iid in sorted(rows)}
 
 
@@ -1085,18 +1092,18 @@ def _naming_cases(rows, tcs):
     return cases, verifying
 
 
-def _verifying_cases(reached, llrs, verifying, walk):
+def _verifying_cases(reached, constraining, below, verifying):
     """The cases (`verifying`, `{row id: {TC ids}}`) verifying the rows
-    `reached`, a requirement in `walk` (one constraining the interface)
-    including those of the design rows under it: `interface_reach`'s last
-    step. A requirement only observed at the interface brings its own cases,
-    not its design rows'."""
+    `reached`, a row in `constraining` (one whose `Constrains` names the
+    interface) including those of the design rows below it in the tree
+    (`below`, `llr_tree`'s): `interface_reach`'s last step. A row only
+    observed at the interface brings its own cases, not its design rows'."""
     out = set()
     for rid in reached:
         out |= verifying.get(rid, set())
-    for rid in walk:
-        for row in llrs_under([rid], llrs):
-            out |= verifying.get(str(row.get("LLR-ID")).strip(), set())
+    for rid in constraining:
+        for lid in below.get(rid, ()):
+            out |= verifying.get(lid, set())
     return out
 
 
@@ -1181,11 +1188,167 @@ def declared_roots(profile):
     )
 
 
+# THE REQUIREMENT TREE (WI-1027, the review-churn plan's F-call 5 and revision
+# 36). A design row names one parent design row in `Parent`, or, at the top of
+# the tree, its SRs in `SR-Refs`; a child's SRs are read up its chain. Every
+# derivation that relates an SR to its design rows reads this one walk, so a
+# child counts wherever a top-level row counts and its tests cannot drop out of
+# a set unseen. `broken` is what the orphan rules report.
+LlrTree = namedtuple("LlrTree", "below srs_of parent_of depth broken")
+
+
+def _chain_step(rid, by_id, parents):
+    """`(memo entry, next id)` for one row of a chain: the entry when the row
+    ends the chain (top-level, or a parent cell naming several ids or no live
+    row), else `(None, its parent)`."""
+    named = parents.get(rid, [])
+    if not named:
+        return (refs(by_id[rid].get("SR-Refs")), 0, None), None
+    if len(named) > 1:
+        return ([], None, ("several", rid, tuple(named))), None
+    if named[0] not in by_id:
+        return ([], None, ("missing", rid, named[0])), None
+    return None, named[0]
+
+
+def _resolve_chain(rid, by_id, parents, memo):
+    """Fill `memo[id] = (SR ids, depth, broken)` for `rid` and every row on its
+    chain. The ids the chain has passed are kept, so meeting one again stops
+    the walk: the rows on that loop are a cycle and the rows below it are
+    under it. Each row is resolved once."""
+    path, seen, cur = [], {}, rid
+    while cur not in memo:
+        if cur in seen:
+            loop = path[seen[cur] :]
+            for i, x in enumerate(loop):
+                memo[x] = ([], None, ("cycle", x, tuple(loop[i:] + loop[:i])))
+            del path[seen[cur] :]
+            break
+        entry, nxt = _chain_step(cur, by_id, parents)
+        if entry is not None:
+            memo[cur] = entry
+            break
+        seen[cur] = len(path)
+        path.append(cur)
+        cur = nxt
+    for x in reversed(path):
+        srs, depth, broken = memo[parents[x][0]]
+        if broken is None:
+            memo[x] = (srs, depth + 1, None)
+        else:
+            at = broken[1] if broken[0] == "under" else parents[x][0]
+            memo[x] = ([], None, ("under", at, None))
+
+
+def _tree_below(by_id, parents, memo):
+    """`(below, depth)` from the resolved chains `memo`: each row whose chain
+    reaches a top-level row is listed below every ancestor and every SR its
+    chain reaches, in the order of `by_id`, and given its depth.
+
+    Implements: SR-157, SR-049, LLR-481"""
+    below, depth = {}, {}
+    for rid in by_id:
+        srs, level, broken = memo[rid]
+        if broken is not None:
+            continue
+        depth[rid] = level
+        up = parents.get(rid, [None])[0]
+        while up is not None:
+            below.setdefault(up, []).append(rid)
+            up = parents.get(up, [None])[0]
+        for sr in dict.fromkeys(srs):
+            below.setdefault(sr, []).append(rid)
+    return below, depth
+
+
+def llr_tree(llrs):
+    """The requirement tree over the design rows `llrs`, built once.
+
+    A row hangs from its `Parent` when that names an id, else from its
+    `SR-Refs`; a child's own `SR-Refs` are not read (the orphan rules report
+    them). `-000` example rows and rows with no id are not in the tree.
+      below:     {SR id or LLR id: [LLR ids]}, every design row below it, each
+                 once, in the order of `llrs`. Down from an SR: the top-level
+                 rows naming it and every row below them. Down from a design
+                 row: its descendants.
+      srs_of:    {LLR id: [SR ids]}, up: a top-level row's own, a child's those
+                 of the top-level row its chain ends at, [] for a broken chain.
+      parent_of: {LLR id: the one id its parent cell names}.
+      depth:     {LLR id: 0 for a top-level row, +1 per link}; a row whose chain
+                 is broken has none.
+      broken:    {LLR id: (kind, at, detail)}: "missing" (at the row naming a
+                 parent no live row carries, detail that id), "several" (detail
+                 the ids), "cycle" (at each row on it, detail the loop from it),
+                 "under" (at the faulty row its chain reaches).
+    It never raises and never loops: each chain stops at a top-level row, a
+    broken parent cell or a row it has already passed.
+
+    Implements: SR-157, SR-049, LLR-481
+
+    Contract:
+      Inputs:  llrs: iterable of LLR row mappings
+      Outputs: LlrTree — the five maps above
+    """
+    by_id = {}
+    for row in llrs:
+        rid = str(row.get("LLR-ID") or "").strip()
+        if rid and not is_example(rid):
+            by_id.setdefault(rid, row)
+    parents = {rid: refs(row.get("Parent")) for rid, row in by_id.items()}
+    parents = {rid: named for rid, named in parents.items() if named}
+    memo = {}
+    for rid in by_id:
+        _resolve_chain(rid, by_id, parents, memo)
+    below, depth = _tree_below(by_id, parents, memo)
+    return LlrTree(
+        below=below,
+        srs_of={rid: list(dict.fromkeys(memo[rid][0])) for rid in by_id},
+        parent_of={rid: named[0] for rid, named in parents.items() if len(named) == 1},
+        depth=depth,
+        broken={rid: memo[rid][2] for rid in by_id if memo[rid][2] is not None},
+    )
+
+
+LlrRows = namedtuple("LlrRows", "tree below tops children")
+
+
+def llr_tree_rows(llrs):
+    """`llr_tree`'s answers as ROWS, for the readers that render or chain them:
+    `LlrRows(tree, below, tops, children)`, where `below` is `{SR id: [the
+    design rows below it]}`, `tops` `{SR id: [its top-level rows]}` and
+    `children` `{LLR id: [its child rows]}`, each list in the order of `llrs`.
+    A row whose chain is broken is below nothing and nobody's child.
+
+    Implements: SR-157, SR-049, LLR-481
+
+    Contract:
+      Inputs:  llrs: iterable of LLR row mappings
+      Outputs: LlrRows — the tree and the three row maps
+    """
+    llrs = list(llrs)
+    tree = llr_tree(llrs)
+    by_id = {}
+    for row in llrs:
+        by_id.setdefault(str(row.get("LLR-ID") or "").strip(), row)
+    below = {
+        k: [by_id[r] for r in ids] for k, ids in tree.below.items() if k not in by_id
+    }
+    tops = {
+        k: [r for r in rows if tree.depth[r["LLR-ID"].strip()] == 0]
+        for k, rows in below.items()
+    }
+    children = {}
+    for rid, level in tree.depth.items():
+        if level:
+            children.setdefault(tree.parent_of[rid], []).append(by_id[rid])
+    return LlrRows(tree, below, tops, children)
+
+
 def llrs_under(srs, llrs):
-    """The LLR rows reached from the SR ids `srs`, in row order: every row
-    naming one of them. THE ONE HOME OF THE SR-TO-LLR WALK, so a parent link
-    between LLRs extends it here and a child's tests cannot drop out of a set
-    unseen.
+    """The LLR rows below the SR ids `srs` in the requirement tree, in row
+    order: every top-level row naming one of them and every row below those
+    (`llr_tree`). THE ONE HOME OF THE SR-TO-LLR WALK, so a child's tests cannot
+    drop out of a set unseen.
 
     Implements: SR-241, LLR-367
 
@@ -1193,8 +1356,10 @@ def llrs_under(srs, llrs):
       Inputs:  srs: iterable of SR ids; llrs: iterable of LLR row mappings
       Outputs: list — the rows reached
     """
-    wanted = set(srs)
-    return [r for r in llrs if wanted.intersection(refs(r.get("SR-Refs")))]
+    llrs = list(llrs)
+    below = llr_tree(llrs).below
+    wanted = {rid for sr in srs for rid in below.get(sr, ())}
+    return [r for r in llrs if str(r.get("LLR-ID") or "").strip() in wanted]
 
 
 def _case_answer(row, tags, prefix, exists):
@@ -1221,14 +1386,15 @@ def _case_answer(row, tags, prefix, exists):
     return [], [], "{}: no evidence ({})".format(tc, said)
 
 
-def _unverified(srs, reached, cases):
+def _unverified(srs, reached, cases, srs_of):
     """The gap line of each SR, then each reached LLR, that no case in `cases`
-    verifies. An SR counts as verified directly or through one of its LLRs.
+    verifies. An SR counts as verified directly or through any reached LLR
+    whose chain reaches it (`srs_of`, the walk's up map).
 
     Implements: SR-241, LLR-367
     """
     verified = {ref for r in cases for ref in refs(r.get("Verifies"))}
-    llr_srs = [(r.get("LLR-ID"), refs(r.get("SR-Refs"))) for r in reached]
+    llr_srs = [(r.get("LLR-ID"), srs_of.get(r.get("LLR-ID"), [])) for r in reached]
     through = {sr for llr, named in llr_srs if llr in verified for sr in named}
     bare = [sr for sr in srs if sr not in verified and sr not in through]
     bare += [llr for llr, _named in llr_srs if llr not in verified]
@@ -1255,11 +1421,13 @@ def review_scope(srs, llrs, tcs, tags, test_root, exists):
                a predicate over repo-relative paths
       Outputs: (list[str], list[str], list[str]) — files, listed, gaps
     """
+    llrs = list(llrs)
     reached = llrs_under(srs, llrs)
     scope = set(srs) | {r.get("LLR-ID") for r in reached}
     cases = [r for r in tcs if scope.intersection(refs(r.get("Verifies")))]
     prefix = root_prefix(test_root)
-    files, listed, gaps = set(), set(), _unverified(srs, reached, cases)
+    srs_of = llr_tree(llrs).srs_of
+    files, listed, gaps = set(), set(), _unverified(srs, reached, cases, srs_of)
     for row in cases:
         found, beside, gap = _case_answer(row, tags, prefix, exists)
         files.update(found)
@@ -1562,9 +1730,12 @@ SPINE_TIER_KEYS = {
     # states, a POINTER; beside it, and only beside it, `dimensions` states
     # that behaviour's input set in the permutation grammar and
     # `out_of_domain` what the interface does outside it, both statements the
-    # row makes.
+    # row makes. `parent` (WI-1027) names a child row's one parent design row;
+    # a child carries no `sr_refs`, its SRs being read up its chain
+    # (`llr_tree`).
     "LLR-ID": (
         "sr_refs",
+        "parent",
         "hat_refs",
         "title",
         "detail",

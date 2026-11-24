@@ -1483,3 +1483,44 @@ def test_with_the_gate_on_a_falsified_assumption_is_not_listed_twice(rules):
     assert _worklist(rules, [_da(Standing="falsified")], gate=True) == []
     lines = _worklist(rules, [_da()], [_record("TC-001", outcome="fail")], gate=True)
     assert len(lines) == 1 and "DA-001" in lines[0]
+
+
+# --- the architecture arm reads the requirement tree (LLR-244, WI-1027) -------
+
+
+def _tree_rows():
+    """SR-001 holds a top-level design row, its child and its grandchild; only
+    the grandchild is realized in the boundary interface's body file, and only
+    the grandchild's case names the interface."""
+    srs = [_sr("SR-001", Form="interface", **{"DA-Refs": "DA-001"})]
+    llrs = [
+        {"LLR-ID": "LLR-001", "SR-Refs": "SR-001"},
+        {"LLR-ID": "LLR-002", "Parent": "LLR-001"},
+        {"LLR-ID": "LLR-003", "Parent": "LLR-002"},
+    ]
+    ifs = [
+        {"IF-ID": "IF-001", "Owner": "CMP-001", "InterfaceToExternal": "B-01",
+         "BridgedBy": "DA-001"},
+    ]  # fmt: skip
+    index = {"LLR-003": ["project-trajectory/scripts/flags.py"]}
+    homes = {"IF-001": "project-trajectory/scripts/flags.py"}
+    tcs = [{"TC-ID": "TC-003", "Verifies": "LLR-003; IF-001"}]
+    return srs, llrs, ifs, index, homes, tcs
+
+
+def test_a_boundary_interface_reaches_a_requirement_through_a_grandchild(rules):
+    """Implements: TC-564"""
+    srs, llrs, ifs, index, homes, tcs = _tree_rows()
+    assert rules.if_reached_srs(ifs, llrs, homes, index, []) == {"IF-001": ["SR-001"]}
+    assert rules.if_reached_srs(ifs, llrs, None, index, tcs) == {"IF-001": ["SR-001"]}
+
+
+def test_a_requirement_reached_through_a_grandchild_is_judged_as_through_a_top_row(
+    rules,
+):
+    """Implements: TC-564"""
+    srs, llrs, ifs, index, homes, tcs = _tree_rows()
+    assert rules.interface_form_gate_findings(srs, ifs, llrs, homes, index, tcs) == []
+    unbridged = [dict(ifs[0], BridgedBy="DA-009")]
+    [line] = rules.interface_form_gate_findings(srs, unbridged, llrs, homes, index, tcs)
+    assert line.startswith("SR SR-001 is reached by boundary interface IF-001,")

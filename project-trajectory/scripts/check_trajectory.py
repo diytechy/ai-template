@@ -2371,11 +2371,10 @@ def _placed_sr_components(root, components):
         llrs,
     )
     out = {}
-    for r in llrs:
-        placed = set(placement.get((r.get("LLR-ID") or "").strip(), ())) & set(
-            components
-        )
-        for sr in _split_refs(r.get("SR-Refs") or "") if placed else ():
+    srs_of = _kitspine.llr_tree(llrs).srs_of
+    for lid, srs in srs_of.items():  # a child's SRs are read up its chain
+        placed = set(placement.get(lid, ())) & set(components)
+        for sr in srs if placed else ():
             out.setdefault(sr, set()).update(placed)
     return out
 

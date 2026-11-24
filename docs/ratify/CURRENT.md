@@ -30,7 +30,7 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 26 chain(s): SR-010, SR-026, SR-032, SR-033, SR-035, SR-046, SR-049, SR-070, SR-112, SR-140, SR-157, SR-158, SR-168, SR-170, SR-178, SR-179, SR-207, SR-211, SR-212, SR-218, SR-224, SR-228, SR-229, SR-230, SR-238, SR-249</summary>
+<summary>Waiting for automated adjudication — 29 chain(s): SR-010, SR-026, SR-032, SR-033, SR-035, SR-046, SR-049, SR-070, SR-112, SR-140, SR-157, SR-158, SR-168, SR-170, SR-178, SR-179, SR-207, SR-211, SR-212, SR-217, SR-218, SR-224, SR-228, SR-229, SR-230, SR-238, SR-241, SR-248, SR-249</summary>
 
 ## SR-010 — Scaffold passes out of the box
 
@@ -156,6 +156,40 @@ _traced — routes to adjudication_
 - **Constrains**
   - before: (empty)
   - after: IF-074
+
+### LLR LLR-481 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-481
+- **SR-Refs**: SR-157;SR-049
+- **Title**: One walk over the requirement tree answers both directions, below every reader
+- **Detail**: One derivation relates system requirements and design rows. Down, from a system requirement or a design row, it returns every design row below it, each once, in registry order: the top-level rows naming the requirement, or the rows whose parent cell names the design row, and every row below those. Up, from a design row, it returns the system requirements its chain reaches: a top-level row's own, a child's those of the top-level row its parent chain ends at, and none for a row whose chain meets a missing parent or a cycle. It answers every input without raising and without looping, following each chain until a top-level row, a missing parent or a row the chain has already passed. The checker's rules and reports and the stage derivation take the relation from it, so a row below a top-level row counts wherever a top-level row counts.
+- **Rationale**: A reader taking a design row's requirements from its own cell would lose every child, and two copies of the walk could disagree about which rows a requirement holds; one walk below its readers keeps a child's test cases in every derivation that starts from a requirement.
+- **TestRefs**: TC-561; TC-567
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-561 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-561
+- **Verifies**: SR-157;SR-049;LLR-481
+- **Level**: Unit
+- **Method**: Call the walk over design rows listed out of tree order: a top-level row under one requirement with a child and a grandchild, a second requirement's top-level row, a child whose parent is missing, a cycle of two rows, a row below the cycle, a cycle of one row and a row naming two parents.
+- **Tier**: Smoke
+- **Expected**: Down from the first requirement: the top-level row, the child and the grandchild, each once, in registry order; down from the top-level row: the child and the grandchild; up from the grandchild: the first requirement; up from the row below the missing parent, from each row on or below a cycle and from the row naming two parents: none. Every call returns.
+- **Automated**: Yes
+- **Status**: Drafted
+- **Phase**: 6
+- **Evidence**: tests/test_requirement_tree.py::test_a_missing_parent_or_a_cycle_reaches_no_requirement_and_the_walk_returns; tests/test_requirement_tree.py::test_a_one_row_cycle_and_a_row_naming_two_parents_are_broken_too; tests/test_requirement_tree.py::test_llrs_under_keeps_its_rows_and_reaches_the_grandchild; tests/test_requirement_tree.py::test_the_walk_goes_down_from_a_design_row_to_its_descendants; tests/test_requirement_tree.py::test_the_walk_goes_down_from_a_requirement_to_every_row_below_it_once; tests/test_requirement_tree.py::test_the_walk_goes_up_from_a_grandchild_to_its_chains_requirement
+
+### TC TC-567 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-567
+- **Verifies**: SR-157;SR-049;LLR-481
+- **Level**: Unit
+- **Method**: Over the three-level tree with one test case per row, run the checker's orphan pass; its triangle rule over a test case citing the grandchild beside each requirement; its paraphrase advisory over a grandchild echoing the first requirement; its perspective coverage with a perspective only on the first requirement; and its report's outline, matrix and graph. Group the rows into phases and derive the per-phase stage with the two requirements in two phases, with every row settled and then with the grandchild Drafted; and group the settled rows under a Drafted top-level row by the chain read over every row.
+- **Tier**: Smoke
+- **Expected**: No row of the tree is reported as missing a system requirement; the case citing the grandchild beside the first requirement is coherent and beside the second is reported; the grandchild's echo is reported against the first requirement; its effective perspectives include the first requirement's; the outline nests the grandchild under the child under the top-level row, the matrix lists all three under the first requirement, and the graph draws each parent link. The grandchild falls in the first requirement's phase; Drafted, it holds that phase's live reading at the design-row rung, and the phase's settled reading equals the reading with it settled; the settled child and grandchild under a Drafted top-level row keep the first requirement's phase.
+- **Automated**: Yes
+- **Status**: Drafted
+- **Phase**: 6
+- **Evidence**: tests/test_requirement_tree.py::test_a_drafted_grandchild_holds_its_phases_live_reading; tests/test_requirement_tree.py::test_a_grandchilds_effective_perspectives_include_its_chains_requirements; tests/test_requirement_tree.py::test_the_graph_draws_each_parent_link; tests/test_requirement_tree.py::test_the_matrix_lists_every_row_below_a_requirement; tests/test_requirement_tree.py::test_the_outline_nests_the_grandchild_under_the_child_under_the_top_row; tests/test_requirement_tree.py::test_the_paraphrase_advisory_compares_a_grandchild_with_its_chains_requirement; tests/test_requirement_tree.py::test_the_stage_places_a_grandchild_in_its_requirements_phase; tests/test_requirement_tree.py::test_the_triangle_rule_reads_a_grandchilds_requirement_up_its_chain; tests/test_requirement_tree.py::test_the_settled_grouping_reads_the_walk_over_the_live_rows
 
 ## SR-070 — Generated views are offline, deterministic and drift-checkable
 
@@ -339,7 +373,7 @@ _traced — routes to adjudication_
 - **LLR-ID**: LLR-421
 - **SR-Refs**: SR-157
 - **Title**: An interface whose reach through the rows constraining it and the cases naming it holds no executable test case is reported
-- **Detail**: An interface's reach is the design rows and system requirements whose constrains cell names it, the design rows and requirements a test case naming it verifies, and every test case naming it or verifying one of those rows, a constraining requirement's cases including those of the design rows decomposing it. Each live interface whose reach holds no test case the harness runs, an observation case being one it does not run, is named on one warning line, and those whose reach holds observation cases alone are named on a line of their own. A count line gives the interfaces reached through a constraining design row, through a constraining requirement, through a naming test case alone, by observation alone, and not at all. The process settings' interface-check opt-out silences the report, and with no live interface row it is empty. The report does not change the strict check's exit code.
+- **Detail**: An interface's reach is the design rows and system requirements whose constrains cell names it, the design rows and requirements a test case naming it verifies, and every test case naming it or verifying one of those rows, a constraining design row's cases including those of the design rows below it in the requirement tree, as a constraining requirement's include those of the design rows decomposing it. Each live interface whose reach holds no test case the harness runs, an observation case being one it does not run, is named on one warning line, and those whose reach holds observation cases alone are named on a line of their own. A count line gives the interfaces reached through a constraining design row, through a constraining requirement, through a naming test case alone, by observation alone, and not at all. The process settings' interface-check opt-out silences the report, and with no live interface row it is empty. The report does not change the strict check's exit code.
 - **Rationale**: Every interface is pointed at by a requirement stating its behaviour or by a test case observing it, and reaches a test the harness runs that way; reporting the reach before it fails lets the population land first.
 - **TestRefs**: TC-531
 - **Status**: Drafted
@@ -352,6 +386,36 @@ _traced — routes to adjudication_
 - **Detail**: For each interface a test case's verifies cell names, the name repeats each verified design row or system requirement whose constrains cell includes that interface. The name is reported, naming the case, the interface and the rows, only when it repeats every design row and system requirement the case verifies: a case verifying neither repeats nothing, and a case verifying one row that constrains the interface beside a row or requirement that does not repeats nothing. The report changes the exit code of neither the strict check nor the integrity check.
 - **Rationale**: A test case names an interface only where it observes the behaviour at a different interface from the one its rows constrain; per pair, a row that constrains nothing still needs the name for its placement.
 - **TestRefs**: TC-532
+- **Status**: Drafted
+- **Phase**: 6
+
+### LLR LLR-480 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-480
+- **SR-Refs**: SR-157
+- **Title**: A design row hangs from one parent row or from its system requirements, and a malformed tree fails the strict check
+- **Detail**: A design row's parent cell, when present, names one other design row: the row is then a child and names no system requirement, its requirements being read up its parent chain; a row with no parent cell is top-level and names at least one system requirement. The strict check reports each of these, naming the row, whatever its status: a top-level row naming no system requirement; a child naming one; a parent cell naming anything but exactly one live design row, an example row not being live; each row on a cycle of parent links, naming the cycle's rows; and each row whose parent chain reaches such a parent cell or such a cycle, naming the row where the chain breaks.
+- **Rationale**: A child naming its own system requirements would give its parentage two homes that can disagree, so the chain is the one home. A row on a cycle or under a missing parent reaches no requirement, so every derivation starting from a requirement would drop it and its test cases; reporting it at the strict check keeps that loss visible.
+- **TestRefs**: TC-560
+- **Status**: Drafted
+- **Phase**: 6
+
+### LLR LLR-481 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-481
+- **SR-Refs**: SR-157;SR-049
+- **Title**: One walk over the requirement tree answers both directions, below every reader
+- **Detail**: One derivation relates system requirements and design rows. Down, from a system requirement or a design row, it returns every design row below it, each once, in registry order: the top-level rows naming the requirement, or the rows whose parent cell names the design row, and every row below those. Up, from a design row, it returns the system requirements its chain reaches: a top-level row's own, a child's those of the top-level row its parent chain ends at, and none for a row whose chain meets a missing parent or a cycle. It answers every input without raising and without looping, following each chain until a top-level row, a missing parent or a row the chain has already passed. The checker's rules and reports and the stage derivation take the relation from it, so a row below a top-level row counts wherever a top-level row counts.
+- **Rationale**: A reader taking a design row's requirements from its own cell would lose every child, and two copies of the walk could disagree about which rows a requirement holds; one walk below its readers keeps a child's test cases in every derivation that starts from a requirement.
+- **TestRefs**: TC-561; TC-567
+- **Status**: Drafted
+- **Phase**: 6
+
+### LLR LLR-483 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-483
+- **SR-Refs**: SR-157
+- **Title**: The required-field check asks a top-level design row, not a child, for its system requirements
+- **Detail**: The required-field check asks a design row for its system-requirement references only when the row names no parent row: a child, whose requirements are read up its parent chain, is not reported for leaving them empty. Every other required cell of a design row is asked of a child as of a top-level row.
+- **Rationale**: A child stating its own requirements would give its parentage a second home, so the one cell the check asks of every top-level row is one a child leaves empty; the rest of a child's row is held to the same cells, since it is a design row like any other.
+- **TestRefs**: TC-568
 - **Status**: Drafted
 - **Phase**: 6
 
@@ -395,11 +459,11 @@ _traced — routes to adjudication_
 - **TC-ID**: TC-531
 - **Verifies**: SR-157;LLR-421
 - **Level**: Integration
-- **Method**: Derive the reach and the route of six interfaces: one a design row constrains, one a requirement constrains whose design row a case verifies, one a case names beside the row it verifies, one only an observation case names, one no row or case reaches, and one that only a design row verified by an observation case constrains; then derive the reach of an interface only an observation case names beside a requirement a run case verifies; then run the strict check over the project, again with the interface-check opt-out set, and over a project with no interface row.
+- **Method**: Derive the reach and the route of six interfaces: one a design row constrains, one a requirement constrains whose design row a case verifies, one a case names beside the row it verifies, one only an observation case names, one no row or case reaches, and one that only a design row verified by an observation case constrains; then derive the reach of an interface only an observation case names beside a requirement a run case verifies; then run the strict check over the project, again with the interface-check opt-out set, and over a project with no interface row. Over two top-level design rows with children, derive the reach and the route of an interface the first constrains, whose only run case verifies its child, and of one the second constrains, whose only run case verifies its grandchild, each top-level row's own case being an observation case, and run the strict check; then, over a three-level tree, derive the reach and the route of an interface its top-level row constrains, its child and grandchild each verified by a run case, and of an interface an observation case names beside that row and its requirement, neither of which constrains it.
 - **Tier**: Smoke
-- **Expected**: Each interface's reach holds its constraining or observed rows and the cases verifying them; the routes are design row, requirement, case, observation, unreached and observation; the count line reads one, one, one, two and one; the unreached interface and the two observation-only interfaces are each named on their own line; the interface the observation case names beside a requirement a run case verifies is reached through that case; the check exits 0; the opted-out run and the project with no interface row print no coverage line.
+- **Expected**: Each interface's reach holds its constraining or observed rows and the cases verifying them; the routes are design row, requirement, case, observation, unreached and observation; the count line reads one, one, one, two and one; the unreached interface and the two observation-only interfaces are each named on their own line; the interface the observation case names beside a requirement a run case verifies is reached through that case; the check exits 0; the opted-out run and the project with no interface row print no coverage line. Over the two top-level rows, each interface holds in its reach the run case of the child or grandchild and is reached through a constraining design row, the count line reads two through a constraining design row and none by any other route, neither interface is named on a warning line, and the check exits 0; over the three-level tree, the constrained interface holds the child's and grandchild's run cases and its route is design row, while the interface where the row and its requirement are only observed holds the observation case alone, not the run cases of the rows below, and its route is observation.
 - **Automated**: Yes
-- **Evidence**: tests/test_constrains.py::test_each_interface_reaches_a_run_case_through_a_constraining_row_or_a_naming_case; tests/test_constrains.py::test_the_interface_check_opt_out_silences_coverage; tests/test_constrains.py::test_a_requirement_a_naming_case_verifies_brings_its_run_cases_into_the_reach
+- **Evidence**: tests/test_constrains.py::test_each_interface_reaches_a_run_case_through_a_constraining_row_or_a_naming_case; tests/test_constrains.py::test_the_interface_check_opt_out_silences_coverage; tests/test_constrains.py::test_a_requirement_a_naming_case_verifies_brings_its_run_cases_into_the_reach; tests/test_constrains.py::test_a_constraining_design_row_brings_the_cases_of_the_design_rows_below_it; tests/test_constrains.py::test_a_row_only_observed_at_an_interface_brings_its_own_cases_alone
 - **Status**: Drafted
 - **Phase**: 6
 
@@ -414,6 +478,54 @@ _traced — routes to adjudication_
 - **Evidence**: tests/test_constrains.py::test_a_name_every_verified_row_already_constrains_is_reported_per_pair
 - **Status**: Drafted
 - **Phase**: 6
+
+### TC TC-560 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-560
+- **Verifies**: SR-157;LLR-480
+- **Level**: Unit
+- **Method**: Run the orphan pass and the strict check over a three-level tree of design rows beside one row of each fault: a top-level row naming no system requirement, a child naming one, a parent cell naming a missing row, one naming a system requirement, one naming two rows, a cycle of two rows and a cycle of one, and a row below the missing parent; once with the faulty rows Drafted and once Accepted, through the orphan pass and through the strict check for each fault. Load a design registry whose rows carry parent cells.
+- **Tier**: Smoke
+- **Expected**: The well-formed tree produces no report. Each faulty row is reported once, naming the row and its fault, at both statuses, and the strict check fails on each fault at both statuses: each row on a cycle names the cycle's rows, and the row below the missing parent names the row where its chain breaks. The registry loads.
+- **Automated**: Yes
+- **Status**: Drafted
+- **Phase**: 6
+- **Evidence**: tests/test_requirement_tree.py::test_a_design_registry_whose_rows_carry_a_parent_loads; tests/test_requirement_tree.py::test_a_row_below_a_missing_parent_names_where_its_chain_breaks; tests/test_requirement_tree.py::test_a_well_formed_tree_is_silent; tests/test_requirement_tree.py::test_each_fault_is_reported_once_at_either_status; tests/test_requirement_tree.py::test_each_row_on_a_two_row_cycle_names_the_cycle; tests/test_requirement_tree.py::test_a_well_formed_tree_passes_the_strict_check; tests/test_requirement_tree.py::test_the_strict_check_fails_on_each_fault
+
+### TC TC-561 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-561
+- **Verifies**: SR-157;SR-049;LLR-481
+- **Level**: Unit
+- **Method**: Call the walk over design rows listed out of tree order: a top-level row under one requirement with a child and a grandchild, a second requirement's top-level row, a child whose parent is missing, a cycle of two rows, a row below the cycle, a cycle of one row and a row naming two parents.
+- **Tier**: Smoke
+- **Expected**: Down from the first requirement: the top-level row, the child and the grandchild, each once, in registry order; down from the top-level row: the child and the grandchild; up from the grandchild: the first requirement; up from the row below the missing parent, from each row on or below a cycle and from the row naming two parents: none. Every call returns.
+- **Automated**: Yes
+- **Status**: Drafted
+- **Phase**: 6
+- **Evidence**: tests/test_requirement_tree.py::test_a_missing_parent_or_a_cycle_reaches_no_requirement_and_the_walk_returns; tests/test_requirement_tree.py::test_a_one_row_cycle_and_a_row_naming_two_parents_are_broken_too; tests/test_requirement_tree.py::test_llrs_under_keeps_its_rows_and_reaches_the_grandchild; tests/test_requirement_tree.py::test_the_walk_goes_down_from_a_design_row_to_its_descendants; tests/test_requirement_tree.py::test_the_walk_goes_down_from_a_requirement_to_every_row_below_it_once; tests/test_requirement_tree.py::test_the_walk_goes_up_from_a_grandchild_to_its_chains_requirement
+
+### TC TC-567 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-567
+- **Verifies**: SR-157;SR-049;LLR-481
+- **Level**: Unit
+- **Method**: Over the three-level tree with one test case per row, run the checker's orphan pass; its triangle rule over a test case citing the grandchild beside each requirement; its paraphrase advisory over a grandchild echoing the first requirement; its perspective coverage with a perspective only on the first requirement; and its report's outline, matrix and graph. Group the rows into phases and derive the per-phase stage with the two requirements in two phases, with every row settled and then with the grandchild Drafted; and group the settled rows under a Drafted top-level row by the chain read over every row.
+- **Tier**: Smoke
+- **Expected**: No row of the tree is reported as missing a system requirement; the case citing the grandchild beside the first requirement is coherent and beside the second is reported; the grandchild's echo is reported against the first requirement; its effective perspectives include the first requirement's; the outline nests the grandchild under the child under the top-level row, the matrix lists all three under the first requirement, and the graph draws each parent link. The grandchild falls in the first requirement's phase; Drafted, it holds that phase's live reading at the design-row rung, and the phase's settled reading equals the reading with it settled; the settled child and grandchild under a Drafted top-level row keep the first requirement's phase.
+- **Automated**: Yes
+- **Status**: Drafted
+- **Phase**: 6
+- **Evidence**: tests/test_requirement_tree.py::test_a_drafted_grandchild_holds_its_phases_live_reading; tests/test_requirement_tree.py::test_a_grandchilds_effective_perspectives_include_its_chains_requirements; tests/test_requirement_tree.py::test_the_graph_draws_each_parent_link; tests/test_requirement_tree.py::test_the_matrix_lists_every_row_below_a_requirement; tests/test_requirement_tree.py::test_the_outline_nests_the_grandchild_under_the_child_under_the_top_row; tests/test_requirement_tree.py::test_the_paraphrase_advisory_compares_a_grandchild_with_its_chains_requirement; tests/test_requirement_tree.py::test_the_stage_places_a_grandchild_in_its_requirements_phase; tests/test_requirement_tree.py::test_the_triangle_rule_reads_a_grandchilds_requirement_up_its_chain; tests/test_requirement_tree.py::test_the_settled_grouping_reads_the_walk_over_the_live_rows
+
+### TC TC-568 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-568
+- **Verifies**: SR-157;LLR-483
+- **Level**: Unit
+- **Method**: Run the required-field check over a top-level design row and a child row that each name no system requirement, and over a child that also leaves its title empty.
+- **Tier**: Smoke
+- **Expected**: The top-level row is reported for its empty system-requirement references and the first child is not; the untitled child is reported for its empty title only.
+- **Automated**: Yes
+- **Status**: Drafted
+- **Phase**: 6
+- **Evidence**: tests/test_requirement_tree.py::test_the_required_field_check_asks_sr_refs_of_a_top_level_row_only
 
 ## SR-158 — Documentation drift fails or warns per its declared tier
 
@@ -461,6 +573,28 @@ _traced — routes to adjudication_
 - **Constrains**
   - before: (empty)
   - after: IF-088
+
+### LLR LLR-482 — ADDED since the snapshot, Drafted — never accepted
+- **LLR-ID**: LLR-482
+- **SR-Refs**: SR-168
+- **Title**: The state view draws a child design row inside its parent
+- **Detail**: In the state view's requirement decomposition, a child design row is drawn inside its parent row's span, one column further in than its parent; the test-case column follows the deepest design column, so a decomposition with no child row keeps one design column.
+- **Rationale**: A child drawn beside its parent would read as a second decomposition of the requirement; drawn inside it, the view shows which row the child refines, as the component view shows a part inside its whole.
+- **TestRefs**: TC-562
+- **Status**: Drafted
+- **Phase**: 6
+
+### TC TC-562 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-562
+- **Verifies**: SR-168;LLR-482
+- **Level**: Unit
+- **Method**: Render the state view's requirement decomposition over a three-level tree with one test case under each design row, and over the same requirements with every design row top-level.
+- **Tier**: Smoke
+- **Expected**: The child is drawn inside the top-level row's span one column further in, and the grandchild inside the child's one column further again; the test-case column follows the grandchild's. With every row top-level the decomposition has one design column, followed by the test-case column.
+- **Automated**: Yes
+- **Status**: Drafted
+- **Phase**: 6
+- **Evidence**: tests/test_requirement_tree.py::test_a_spine_with_no_child_keeps_one_design_column; tests/test_requirement_tree.py::test_the_spine_view_draws_each_child_one_column_further_in; tests/test_requirement_tree.py::test_the_spine_view_draws_each_child_inside_its_parents_span
 
 ## SR-170 — Shared authority surfaces are the serial actor's alone
 
@@ -693,12 +827,48 @@ _traced — routes to adjudication_
 ### LLR LLR-244
 - **Detail**
   - before: Each boundary interface, one carrying a from- or to-external tie-back, reaches the requirements named in SR-Refs by the design rows realized in the one file stating its contract body. That file is the one the definition gate's scan finds; the files realizing a design row are those the back-link index names for it; the two are compared through the one path normalizer. An interface with no contract body yet reaches none. Where no source is scanned, an interface instead reaches the requirements of the design rows placed in its owner component, a design row placed through the interfaces its verifying test cases name. The architecture arm judges each requirement whose form is interface against every boundary interface reaching it: one reached by none fails naming the requirement and stating that no boundary interface reaches it; each reaching interface with no Coincident whose BridgedBy shares no assumption with the requirement's DA-Refs fails naming the requirement and that interface, so one valid interface never excuses another invalid one. The harness gains a built-in step for the architecture arm at the DevStg-Arch threshold, gated by the same setting. The boundary arm judges the frame's crossings: each interface-form requirement with no Coincident fails once for each declared crossing its Boundary-Refs names on which no assumption in its DA-Refs lands (EffectAt), naming the requirement and that crossing; a crossing the frame does not declare is left to the frame's own reference rule. The harness gains a built-in step for the boundary arm at the DevStg-Boundary threshold, gated by the same setting. The relation is derived here and never recorded on an interface, and the stage fold gains no interface parameter.
-  - after: Each boundary interface, one carrying a from- or to-external tie-back, reaches the requirements named in SR-Refs by the design rows realized in the one file stating its contract body. That file is the one the definition gate's scan finds; the files realizing a design row are those the back-link index names for it; the two are compared through the one path normalizer. An interface with no contract body yet reaches none. Where no source is scanned, an interface instead reaches the requirements of the design rows placed in its owner component, each placed as LLR-403 places it. The architecture arm judges each requirement whose form is interface against every boundary interface reaching it: one reached by none fails naming the requirement and stating that no boundary interface reaches it; each reaching interface with no Coincident whose BridgedBy shares no assumption with the requirement's DA-Refs fails naming the requirement and that interface, so one valid interface never excuses another invalid one. The harness gains a built-in step for the architecture arm at the DevStg-Arch threshold, gated by the same setting. The boundary arm judges the frame's crossings: each interface-form requirement with no Coincident fails once for each declared crossing its Boundary-Refs names on which no assumption in its DA-Refs lands (EffectAt), naming the requirement and that crossing; a crossing the frame does not declare is left to the frame's own reference rule. The harness gains a built-in step for the boundary arm at the DevStg-Boundary threshold, gated by the same setting. The relation is derived here and never recorded on an interface, and the stage fold gains no interface parameter.
+  - after: Each boundary interface, one carrying a from- or to-external tie-back, reaches the requirements named in SR-Refs by the design rows realized in the one file stating its contract body, a child row's requirements being those of the top-level row its parent chain ends at. That file is the one the definition gate's scan finds; the files realizing a design row are those the back-link index names for it; the two are compared through the one path normalizer. An interface with no contract body yet reaches none. Where no source is scanned, an interface instead reaches the requirements of the design rows placed in its owner component, each placed as LLR-403 places it. The architecture arm judges each requirement whose form is interface against every boundary interface reaching it: one reached by none fails naming the requirement and stating that no boundary interface reaches it; each reaching interface with no Coincident whose BridgedBy shares no assumption with the requirement's DA-Refs fails naming the requirement and that interface, so one valid interface never excuses another invalid one. The harness gains a built-in step for the architecture arm at the DevStg-Arch threshold, gated by the same setting. The boundary arm judges the frame's crossings: each interface-form requirement with no Coincident fails once for each declared crossing its Boundary-Refs names on which no assumption in its DA-Refs lands (EffectAt), naming the requirement and that crossing; a crossing the frame does not declare is left to the frame's own reference rule. The harness gains a built-in step for the boundary arm at the DevStg-Boundary threshold, gated by the same setting. The relation is derived here and never recorded on an interface, and the stage fold gains no interface parameter.
 
 ### TC TC-466
 - **Evidence**
   - before: tests/test_if_owner_component.py::test_a_boundary_row_reaches_requirements_through_the_file_stating_its_body
   - after: tests/test_if_owner_component.py::test_a_boundary_row_reaches_requirements_through_the_file_stating_its_body; tests/test_if_owner_component.py::test_with_no_scanned_source_a_row_is_placed_by_the_interface_it_constrains
+
+### TC TC-564 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-564
+- **Verifies**: SR-212;LLR-244
+- **Level**: Unit
+- **Method**: Run the architecture arm over an interface-form requirement whose only design row realized in a boundary interface's body file is a grandchild of a top-level row naming the requirement; once with the source scanned, and once unscanned with the grandchild placed in the interface's owner component; then with the interface bridged by no assumption the requirement cites.
+- **Tier**: Smoke
+- **Expected**: In both readings the interface reaches the requirement, which is judged against it as one reached through a top-level row is: bridged, it passes; unbridged, it fails naming the requirement and the interface.
+- **Automated**: Yes
+- **Status**: Drafted
+- **Phase**: 6
+- **Evidence**: tests/test_assumption_rules.py::test_a_boundary_interface_reaches_a_requirement_through_a_grandchild; tests/test_assumption_rules.py::test_a_requirement_reached_through_a_grandchild_is_judged_as_through_a_top_row
+
+## SR-217 — A requirement implemented before its test cases were accepted is reported
+
+> **Requirement.** The delivered harness shall report each system requirement accepted after the project's declared starting point whose implementation has landed on trunk while any of its test cases was not yet accepted for it, reading the order from the committed history.
+
+> **Rationale.** Tests written after the code tend to describe what the code does rather than what was required, so the order is the evidence that a passing run means the requirement is met. The stage ladder puts test cases before implementation for a project as a whole, but not requirement by requirement, and the committed history is the one record of order that no cell can restate after the fact. Code declaring which requirement or design row it implements is the one event that marks an implementation landing. A requirement's acceptance is its entry into scope, so judging only requirements accepted after a declared starting point keeps a project that adopts the rule from being judged on history written before it; a project that declares none is judged whole. A test case is evidence for a requirement only once it is accepted while it names that requirement: dated from its own acceptance alone, a test case accepted for something else could be re-pointed at code already written and lend it an order it never had. A test case not yet accepted is the same gap at its widest, since its passing run shows only that the code does what unaccepted text says; the report names it with a warning rather than withholding the result, which a reviewer can still weigh.
+
+
+### LLR LLR-257
+- **Detail**
+  - before: The start is [checks] test_first_since in the process settings, a commit id, read as text. When each requirement, and each pair of a test case and a requirement it names, was first accepted is read from the acceptance record, never by replaying the registries: the commits read are those that wrote the act ledger or the record's copies of the requirement, design and test-case registries at the record's current path, found by the act ledger's one history walk widened to those copies, and each commit's copies are read against every parent's through the shared row reader and acceptance-act rule. A commit that added a ledger entry is an act and dates exactly each row it carried into acceptance and each pair new in its copies, a pair being a test case accepted in a copy while it names the requirement directly or through a design row whose SR-Refs name the requirement in that same copy, so a test case accepted earlier and re-pointed at the requirement, or reached through a design row re-pointed at it, is dated at the act that re-accepts it; a row born Accepted counts at its act, and a row's later re-acceptances are not its first. An act made on a side branch is ordered at the first first-parent commit that contains it, as a landing is, and named by its own commit. The record's first commit at its current path is its cut: nothing before it is read, in any earlier spelling of the record, since no reader is kept for a spelling the record has left behind and its history is cut cleanly there rather than translated; each acceptance its copies carry is known only to be at or before the cut while its ledger records an act, and is unread when the cut holds no ledger, an empty one or a malformed one; in this repository the cut is the vocabulary move, which reached trunk at the declared start. A row moved into Accepted from a word outside the status vocabulary is likewise known only to be at or before its act. Such a date settles the order when it falls at or before the landing, and for a requirement's own acceptance at or before the start; otherwise the requirement is reported as unread, never as a pass. A commit that changes the copies with a flip or a new pair and adds no ledger entry, or whose ledger or its parent's is malformed, is a gap: what it carries is unread, never a pass and never dated at a later act, and so is a requirement or test case reading accepted at the tip that no act in the record accepted. The start applies to the requirement's acceptance only, and test-case acceptances are read over the whole record, so a test case accepted after the implementation landed is reported even when both precede the start. A count-based pickaxe is not used, because an act accepting one row while withdrawing another nets to zero. A requirement's implementation lands at the earliest first-parent commit adding an `Implements:` line naming it or one of its design rows, read with the one back-link grammar the reverse back-link scan defines. Each requirement accepted after the start whose implementation has landed is judged over the test cases whose Verifies name it or one of its design rows at the tip: the check reports each one accepted for it after the landing, naming the requirement, the implementation commit and each such acceptance commit, and each one that does not read accepted at the tip or that no act has accepted while it names the requirement, by name, on one line carrying the warning that those test cases' results may not reflect the intended behaviour. A shallow clone, a start commit that no longer exists or is not a first-parent ancestor of trunk, a start before the TOML registries, and registries still under an older carrier are reported as unreadable, never as a pass, the design registry held to both carrier rules with the requirement and test-case registries, since a test case reaching a requirement through a design row the TOML reader cannot see would otherwise drop out in silence; a rewrite that keeps the start on trunk is read as the history it now is. The harness's checks gain a warn-only built-in step `test-first`.
+  - after: The start is a commit id the process settings declare for this check, read as text. When each requirement, and each pair of a test case and a requirement it names, was first accepted is read from the acceptance record, never by replaying the registries: the commits read are those that wrote the act ledger or the record's copies of the requirement, design and test-case registries at the record's current path, found by the act ledger's one history walk widened to those copies, and each commit's copies are read against every parent's through the shared row reader and acceptance-act rule. A commit that added a ledger entry is an act and dates exactly each row it carried into acceptance and each pair new in its copies, a pair being a test case accepted in a copy while it names the requirement directly or through a design row below the requirement in that same copy's requirement tree (one whose SR-Refs name the requirement, or a child whose parent chain ends at such a row), so a test case accepted earlier and re-pointed at the requirement, or reached through a design row re-pointed at it, is dated at the act that re-accepts it; a row born Accepted counts at its act, and a row's later re-acceptances are not its first. An act made on a side branch is ordered at the first first-parent commit that contains it, as a landing is, and named by its own commit. The record's first commit at its current path is its cut: nothing before it is read, in any earlier spelling of the record, since no reader is kept for a spelling the record has left behind and its history is cut cleanly there rather than translated; each acceptance its copies carry is known only to be at or before the cut while its ledger records an act, and is unread when the cut holds no ledger, an empty one or a malformed one; in this repository the cut is the vocabulary move, which reached trunk at the declared start. A row moved into Accepted from a word outside the status vocabulary is likewise known only to be at or before its act. Such a date settles the order when it falls at or before the landing, and for a requirement's own acceptance at or before the start; otherwise the requirement is reported as unread, never as a pass. A commit that changes the copies with a flip or a new pair and adds no ledger entry, or whose ledger or its parent's is malformed, is a gap: what it carries is unread, never a pass and never dated at a later act, and so is a requirement or test case reading accepted at the tip that no act in the record accepted. The start applies to the requirement's acceptance only, and test-case acceptances are read over the whole record, so a test case accepted after the implementation landed is reported even when both precede the start. Counting a row's occurrences in a commit's diff is not used, because an act accepting one row while withdrawing another nets to zero. A requirement's implementation lands at the earliest first-parent commit adding a back-link line naming it or one of its design rows, read with the one back-link grammar the reverse back-link scan defines. Each requirement accepted after the start whose implementation has landed is judged over the test cases whose Verifies name it or one of its design rows at the tip: the check reports each one accepted for it after the landing, naming the requirement, the implementation commit and each such acceptance commit, and each one that does not read accepted at the tip or that no act has accepted while it names the requirement, by name, on one line carrying the warning that those test cases' results may not reflect the intended behaviour. A shallow clone, a start commit that no longer exists or is not a first-parent ancestor of trunk, a start before the TOML registries, and registries still under an older carrier are reported as unreadable, never as a pass, the design registry held to both carrier rules with the requirement and test-case registries, since a test case reaching a requirement through a design row the TOML reader cannot see would otherwise drop out in silence; a rewrite that keeps the start on trunk is read as the history it now is. The harness's checks gain a warn-only built-in step for this order.
+
+### TC TC-565 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-565
+- **Verifies**: SR-217;LLR-257
+- **Level**: Unit
+- **Method**: Pair the test cases with the requirements over one copy of the registries in which a test case names only the grandchild of a top-level row naming a requirement.
+- **Tier**: Smoke
+- **Expected**: The test case is paired with that requirement.
+- **Automated**: Yes
+- **Status**: Drafted
+- **Phase**: 6
+- **Evidence**: tests/test_requirement_tree.py::test_a_case_naming_only_a_grandchild_is_paired_with_its_chains_requirement
 
 ## SR-218 — The state view shows, for each need, the assumptions it relies on and whether any has been shown false
 
@@ -847,6 +1017,49 @@ _traced — routes to adjudication_
 - **Constrains**
   - before: (empty)
   - after: IF-041
+
+## SR-241 — Review briefs render only over a matching verified passed-checks record
+
+> **Requirement.** When an attended launcher requests a review brief for a lane commit, the delivered review content shall render it only when that commit, or a commit beneath it from which only record changes or no changes separate it, carries a verified record that the declared commit checks and the test set derived from the work item's requirements passed on its tree; otherwise it refuses without a brief and names the cause and the step that makes the record.
+
+> **Rationale.** A DERIVED requirement, and labelled so. SN-004 and SN-008 require trustworthy gate outcomes, but do not say that a metered independent-review session must be withheld when its requested tree is already known not to meet its declared commit checks. The performance lens listens for operating cost left unassessed: a review over such a tree spends the scarce review session on a failure the process can name before dispatch, while a record-only change must not require the same checks again. Trusting the verified record was chosen over running the checks during rendering because rendering then stays a bounded reader of a prior result rather than a second executor with a potentially different result. The coordinator and unattended review routes decompose this shared boundary separately. Fed back to the needs: their acceptance could state that a review begins only from a verified commit-check result.
+
+
+### LLR LLR-367
+- **Detail**
+  - before: The derivation reads the merge base, then one claimed work item found at the lane tip or that base, using its closed copy when available, then its requirement references, its changed paths and declared paths, before registries and test declarations. Its scope is the row's referenced system requirements, every low-level requirement referring to any of them, and every test case of any status verifying either; directly verified system requirements have no gap. Each scoped test case is exactly one of tagged, declared non-executable, untagged executable, or no evidence. It returns the sorted union of tagged test files, lists a tagged test case's non-test evidence and declared non-executable evidence without running it, and returns every gap: a system requirement that no scoped test case verifies, directly or through a scoped low-level requirement, or a low-level requirement that no scoped test case verifies, an untagged executable test case, or a test case with no evidence; sibling low-level requirements are included. Code-touching is a changed path from merge base to staged tree under the declared source or tests roots, with both ends of a rename counted; all other paths are not code-touching. A code-touching row with no requirement reference refuses by name; one with any gap refuses partial naming every gap; one with no tagged file and no gap refuses empty; a row not touching code reports gaps without refusal, permits an empty set, and runs a non-empty set. Missing or multiple claims, malformed frontmatter or requirement references, a missing referenced system requirement, unreadable or malformed registries, paths declaration, trunk declaration, or a test-declaration refusal refuse by name; an unreadable input outranks partial and empty. The derivation reads the lane's own tree and never widens to the whole checks. Its covered behavior is the claim copy, scope walk, classes, changed-path decision, input refusals, set printing, recording, draw, rendering, and closed-lane routes; hand-edited claim copies or records, path aliases, and sub-second timing windows are outside this bound.
+  - after: The derivation reads the merge base, then one claimed work item found at the lane tip or that base, using its closed copy when available, then its requirement references, its changed paths and declared paths, before registries and test declarations. Its scope is the row's referenced system requirements, every low-level requirement below any of them in the requirement tree (one referring to it, and every row whose parent chain ends at such a row), and every test case of any status verifying either; directly verified system requirements have no gap. Each scoped test case is exactly one of tagged, declared non-executable, untagged executable, or no evidence. It returns the sorted union of tagged test files, lists a tagged test case's non-test evidence and declared non-executable evidence without running it, and returns every gap: a system requirement that no scoped test case verifies, directly or through a scoped low-level requirement, or a low-level requirement that no scoped test case verifies, an untagged executable test case, or a test case with no evidence; sibling low-level requirements are included. Code-touching is a changed path from merge base to staged tree under the declared source or tests roots, with both ends of a rename counted; all other paths are not code-touching. A code-touching row with no requirement reference refuses by name; one with any gap refuses partial naming every gap; one with no tagged file and no gap refuses empty; a row not touching code reports gaps without refusal, permits an empty set, and runs a non-empty set. Missing or multiple claims, malformed frontmatter or requirement references, a missing referenced system requirement, unreadable or malformed registries, paths declaration, trunk declaration, or a test-declaration refusal refuse by name; an unreadable input outranks partial and empty. The derivation reads the lane's own tree and never widens to the whole checks. Its covered behavior is the claim copy, scope walk, classes, changed-path decision, input refusals, set printing, recording, draw, rendering, and closed-lane routes; hand-edited claim copies or records, path aliases, and sub-second timing windows are outside this bound.
+
+### TC TC-563 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-563
+- **Verifies**: SR-241;LLR-367
+- **Level**: Unit
+- **Method**: Derive the review test set for one requirement over a three-level tree whose grandchild's test case is tagged, then with the grandchild's test case removed, then with the grandchild's test case the only one.
+- **Tier**: Smoke
+- **Expected**: The grandchild's tagged test file is in the set and no gap is reported; without its test case the grandchild is named as a gap; verified through the grandchild alone, the requirement is not a gap while the two rows above the grandchild are.
+- **Automated**: Yes
+- **Status**: Drafted
+- **Phase**: 6
+- **Evidence**: tests/test_review_set_walk.py::test_a_grandchilds_tagged_file_is_in_the_set; tests/test_review_set_walk.py::test_an_sr_verified_only_through_a_grandchild_has_no_gap; tests/test_review_set_walk.py::test_an_untested_grandchild_is_a_gap
+
+## SR-248 — A design row past Drafted is discharged by a test case verifying it
+
+> **Requirement.** The delivered harness shall report as undischarged each design-tier row past its Drafted status that no live test case verifies.
+
+> **Rationale.** Realizes SN-002: the chain from need to test is trustworthy because it is mechanically verified, and its bottom rung is the claim a design row makes that it is delivered. That claim is discharged by the evidence of the row's own kind: a test case verifying it, executable through its declared tests or an inspection, analysis or attestation through its declared evidence. A row still Drafted is being written and makes no such claim yet, so the rule reaches it once it leaves Drafted. Binding discharge to a code symbol the row names pointed down at the code, so every rename reopened an accepted row while the code's own back-links already stated the same link upward. Where a design row sits and which files realize it are obligations of their own (SR-249, SR-250).
+
+
+### TC TC-566 — ADDED since the snapshot, Drafted — never accepted
+- **TC-ID**: TC-566
+- **Verifies**: SR-248;LLR-408
+- **Level**: Unit
+- **Method**: Run the orphan rules over a parent design row past Drafted whose child and grandchild each have a test case and which no test case names; again with a test case naming the parent; again with the parent Drafted and named by none; and over an Accepted grandchild no test case verifies. Run the strict check over the first.
+- **Tier**: Smoke
+- **Expected**: The parent no case names is reported as having no test case, naming it, though its descendants are verified, and the strict check fails; named by a case it is not reported; Drafted it is not reported; the unverified Accepted grandchild is reported as having no test case.
+- **Automated**: Yes
+- **Status**: Drafted
+- **Phase**: 6
+- **Evidence**: tests/test_requirement_tree.py::test_a_parent_named_by_its_own_case_or_drafted_is_not_reported; tests/test_requirement_tree.py::test_a_parent_no_case_names_is_reported_though_its_descendants_are_verified; tests/test_requirement_tree.py::test_an_unverified_accepted_grandchild_is_reported; tests/test_requirement_tree.py::test_the_strict_check_fails_on_an_undischarged_parent
 
 ## SR-249 — Where a design row sits is derived from the interfaces it constrains and those its verifying test cases name
 

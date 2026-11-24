@@ -22,7 +22,7 @@
 [derived]
 components = 4
 design_rows = 151
-design_rows_unplaced = 233
+design_rows_unplaced = 237
 seam_rows = 239
 requirements_placed = 79
 requirements_unplaced = 62
@@ -1292,5 +1292,9 @@ llr_refs = [
   "LLR-422",
   "LLR-423",
   "LLR-424",
+  "LLR-480",
+  "LLR-481",
+  "LLR-482",
+  "LLR-483",
 ]
 seam_refs = []

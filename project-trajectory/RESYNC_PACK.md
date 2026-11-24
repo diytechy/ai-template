@@ -12606,6 +12606,50 @@ header, if you keep the template's, gains the paragraph on where an
 interface's behaviour is stated; your requirement registries gain the cells as
 step 2 adds them.
 
+### A design row may name one parent design row, and every walk from a requirement to its design rows walks the tree [since 263b319df]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.
+Variant F's entry for the requirement tree; apply it after the design-row
+trace-cell entry above.)*
+
+**What changed.** A design row (`LLR-###`) may carry an optional `parent`
+cell naming one other design row. Such a row is a child: it carries no
+`sr_refs`, and its SRs are read up its parent chain to the top-level row the
+chain ends at, which alone names its SRs. `trace.py --strict` reports, as
+orphan findings naming the row whatever its status: a top-level row naming no
+SR (as before), a child naming SRs, a `parent` naming no live design row or
+several, each row on a cycle of parent links, and each row whose chain breaks
+at one of those. `--strict-schema` asks `SR-Refs` of a top-level row only. A
+parent is discharged by its own integration test case, which names the parent
+itself; its children's cases do not discharge it, and the no-test finding on
+a parent past `Drafted` says so. The cell is accepted text in the acceptance
+record's cell split, so re-pointing an accepted row's `parent` is an amendment
+of that row. One walk in `scripts/kitlib/spine.py` relates an SR and its
+design rows in both directions, and every reader takes it: the orphan rules,
+the review test set, the derived stage's per-phase grouping, the acceptance
+brief and hierarchy, the adjudication and consolidation briefs, the context
+block, the report's outline, matrix and graph, the component view, the
+architecture arm's reach, the test-first order and the knowledge-pack
+advisory. The interface coverage report's reach now includes the cases of
+the design rows below a constraining design row. The dashboard's spine view
+draws a child inside its parent, one design column per tree depth. `PROCESS.md` §4 states decomposition (b): an SR
+states behaviour at the system boundary, and a design row that needs breaking
+down for its parts becomes a parent of child design rows, under one
+`DevStg-LLReqs` rung.
+
+**What to do.** Nothing for existing rows: every row of a registry written
+before this entry is top-level, and every report and view reads it as before.
+To decompose a row, write each child with `parent = "LLR-###"` and no
+`sr_refs`, give the parent its own integration test case naming it in
+`verifies`, and run `python scripts/trace.py --strict`.
+
+**Kit-owned files — overwrite:** every file the kit ships under `scripts/`,
+`registries/low-level-requirements.template.toml`, `PROCESS.md`,
+`prompts/spine-questions.md`, `skills/spine-authoring/` and
+`skills/gate-advance/`.
+
+**Project-owned files — edit:** none.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

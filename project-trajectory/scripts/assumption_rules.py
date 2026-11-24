@@ -204,7 +204,13 @@ try:
         is_example,
         refs,
     )
-    from kitlib.spine import is_accepted, is_founded, llr_placement, norm_module
+    from kitlib.spine import (
+        is_accepted,
+        is_founded,
+        llr_placement,
+        llr_tree,
+        norm_module,
+    )
 except ImportError:  # pragma: no cover - in-process fallback
     import sys
     from pathlib import Path
@@ -218,7 +224,13 @@ except ImportError:  # pragma: no cover - in-process fallback
         is_example,
         refs,
     )
-    from kitlib.spine import is_accepted, is_founded, llr_placement, norm_module
+    from kitlib.spine import (
+        is_accepted,
+        is_founded,
+        llr_placement,
+        llr_tree,
+        norm_module,
+    )
 
 # The observation record's reader (SR-199): the shipped package again,
 # importable once the block above has put this directory on the path.
@@ -1817,17 +1829,18 @@ def release_gate_findings(das, srs, risks):
 def module_srs(llrs, index):
     """`{file: [requirement ids]}`: each file the Implements index (`index`,
     `{spine id: [file, ...]}`) names for a design row, normalized by
-    `norm_module`, mapped to the requirements that row's `SR-Refs` names, in
-    row order and once each. A design row names no file; the code's tags say
-    which file realizes it.
+    `norm_module`, mapped to the requirements that row's `SR-Refs` names (a
+    child's read up its parent chain, `llr_tree`), in row order and once each.
+    A design row names no file; the code's tags say which file realizes it.
 
     Implements: SR-212, LLR-244
     """
+    srs_of = llr_tree(llrs).srs_of
     out = {}
-    for lid, row in _real(llrs, "LLR-ID"):
+    for lid, _row in _real(llrs, "LLR-ID"):
         for path in index.get(lid, ()):
             listed = out.setdefault(norm_module(path), [])
-            listed += [s for s in refs(row.get("SR-Refs")) if s not in listed]
+            listed += [s for s in srs_of.get(lid, ()) if s not in listed]
     return out
 
 
@@ -1862,18 +1875,20 @@ def if_reached_srs(ifs, llrs, homes, index, tcs):
 def component_srs(llrs, tcs, ifs):
     """`{component: [requirement ids]}`: each design row's derived placement
     (`kitlib.spine.llr_placement`, the owner components of the interfaces it
-    constrains and those its verifying cases name) mapped to the requirements its `SR-Refs` names, in
+    constrains and those its verifying cases name) mapped to the requirements
+    its `SR-Refs` names (a child's read up its parent chain, `llr_tree`), in
     row order and once each; `if_reached_srs`' reach where no source is
     scanned.
 
     Implements: SR-212, LLR-244
     """
     placement = llr_placement(tcs, ifs, llrs)
+    srs_of = llr_tree(llrs).srs_of
     out = {}
-    for lid, row in _real(llrs, "LLR-ID"):
+    for lid, _row in _real(llrs, "LLR-ID"):
         for cid in placement.get(lid, ()):
             listed = out.setdefault(cid, [])
-            listed += [s for s in refs(row.get("SR-Refs")) if s not in listed]
+            listed += [s for s in srs_of.get(lid, ()) if s not in listed]
     return out
 
 
