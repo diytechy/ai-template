@@ -44,5 +44,20 @@ acts owed.
   before the merge.
 
 <!-- fig: cmd="python -m pytest -q -n auto -p no:randomly --basetemp <scratch> <the 40 modules>; the five failing modules again with --basetemp D:/review-tmp/2026-11-24-wi1072/pt; python project-trajectory/scripts/run_menu.py smoke" rev="maint/wi-1072 at 98b7fe483 (modules, uncommitted then) and the close-out tree (smoke), 2026-11-24" -->
+- **Review round 1** (`c31642461..57f1194e2`): Gemini Hydrogen APPROVE
+  findings=0; OpenAI Sol two MINORs, both adopted by the coordinator and
+  fixed in `0bf1310a8`. (1) Compose rejected only surplus identity lines,
+  so an override moving `{identity}` off the start of its line hid a
+  single-row brief's genuine line and an appended line then bound in its
+  place; the composed brief must now read as exactly the composer's
+  identities, as one block naming each row once, and LLR-359 and TC-398
+  state it. Red first `4 failed, 33 passed in 6.36s`, after `37 passed in
+  6.55s`; the new module, TC-398's modules, `test_done_when_blessing` and
+  the ratchets `476 passed in 563.37s`; `trace.py --strict` and
+  `check_trajectory.py --strict` clean. (2) The RESYNC entry tells an
+  adopter overriding a template to keep closing text after `{identity}` and
+  the slot alone at column 0.
+
+<!-- fig: cmd="python -m pytest -q -p no:randomly tests/test_judged_identity_lines.py --basetemp D:/rt1072/red|green; python -m pytest -q -n auto -p no:randomly <the 11 modules> --basetemp D:/rt1072/run" rev="57f1194e2 plus the uncommitted tests (red) and 0bf1310a8's tree, 2026-11-24" -->
 - Deferred open items: none — the operator owes no decision from this row;
   the amended rows go to the next sitting as owed acts.
