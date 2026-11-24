@@ -25,7 +25,11 @@ No decisions record (D12): every call is the approved plan's.
   the interface rows, the scaffold row, the documents, the RESYNC entry,
   `intake.py`'s size re-stamp, the regenerated views and the plan's approval
   line.
-- The commit after it: this close-out.
+- `dec40ead9`: the close-out (this Deliverable, the move to `complete/`,
+  the log fragment).
+- `f21ab4907`: review round 1's fix, the RESYNC entry naming every moved
+  definition.
+- The commit after it: this review record.
 
 **1. What moved and what stayed** (Done-when 1). The new
 `project-trajectory/scripts/landing_rules.py` declares `Component: CMP-008`
@@ -168,6 +172,17 @@ under `D:/review-tmp/2026-11-24-wi1045/`):
   691.9 s over the 540 s budget, reported only, on a box shared with another
   builder. The unfiltered suite is the coordinator's, before the merge.
 <!-- fig: cmd="python -m pytest -q -n auto -p no:cacheprovider --basetemp <scratch> <the 137 modules>; python project-trajectory/scripts/run_menu.py smoke" rev="36a476992's tree for the module run, then the close-out tree for the smoke run" -->
+
+**Review record.** Round 1: Gemini Hydrogen `APPROVE`, findings=0; OpenAI
+Sol one MINOR, adopted by the coordinator: the RESYNC entry named 10 of the
+33 moved definitions and folded the rest into "with their helpers". Fixed in
+`f21ab4907`: the entry lists all 33, grouped by rule (the ruling sync's 17,
+its four constants and two git aliases among them; the parent-first
+judgement's 7; the trunk mint's 9), the same set as the boundary test's
+`LANDING_RULES`, and says that, with no compatibility shim, a project script
+or test importing any of them from `acceptance_record` must import it from
+`landing_rules`. `scripts/check_resync.py --root .`: `OK, 10 shipped path(s)
+changed; entry anchored at 9e8eb6e5749735bc7431265cc9d40828e9eb7abe`.
 
 **Acts owed to automated adjudication.**
 - Amendments to `Accepted` rows: none.

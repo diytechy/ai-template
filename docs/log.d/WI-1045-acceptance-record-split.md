@@ -35,6 +35,10 @@ holds the per-item record, the cover and the acts owed.
   `5212 passed, 4 skipped in 5285.36s (1:28:05)`; `run_menu.py smoke` exit 0,
   `3957 passed, 3 skipped, 18 warnings in 150.36s (0:02:30)`.
   <!-- fig: cmd="python -m pytest -q -n auto -p no:cacheprovider --basetemp <scratch> <the 137 modules>; python project-trajectory/scripts/run_menu.py smoke" rev="36a476992's tree, then the close-out tree for the smoke run" -->
+- **Review round 1:** Hydrogen `APPROVE`, findings=0; Sol one MINOR,
+  adopted: the RESYNC entry named 10 of the 33 moved definitions. Fixed in
+  `f21ab4907`, which lists all 33 and says a project's import of any of them
+  from `acceptance_record` must move to `landing_rules` (no shim).
 - **Left for the coordinator to file:** the uncalled
   `acceptance_record.verdict_rulings` alias, whose import of `kitlib/verdict`
   makes CMP-006's notes sentence on that module's edges untrue, and the
