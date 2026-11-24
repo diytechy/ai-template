@@ -55,3 +55,9 @@ per-item record, the approval and the acts owed.
   and its re-cut is the coordinator's stale-text item. After the fixes: the
   two migrator modules `93 passed in 16.17s`; `trace.py --strict` and
   `check_trajectory.py --strict` exit 0; no smoke-tier test added.
+- Review round 2 (narrow): Hydrogen APPROVE; Sol one MINOR, adopted: a
+  backtick escaped by a backslash no longer opens a code span, so a link
+  between two escaped backticks is rewritten; a span's closing run still
+  reads no escape. Red first in the links test (`2 link(s)` where 3 were
+  due); TC-427's method names the three new paragraphs. The two migrator
+  modules `93 passed`.

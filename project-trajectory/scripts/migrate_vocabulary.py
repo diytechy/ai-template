@@ -1407,21 +1407,41 @@ def _fenced_blocks(text):
 def _inline_spans(text, start, end):
     """`[(start, end)]` of each inline code span in `text[start:end]`: a run
     of backticks up to the next run of the same length in its paragraph. A
-    run that nothing closes there is a literal backtick."""
+    run that nothing closes there is a literal backtick, and so is a backtick
+    a backslash escapes where a span would open; a closing run reads no
+    escape, since code holds none (CommonMark)."""
     spans = []
     for para_start, para_end in _paragraphs(text, start, end):
-        runs = list(_TICKS.finditer(text, para_start, para_end))
+        runs = [m.span() for m in _TICKS.finditer(text, para_start, para_end)]
         i = 0
         while i < len(runs):
-            width = len(runs[i].group())
-            close = next(
-                (j for j in range(i + 1, len(runs)) if len(runs[j].group()) == width),
-                None,
-            )
+            opened, stop = runs[i]
+            opened += _escaped(text, para_start, opened)
+            close = _closing_run(runs, i, stop - opened)
             if close is not None:
-                spans.append((runs[i].start(), runs[close].end()))
+                spans.append((opened, runs[close][1]))
             i = i + 1 if close is None else close + 1
     return spans
+
+
+def _escaped(text, floor, pos):
+    """1 when an odd run of backslashes after `floor` ends at `pos`, so the
+    character there is escaped; else 0."""
+    back = pos
+    while back > floor and text[back - 1] == "\\":
+        back -= 1
+    return (pos - back) % 2
+
+
+def _closing_run(runs, i, width):
+    """The index of the first run after `runs[i]` `width` backticks long, or
+    None; a run of no backticks opens nothing."""
+    if not width:
+        return None
+    return next(
+        (j for j in range(i + 1, len(runs)) if runs[j][1] - runs[j][0] == width),
+        None,
+    )
 
 
 def _paragraphs(text, start, end):

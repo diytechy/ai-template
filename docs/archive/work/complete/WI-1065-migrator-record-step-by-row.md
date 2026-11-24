@@ -33,8 +33,10 @@ never opens it). The RESYNC anchor stays `[since c7d6bd6f4]`; trunk has moved
 - `47e762418`: the build: the record reading, the refusal, the skip, the link walk,
   the rows, the RESYNC entry, regenerated evidence and views.
 - `e425d4173`: the close-out (this Deliverable, the move, the log fragment).
-- The commit after it: review round 1's three adopted findings (the review
-  record, at the end of this Deliverable).
+- `809e610f2`: review round 1's three adopted findings (the review record,
+  at the end of this Deliverable).
+- The commit after it: review round 2's adopted finding (the escaped
+  backtick).
 
 **A read of this repository's scratchpad, recorded for the operator.** One
 measuring run before the fix, `migrate_vocabulary.py --root . --check` over
@@ -273,6 +275,31 @@ Tests of the round-1 fixes:
   exit 0, `check_trajectory: clean (1066 work item(s), 936 done (88%), 37
   cancelled, graph acyclic).`
 - No smoke rerun: no smoke-tier test was added.
+
+Round 2 (2026-11-23, narrow, over `e425d4173..809e610f2`): Gemini Hydrogen
+`APPROVE findings=0`; OpenAI Sol one new MINOR, confirmed by execution: a
+backtick escaped by a backslash was read as a code span's delimiter, so a
+link written in prose between two escaped backticks was left unrewritten.
+**Adopted** by the coordinator, and fixed on this branch: `_inline_spans`
+reads a backtick escaped by an odd run of backslashes, where a span would
+open, as a literal (the rest of its run, if any, still opens), while a
+span's closing run reads no escape, since code holds none (CommonMark). The
+regression is the same links test, whose code page gains three paragraphs:
+a link in prose between two escaped backticks (moves), a backtick after an
+escaped backslash opening a span around a link (stays), and a span whose
+closing backtick follows a backslash with a link after it (moves). Red
+before the fix:
+`FAILED tests/test_migrate_vocabulary.py::test_links_into_the_record_follow_it_and_every_other_word_stays`,
+on `assert 'docs/reviews/code.md: 3 link(s)' in 'migrate_vocabulary:
+acceptance-record link rewritten: docs/reviews/code.md: 2 link(s) ...'`.
+TC-427's `method` names the three paragraphs (a cell already owed). LLR-369
+and SR-247 are unchanged: an escaped backtick is not a run of backticks, so
+their "inline code span" already excludes it. After the fix: the two
+migrator modules `93 passed in 16.39s`; with the ratchets and
+`test_import_layers`, `105 passed in 12.83s`; `check_complexity.py --mode
+enforce`: `OK - 168 row(s) over 15, unchanged from baseline.`; `trace.py
+--root . --strict` and `check_trajectory.py --root . --strict` exit 0.
+<!-- fig: cmd="python -m pytest -q -p no:cacheprovider --basetemp <scratch> tests/test_migrate_vocabulary.py tests/test_migrate_vocabulary_record.py" rev="809e610f2 plus the round-2 fix, uncommitted, 2026-11-23" -->
 
 ## Context
 
