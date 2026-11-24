@@ -43,6 +43,9 @@ says so; if it does not, the builder stops and reports.
 SR-207 is the acceptance act's rule, and WI-1060's record says its
 amendment is shown to the operator; this row's rewrite is shown with it.
 
+Critiqued 2026-11-23 (`docs/reviews/2026-11-23-scope-critiques/WI-1067.md`):
+the `constrains` check is a Done-when item of its own.
+
 **TC-560 (RETURN; still `Drafted`).** It verifies LLR-480 but leaves two
 of its fault branches undriven, in its method, expected and tests:
 1. A design row whose parent cell names an example row (an id ending
@@ -62,6 +65,10 @@ reports; LLR-480 was accepted by this sitting and is not amended here.
       cases name; its rationale's adjudicated links include the
       `constrains` link. The amendment is text only; SR-207 stays
       `Accepted`, owed to the next sitting.
+- [ ] The Deliverable reports, from the code and a test, that an act keeps
+      a row whose `constrains` link alone changed (LEFT OWED, in `kept`)
+      until an act names it; if it does not, the builder stops and reports
+      before amending SR-207's rationale.
 - [ ] TC-560's method, expected and tests drive both missing faults at
       both statuses, red first where a test is new; TC-560 stays
       `Drafted`, owed to the next sitting.

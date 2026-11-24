@@ -6,6 +6,7 @@ specref = "docs/archive/work/complete/WI-1060-row-scoped-acceptance-copy.md"
 sr_refs = ["SR-247", "SR-179"]
 needs = ["WI-1060"]
 buildtier = "medium"
+planmode = "single"
 safety_class = "ordinary"
 priority = 3
 +++
@@ -64,7 +65,10 @@ empty list, which turns on the row-by-row judge for every later write):
 SR-179 and LLR-178 need no amendment; only SR-247, LLR-369 and TC-427
 take text-only amendments.
 
-Operator's choice recorded; owes a scope critique before it is built.
+Operator's choice recorded. Critiqued 2026-11-23 (Sol and Hydrogen;
+`docs/reviews/2026-11-23-scope-critiques/WI-1065.md`): `planmode` is
+`single`, since the row promises behaviour over three record states, and
+its promises are bounded below.
 
 ## Done-when
 
@@ -77,5 +81,9 @@ Operator's choice recorded; owes a scope critique before it is built.
       including in the registry step — when the record still stores
       earlier vocabulary; tests cover both paths and verify the commit
       hook and the committed history.
+- [ ] Coverage bound: the skip and the refusal reach records the kit's
+      own routes produced (acts taken through the snapshot command, the
+      migrator's own earlier runs); a hand-edited record copy, ledger or
+      stamp is outside them (PROCESS.md §6, "Review threat model").
 - [ ] Any accepted row this changes is amended (text only, no code names)
       and listed as owed to adjudication.
