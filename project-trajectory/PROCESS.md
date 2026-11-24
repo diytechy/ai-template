@@ -899,9 +899,11 @@ the **boundaries** of each dimension and in the **interactions** between them.
    `Smoke`/`Full`; expensive integration/hardware combinations use
    boundary-corners in `Release`. Don't run a 4-mode × N-size sweep on every push.
 
-Record each requirement's dimensions in the SR **`Permutations`** column using
-this grammar, so one SR stands in for many near-duplicate rows and the intent is
-machine-readable:
+Record a system-boundary requirement's dimensions in the SR **`Permutations`**
+column, and a behaviour across an interface in the `dimensions` cell of the LLR
+whose `constrains` names that interface, beside its `out_of_domain` sentence
+(what the interface does outside the set); both use this grammar, so one row
+stands in for many near-duplicate rows and the intent is machine-readable:
 
 ```
 field=set{plain,comma,quote,newline}; size=range[0..2GiB]; enc=set{utf8,utf16}; @pairwise

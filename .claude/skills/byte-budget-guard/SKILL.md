@@ -31,7 +31,7 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,964 | 2026-11-16 | -35: the vocabulary migration's close (stage, checks, pass and fail), re-stamped to the measured size |
 | `CLAUDE.md` | **8,500** | 8,052 | 2026-11-16 | +15: the vocabulary migration's close (stage, checks, pass and fail), re-stamped to the measured size |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,592 | 2026-11-23 | Restamps the PROCESS.md and PROCESS_OPTIONS.md rows below |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,626 | 2026-11-23 | Restamps the PROCESS.md and PROCESS_OPTIONS.md rows below |
 
 **`AGENTS.template.md` has less than 1% free**; `CLAUDE.md` about 6% and this skill
 about 10%. The DOC gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own
@@ -45,7 +45,7 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
-| `project-trajectory/PROCESS.md` | 102,118 | 2026-11-23 | **+58** WI-1060: an act's copy is the rows it names; other drifted rows stay as recorded |
+| `project-trajectory/PROCESS.md` | 102,328 | 2026-11-23 | **+210** WI-1024: an LLR constraining an interface states its input set beside the SR's Permutations (after WI-1060's +58) |
 | `project-trajectory/PROCESS_OPTIONS.md` | 202,580 | 2026-11-23 | **-13** WI-1060: the record takes only the rows the act names |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped

@@ -1361,13 +1361,13 @@ _PLACEMENT_SHOWN = 10
 
 def placement_line(llrs, tcs, ifs):
     """The one console line counting where the design rows sit: placed through
-    the interfaces their verifying cases name (`kitlib.spine.llr_placement`),
-    or unplaced, the first `_PLACEMENT_SHOWN` unplaced ids named. Informational:
+    the interfaces they constrain and those their verifying cases name
+    (`kitlib.spine.llr_placement`), or unplaced, the first `_PLACEMENT_SHOWN` unplaced ids named. Informational:
     an unplaced row is counted, never refused, and the line joins no exit code.
 
     Implements: SR-249, LLR-403
     """
-    placement = _spine.llr_placement(tcs, ifs)
+    placement = _spine.llr_placement(tcs, ifs, llrs)
     unplaced = _spine.unplaced_llrs(llrs, placement)
     placed = len({str(r.get("LLR-ID") or "").strip() for r in llrs} & set(placement))
     shown = ", ".join(unplaced[:_PLACEMENT_SHOWN])

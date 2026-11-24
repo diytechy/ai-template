@@ -12553,6 +12553,58 @@ point. Your record's `README.md` is prose; refresh it from
 `skills/coordinator-cycle/references/recipes.md`,
 `skills/spine-authoring/references/in-lane.md`,
 `registries/last-accepted-README.template.md`.
+### Requirement rows name the interfaces they constrain, with the behaviour's input set, and interface reach is reported warn-first [since bba30552f]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.
+Variant F's fourth entry, first part; apply it after the design-row entry
+above. A later entry makes the reach strict and retires the direct
+interface-to-test-case check.)*
+
+**What changed.** A design row (`LLR-###`) or a system requirement (`SR-###`)
+may carry `constrains = ["IF-###", ...]`, the interfaces whose behaviour it
+states: the interface row states the form, the requirement what must be true
+of what crosses it. Beside it, and only beside it, a design row may carry
+`dimensions`, the behaviour's input set in the `gen_cases.py` grammar (one
+parser, now in `kitlib/spine.py`, serves both), and `out_of_domain`, one
+sentence saying what the interface does outside that set. `trace.py --strict`
+fails a `constrains` id naming no live interface row, a `dimensions` cell the
+grammar refuses, an `out_of_domain` that is not one sentence, and either
+companion on a row constraining nothing; an empty list is refused on read. A
+constraining row without both companions is counted by channel on one warning
+line, never failing. `constrains` is traced and routed to adjudication when it
+changes on an accepted row; `dimensions` and `out_of_domain` are accepted text.
+A design row is now also placed at the owner of each interface it constrains,
+in every placement reader (the component view, the dashboard's design-row
+detail, the build brief, the knowledge-pack advisory, the interface-form
+gate's fallback reach). `trace.py` prints an `interface coverage:` count line
+and names each interface whose reach (the rows constraining it or observed at
+it, then every test case verifying them or naming it) holds no test case the
+harness runs, and each test case naming an interface every row it verifies
+already constrains; both report warn-first, and `[checks] interfaces_check =
+false` silences the coverage report. The SR template's `permutations` cell is
+for system-boundary dimensions only.
+
+**What to do.**
+
+1. Run `python scripts/trace.py --strict` and read the `interface coverage:`
+   line and the interfaces it names.
+2. For each, add `constrains = ["IF-###"]` to the LLR whose text states the
+   behaviour across it (an SR only at the system boundary, where no LLR states
+   it), or name it in a test case's `verifies`. Each `constrains` added to an
+   accepted row is a routed traced change for adjudication.
+3. Where the behaviour's input is a closed set and a test drives every value,
+   add `dimensions` and `out_of_domain`; each re-opens the row's acceptance.
+
+**Kit-owned files — overwrite:** every file the kit ships under `scripts/`,
+`registries/low-level-requirements.template.toml`,
+`registries/system-requirements.template.toml`,
+`registries/interfaces.template.toml`, `PROCESS.md` and the skills under
+`skills/`.
+
+**Project-owned files — edit:** your own `docs/requirements/interfaces.toml`
+header, if you keep the template's, gains the paragraph on where an
+interface's behaviour is stated; your requirement registries gain the cells as
+step 2 adds them.
 
 ## 5. Promotion: when this pack stops being prose
 

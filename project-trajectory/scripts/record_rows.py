@@ -76,13 +76,17 @@ except ImportError:  # pragma: no cover - in-process fallback
 # `intake.py` at WI-1060, which keeps the name as an alias: the trunk mint reads
 # it to decide what to mint, and the record reads it to decide what an act may
 # refresh without naming the row, so both the writer and the judge need it and
-# neither may import the lifecycle module that held it.
-# Implements: SR-207, LLR-245
+# neither may import the lifecycle module that held it. `Constrains` (WI-1024)
+# routes too: whether a row's text states the behaviour across the interface it
+# names is the adjudication's question.
+# Implements: SR-207, LLR-245, SR-178, LLR-420
 ROUTED_TRACED_CELLS = {
     "docs/requirements/system-requirements.toml": frozenset(
-        {"SN-Refs", "Boundary-Refs"}
+        {"SN-Refs", "Boundary-Refs", "Constrains"}
     ),
-    "docs/requirements/low-level-requirements.toml": frozenset({"SR-Refs"}),
+    "docs/requirements/low-level-requirements.toml": frozenset(
+        {"SR-Refs", "Constrains"}
+    ),
     "docs/test/test-cases.toml": frozenset({"Verifies"}),
 }
 

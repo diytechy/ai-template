@@ -625,10 +625,14 @@ def _pending_oi_lines(root, wi_row, rows, kin):
 
 def _placement(root):
     """Each design row's derived placement (`kitlib.spine.llr_placement`): the
-    owner components of the interfaces its verifying cases name."""
+    owner components of the interfaces it constrains and those its verifying
+    cases name."""
     return _spine.llr_placement(
         spine_carrier.load(root / "docs/test/test-cases.toml", "TC-ID"),
         spine_carrier.load(root / "docs/requirements/interfaces.toml", "IF-ID"),
+        spine_carrier.load(
+            root / "docs/requirements/low-level-requirements.toml", "LLR-ID"
+        ),
     )
 
 

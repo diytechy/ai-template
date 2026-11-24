@@ -395,12 +395,21 @@ def _tier_reads(root, prefix, rel_path, id_col, under=""):
 # obligation. If phase 5's amend-without-flip arm ever wants that routing, it is
 # one line — added on evidence, not in advance.
 #
+# `Constrains` (SR and LLR) joins the TRACED half at WI-1024, on `SR-Refs`' own
+# argument: it names the interface whose behaviour the row states, a pointer
+# into another registry carrying no prose. A changed one ROUTES to
+# adjudication (intake.ROUTED_TRACED_CELLS), because whether the row's text
+# states the behaviour across the interface it now names is the sitting's
+# judgement. A design row's `Dimensions` and `OutOfDomain` are statements the
+# row makes, the behaviour's input set and what the interface does outside it,
+# so they join the ACCEPTED half, as the SR tier's `Permutations` did.
+#
 # THE ASSUMPTION TIER'S POINTERS JOIN IT (LLR-225), on the same argument: a
 # requirement's `DA-Refs` and a test case's `Assumption-Refs` name rows in
 # another registry, and a need's `Stakeholder-Refs` and `Source` name the
 # stakeholders it serves and the document it was drawn from. Each re-points
 # without moving anything the row asserts.
-# Implements: SR-189, SR-190, SR-193, SR-197, LLR-225
+# Implements: SR-189, SR-190, SR-193, SR-197, LLR-225, LLR-420
 SPINE_TRACED_CELLS = {
     "docs/requirements/system-requirements.toml": frozenset(
         {
@@ -411,6 +420,7 @@ SPINE_TRACED_CELLS = {
             "Aspect",
             "Lifecycle",
             "DA-Refs",
+            "Constrains",
         }
     ),
     # `SR-Refs` is here BY RULING (WI-388, closing WI-380 REVIEW-A finding 3 —
@@ -436,6 +446,7 @@ SPINE_TRACED_CELLS = {
             "Phase",
             "SR-Refs",
             "Hat-Refs",
+            "Constrains",
         }
     ),
     "docs/test/test-cases.toml": frozenset(
@@ -457,7 +468,7 @@ SPINE_TRACED_CELLS = {
 # An observation case's cadence cells `Trigger`, `Rubric` and `MinWorkItems`
 # join by name too (WI-784), keeping the residual's reading: like `MaxAge` and
 # `Inputs`, each states how the row's claim is judged or kept current.
-# Implements: SR-193, SR-194, SR-198, LLR-222, LLR-225
+# Implements: SR-193, SR-194, SR-198, LLR-222, LLR-225, LLR-420
 SPINE_ACCEPTED_CELLS = {
     "docs/requirements/system-requirements.toml": frozenset(
         {
@@ -474,7 +485,7 @@ SPINE_ACCEPTED_CELLS = {
         }
     ),
     "docs/requirements/low-level-requirements.toml": frozenset(
-        {"Title", "Detail", "Rationale"}
+        {"Title", "Detail", "Rationale", "Dimensions", "OutOfDomain"}
     ),
     "docs/test/test-cases.toml": frozenset(
         {

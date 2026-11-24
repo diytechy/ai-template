@@ -147,6 +147,29 @@ def test_membership_and_the_requirement_reach(repo):
     assert view["CMP-001"]["modules"] == ["project-trajectory/scripts/alpha.py"]
 
 
+def test_a_design_row_sits_where_the_interface_it_constrains_is_owned(repo):
+    """Implements: TC-195"""
+    # A row no case places by an interface sits at the owner of the interface
+    # it constrains, beside the place its case gives it, and its requirement
+    # reaches that component through it.
+    llrs = repo / "docs" / "requirements" / "low-level-requirements.toml"
+    llrs.write_text(
+        LLRS.replace(
+            'title = "in alpha"', 'title = "in alpha"\nconstrains = ["IF-004"]'
+        )
+        + '\n[design.LLR-003]\nsr_refs = ["SR-003"]\ntitle = "constrains only"\n'
+        'constrains = ["IF-002"]\nstatus = "Accepted"\n',
+        encoding="utf-8",
+        newline="\n",
+    )
+    doc = _view(repo)
+    view = doc["component_view"]
+    assert view["CMP-001"]["llr_refs"] == ["LLR-001", "LLR-003"]
+    assert view["CMP-002"]["llr_refs"] == ["LLR-001", "LLR-002"]
+    assert view["CMP-001"]["sr_refs"] == ["SR-001", "SR-003"]
+    assert doc["unplaced"]["sr_refs"] == []
+
+
 def test_the_hat_union_is_DERIVED_from_the_parent_not_copied(repo):
     """Implements: TC-195"""
     # The anti-staleness decision, one tier up: LLR-001 carries no hat cell at

@@ -67,7 +67,6 @@ Contract IF-017: LLR-024's obligation delivered as a CLI here, and a crossing
 import argparse
 import csv
 import itertools
-import re
 import sys
 
 import spine_carrier
@@ -75,44 +74,19 @@ import spine_carrier
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
 from kitlib.config import utf8_console as _utf8_console
-from kitlib.spine import REGISTRY_KEYS
+from kitlib.spine import REGISTRY_KEYS, parse_dimensions
 
 
 def parse_spec(spec):
-    """Return (dims, strategy_or_None). dims = list of (name, values, boundary_flags)."""
-    strategy = None
-    dims = []
-    for seg in spec.split(";"):
-        seg = seg.strip()
-        if not seg:
-            continue
-        if seg.startswith("@"):
-            strategy = seg[1:].strip().lower()
-            continue
-        if "=" not in seg:
-            raise SystemExit("bad dimension (no '='): {!r}".format(seg))
-        name, rhs = seg.split("=", 1)
-        name, rhs = name.strip(), rhs.strip()
-        m = re.match(r"range\[(.+?)\.\.(.+?)(?:\|(.+))?\]$", rhs)
-        if m:
-            lo, hi = m.group(1).strip(), m.group(2).strip()
-            interior = [v.strip() for v in (m.group(3) or "").split("|") if v.strip()]
-            values = [lo, hi] + interior
-            # boundary = the two extremes; interior points are nominal (not boundary)
-            flags = [True, True] + [False] * len(interior)
-        elif rhs.startswith("set{") and rhs.endswith("}"):
-            values = [v.strip() for v in rhs[4:-1].split(",") if v.strip()]
-            flags = [False] * len(values)
-        elif rhs == "bool":
-            values, flags = ["true", "false"], [True, True]
-        else:
-            raise SystemExit("unrecognized dimension type: {!r}".format(seg))
-        if not values:
-            raise SystemExit("dimension {!r} has no values".format(name))
-        dims.append((name, values, flags))
-    if not dims:
-        raise SystemExit("no dimensions parsed from spec")
-    return dims, strategy
+    """Return (dims, strategy_or_None). dims = list of (name, values, boundary_flags).
+
+    The grammar's one parser is `kitlib.spine.parse_dimensions`, which a design
+    row's `dimensions` cell is checked against too; a spec it refuses exits
+    here with its message."""
+    try:
+        return parse_dimensions(spec)
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from None
 
 
 def pair_key(a, va, b, vb):

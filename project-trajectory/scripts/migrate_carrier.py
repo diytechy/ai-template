@@ -173,6 +173,8 @@ REF_COLS = {
     # SR-211: an interface's bridging assumptions, DA ids, which hold no
     # separator.
     "BridgedBy",
+    # WI-1024: the interfaces a requirement or design row constrains, IF ids.
+    "Constrains",
 }
 # SR-198: an observation case's lifetime in days and its sample size are whole
 # numbers. A value that does not parse is preserved as text, as for `Phase`, so
@@ -332,6 +334,11 @@ KEY = {
     "Delivered-With": "delivered_with",
     "Coincident": "coincident",
     "Form": "form",
+    # the requirement-to-interface relation (WI-1024). Never converted from a
+    # legacy carrier; declared as the writer half of the one pinned bijection.
+    "Constrains": "constrains",
+    "Dimensions": "dimensions",
+    "OutOfDomain": "out_of_domain",
     "EffectAt": "effect_at",
     "Assumption": "assumption",
     "HoldsWhen": "holds_when",
