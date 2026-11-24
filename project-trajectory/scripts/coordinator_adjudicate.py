@@ -73,7 +73,8 @@ Contract IF-284: the command's exit codes. `adjudicate` exits 0 for a valid
     (`session_service.call_succeeded`), or a missing (still
     empty) or invalid verdict; 2, before anything launches, for a root that
     is not a lane, an unusable route, a brief file that cannot be read or
-    decoded, a PATH that exists or cannot be reserved, or a launch the
+    decoded, a brief whose judged-text identity lines are not the one block
+    its composer wrote, a PATH that exists or cannot be reserved, or a launch the
     blackout window refuses (the session service admits only an
     adjudication of a work item whose claim is active there); and 7 (needs an
     operator) when the launch is refused because its account cannot
@@ -250,14 +251,19 @@ def bind_requested(path, brief, prompt):
     a single-kind brief's own class), and for a dispute brief the findings
     file its `FINDINGS-FILE:` line names. A separate file, so the
     adjudicator's rewrite of the verdict cannot change what the verdict is
-    judged against (WI-841 round 10). None when bound.
+    judged against (WI-841 round 10). None when bound. A brief whose
+    judged-text identity lines are not the one block its composer wrote
+    (text added to it after composition carrying one) is refused, naming
+    each such line, and nothing is bound.
 
-    Implements: SR-232, LLR-310
+    Implements: SR-232, SR-178, LLR-310, LLR-359
     """
     try:
         kinds = adjudicate_brief.bind_pending(path, brief, prompt, exclusive=True)
     except OSError as exc:
         return "the verdict binding for {} cannot be written: {}".format(path, exc)
+    except ValueError as exc:
+        return "the verdict binding for {} is refused: {}".format(path, exc)
     if not kinds:
         return (
             "the {} brief names nothing to judge (a combined brief's kinds on a "

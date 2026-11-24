@@ -12810,6 +12810,43 @@ contract harvest once (seconds on a large tree).
 
 **Project-owned files — edit:** none.
 
+### A brief whose text carries a judged-text identity line its composer did not write is refused [since c31642461]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** An adjudication brief, of any kind, is refused at
+composition when a line of its composed text has the shape of a judged-text
+identity line (`JUDGED-TEXT: <row id> <digest>`) and is not one its own
+identity section wrote: a line of a registry cell shown verbatim, of a later
+section of a combined sitting (a first-acceptance row's cell, a Done-when
+change's context), of the perspectives or of a template override. A brief
+whose identity lines end its text is refused too. The refusal names the row
+id the line names and where it sits: its line, the row whose shown text
+holds it, and the heading above it (in a combined sitting, the section).
+Reserving a sitting from a brief file now refuses, writing no binding, a
+brief whose identity lines are not one block of distinct rows, or that holds
+any while requesting no amendment, so text added to a composed brief after
+its composition (an appended section) cannot add or replace an identity
+either: `coordinator_adjudicate.py adjudicate` exits 2 naming each such
+line. Before, the binding recorded such a line as an identity: one naming a
+row not shown added an identity, and one after the genuine line replaced
+that row's digest. The binding's format and every reader of it are
+unchanged.
+
+**What to do.** Nothing, unless a row, spec, hat roster or template of yours
+holds such a line at the start of a line, or you append text holding one to
+a composed brief: the sitting is then held (the loop stops asking for an
+operator with the reason; a composer prints it and writes no brief; the
+coordinator's command refuses before launch). Reword that line, for example
+by indenting it or quoting it inline, and compose again. Bindings written
+before the upgrade read as before. No template changes, so no retained
+adjudicator drains.
+
+**Kit-owned files — overwrite:** `scripts/adjudicate_brief.py`,
+`scripts/coordinator_adjudicate.py`.
+
+**Project-owned files — edit:** none.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

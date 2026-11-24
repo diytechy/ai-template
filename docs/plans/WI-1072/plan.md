@@ -5,6 +5,15 @@ cut from `refactor_again` at `c31642461`. `planmode = "single"`: this commit
 carries the plan alone, and nothing else changes until the coordinator's
 go-ahead.
 
+**Approved** by the coordinator 2026-11-24 (revision 1, `4d96403cb`), D1 to
+D10 confirmed: D1 with the refusal naming where the line sits (the row or
+section it came from); D6 on the condition that the text appended after
+composition is kit-composed with no registry or spec text, else the check
+extends to it. Read from the code at the build: the condition does not hold
+(the owner-route section is the disposition spec's text appended verbatim;
+the arms map is drawn by a sub-agent from the rows, and no kit code composes
+it), so reservation checks the brief it binds as well (the Deliverable).
+
 Read in full: the spec `docs/work/queued/WI-1072-identity-line-forging.md`
 (its `## Trust` included); its scope critique
 `docs/reviews/2026-11-24-scope-critiques/WI-1072.md`; WI-1070's plan
