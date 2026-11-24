@@ -1370,3 +1370,32 @@ Append one line per step taken: the item, what happened, the commit.
   before writing any record file (including in the registry step) when
   the record still holds earlier vocabulary. Owes its scope critique
   before build.
+- 2026-11-23 (fifth session): F-4's slice 1 (WI-1024) merged `6ed2cfc28`
+  (D16: `Constrains` moved into `record_rows.ROUTED_TRACED_CELLS`; the
+  watermark LLR 424 and TC 534; RESYNC both entries; a three-way
+  cell-by-cell registry check, no cell changed by both sides; 571 passed,
+  1 skipped over the modules both sides touched), regen `263b319df`; smoke
+  `3796 passed, 3 skipped`. F-7 (WI-1027): trunk merged into the branch
+  (`60d44150a`: LLR-244 joined, both sides' new rows kept, WI-1064's
+  specref re-pointed, F-7's RESYNC entry re-anchored at `263b319df`, since
+  `check_resync` reads the change's base as the merge-base with trunk); a
+  builder moved blast radius onto the tree walk for a constraining design
+  row too (`interface_reach`, `coherence._route`; LLR-421 and TC-531
+  amended; this repository's reach byte-identical). Review rounds 2 to 5
+  (narrow): round 2 Hydrogen APPROVE, Sol two MINORs adopted; round 3 (the
+  merge's resolution by `git show --remerge-diff`, and the move) Hydrogen
+  APPROVE, Sol one MINOR adopted in part (the tree built once per call of
+  each walk, not once per coverage call; prose corrected); round 4
+  Hydrogen APPROVE, Sol one MINOR (a linearity claim the fix added)
+  adopted; round 5 Sol APPROVE. Merged `0303183a3` (clean), regen
+  `97d4444bd` (its message corrects the merge's: the amendments owed were
+  LLR-367, LLR-244 and LLR-257); smoke `3874 passed, 3 skipped`. Worktree
+  and branch removed.
+- 2026-11-23 (fifth session): the seventh sitting, WI-1066 (filed
+  `123cd20f5`; 31 tokens, brief 339K characters, so sitting A stays
+  separate; Neon 431 s): 17 amendments MEANING+BLESS, SR-207 MEANING not
+  blessed; 12 ACCEPT, TC-560 RETURN. Verdict `581275692`, recorded
+  `064859662`. Re-acceptance `dbe7da595` printed LEFT OWED for SR-207 and
+  sitting A's 26 rows and completed: the first ledger entry carrying
+  `kept`, no revert. First acceptance `8f45c0d5c` (LLR-480 to 483, TC-561
+  to 568). Closed with WI-1067 filed to answer SR-207 and TC-560.

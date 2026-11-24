@@ -12,6 +12,42 @@ adjudicates = ["amendment:SR-140", "amendment:SR-179", "amendment:SR-207", "amen
 priority = 2
 +++
 
+## Deliverable
+
+Run on trunk by the queue drill's coordinator on 2026-11-23. The seventh
+combined adjudication sitting, the first under the row-scoped acceptance
+copy (WI-1060), judged the 31 rows its `adjudicates` names (Gemini Neon,
+431 seconds, one session). Its verdict
+(`docs/reviews/wi-1066-adjudicate-seventh-sitting/001-ADJUDICATE-123cd20.md`,
+`581275692`) was recorded by `record_outcome` (`064859662`), and the act it
+derives is taken whole. No operator ruling was needed: the act's first
+snapshot was tested read-only and read no refusal, and the unblessed row
+stayed owed without blocking the act.
+
+- **Re-accepted (`dbe7da595`), all MEANING+BLESS:** WI-1060's SR-140,
+  SR-179, LLR-173, LLR-178, LLR-245, LLR-271, LLR-361, LLR-364, TC-167,
+  TC-173, TC-240, TC-269, TC-400 and TC-403, and F-7's LLR-244, LLR-257 and
+  LLR-367. LLR-244 was judged on its whole current text, F-4's placement
+  clause included.
+- **Accepted (`8f45c0d5c`):** LLR-480 to LLR-483 and TC-561 to TC-568,
+  flipped together in one commit.
+- **MEANING, not blessed: SR-207.** The sitting asks its requirement to
+  front the event condition ("When ..."), and its acceptance criteria to
+  state the retirement rule the requirement names: an unnamed recorded
+  accepted row live no longer carries stays in the recorded copy and is
+  named owed, and naming it retires it. It stays at its recorded text,
+  owed. Follow-up: WI-1067, filed with this close.
+- **Returned: TC-560.** It leaves two of LLR-480's fault branches
+  unverified: a parent cell naming an example row, and a row below a cycle
+  (not on it), each at both statuses. It stays `Drafted`. Follow-up:
+  WI-1067.
+- **Left owed by the act, at their recorded text (LEFT OWED, the ledger's
+  `kept`):** SR-207, and the 26 rows WI-1024's slice 1 owes its own sitting
+  (sitting A). This is the first act ledger entry carrying `kept`.
+- **Not shown:** IF-312 and CMP-006 still drift in their off-spine
+  registries, and IF-220, IF-296 and IF-308 stay `Drafted`; the brief shows
+  no off-spine row.
+
 ## Context
 
 Filed on trunk on 2026-11-23 by the queue drill's coordinator: the seventh
@@ -65,11 +101,11 @@ One session, never fanned out (PROCESS.md §6).
 
 ## Done-when
 
-- [ ] The verdict is recorded beside its binding under
+- [x] The verdict is recorded beside its binding under
       `docs/reviews/wi-1066-adjudicate-seventh-sitting/`, as the
       adjudicator returned it, and `record_outcome` reads it recorded.
-- [ ] The act `compose_act` derives is taken, each part in its own commit;
+- [x] The act `compose_act` derives is taken, each part in its own commit;
       a row the act leaves owed is listed. A refusal of any other kind goes
       to the operator.
-- [ ] Each MEANING amendment and RETURN row is listed in the Deliverable
+- [x] Each MEANING amendment and RETURN row is listed in the Deliverable
       with its finding, and its follow-up is filed or named.
