@@ -15,15 +15,15 @@ SR-207 and sitting A's rows left owed, no revert needed. F-4's sitting A
 (WI-1068) is filed but waits on WI-1069: the amendment brief shows no
 routed link change, so its 21 routed `constrains` links would land
 unjudged. WI-1067 (SR-207's and TC-560's answer) merged; WI-1064 is
-reviewed and ready; WI-1065 owes a narrow round 2; WI-1069 is mid-build.
-**Start at §0.**
+reviewed and ready; WI-1065 owes a narrow round 2; WI-1069 is built and
+owes its review. **Start at §0.**
 
 ## 0. Resume here (2026-11-23, end of the fifth session)
 
 Trunk `refactor_again` is clean (`f78cb0a57` plus this hand-off's commit).
-Four branches are open in D: worktrees. The fifth session ended with
-builders still at work on two of them, so **first run `git log --oneline
--3` and `git status --short` in each worktree** and read its spec's
+Four branches are open in D: worktrees, each committed and clean when the
+fifth session ended. **First run `git log --oneline -3` and `git status
+--short` in each worktree** and read its spec's
 Deliverable before acting: a dirty tree is a builder's unfinished work.
 Finish it in a fresh builder from its brief (the scratchpad's
 `brief-NNNN.md`), or discard it and re-brief; never commit someone else's
@@ -57,17 +57,22 @@ half-done tree blind.
    scratchpad once through the migrator before the fix (nothing printed or
    written); its Deliverable says so. Delete `D:/review-tmp/2026-11-23-wi1065/`
    after the merge. Owed: SR-247, LLR-369, TC-427 (amendments).
-3. **WI-1069 (the model and amendment brief show routed links): its
-   build.** `maint/wi-1069`, `D:/ai-template-wt-wi1069`. The plan
-   (`1fd247ee0`) is approved with D1 to D12 as proposed (the message to its
-   builder: keep the RESYNC anchor `[since d62f3c74b]`; list IF-129 and
-   IF-075's note edits as off-spine). Its builder was mid-build (tree
-   dirty, a test run with two failures in progress) when the session
-   ended. Then review (code: Sol, split code and docs if large; prose:
-   Sol and Hydrogen; check the identity change's RESYNC guidance: take
-   held acts before upgrading, else re-sit) and merge. Owed: SR-178,
-   LLR-167, LLR-359, TC-161, TC-398 (amendments); LLR-484, TC-571 (first
-   acceptance).
+3. **WI-1069 (the model and amendment brief show routed links): review
+   it.** `maint/wi-1069` at `c277c4185`, `D:/ai-template-wt-wi1069`, built
+   and closed out (plan `1fd247ee0`, D1 to D12 approved). Red first `27
+   failed, 8 passed`; the 86 importing modules `3134 passed` after three
+   fixes; smoke `3902 passed, 3 skipped`. Over WI-1068's 26 tokens the
+   brief now shows 26 rows (23 before), 21 with a `Constrains` link.
+   Review round 1 over `d62f3c74b..c277c4185` (Sol, split code and docs if
+   the brief passes about 150K; Sol and Hydrogen on the prose; check the
+   identity change's RESYNC guidance: take held acts before upgrading, else
+   re-sit). Confirm or overrule the builder's two calls: the smoke
+   `max-tests` re-stamp 3890 -> 4060 (29 new in-process tests, about 4%
+   headroom), and the new in-process module `test_amendment_brief_links.py`.
+   It is wide (86 importing modules): consider the unfiltered suite on its
+   merge commit, trunk-first (§9). Owed: SR-178, LLR-167, LLR-359, TC-161,
+   TC-398 (amendments); LLR-484, TC-571 (first acceptance); IF-075 and
+   IF-129 (off-spine). SR-178 now has 9 direct design rows (advisory).
 4. **Sitting A (WI-1068), once WI-1069 lands.** Re-read its scope: a dry
    compose must show LLR-017, LLR-022 and LLR-024 and every routed
    `constrains` change. Fix its Context first: 18 (not 20) of its 23
