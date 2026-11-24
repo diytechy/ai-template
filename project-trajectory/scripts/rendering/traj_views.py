@@ -192,7 +192,7 @@ def arch_icicle(root):
     # `check_trajectory._cycles`, which walk the unbounded WI chain.
     # Kept recursive so this block stays a faithful port
     # of the proven gilbert icicle; if that port is ever hardened upstream (for a
-    # deeper tree there), mirror it — here it is provably safe.
+    # deeper tree there), mirror it.
     offset, deep = icicle_offsets(tier, depth)
     weight = {}
 

@@ -61,8 +61,10 @@ returns `LlrTree(below, srs_of, parent_of, depth, broken)`: down, every design
 row below an SR or below a design row, each once, in registry order; up, a
 top-level row's own SRs and a child's read up its chain; never raising and
 never looping (each chain stops at a top-level row, a broken parent cell or a
-row it has passed). Its costs: resolving the chains is linear in the rows,
-since each row's answer is memoized and every row is resolved once; building
+row it has passed). Its costs: resolving the chains is linear in the rows
+for acyclic chains, since each row's answer is memoized and every row is
+resolved once, while a cycle's report lists the loop from each of its rows,
+so a cycle of n rows costs about n² entries in its diagnostic; building
 the descendant index is output-sensitive, since each row is listed under every
 ancestor and every SR its chain reaches, so a single chain of n rows costs
 about n²/2 entries (a real tree, a few levels deep, costs a few times the
@@ -94,6 +96,7 @@ rows now takes it:
 | `gen_okf`: `emit` (`_children_by_parent`, `_llr_tree_links`) | | the bundle exports the authored link: a child's page links its parent, a parent's lists its children |
 | `check_trajectory`: `_placed_sr_components` | up | the knowledge-pack join reaches a placed child's SR |
 | `traj_parse`: `tree_llrs`; `rendering/traj_render`: `icicle_offsets`, `icicle_columns`; `rendering/traj_views`: `LLR_TIER`, `arch_icicle` | down | the dashboard (Done-when 4) |
+| `kitlib/spine`: `interface_reach` (`_verifying_cases`); `coherence`: `interface_coverage`, `_route` (`_cases_below`) | down | blast radius: a design row constraining an interface brings the cases of every design row below it, as a constraining SR brings those below it; a row only observed at the interface brings its own cases alone; the tree is built once per call (after trunk's merge, below) |
 
 Unchanged readers of the link, as the plan says: `spine_rules._decomposed_sr_ids`
 and `coherence._sr_orphan_findings` (only top-level rows carry `SR-Refs`, so
@@ -102,9 +105,16 @@ the set is the walk's on every tree the strict check passes; D14),
 rows), `kitlib.spine.parent_first_findings` (D2) and `intake._owning_srs` (a
 re-parent is an accepted change and never reaches its routed arm). The 13
 files that read only the work registry's `sr_refs` are untouched. **Blast
-radius** is not on trunk at `bba30552f`: WI-1024 adopts `llr_tree(...).below`
-for an SR and for a design row, or, if it lands first, this row moves it onto
-the walk at the coordinator's call (D10).
+radius** moved onto the walk on this branch: WI-1024's slice 1 landed first
+and reached the branch with trunk's merge (`60d44150a`), so the move was this
+row's at the coordinator's call (D10). `interface_reach` builds the tree once
+per call and reads `llr_tree(...).below` for a constraining SR and, new, for a
+constraining design row; `coherence._route` reads the same `below`, built
+once per `interface_coverage` call, for its design-row and requirement
+routes. A spine with no parent cell reaches exactly as before: this
+repository's reach and routes over its 239 interfaces dump byte-identical
+before and after.
+<!-- fig: cmd="interface_reach and interface_coverage over this repository's registries, dumped as JSON with the base and the changed scripts, then cmp" rev="01b49c333" -->
 
 **A parent's discharge, coverage and the stage** (Done-when 3). LLR-408's rule
 already holds: a design row is discharged only by a live case naming it, so a
@@ -184,7 +194,12 @@ LLR-481 (SR-157, SR-049), LLR-482 (SR-168), LLR-483 (SR-157, review round
 generated from the tests' tags (`--regen-evidence`). Amended, `detail` text
 only: LLR-367 (the scope phrase), LLR-244 (above), LLR-257 (the pairing
 phrase, and four inherited code names scrubbed: the settings key, the tag
-spelling, "pickaxe" and the step name). No SR written or amended.
+spelling, "pickaxe" and the step name). No SR written or amended. For
+blast radius, two `Drafted` rows of WI-1024's are amended in text, no act
+involved: LLR-421's `detail` (a constraining design row's cases include those
+of the design rows below it, as a constraining requirement's include those of
+the design rows decomposing it), and TC-531's `method` and `expected` (the
+two cases below; its evidence regenerated from their tags).
 
 **Red before the code** (each case written, run against the unchanged reader,
 then the reader changed):
@@ -203,6 +218,16 @@ then the reader changed):
   46 deselected in 8.12s`; the one pass was a weak case, since rewritten to
   verify the requirement through the grandchild alone (red on the base too).
   <!-- fig: cmd="python -m pytest -q <the cases named> per stage" rev="the worktree before each reader's change, ahead of 290d3d5d1" -->
+- Blast radius (after trunk's merge): `test_a_constraining_design_row_brings_the_cases_of_the_design_rows_below_it`
+  and `test_a_row_only_observed_at_an_interface_brings_its_own_cases_alone`
+  (TC-531), committed red in `5bbac4efd`: `2 failed, 19 deselected in
+  0.36s`, each failing on the constrained interface's reach
+  (`assert (['LLR-001'], ['TC-003']) == ...`), and again against the base
+  scripts after one case gained SR-001 in a run case's verifies, so the
+  strict check over its project does not stop on an SR no case names:
+  `2 failed, 19 deselected in 0.35s`; after the change
+  `test_constrains.py` reads `21 passed in 4.98s`.
+  <!-- fig: cmd="python -m pytest -q tests/test_constrains.py (-k the two cases for the red run)" rev="5bbac4efd (red), 01b49c333 (green)" -->
 
 **Tests:**
 - The rule-5 set: every test module importing a changed script (an import
@@ -227,6 +252,8 @@ then the reader changed):
 
 - Review round 1, after the fixes: the 79 modules importing what the round changed (`trace.py`, the dashboard's views, the registries' readers) with `test_requirement_tree`, `test_evidence_join`, `test_trace_golden` and the four named modules: `2715 passed, 2 skipped, 18 warnings in 2436.57s (0:40:36)`; `run_menu.py smoke`: exit 0, `3840 passed, 3 skipped, 18 warnings in 155.80s (0:02:35)`, its budget line `CPU 715.6 s vs 540 s ... -> OVER` warn-only, the tier overrun WI-1039 is filed for.
   <!-- fig: cmd="python -m pytest -q -n auto <the 79 modules>; python project-trajectory/scripts/run_menu.py smoke" rev="the round-1 fix tree, ahead of its commit" -->
+- Blast radius, after the change: the 39 modules importing `coherence` or the reach, those `trace.py --tests-for` lists for `kitlib/spine.py` and `coherence.py`, and `test_import_layers`, `test_module_size_ratchet`, `test_complexity_ratchet` and `test_dogfood_sync`: `1367 passed, 2 skipped, 18 warnings in 1238.89s (0:20:38)`; no ratchet moved. `run_menu.py smoke`: exit 0, `3874 passed, 3 skipped, 18 warnings in 130.80s (0:02:10)`, its budget line `CPU 656.2 s vs 540 s cpu-seconds; wall 131.6 s vs 600 s wall-seconds ... -> OVER`, warn-only.
+  <!-- fig: cmd="python -m pytest -q -n auto <the 39 modules>; python project-trajectory/scripts/run_menu.py smoke" rev="01b49c333" -->
 
 **Ratchets.** `trace.py`'s module-size baseline is bumped +46 (3784 -> 3830),
 the reason in its entry: the views and rules reading the walk, and the
@@ -281,6 +308,8 @@ in one commit:
 6. **MINOR, recursion depth**: the comments on the icicle's walks and on
    `_llr_forest_node` now state the bound and what happens past it; the walks
    stay recursive, as ruled.
+
+Round 2 (narrow, 9cc2cd5a0..c319d6b9f): Hydrogen APPROVE; Sol two MINORs (the icicle comment's leftover 'provably safe'; linear resolution qualified for cycles), both adopted.
 
 **Acts owed for automated adjudication:**
 - First acceptance (`Drafted` rows this branch wrote): LLR-480, LLR-481,

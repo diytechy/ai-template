@@ -12630,8 +12630,9 @@ the review test set, the derived stage's per-phase grouping, the acceptance
 brief and hierarchy, the adjudication and consolidation briefs, the context
 block, the report's outline, matrix and graph, the component view, the
 architecture arm's reach, the test-first order and the knowledge-pack
-advisory. The dashboard's spine view draws a child inside its parent, one
-design column per tree depth. `PROCESS.md` §4 states decomposition (b): an SR
+advisory. The interface coverage report's reach now includes the cases of
+the design rows below a constraining design row. The dashboard's spine view
+draws a child inside its parent, one design column per tree depth. `PROCESS.md` §4 states decomposition (b): an SR
 states behaviour at the system boundary, and a design row that needs breaking
 down for its parts becomes a parent of child design rows, under one
 `DevStg-LLReqs` rung.

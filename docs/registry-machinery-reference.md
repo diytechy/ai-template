@@ -324,9 +324,12 @@ and the build brief's code map.
 
 **Interface reach (WI-1024).** An interface's reach, its blast radius, is the
 rows constraining it or observed at it and every test case verifying those rows
-or naming it (`kitlib.spine.interface_reach`). `trace.py` counts the
-interfaces reached through a constraining LLR, a constraining SR, a naming test
-case alone, observation cases alone, or not at all, and names each interface
+or naming it (`kitlib.spine.interface_reach`), a constraining SR's or LLR's
+cases including those of every LLR below it in the requirement tree
+(`llr_tree(...).below`, WI-1027); a row only observed at it brings its own.
+`trace.py` counts the interfaces reached through a constraining LLR or the
+LLRs below it, a constraining SR or the LLRs below it, a naming test case
+alone, observation cases alone, or not at all, and names each interface
 reaching no test case the harness runs; a test case naming an interface every
 row it verifies already constrains is reported (`coherence.repeat_findings`).
 Both are warn-first until the population lands, and the `[checks]

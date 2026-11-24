@@ -23,7 +23,12 @@ The record is in the row's Deliverable
   takes it (the review test set, the orphan and triangle rules, the stage's
   phase grouping, the acceptance and adjudication briefs, the context block,
   the report's views, the component view, the architecture arm's reach, the
-  test-first order and five more). Blast radius is WI-1024's to put on it.
+  test-first order and five more). Blast radius moved onto it after
+  trunk's merge brought WI-1024's slice 1: a design row constraining an
+  interface now brings the cases of every design row below it, as a
+  constraining requirement does, in the reach and in the coverage report's
+  design-row route, the tree built once per call (LLR-421 and TC-531
+  amended in text, two new cases in `test_constrains.py`).
 - **A parent's discharge:** LLR-408's rule already discharges a design row
   only by a case naming it, so a parent needs its own integration TC; the
   finding on a parent past Drafted says its children's cases do not
@@ -46,9 +51,10 @@ The record is in the row's Deliverable
   case does not drive); LLR-480's propagation clause narrowed to what the
   walk propagates; TC-562's span and TC-560's both-statuses and
   strict-per-fault clauses each gained the cases that drive them; the walk's
-  cost restated (linear chain resolution, an output-sensitive descendant
-  index); the recursive walks' comments state their bound and what happens
-  past it. After the fixes, the 79 importing modules: `2715 passed, 2 skipped,
+  cost restated (chain resolution linear for acyclic chains, a cycle of n
+  rows costing about n² entries in its diagnostic, round 2; an
+  output-sensitive descendant index); the recursive walks' comments state
+  their bound and what happens past it. After the fixes, the 79 importing modules: `2715 passed, 2 skipped,
   18 warnings in 2436.57s (0:40:36)`; smoke exit 0, `3840 passed, 3 skipped`.
 - **Ratchets:** `trace.py` +46 SLOC (3784 -> 3830), a reviewed bump whose
   reason is in its entry: the walk's readers and the outward decomposition the
