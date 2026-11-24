@@ -3,11 +3,12 @@ id = "WI-1075"
 title = "A census test holds every shipped checker to IF-144's absent-input and advisory rules"
 workstream = "process"
 specref = "docs/plans/2026-11-21-queue-drill/HANDOFF.md"
-sr_refs = []
+sr_refs = ["SR-006"]
 needs = []
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
+planmode = "single"
 +++
 
 ## Context
@@ -38,12 +39,38 @@ absent baseline, and prints `FAIL` in its warn mode.
 **Order.** Before WI-1024's slice 5, so IF-144 is reached when coverage
 turns strict.
 
+**Parent: SR-006** (settled at the scope critique). The harness's verdict is
+its steps' exit codes, so a step whose advisory reached its exit code, or
+whose absent optional input failed it, would fail the gate for something
+SR-006 does not ask. The new design row decomposes SR-006's "runs the
+required steps and fails that gate when..." into the per-step protocol that
+makes the verdict mean what SR-006 says. If the plan finds SR-006 cannot
+hold it, it stops and asks.
+
+**Kept together** (the scope critique): the census test is the row's
+evidence, the two complexity-census defects are its red, and IF-144's text
+says what the test does not drive; landed apart, the row would state a
+protocol no test holds. Order inside the row: the census test red first,
+the defects' fixes, then the rows.
+
+Critiqued 2026-11-24 (Sol and Hydrogen;
+`docs/reviews/2026-11-24-scope-critiques/WI-1075.md`): `planmode` is
+`single`, the parent is SR-006, and the census's population and bound are
+stated.
+
 ## Done-when
 
-- [ ] A design row (a new `Drafted` LLR under the SR the plan names) states
-      parts 3 and 4 for every shipped checker found by glob, so a new
-      checker joins by default, with a carve-out table of the three argued
-      exceptions, each with its reason; its `constrains` cell names IF-144.
+- [ ] A design row (a new `Drafted` LLR under SR-006) states parts 3 and 4
+      for every shipped checker: each `check_*.py` in the shipped scripts
+      directory and the traceability check, named; a discovered checker
+      with no census case fails the census test (deny by default), so a new
+      checker joins by adding its case; a carve-out table holds the three
+      argued exceptions, each with its reason; its `constrains` cell names
+      IF-144.
+- [ ] Coverage bound: the promise reaches the shipped checkers the harness
+      runs, on kit-produced or supported inputs (PROCESS.md §6, "Review
+      threat model"); an adopter's own checker outside the shipped scripts
+      directory is outside it.
 - [ ] A census test (a new `Drafted` TC) drives part 4 on every checker and
       part 3 on every checker with an advisory class, red first against
       today's two complexity-census defects, which this row fixes.

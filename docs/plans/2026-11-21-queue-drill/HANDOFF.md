@@ -8,53 +8,57 @@ reading before starting.
 **Where the drill stands.** Waves A and B are merged, and WI-1036 and
 WI-1037 beside F-1. Variant F is filed (WI-1021 to WI-1030), critiqued, and
 its cut approved (§3.4). F-1 (WI-1021), F-2 (WI-1022), F-3 (WI-1023) and
-F-7 (WI-1027) are merged, and so are F-4's slices 1 and 2 (WI-1024), with
-the rows beside them. Nine adjudication sittings have run. The ninth
-(WI-1074, 60 rows: the eighth's owed rows, WI-1070's and WI-1071's, and
-F-4's slice 2) blessed 49 amendments and accepted all 10 new rows, once
-WI-1070's brief showed each linked row whole with the rows its links name;
-only LLR-014 is owed, and F-4's slice 3 answers it. **Start at §0.**
+F-7 (WI-1027) are merged, and so are F-4's slices 1 to 3 (WI-1024), with
+the rows beside them (WI-1045, WI-1070 to WI-1073 in the seventh session).
+Nine adjudication sittings have run; the ninth (WI-1074) blessed 49 of 50
+amendments and accepted all 10 new rows. Owed now: F-4's slice 3 (48 rows,
+its sittings C1 and C2) and WI-1072's LLR-359 and TC-398. **Start at §0.**
 
-## 0. Resume here (2026-11-24, during the seventh session)
+## 0. Resume here (2026-11-24, end of the seventh session)
 
-Trunk `refactor_again` is clean at this hand-off's commit. Three drill
-worktrees are open, each with a builder that may still be running: **first
-run `git log --oneline -3` and `git status --short` in each**; a dirty tree
-is a builder's unfinished work (finish it from its brief, or discard and
-re-brief).
+Trunk `refactor_again` is clean at this hand-off's commit. One drill
+worktree is open, `D:/ai-template-wt-wi1024` (F-4, `maint/wi-1024` at
+`a76ffcd3c`, clean, merged into trunk, nothing unmerged); no builder is
+running. **First run `git log --oneline -3` and `git status --short` in it.**
 
-1. **F-4's slice 3** (`D:/ai-template-wt-wi1024`, `maint/wi-1024`, cut at
-   `d7e3a57df`): the CMP-008 population, about 76 interfaces, split in two
-   halves for two sittings (C1, C2); IF-049 linked to LLR-047; IF-144
-   measured only, its proposal (a new row with a census test, or retiring
-   the interface row) for the coordinator; and LLR-014 answered (the ninth
-   sitting's one MEANING: its unmeasured fail-level budget line is a WARN
-   marked as a skip, as IF-004 and the code say; IF-147's baseline-update
-   refusal and IF-167's report behaviour). Brief: the scratchpad's
-   `brief-1024-s3.md` with the coordinator's LLR-014 message. Review it as
-   slice 2 was (Sol the whole diff, Hydrogen the prose with each amended
-   row's accepted text and each linked interface's row appended:
-   `rows_accepted.py`, `rows_ifs.py`), then merge, then its sitting.
-2. **WI-1045** (`D:/ai-template-wt-wi1045`, `maint/wi-1045`, cut at
-   `9e8eb6e57`): `acceptance_record`'s landing rules move to a CMP-008
-   module. `planmode = "single"`: its builder writes the plan and stops;
-   the coordinator approves it. Ranges IF 327 to 336, LLR 511 to 515, TC
-   606 to 612.
-3. **WI-1073** (`D:/ai-template-wt-wi1073`, `maint/wi-1073`, cut at
-   `d1571e8fc`): the component view header's placement sentence.
-   `planmode = "none"`; no ids.
-4. **WI-1072** (a row's own text cannot add or replace a judged-text
-   identity): critiqued (`d1571e8fc`), `planmode = "single"`, not launched.
-   It waits for WI-1045's plan, since both may touch where the identity is
-   read; launch it once that plan shows no overlap.
-5. **Then:** F-4's slice 4 (CMP-006) and slice 5 (the strictness);
-   WI-1039 on a quiet box; F-5 (WI-1025) after F-4 closes. Brief every
-   builder with the scratchpad's `common-rules.md` or a brief derived from
-   the last one (`brief-1070.md` for a planned row, `brief-1024-s3.md` for a
-   slice).
+1. **The tenth sitting.** File it first: every spine row owed on trunk.
+   That is F-4's slice 3 (`docs/plans/WI-1024/slice-3.md` §5: C1, 23 rows,
+   LLR-014 among them answering the ninth sitting; C2, 25 rows) and
+   WI-1072's LLR-359 and TC-398 (amendments). All are amendments; no new
+   `Drafted` row is owed but LLR-421, LLR-422, TC-531 and TC-532, held for
+   slice 5. Dry compose the 50 tokens (`sit/mkspec.py`, then
+   `sit/prepare_sit.py` with an existing WI id, see §9) and split into C1
+   and C2 only if over about 400K characters; the ninth sitting's 60 rows
+   came to 344K. Then as WI-1074 ran (§3.7): file with `--bump-ids`, bind,
+   Neon high, write, record, act (test the first snapshot read-only, run
+   `trace.py --strict` after any flips), close. WI-1072's composition check
+   now refuses any brief carrying an identity line its composer did not
+   write; a real dry compose passed it (`0de9125ad`).
+2. **WI-1075** (IF-144's checker protocol, a census test): critiqued and
+   its dispositions applied at this hand-off's commit (`planmode =
+   "single"`, parent SR-006, the discovery rule and bound stated). Build
+   it (plan first) before F-4's slice 5. Ranges at launch: LLR from 516, TC
+   from 613.
+3. **F-4's slice 4** (CMP-006's population, about 98 interfaces, likely two
+   sittings D1 and D2): brief it from `brief-1024-s3.md`, fast-forwarding
+   the branch to trunk first (`git -C D:/ai-template-wt-wi1024 merge
+   --ff-only refactor_again`). Carry from slice 3's §6: LLR-288 may become
+   IF-054's and IF-073's row; IF-271 to IF-275 stay reached through their
+   naming cases (IF-274's unstated parse failure goes to LLR-300's next
+   amendment; IF-272 and IF-273 wait for LLR-270's next amendment, IF-247
+   and IF-248 stay on LLR-290); TC-301's repeated IF-264 is slice 5's.
+   Then slice 5 (the strictness) once slice 4's sittings and WI-1075 land.
+4. **The smoke tier's membership** is at 4,017 of `max-tests = 4060`
+   (`docs/stack.ini`); slice 4 or WI-1075 may cross it. Re-stamp with the
+   reason and about 4% headroom (§9), not current+1.
+5. **Then:** WI-1039 on a quiet box; F-5 (WI-1025) after F-4 closes. Brief
+   every builder from the scratchpad's briefs (`brief-1070.md` for a
+   planned row, `brief-1024-s3.md` for a slice) or `common-rules.md`.
 6. **For the operator:**
-   - A push: trunk is ahead of the remote from `80d64a5f3`.
-   - Scratch folders: `D:/rt*` and `D:/review-tmp/2026-11-23-wi1060`,
+   - A push: trunk is ahead of the remote by 133 commits, from
+     `80d64a5f3`.
+   - Scratch folders to delete by hand: `D:/rt*` (`D:/rt1024`, `D:/rt1072`,
+     `D:/rtm` among them) and `D:/review-tmp/2026-11-23-wi1060`,
      `D:/review-tmp/2026-11-24-wi1070`.
 
 Not filed, noted for WI-1018's list or a later row:
@@ -80,6 +84,15 @@ Not filed, noted for WI-1018's list or a later row:
   `trace.py --strict` after the flips, before the act's commit (§9).
 - LLR-300 stays one row of several obligations (WI-1071's D8); re-cut it
   only if a sitting returns it.
+- `acceptance_record.verdict_rulings` has no caller and keeps an edge into
+  the verdict library that falsifies a sentence of CMP-006's accepted
+  notes; `landing_rules.ARCHIVE_WORK_DIR` is unused (WI-1045's D10).
+- TC-369's text lists its tests by name and does not mention slice 3's new
+  fallback test (its evidence does); the lane's base is an abbreviated
+  commit id in the no-merge-base fallback but a full one otherwise
+  (slice 3's §6 item 16).
+- `tests/test_migrate_vocabulary_record.py` has an unused import (ruff
+  F401), outside the smoke lint.
 
 Scratch tools, in the seventh session's scratchpad
 (`C:/Users/Peter/AppData/Local/Temp/claude/9919beaa12ed540b/3f3a88bd-e950-46b6-8d3e-0f9f3ffb7f42/scratchpad`,
@@ -167,14 +180,10 @@ adjudication sittings by Gemini Neon through `agy` (operator, 2026-11-21;
 
 | Item | What | Wave | Notes |
 |---|---|---|---|
-| WI-1024 slice 3 | F-4's CMP-008 population, IF-049, IF-144's measure, LLR-014's answer | Building (§0 step 1) | Slices 1 and 2 merged (`6ed2cfc28`, `88e589103`); its sittings C1 and C2 follow |
-| WI-1024 slices 4 and 5 | CMP-006's population, then the strictness | After slice 3 | Slice 5 lands after slice 4's sitting |
-| WI-1072 | A row's own text cannot add or replace a judged-text identity | Critiqued, not launched (§0 step 4) | `planmode = "single"`; waits on WI-1045's plan |
-| WI-1073 | The component view header states placement as LLR-403 does | Building (§0 step 3) | `planmode = "none"` |
-| WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6, §3.4) | F, after the N6 stop | Filed and critiqued (round 1, Sol and Argon, all findings applied, `a57782d59`). Order by `needs`: 1021; 1022; 1023; then 1024 and 1027 (either order); 1025; then 1026, 1028 and 1030; then 1029. Built side by side where `needs` allows, landing one at a time (plan revision 37). F-1 merged (`147fed185`), F-2 merged (`b2b0d9476`), F-3 merged (`4335c1a4d`); F-4 slices 1 and 2 merged (`6ed2cfc28`, `88e589103`), F-7 merged (`0303183a3`); next F-4's slices 3 to 5, then 1025 |
-| WI-1016 | A repository can switch off the implementation layer | After F | Re-critiqued once F lands; reverses SR-186, so its amendment is drafted for the operator |
-| WI-1018 | Row text a lane leaves stale is filed, and the first set is brought up to the code | After F-8 | F-8's text migration takes B1, B7 and B9 and likely more; this row then fixes what is left |
-| WI-1045 | `acceptance_record.py`'s landing rules move to a CMP-008 module (F-1's table, §3.5 R2) | Building, plan first (§0 step 2) | Critiqued (Sol and Hydrogen, all findings applied): the order settled after F-3, the cover held to F-2's rule, IF-308's callers named |
+| Tenth sitting | F-4's slice 3 (C1, C2) and WI-1072's LLR-359, TC-398 | Next (§0 step 1) | 50 amendments; split only above about 400K |
+| WI-1075 | IF-144's checker protocol: a census test, parent SR-006 | Critiqued, ready to build (§0 step 2) | Before F-4's slice 5 |
+| WI-1024 slices 4 and 5 | CMP-006's population, then the strictness | Slice 4 may build (§0 step 3) | Slices 1 to 3 merged (`6ed2cfc28`, `88e589103`, `eb96d6298`) |
+| WI-1045 | `acceptance_record.py`'s landing rules move to a CMP-008 module (F-1's table, §3.5 R2) | Merged `3bd545635` | Critiqued (Sol and Hydrogen, all findings applied): the order settled after F-3, the cover held to F-2's rule, IF-308's callers named |
 | WI-1039 | The smoke tier back under its CPU budget | Beside F-1 | Filed 2026-11-21 (§3.4, the suite during F); critiqued by Sol alone, findings applied (`d1c56e986`); not built |
 | WI-1031 to WI-1035 | The rest of phase 3 | Filed, not drilled | Owe a scope critique when they come up (§3.3 N2); WI-1035 carries §3.4 S4's answer |
 
@@ -821,6 +830,9 @@ LLR-493 to LLR-495 and TC-586 to TC-588; WI-1072 to WI-1074 filed. Trunk's
 marks: SR 251, LLR 495, TC 588, IF 326, WI 1074. Ranges at launch: F-4's
 slice 3 LLR 496 to 510 and TC 589 to 605; WI-1045 IF 327 to 336, LLR 511
 to 515 and TC 606 to 612; WI-1073 none. Next free: LLR 516, TC 613, IF 337.
+End of the seventh session: slice 3, WI-1045, WI-1072 and WI-1073 minted
+no ids; WI-1075 filed. Trunk's marks: SR 251, LLR 495, TC 588, IF 326, WI
+1075. Next free: LLR 496, TC 589, IF 327.
 
 WI-1019 used LLR-395 only; its TC range went unused and passes to WI-1021,
 which used LLR-396 and LLR-397, TC-457 to TC-461 and IF-326; the rest of its
@@ -1483,3 +1495,24 @@ Append one line per step taken: the item, what happened, the commit.
   passed, 3 skipped`. WI-1072 and WI-1073 critiqued (Sol and Hydrogen,
   every finding adopted: `planmode`, WI-1072's Trust section),
   `d1571e8fc`. F-4's slice 3, WI-1045 (plan first) and WI-1073 building.
+- 2026-11-24 (seventh session, later): WI-1073 built (the component view
+  header's placement sentence), review Sol and Hydrogen APPROVE, merged
+  `bd3f004a9`, regen `1e8b2a28f`; smoke `3956 passed, 3 skipped`. WI-1072's
+  plan approved (refuse at compose; D6's condition failed, so reservation
+  refuses non-composed identity lines too), built; round 1 Hydrogen
+  APPROVE, Sol two MINORs (the exact-match rule, the RESYNC guidance),
+  adopted; round 2 both APPROVE. Merged `33407fb30` (RESYNC kept both
+  entries), regen `0de9125ad`; smoke `3993 passed, 3 skipped`; a real
+  amendment brief composes under the new check. WI-1045's plan approved
+  (D1 to D12; the identity function stays in `acceptance_record`), built
+  (33 definitions moved byte for byte into `landing_rules.py`, 989 -> 689
+  SLOC); round 1 Hydrogen APPROVE, Sol one MINOR (the RESYNC names),
+  adopted; round 2 both APPROVE. Merged `3bd545635` (163 passed over the
+  modules it and WI-1072 share), regen `10d9ccc13`; smoke `3994 passed, 3
+  skipped`. F-4's slice 3 built (71 of 76 CMP-008 interfaces, LLR-014
+  answered, 48 tests); round 1 in five sessions (Sol code, C1, C2;
+  Hydrogen C1, C2): Hydrogen APPROVE, Sol seven MINORs adopted; round 2
+  both APPROVE. Merged `eb96d6298` (no slice-3 file imports a moved name),
+  regen `3a187cd39`; smoke `4014 passed, 3 skipped`. WI-1075 filed
+  `e12781779` from slice 3's IF-144 proposal and critiqued (Sol four
+  findings, Hydrogen one, all adopted), with this hand-off.
