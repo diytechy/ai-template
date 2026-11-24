@@ -13,7 +13,7 @@ import subprocess
 
 from conftest import SCRIPTS, load_script, pin_autocrlf, run_py
 
-ar = load_script("acceptance_record")
+ar = load_script("landing_rules")
 integrate = load_script("integrate")
 ct = load_script("check_trajectory")
 

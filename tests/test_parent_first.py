@@ -6,7 +6,7 @@ or `Founded`, citing a declared parent that is not accepted, over an SR's
 `SN-Refs` to SNs, an LLR's `SR-Refs` to SRs, a child LLR's `Parent` to its
 parent LLR and a TC's `Verifies` to SRs and LLRs. `parent_first_line` words
 each entry once. The commit judgement
-(`acceptance_record.parent_first_lines`) reads a tree against its parents; its
+(`landing_rules.parent_first_lines`) reads a tree against its parents; its
 arms that need a git failure are driven here with the git reads replaced, and
 the real-repository cases live in `test_parent_first_git.py` (slow tier), whose
 in-process pin this module is. The wiring pins (the lane-commit rider, the
@@ -29,6 +29,7 @@ import spine_carrier  # noqa: E402
 from kitlib import spine  # noqa: E402
 
 ar = load_script("acceptance_record")
+pf = load_script("landing_rules")
 tta = load_script("text_then_act")
 check = load_script("check")
 
@@ -250,7 +251,7 @@ def _fake_git(monkeypatch, trees, diff):
     def show(root, prefix, path):
         text = trees.get(prefix, {}).get(path)
         if text is _UNREADABLE:
-            raise ar._kitgit.UnreadableBlob(prefix + path)
+            raise pf._kitgit.UnreadableBlob(prefix + path)
         return text
 
     def git(root, args, stdin=None):
@@ -264,10 +265,10 @@ def _fake_git(monkeypatch, trees, diff):
     def paths(root, args):
         return None if diff is None else list(diff)
 
-    monkeypatch.setattr(ar._kitgit, "git_show", show)
-    monkeypatch.setattr(ar._kitgit, "git_paths", paths)
-    monkeypatch.setattr(ar._kitgit, "git_out", git)
-    monkeypatch.setattr(ar, "_git", git)
+    monkeypatch.setattr(pf._kitgit, "git_show", show)
+    monkeypatch.setattr(pf._kitgit, "git_paths", paths)
+    monkeypatch.setattr(pf._kitgit, "git_out", git)
+    monkeypatch.setattr(pf, "_git", git)
 
 
 @pytest.mark.parametrize(
@@ -282,7 +283,7 @@ def test_a_commit_side_registry_that_cannot_be_read_or_does_not_parse_is_refused
     clean = registries(("SR-001", "Accepted"), ("LLR-001", "Accepted", "SR-001"))
     index = dict(clean, **{SR_PATH: broken})
     _fake_git(monkeypatch, {"BASE:": clean, ":": index}, [SR_PATH])
-    lines = ar.parent_first_lines(tmp_path, ["BASE"])
+    lines = pf.parent_first_lines(tmp_path, ["BASE"])
     assert any(SR_PATH in ln and failure in ln and "index" in ln for ln in lines), lines
 
 
@@ -290,7 +291,7 @@ def test_a_diff_git_cannot_produce_is_a_refusal_not_a_skip(tmp_path, monkeypatch
     """Implements: TC-397"""
     clean = registries(("SR-001", "Accepted"), ("LLR-001", "Accepted", "SR-001"))
     _fake_git(monkeypatch, {"BASE:": clean, ":": clean}, None)
-    lines = ar.parent_first_lines(tmp_path, ["BASE"])
+    lines = pf.parent_first_lines(tmp_path, ["BASE"])
     assert lines and "cannot" in " ".join(lines), lines
 
 
@@ -301,13 +302,13 @@ def test_a_parent_side_that_does_not_parse_counts_every_status_as_moved(
     index = registries(("SR-001", "Drafted"), ("LLR-001", "Accepted", "SR-001"))
     base = dict(index, **{SR_PATH: BROKEN})
     _fake_git(monkeypatch, {"BASE:": base, ":": index}, [SR_PATH])
-    lines = ar.parent_first_lines(tmp_path, ["BASE"])
+    lines = pf.parent_first_lines(tmp_path, ["BASE"])
     assert len(lines) == 1, lines
     assert "LLR-001" in lines[0] and "SR-001" in lines[0], lines
     # The control: the same standing case over a parent that parses moved
     # neither status, so it is not this judgement's to refuse.
     _fake_git(monkeypatch, {"BASE:": dict(index), ":": index}, [SR_PATH])
-    assert ar.parent_first_lines(tmp_path, ["BASE"]) == []
+    assert pf.parent_first_lines(tmp_path, ["BASE"]) == []
 
 
 def test_a_child_design_row_is_refused_at_the_commit_only_where_a_status_moved(
@@ -323,7 +324,7 @@ def test_a_child_design_row_is_refused_at_the_commit_only_where_a_status_moved(
     drafts = registries(("LLR-001", "Drafted"), ("LLR-002", "Drafted", "LLR-001"))
     flipped = registries(("LLR-001", "Drafted"), ("LLR-002", "Accepted", "LLR-001"))
     _fake_git(monkeypatch, {"BASE:": drafts, ":": flipped}, [LLR_PATH])
-    assert ar.parent_first_lines(tmp_path, ["BASE"]) == [
+    assert pf.parent_first_lines(tmp_path, ["BASE"]) == [
         "the index: LLR-002 (Accepted) is accepted under LLR-001 (Drafted), which "
         "is not: accept LLR-001 in its own acceptance act, or return LLR-002 to "
         "Drafted"
@@ -334,7 +335,7 @@ def test_a_child_design_row_is_refused_at_the_commit_only_where_a_status_moved(
         ("LLR-003", "Drafted"),
     )
     _fake_git(monkeypatch, {"BASE:": flipped, ":": unmoved}, [LLR_PATH])
-    assert ar.parent_first_lines(tmp_path, ["BASE"]) == []
+    assert pf.parent_first_lines(tmp_path, ["BASE"]) == []
 
 
 # --- characterizations of the settled rule and judgement --------------------
@@ -367,7 +368,7 @@ def test_an_unreadable_parent_side_counts_every_status_as_moved(tmp_path, monkey
     index = registries(("SR-001", "Drafted"), ("LLR-001", "Accepted", "SR-001"))
     base = dict(index, **{SR_PATH: _UNREADABLE})
     _fake_git(monkeypatch, {"BASE:": base, ":": index}, [SR_PATH])
-    lines = ar.parent_first_lines(tmp_path, ["BASE"])
+    lines = pf.parent_first_lines(tmp_path, ["BASE"])
     assert len(lines) == 1, lines
     assert "LLR-001 (Accepted) is accepted under SR-001 (Drafted)" in lines[0], lines
 
@@ -427,7 +428,7 @@ def test_when_both_carriers_of_a_tier_exist_the_first_listed_decides(
     base = registries(("SR-001", toml_status), ("LLR-001", "Drafted", "SR-001"))
     base[csv] = index[csv]
     _fake_git(monkeypatch, {"BASE:": base, ":": index}, [LLR_PATH])
-    lines = ar.parent_first_lines(tmp_path, ["BASE"])
+    lines = pf.parent_first_lines(tmp_path, ["BASE"])
     assert bool(lines) is found, lines
 
 
@@ -461,7 +462,7 @@ def test_a_tier_absent_on_the_commit_side_supplies_no_rows(tmp_path, monkeypatch
     base = registries(("SR-001", "Drafted"), ("LLR-001", "Drafted", "SR-001"))
     index = registries(("LLR-001", "Accepted", "SR-001"))
     _fake_git(monkeypatch, {"BASE:": base, ":": index}, [SR_PATH, LLR_PATH])
-    assert ar.parent_first_lines(tmp_path, ["BASE"]) == []
+    assert pf.parent_first_lines(tmp_path, ["BASE"]) == []
 
 
 # --- the wiring -------------------------------------------------------------

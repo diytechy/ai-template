@@ -23,7 +23,7 @@ from kitlib import git as kgit
 from kitlib import registry as kregistry
 
 ar = load_script("adoption_record")
-acceptance = load_script("acceptance_record")
+acceptance = load_script("landing_rules")
 
 ROOTS = ["docs/work", "docs/archive/work"]
 

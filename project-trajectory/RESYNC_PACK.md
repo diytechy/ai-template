@@ -12810,6 +12810,38 @@ contract harvest once (seconds on a large tree).
 
 **Project-owned files — edit:** none.
 
+### The landing rules move out of the acceptance record into their own module [since 9e8eb6e57]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** The rules the landing runs on top of the acceptance record
+move, unchanged, out of `scripts/acceptance_record.py` into a new
+`scripts/landing_rules.py`: the ruling sync (`ruling_sync_lines`,
+`staged_ruling_sync_lines`, `commit_ruling_sync_lines`), the parent-first
+judgement (`parent_first_lines`, `parent_first_tiers`,
+`staged_parent_first_lines`, `commit_parent_first_lines`) and the trunk
+mint's settled-amendment filter and held-act arms (`settled_amendments`,
+`unanchored_rows`, `text_as_bound`), with their helpers. `acceptance_record`
+no longer defines them and keeps no second name for them. Every finding,
+refusal, its wording and its order are unchanged. `acceptance_record` keeps
+the two-tree comparison, the mirror rules, the merge slot's acceptance-act
+refusal, the judged-text identity (`accepted_text_digest`) and the readers
+the new module calls. `integrate.py`, `intake.py` and `text_then_act.py`
+import the new module unguarded, so a scaffold without it cannot merge, mint
+or run the hook's text-then-act step.
+
+**What to do.** Copy the new file in with the overwrite. If your own code
+imports any of the moved names from `acceptance_record`, import them from
+`landing_rules` instead. No registry or setting changes.
+
+**Kit-owned files — overwrite:** `scripts/landing_rules.py` (new),
+`scripts/acceptance_record.py`, `scripts/check.py`, `scripts/integrate.py`,
+`scripts/intake.py`, `scripts/text_then_act.py`, `scripts/adjudicate_act.py`,
+`scripts/kitlib/bootstrap_manifest.py`, `scripts/kitlib/git.py`,
+`scripts/kitlib/decisions.py`, `README.md`.
+
+**Project-owned files — edit:** none.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

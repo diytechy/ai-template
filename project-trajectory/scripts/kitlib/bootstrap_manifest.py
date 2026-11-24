@@ -759,6 +759,12 @@ MAPPING = [
     # rider) and `check_trajectory.py` behind their sibling guards and
     # `check.py`'s held-status step deferred, all in this list.
     ("scripts/held_status.py", "scripts/held_status.py"),
+    # The landing rules (WI-1045), moved out of the acceptance record: the ruling
+    # sync, the parent-first judgement and the trunk mint's acceptance arms.
+    # `integrate.py`, `intake.py` and `text_then_act.py` import it unguarded,
+    # `adjudicate_act.py` at module level and `check.py`'s two steps deferred,
+    # all in this list.
+    ("scripts/landing_rules.py", "scripts/landing_rules.py"),
     # The WI-218 split of the coordinator engine: the headless session layer,
     # the shared primitives, and the dual-plan runner agent_loop.py imports as
     # siblings. (The parallel dispatcher retired at concurrency-restructure

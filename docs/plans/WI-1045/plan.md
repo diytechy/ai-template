@@ -5,6 +5,10 @@ cut from `refactor_again` at `9e8eb6e57`. `planmode = "single"`: this commit
 carries the plan alone, and nothing else changes until the coordinator's
 go-ahead.
 
+**Approved by the coordinator 2026-11-24, D1 to D12 confirmed.** D3 is
+recorded in the Deliverable as a deviation from the spec's Context, which
+listed the judged-text identity among the rules to move.
+
 Read in full: the spec `docs/work/queued/WI-1045-acceptance-record-split.md`;
 its scope critique `docs/reviews/2026-11-21-scope-critiques/WI-1045.md`; the
 queue-drill hand-off `docs/plans/2026-11-21-queue-drill/HANDOFF.md` sections

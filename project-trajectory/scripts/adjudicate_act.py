@@ -65,7 +65,7 @@ first-acceptance flip waits when a parent the parent-first rule reads for it
 not be accepted after the act: neither accepted at the revision nor flipped by
 a flip of the act that does not itself wait, so a flip under a waiting parent
 waits too. The rows are read by the hook's own reader
-(`acceptance_record.parent_first_tiers`), and one of its registries that cannot
+(`landing_rules.parent_first_tiers`), and one of its registries that cannot
 be read or does not parse refuses the whole derivation, naming it. A waiting
 flip stays OWED: the brief names it, with each parent it waits on, and never
 lists it; the later-act derivation reports it marked; a verdict whose every
@@ -141,6 +141,7 @@ import acceptance_record
 import agent_brief
 import baseline_snapshot
 import intake
+import landing_rules
 import prompts
 from kitlib import authority as kauthority
 from kitlib import sitting as ksitting
@@ -425,7 +426,7 @@ def _waits(root, rev, rel, owed):
     flips = [rid for act, rid, _held in owed if act == "accept"]
     if not flips:
         return {}, None
-    tiers, failures = acceptance_record.parent_first_tiers(root, rev + ":")
+    tiers, failures = landing_rules.parent_first_tiers(root, rev + ":")
     if failures:
         return None, (
             "the verdict {}'s flips cannot be judged against the parent-first "

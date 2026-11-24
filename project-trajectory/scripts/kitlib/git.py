@@ -31,7 +31,7 @@ them NUL-delimited as bytes, decoded without loss), and a blob read that tells
 a path the tree does not list from one it lists but cannot read (`git_show`,
 raising `UnreadableBlob` for the second, and for a path that is not UTF-8,
 which it cannot hand back to git). Neither decides what that MEANS: the ruling
-sync and the overrule sync in `acceptance_record` refuse an unreadable blob.
+sync and the overrule sync in `landing_rules` refuse an unreadable blob.
 
 ONE CLAIMED-BRANCH READER. `claimed_work_branch` answers whether the checkout
 is a claimed lane. It moved here from `check.py` so every caller that must

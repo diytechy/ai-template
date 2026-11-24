@@ -1168,8 +1168,8 @@ notes = """sink — the census consumes the validator's one orphan/status engine
 owner = "CMP-006"
 requestors = ["CMP-008"]
 channel = "call"
-data = "Acceptance delta; merge_acceptance_refusal(root, base, head, metas, trunk) -> acceptance or refusal; settled_amendments(...) -> (settled ids, refusal); unanchored_rows(root, head, ids, routed_cells) -> ({row id: registry}, refusal); text_as_bound(root, head, ruled) -> ids at their bound text"
-version = "v1"
+data = "merge_acceptance_refusal -> refusal or None; the record at a revision: live rows, a tier's record copy, act-ledger entries a range added, a commit's parents"
+version = "v2"
 status = "Drafted"
 
 [interface.IF-092]
@@ -1976,7 +1976,7 @@ notes = "The owner is the module that states the file's shape; the file arrives 
 [interface.IF-256]
 rationale = """The merge slot, the loop and the dial reader each ask the record's questions - where a run's record belongs, what makes an entry malformed, whether a close owes one, what a session is told, and which words the dial takes - and answering them in three places is how a session gets told one path while the slot reads another. One imported module answers all of them."""
 owner = "CMP-008"
-requestors = ["CMP-006", "CMP-008", "CMP-009"]
+requestors = ["CMP-008", "CMP-009"]
 channel = "call"
 data = "record_path (raises ValueError for a run name no record can carry: # or a character git refuses); record_findings; operator_state; review_queue(text) -> (unseen, overruled, confirmed_count); citation; citations; newly_overruled (raises ValueError for an unparseable after side); overrule_sync_lines(changed, before, after) -> refusal lines (before/after read a path's text in the parent and resulting tree, None when absent; what they raise propagates); migrate_text -> (text, left_ids) (raises ValueError for unparseable input or failed re-parse equivalence); MODES, REQUIRED_KEYS, OPERATOR_KEY, CONFIRMED, OVERRULED, OPERATOR_VALUES, RETIRED_KEY; owed; missing_record_refusal(mode, run) -> the merge slot refusal of an owed close with no record, or with a run name no record can carry; session_note"
 version = "v1"
@@ -2055,7 +2055,7 @@ notes = "No tie-back: a coordinator reads this local command result in its own r
 
 [interface.IF-308]
 rationale = "The staged check and lane-commit rider need one owner for parent-first refusal lines, so both judge the same parent tree comparison instead of accepting different acceptance relationships."
-owner = "CMP-006"
+owner = "CMP-008"
 requestors = ["CMP-007", "CMP-008"]
 channel = "call"
 data = "staged_parent_first_lines(root) and commit_parent_first_lines(root, rev) return parent-first refusal lines; parent_first_tiers(root, prefix) returns the tiers that judgement reads and the registries that failed to read"

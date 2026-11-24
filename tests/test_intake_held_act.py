@@ -52,6 +52,7 @@ pytestmark = env_gate_skipif("git")
 intake = load_script("intake")
 ac = load_script("agent_common")
 acceptance_record = load_script("acceptance_record")
+landing_rules = load_script("landing_rules")
 adjudicate_brief = load_script("adjudicate_brief")
 amendment_brief = load_script("amendment_brief")
 gen_open_items = load_script("gen_open_items")
@@ -209,7 +210,7 @@ def _assert_the_act_anchors(root, command, *rids):
     proc = _run_act(root, command)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     head = _commit(root, "the operator's act")
-    assert acceptance_record.unanchored_rows(
+    assert landing_rules.unanchored_rows(
         root, head, rids, intake.ROUTED_TRACED_CELLS
     ) == ({}, None)
 
@@ -594,7 +595,7 @@ def test_a_copy_that_cannot_be_read_is_the_refusal(tmp_path):
     root, before, after = _landed(tmp_path, "MEANING")
     _act(root, "SR-001")
     _drop_blob(root, after, COPY_REL)
-    rows, refusal = acceptance_record.unanchored_rows(
+    rows, refusal = landing_rules.unanchored_rows(
         root, after, {"SR-001"}, intake.ROUTED_TRACED_CELLS
     )
     assert rows == {}, rows

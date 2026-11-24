@@ -202,6 +202,7 @@ from typing import NamedTuple
 import agent_common as ac
 import bookkeeping
 import coordinator_guard
+import landing_rules
 import plan_gate
 import review_set
 import score_reviews
@@ -1346,7 +1347,7 @@ def _ruling_sync_refusal(root, branch):
 
     Every commit of the lane, oldest first, is judged against its FIRST parent
     by the same function the pre-commit hook runs over the staged tree
-    (`acceptance_record.commit_ruling_sync_lines`): a commit that takes an open
+    (`landing_rules.commit_ruling_sync_lines`): a commit that takes an open
     item out of `pending` must update the Done-when of each row open in its
     parent that cites the item, or close or remove the row; and a commit that
     overrules a delegated decision must file or amend a queued or active row
@@ -1357,10 +1358,8 @@ def _ruling_sync_refusal(root, branch):
 
     Implements: SR-148, LLR-298
     """
-    import acceptance_record  # a leaf reader; deferred so the cheap rungs stay cheap
-
     found = _each_lane_commit(
-        root, branch, "rulings", (acceptance_record.commit_ruling_sync_lines,)
+        root, branch, "rulings", (landing_rules.commit_ruling_sync_lines,)
     )
     if found is None or isinstance(found, str):
         return found
