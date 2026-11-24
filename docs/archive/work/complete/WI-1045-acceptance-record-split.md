@@ -202,6 +202,8 @@ changed; entry anchored at 9e8eb6e5749735bc7431265cc9d40828e9eb7abe`.
 - `landing_rules.ARCHIVE_WORK_DIR`, a constant nothing reads, moved verbatim
   with the ruling sync's constants.
 
+Round 2 (narrow, over `dec40ead9..c3d455001`, round 1's finding and the coordinator's ruling prepended): OpenAI Sol APPROVE findings=0; Gemini Hydrogen APPROVE findings=0.
+
 ## Context
 
 Filed on trunk on 2026-11-21 from WI-1021's one-component table, on the

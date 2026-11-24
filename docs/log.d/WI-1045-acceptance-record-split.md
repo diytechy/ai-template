@@ -43,3 +43,4 @@ holds the per-item record, the cover and the acts owed.
   `acceptance_record.verdict_rulings` alias, whose import of `kitlib/verdict`
   makes CMP-006's notes sentence on that module's edges untrue, and the
   unread `landing_rules.ARCHIVE_WORK_DIR`.
+- **Review round 2** (narrow): Sol and Hydrogen APPROVE findings=0.
