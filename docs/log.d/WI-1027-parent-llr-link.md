@@ -27,8 +27,9 @@ The record is in the row's Deliverable
   trunk's merge brought WI-1024's slice 1: a design row constraining an
   interface now brings the cases of every design row below it, as a
   constraining requirement does, in the reach and in the coverage report's
-  design-row route, the tree built once per call (LLR-421 and TC-531
-  amended in text, two new cases in `test_constrains.py`).
+  design-row route, the tree built once per call of each, never per
+  interface (LLR-421 and TC-531 amended in text, two new cases in
+  `test_constrains.py`).
 - **A parent's discharge:** LLR-408's rule already discharges a design row
   only by a case naming it, so a parent needs its own integration TC; the
   finding on a parent past Drafted says its children's cases do not

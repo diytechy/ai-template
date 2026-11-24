@@ -96,7 +96,7 @@ rows now takes it:
 | `gen_okf`: `emit` (`_children_by_parent`, `_llr_tree_links`) | | the bundle exports the authored link: a child's page links its parent, a parent's lists its children |
 | `check_trajectory`: `_placed_sr_components` | up | the knowledge-pack join reaches a placed child's SR |
 | `traj_parse`: `tree_llrs`; `rendering/traj_render`: `icicle_offsets`, `icicle_columns`; `rendering/traj_views`: `LLR_TIER`, `arch_icicle` | down | the dashboard (Done-when 4) |
-| `kitlib/spine`: `interface_reach` (`_verifying_cases`); `coherence`: `interface_coverage`, `_route` (`_cases_below`) | down | blast radius: a design row constraining an interface brings the cases of every design row below it, as a constraining SR brings those below it; a row only observed at the interface brings its own cases alone; the tree is built once per call (after trunk's merge, below) |
+| `kitlib/spine`: `interface_reach` (`_verifying_cases`); `coherence`: `interface_coverage`, `_route` (`_cases_below`) | down | blast radius: a design row constraining an interface brings the cases of every design row below it, as a constraining SR brings those below it; a row only observed at the interface brings its own cases alone; each of the two builds the tree once per call, never per row or interface (after trunk's merge, below) |
 
 Unchanged readers of the link, as the plan says: `spine_rules._decomposed_sr_ids`
 and `coherence._sr_orphan_findings` (only top-level rows carry `SR-Refs`, so
@@ -111,7 +111,8 @@ row's at the coordinator's call (D10). `interface_reach` builds the tree once
 per call and reads `llr_tree(...).below` for a constraining SR and, new, for a
 constraining design row; `coherence._route` reads the same `below`, built
 once per `interface_coverage` call, for its design-row and requirement
-routes. A spine with no parent cell reaches exactly as before: this
+routes (so a coverage call builds the tree twice, once in each, each build
+linear in the rows). A spine with no parent cell reaches exactly as before: this
 repository's reach and routes over its 239 interfaces dump byte-identical
 before and after.
 <!-- fig: cmd="interface_reach and interface_coverage over this repository's registries, dumped as JSON with the base and the changed scripts, then cmp" rev="01b49c333" -->
@@ -310,6 +311,8 @@ in one commit:
    stay recursive, as ruled.
 
 Round 2 (narrow, 9cc2cd5a0..c319d6b9f): Hydrogen APPROVE; Sol two MINORs (the icicle comment's leftover 'provably safe'; linear resolution qualified for cycles), both adopted.
+
+Round 3 (narrow: the merge's resolution, `git show --remerge-diff 60d44150a`, and the blast-radius move with round 2's fixes, 32e156e72..70024e28a): Hydrogen APPROVE; Sol one MINOR, that `interface_coverage` builds the tree once and `interface_reach` builds it again inside, against the prose's "once per call". Adopted in part by the coordinator: the docstring, this record and the log fragment now say each builds it once per call, never per interface; the two builds stay, each linear in the rows, since sharing one would widen `interface_reach`'s interface for no measured cost.
 
 **Acts owed for automated adjudication:**
 - First acceptance (`Drafted` rows this branch wrote): LLR-480, LLR-481,

@@ -676,8 +676,9 @@ def interface_coverage(srs, llrs, tcs, ifs):
     below that one, else `requirement` through a constraining requirement or
     the design rows below it, else `case` through a case naming it or
     verifying a row observed at it, else `observation` when its reach holds
-    observation cases alone, else `unreached`. The requirement tree is built
-    once per call.
+    observation cases alone, else `unreached`. The routes read one
+    requirement tree built per call, not per interface (`interface_reach`
+    builds its own, once per its call).
 
     Implements: SR-157, LLR-421
     """
