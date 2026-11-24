@@ -47,6 +47,7 @@ per-item record, the mutants and the acts owed.
   phase cell's before and after under the no-act label on both surfaces.
   Round-1 modules `235 passed, 18 skipped in 323.09s (0:05:23)`;
   `check_trajectory.py --strict` exit 0.
+- **Review round 2** (narrow): Hydrogen and Sol APPROVE findings=0.
 - Deferred open items: none — no decision owed to the operator.
 - **Tests:** the twenty-one touched and ratchet modules `942 passed, 3
   skipped in 745.71s (0:12:25)`; `check_trajectory.py --strict` exit 0;

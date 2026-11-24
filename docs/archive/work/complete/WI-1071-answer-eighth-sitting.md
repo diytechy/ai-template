@@ -347,6 +347,8 @@ cancelled, graph acyclic)."
 
 <!-- fig: cmd="python -m pytest -q -n auto tests/test_routed_link_owed.py tests/test_gen_okf.py tests/test_run_menu.py tests/test_run_devsetup.py tests/test_bootstrap.py; python project-trajectory/scripts/check_trajectory.py --root . --strict; mutant.py (scratch) on the two round-1 assertions" rev="maint/wi-1071 at b5ed556d9 plus the round-1 fixes" -->
 
+Round 2 (narrow, over `b5ed556d9..8c448c988`, the coordinator's rulings prepended; the coordinator confirmed TC-533 citing IF-277 and the three LLR-300 test gaps closed by new cases): Gemini Hydrogen APPROVE findings=0; OpenAI Sol APPROVE findings=0.
+
 ## Context
 
 Filed on trunk on 2026-11-24 by the queue drill's coordinator, to answer
