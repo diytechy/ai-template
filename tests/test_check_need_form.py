@@ -43,6 +43,7 @@ def form(root, *args):
 
 
 def test_dirty_need_cell_names_the_row_and_each_offending_phrase(tmp_path):
+    """Implements: TC-587"""
     make_repo(tmp_path, DIRTY_NEED)
     proc = form(tmp_path)
     assert proc.returncode == 0, "warn-first: findings must not gate by default"
@@ -57,6 +58,7 @@ def test_dirty_need_cell_names_the_row_and_each_offending_phrase(tmp_path):
 
 
 def test_strict_promotes_the_same_findings_to_exit_1(tmp_path):
+    """Implements: TC-587"""
     make_repo(tmp_path, DIRTY_NEED)
     assert form(tmp_path, "--strict").returncode == 1
 
@@ -87,6 +89,7 @@ def test_an_allow_line_with_no_reason_separator_declares_nothing(tmp_path):
 
 
 def test_a_malformed_allow_line_is_reported_by_name_and_line(tmp_path):
+    """Implements: TC-587"""
     # PARSE HONESTY (WI-519): `docs/provenance-allow` and
     # `docs/kernel-modules-allow` already report a declaring line the grammar
     # cannot read, rather than silently reading it as an empty file — this
@@ -264,6 +267,7 @@ def test_a_url_span_stops_at_prose_delimiters(tmp_path):
 
 
 def test_a_present_but_vacuous_registry_is_reported_not_clean(tmp_path):
+    """Implements: TC-587"""
     # The round-1 review's driven find: an emptied registry scanned as a clean
     # tier, and at DevStg-Reqs nothing else in the harness hard-fails on it —
     # the false pass SN-008 forbids, on exactly the registry this check
@@ -302,6 +306,7 @@ def test_an_example_only_registry_is_a_blank_form_not_a_vacuous_tier(tmp_path):
 
 
 def test_the_live_registry_is_clean_at_zero_findings():
+    """Implements: TC-587"""
     # The WI's premise, held as a test: the check landed while the accepted
     # tier was clean (measured 2026-08-13, decision 7 rider 2), so the first
     # row to dirty the tier is the one that reports. A finding here is a real
@@ -312,6 +317,7 @@ def test_the_live_registry_is_clean_at_zero_findings():
 
 
 def test_an_absent_needs_registry_is_a_clean_skip(tmp_path):
+    """Implements: TC-587"""
     (tmp_path / "docs").mkdir()
     proc = form(tmp_path)
     assert proc.returncode == 0

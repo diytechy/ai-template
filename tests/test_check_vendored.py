@@ -43,11 +43,17 @@ def test_drift_warns_and_strict_fails(tmp_path):
     warn = run_py([SCRIPTS / "check_vendored.py", "--root", repo], cwd=repo)
     assert warn.returncode == 0, warn.stdout + warn.stderr  # warn-only
     assert "WARN" in warn.stdout and "differs" in warn.stdout
+    # The drift line names the copy, and the summary line after it counts the
+    # findings; under --strict the summary is a FAIL line instead.
+    lines = warn.stdout.strip().splitlines()
+    assert any("WARN" in ln and "docs/guardrails/core.md" in ln for ln in lines)
+    assert "1 finding(s)" in lines[-1], lines
     strict = run_py(
         [SCRIPTS / "check_vendored.py", "--root", repo, "--strict"], cwd=repo
     )
     assert strict.returncode == 1
     assert "FAIL" in strict.stdout
+    assert strict.stdout.strip().splitlines()[-1].startswith("check_vendored: FAIL")
 
 
 def test_offline_degrades_to_skip(tmp_path):
@@ -78,6 +84,12 @@ def test_missing_vendored_file_warns(tmp_path):
     proc = run_py([SCRIPTS / "check_vendored.py", "--root", repo], cwd=repo)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "missing" in proc.stdout
+    # A missing copy is a finding like a drifted one: --strict fails on it.
+    strict = run_py(
+        [SCRIPTS / "check_vendored.py", "--root", repo, "--strict"], cwd=repo
+    )
+    assert strict.returncode == 1, strict.stdout + strict.stderr
+    assert "FAIL" in strict.stdout
 
 
 def test_no_manifest_is_a_noop(tmp_path):

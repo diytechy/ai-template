@@ -192,6 +192,29 @@ def test_the_measure_names_the_touched_module_it_worsened(
     assert "flag functions 0 -> 1" in found[0][1], found
 
 
+def test_a_touched_module_the_measure_cannot_parse_prints_a_skip_line(
+    fa, cr, tmp_path, monkeypatch, capsys
+):
+    _profile(tmp_path)
+    change = _change(cr, monkeypatch, tmp_path, {"src/broken.py": "def (:\n"})
+    assert cr.MEASURES["flag-axis"](tmp_path, change) == []
+    out = capsys.readouterr().out
+    assert "readability: SKIP - flag-axis cannot read or parse src/broken.py" in out
+
+
+def test_the_count_walks_the_complexity_census_s_own_file_walk(
+    fa, tmp_path, monkeypatch
+):
+    # One walk for both measures: the count reads exactly the files the
+    # complexity census's walk yields, never a glob of its own.
+    _write(tmp_path / "src" / "a.py", TWO_FLAGS)
+    _write(tmp_path / "src" / "b.py", TWO_FLAGS)
+    only_b = [("src/b.py", tmp_path / "src" / "b.py")]
+    monkeypatch.setattr(fa.check_complexity, "source_paths", lambda _r, _i: only_b)
+    counted, skipped = fa.census(tmp_path, ("src/**/*.py",))
+    assert sorted(counted) == ["src/b.py"] and skipped == [], counted
+
+
 def test_a_module_at_its_stamped_row_reports_nothing(fa, cr, tmp_path, monkeypatch):
     _profile(tmp_path)
     _write(tmp_path / fa.BASELINE, "src/mod.py\t1\t1\n")

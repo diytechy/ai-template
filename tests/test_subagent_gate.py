@@ -120,6 +120,8 @@ def test_hook_defers_non_spawn_tool_silently(tmp_path):
     proc = run_hook({"tool_name": "Read"}, tmp_path)
     assert proc.returncode == 0
     assert proc.stdout.strip() == ""  # defer: no output, proceed normally
+    # ...and no decision line: the log records every decision but a defer.
+    assert not (tmp_path / "out" / "subagent-gate.log").exists()
 
 
 def test_hook_fails_open_on_malformed_payload(tmp_path):

@@ -62,7 +62,7 @@ method = """Run the check-harness suite; gate steps run and a missing required t
 tier = "Full"
 expected = "Satisfies SR-006 AcceptanceCriteria"
 automated = "Yes"
-evidence = "tests/test_check_harness.py"
+evidence = "tests/test_check_harness.py; tests/test_stack_profile.py::test_run_step_missing_tool_is_skip_not_block; tests/test_stack_profile.py::test_run_step_unknown_name_errors"
 status = "Accepted"
 phase = 1
 
@@ -758,7 +758,7 @@ method = "Run Deliverable/status coherence and strict open-SpecRef cases."
 tier = "Full"
 expected = """Both coherence mismatches fail every run and empty/dangling open specs fail strict; compliant rows pass."""
 automated = "Yes"
-evidence = """tests/test_trajectory.py::test_ra_open_wi_with_deliverable_fails_plain; tests/test_trajectory.py::test_ra_done_wi_with_empty_deliverable_fails_plain; tests/test_trajectory.py::test_re_empty_specref_warns_plain_fails_strict; tests/test_trajectory.py::test_re_dangling_specref_warns_plain_fails_strict; tests/test_trajectory.py::test_compliant_registry_and_status_passes_strict"""
+evidence = "tests/test_trajectory.py::test_ra_open_wi_with_deliverable_fails_plain; tests/test_trajectory.py::test_ra_done_wi_with_empty_deliverable_fails_plain; tests/test_trajectory.py::test_re_empty_specref_warns_plain_fails_strict; tests/test_trajectory.py::test_re_dangling_specref_warns_plain_fails_strict; tests/test_trajectory.py::test_compliant_registry_and_status_passes_strict; tests/test_trajectory.py::test_specref_anchor_on_a_non_markdown_target_is_not_judged; tests/test_trajectory.py::test_specref_anchor_report_names_the_nearest_heading; tests/test_trajectory.py::test_specref_anchor_that_names_no_heading_warns_plain_fails_strict; tests/test_trajectory.py::test_specref_and_markdown_link_agree_on_the_same_anchor; tests/test_trajectory.py::test_specref_with_anchor_resolves"
 status = "Accepted"
 phase = 1
 
@@ -2635,7 +2635,7 @@ method = "The trailer helpers unit-tested: format and parse round-trip, a sessio
 tier = "Full"
 expected = "Satisfies SR-209's acceptance: every loop-started process carries the marker; a loop commit without a valid trailer is refused naming its subject; a commit from a process the loop did not start passes where it is made, even while the loop runs; at the merge a lane is the loop's when its claim or a loop-writer commit in its range carries the trailer, every commit of a loop lane from its claim or its first marked loop-writer commit on must carry the trailer, a person's included, whoever runs the slot, and a person's own lane is not judged; the same rule wherever the floor runs. An attended re-claim recorded in the lane, a commit that changes nothing against its one parent, names that lane in the re-claim form, and carries no provenance trailer at all, ends the loop's window for the commits after it; a commit that fails any of those conditions is judged like any other; a later loop-writer commit re-opens the window. At the merge slot, a lane's claim record that cannot be read is refused, naming the read, and nothing is merged; it is never read as a lane the loop did not claim."
 automated = "Yes"
-evidence = "tests/test_loop_provenance.py; tests/test_pre_commit_hook.py"
+evidence = "tests/test_loop_provenance.py; tests/test_pre_commit_hook.py; tests/test_bootstrap.py::test_bootstrap_imports_only_the_common_package"
 status = "Accepted"
 phase = 6
 
@@ -2712,7 +2712,7 @@ method = "Driven on a real git repository, in a module registered as slow, whose
 tier = "Full"
 expected = "Satisfies SR-216's acceptance: each declared measure run over the touched parts against its own baseline; every worsening reported in one place naming measure, part and size; no measures reported once without failing; refusal only where a measure is declared gating."
 automated = "Yes"
-evidence = "tests/test_check_readability.py"
+evidence = "tests/test_check_readability.py; tests/test_bootstrap.py::test_scaffold_contains_expected_files; tests/test_stack_profile.py::test_reference_profile_declares_only_the_readability_step"
 status = "Accepted"
 phase = 6
 
@@ -2800,7 +2800,7 @@ method = "In memory, with no git, subprocess or scaffold. A function with two bo
 tier = "Smoke"
 expected = "Satisfies LLR-261: per module, functions with two or more boolean parameters and positional boolean-literal call sites counted with totals, one-flag functions and keyword literals not; a rise above the stamped per-module row reported as a worsening naming the module; never a refusal, even when declared gating."
 automated = "Yes"
-evidence = "tests/test_flag_axis.py"
+evidence = "tests/test_flag_axis.py; tests/test_bootstrap.py::test_every_sibling_imported_module_is_shipped_by_mapping; tests/test_bootstrap.py::test_scaffold_contains_expected_files"
 status = "Accepted"
 phase = 6
 
@@ -4966,3 +4966,36 @@ automated = "Yes"
 status = "Drafted"
 phase = 6
 evidence = "tests/test_routed_link_owed.py::test_a_link_moved_alone_puts_its_chain_in_the_model; tests/test_routed_link_owed.py::test_a_row_moving_only_unjudged_trace_cells_lists_no_chain; tests/test_routed_link_owed.py::test_a_rows_other_trace_cells_come_last; tests/test_routed_link_owed.py::test_both_surfaces_label_the_three_groups_alike; tests/test_routed_link_owed.py::test_each_row_carries_its_accepted_cells_and_links_apart; tests/test_routed_link_owed.py::test_the_acceptance_brief_labels_a_row_with_both; tests/test_routed_link_owed.py::test_the_acceptance_brief_lists_a_link_only_row_naming_its_link; tests/test_routed_link_owed.py::test_the_model_lists_the_moved_chains_and_not_the_unjudged_one; tests/test_routed_link_owed.py::test_the_moved_links_are_the_routing_table; tests/test_routed_link_owed.py::test_the_operator_page_lists_a_link_only_row_naming_its_link"
+
+[test.TC-586]
+verifies = ["SR-017", "SR-018", "LLR-493"]
+level = "Integration"
+method = "Stage a private key and scan the staged diff; seed it in a tracked file and sweep the tracked files; seed it in an outgoing commit and scan the range; seed a home directory path in a commit message with the privacy layer on and scan the range; sweep a clean scaffold with the privacy layer on, then seed a leak and sweep again; and scan with both layers off."
+tier = "Full"
+expected = "Each leak prints on its own line naming its location, the file's path and line or the commit, and its class label, and the run exits 1; the clean sweep prints one clean line naming the scan and both layers and exits 0, and the seeded sweep's summary counts its finding and names the same layers; with both layers off nothing is scanned, the run says so and exits 0."
+automated = "Yes"
+status = "Drafted"
+phase = 6
+evidence = "tests/test_check_privacy.py::test_a_sweep_names_the_scan_and_the_layers_that_ran_clean_or_not; tests/test_check_privacy.py::test_range_mode_catches_history_and_messages; tests/test_check_privacy.py::test_repo_sweep_fresh_scaffold_passes_then_seeded_leak_fails; tests/test_check_privacy.py::test_secrets_floor_in_repo_and_range_modes_with_privacy_off; tests/test_check_privacy.py::test_secrets_floor_runs_with_privacy_off; tests/test_check_privacy.py::test_secrets_scan_off_opts_out"
+
+[test.TC-587]
+verifies = ["SR-150", "LLR-494"]
+level = "Integration"
+method = "Run the need-form check at both severities over a need cell carrying offending phrases, over an exception list holding lines its grammar cannot read and then a well-formed one, and over a present registry with no need cell; run it at its default severity over the live registry and over a project with no needs registry."
+tier = "Full"
+expected = "Every default-severity run exits 0, findings included; the strict run exits 1 on the offending phrases, on the unreadable exception lines and on the empty registry, and 0 once the exception list is well-formed and the scan is clean."
+automated = "Yes"
+status = "Drafted"
+phase = 6
+evidence = "tests/test_check_need_form.py::test_a_malformed_allow_line_is_reported_by_name_and_line; tests/test_check_need_form.py::test_a_present_but_vacuous_registry_is_reported_not_clean; tests/test_check_need_form.py::test_an_absent_needs_registry_is_a_clean_skip; tests/test_check_need_form.py::test_dirty_need_cell_names_the_row_and_each_offending_phrase; tests/test_check_need_form.py::test_strict_promotes_the_same_findings_to_exit_1; tests/test_check_need_form.py::test_the_live_registry_is_clean_at_zero_findings"
+
+[test.TC-588]
+verifies = ["SR-040", "LLR-495"]
+level = "Integration"
+method = "With the stack profile declaring a model tier, run the session engine with neither the environment slot nor the command line set, with the environment slot set, and with both set; resolve the per-phase model map with each of its three sources set and unset; run with no model anywhere and a template needing one; and read the agent-loop section from an absent profile, a malformed one, one without the section and one declaring a dial with a blank value."
+tier = "Full"
+expected = "The declared tier reaches the session when nothing else is set, the environment's beats it and the command line's beats both, the model map following the same order; with no model the run fails preflight naming the missing model; and the absent, malformed and section-less profiles and the blank value each read as no declaration of that dial."
+automated = "Yes"
+status = "Drafted"
+phase = 6
+evidence = "tests/test_agent_loop.py::test_model_dial_precedence; tests/test_agent_loop.py::test_model_placeholder_without_model_fails_preflight; tests/test_agent_loop_policy.py::test_read_agent_loop_config_reads_declared_dials; tests/test_agent_loop_policy.py::test_resolve_coordinator_dials_precedence; tests/test_agent_loop_policy.py::test_the_model_map_resolves_from_the_command_line_then_environment_then_profile"

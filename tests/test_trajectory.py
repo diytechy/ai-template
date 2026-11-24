@@ -510,6 +510,7 @@ def test_re_dangling_specref_warns_plain_fails_strict(tmp_path):
 
 
 def test_specref_with_anchor_resolves(tmp_path):
+    """Implements: TC-077"""
     # A `path#anchor` SpecRef whose anchor really is a heading is clean on BOTH
     # halves. Until WI-354 this test cited a heading the file did not have and
     # still passed, because R-E read only the path — the assertion pinned the
@@ -524,6 +525,7 @@ def test_specref_with_anchor_resolves(tmp_path):
 
 
 def test_specref_anchor_that_names_no_heading_warns_plain_fails_strict(tmp_path):
+    """Implements: TC-077"""
     # WI-354: the anchor half of R-E. The path exists, so the pre-WI-354 rule saw
     # nothing; the heading does not, so the citation is not actually traceable.
     # Same warn-plain / error-under---strict tier as the rest of R-E.
@@ -657,6 +659,7 @@ def test_malformed_need_registry_refuses_the_trajectory_check(tmp_path):
 
 
 def test_specref_anchor_report_names_the_nearest_heading(tmp_path):
+    """Implements: TC-077"""
     # The finding must be ACTIONABLE, not merely true: a wrong anchor is nearly
     # always stale or TRUNCATED rather than invented (WI-326 cited a truncated
     # docs/log.md slug for two days), so the report names the near miss. difflib
@@ -762,7 +765,9 @@ def test_specref_and_markdown_link_agree_on_the_same_anchor(tmp_path):
     invisible as a SpecRef (check_trajectory), which is how WI-326's ref survived
     two days. The anchor set now comes from check_docs.parse_doc, so this asserts
     the two homes agree on a heading whose slug is non-trivial — em dash, code
-    span and punctuation all normalize — in BOTH directions, and in mixed CASE."""
+    span and punctuation all normalize — in BOTH directions, and in mixed CASE.
+
+    Implements: TC-077"""
     cd = load_script("check_docs")
     heading = "S1 — the `--strict` slice, part 2"
     write_spec(tmp_path, "docs/specs/effort.md", heading)
@@ -809,6 +814,7 @@ def test_specref_and_markdown_link_agree_on_the_same_anchor(tmp_path):
 
 
 def test_specref_anchor_on_a_non_markdown_target_is_not_judged(tmp_path):
+    """Implements: TC-077"""
     # Anchors are a markdown concept. A SpecRef into a non-markdown in-repo file
     # keeps the pre-WI-354 path-only behaviour rather than inventing a finding.
     (tmp_path / "docs").mkdir(parents=True, exist_ok=True)

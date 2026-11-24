@@ -105,6 +105,7 @@ def test_privacy_off_skips_identity_classes(scaffold):
 
 @needs_git
 def test_secrets_floor_runs_with_privacy_off(scaffold):
+    """Implements: TC-586"""
     # Thread 44: a committed credential is a leak regardless of who authored it,
     # so the secrets floor fires even with the privacy gate off (the default) —
     # the security net an ordinary identified repo gets too.
@@ -113,6 +114,8 @@ def test_secrets_floor_runs_with_privacy_off(scaffold):
     proc = run_lint(scaffold)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert "private key header" in proc.stdout
+    # The finding names the staged file and the line it sits on.
+    assert "cfg.txt:1: [private key header]" in proc.stdout, proc.stdout
 
     stage(scaffold, "cfg.txt", "aws = AKIA" + "A" * 16 + "\n")  # privacy-ok
     proc = run_lint(scaffold)
@@ -122,6 +125,7 @@ def test_secrets_floor_runs_with_privacy_off(scaffold):
 
 @needs_git
 def test_secrets_scan_off_opts_out(scaffold):
+    """Implements: TC-586"""
     # The opt-out: `docs/secrets-scan: off` disables the floor for the rare repo
     # whose content is secret-shaped. With privacy off + secrets off, nothing runs at all.
     init_repo(scaffold)
@@ -154,6 +158,7 @@ def test_secrets_off_still_runs_privacy_when_on(scaffold):
 
 @needs_git
 def test_secrets_floor_in_repo_and_range_modes_with_privacy_off(scaffold):
+    """Implements: TC-586"""
     # The floor runs in all three modes even with privacy off, not just the staged
     # diff: the --repo sweep and the --range history scan both catch it.
     init_repo(scaffold)
@@ -173,6 +178,8 @@ def test_secrets_floor_in_repo_and_range_modes_with_privacy_off(scaffold):
     proc = run_lint(scaffold, "--range", base + "..HEAD")
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert "private key header" in proc.stdout
+    # A range finding names the file and line in the commit that added it.
+    assert "cfg.txt:1: [private key header]" in proc.stdout, proc.stdout
 
 
 @needs_git
@@ -268,6 +275,7 @@ def test_removing_a_leak_is_never_flagged(scaffold):
 
 
 def test_repo_sweep_fresh_scaffold_passes_then_seeded_leak_fails(scaffold):
+    """Implements: TC-586"""
     # A fresh scaffold must itself survive the privacy gate — the kit can't
     # ship content its own lint flags. (No git repo here: the sweep's
     # filesystem-walk fallback is exercised too.)
@@ -283,8 +291,33 @@ def test_repo_sweep_fresh_scaffold_passes_then_seeded_leak_fails(scaffold):
     assert "docs/notes.md:1" in proc.stdout
 
 
+def test_a_sweep_names_the_scan_and_the_layers_that_ran_clean_or_not(scaffold):
+    """A clean run names the scan and the armed layers on its one clean line,
+    and a run with a finding closes on a summary counting it and naming the
+    same layers, so a run with a layer off never reads as a clean one.
+
+    Implements: TC-586"""
+    set_privacy(scaffold)
+    proc = run_lint(scaffold, "--repo")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "check_privacy: clean (repo sweep; privacy + secrets floor)." in proc.stdout
+    (scaffold / "docs" / "notes.md").write_text(
+        "worked from /Users/bobsmith/checkout\n", encoding="utf-8"
+    )
+    proc = run_lint(scaffold, "--repo")
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    last = proc.stdout.strip().splitlines()[-1]
+    assert last.startswith(
+        "check_privacy: 1 finding(s) in repo sweep [privacy + secrets floor]."
+    ), last
+    set_secrets_scan(scaffold, "off")
+    proc = run_lint(scaffold, "--repo")
+    assert "[privacy]." in proc.stdout.strip().splitlines()[-1], proc.stdout
+
+
 @needs_git
 def test_range_mode_catches_history_and_messages(scaffold):
+    """Implements: TC-586"""
     # The push-boundary property: a leak added in one commit and removed in a
     # later one ships in *history* even though the final tree is clean — and a
     # commit message is history too.
