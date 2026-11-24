@@ -66,12 +66,14 @@ def test_duplicate_id_is_a_finding(tmp_path):
 
 
 def test_absent_registry_and_enable_list_are_empty(tmp_path):
+    """Implements: TC-046"""
     reg, errors = route.load_registry(tmp_path / "nope.csv")
     assert reg == {} and errors == []
     assert route.load_enabled(tmp_path / "nope-enabled") == []
 
 
 def test_enable_list_is_ordered_and_skips_comments(tmp_path):
+    """Implements: TC-046"""
     p = tmp_path / "agents-enabled"
     p.write_text(
         "# preference order, one id per line\nOPENAI-GPT-5.2\n\nANTHROPIC-OPUS-4.8\n",
@@ -131,6 +133,7 @@ def test_select_reviewer_heterogeneity_wins_over_phase_preference(tmp_path):
 
 
 def test_select_prefers_a_different_provider_but_degrades(tmp_path):
+    """Implements: TC-046"""
     reg, _ = _registry(tmp_path)
     # Two strong models, both same provider as the implementer -> degraded, legal.
     enabled = ["ANTHROPIC-OPUS-4.8"]
@@ -174,6 +177,7 @@ def test_cooldown_excludes_then_reinstates(tmp_path):
 
 
 def test_select_none_when_all_cooled(tmp_path):
+    """Implements: TC-046"""
     reg, _ = _registry(tmp_path)
     cooldowns = {}
     route.cool(cooldowns, "ANTHROPIC-OPUS-4.8", now=0.0, seconds=300)
@@ -518,6 +522,7 @@ def test_resolve_multi_route_survivors_follow_registry_order(tmp_path):
 
 
 def test_resolve_token_unresolvable(tmp_path):
+    """Implements: TC-046"""
     reg, tr = _pair_registry(tmp_path)
     rid, reason = route.resolve_token("GHOST-MODEL", reg, tr)
     assert rid is None and "no exact id and no Family-Model match" in reason

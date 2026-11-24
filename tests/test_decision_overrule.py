@@ -162,7 +162,7 @@ def test_an_active_row_counts_and_a_terminal_one_does_not(tmp_path):
 
 
 def test_a_citation_of_another_entry_does_not_match(tmp_path):
-    """Implements: TC-319"""
+    """Implements: TC-319, TC-293"""
     root = _base(tmp_path)
     _record(root, "overruled")
     _spec(root, "WI-051", "See {}0 and {}.".format(CITE, RECORD + "#D-001"))
@@ -172,7 +172,7 @@ def test_a_citation_of_another_entry_does_not_match(tmp_path):
 
 
 def test_an_entry_already_overruled_owes_nothing_again(tmp_path):
-    """Implements: TC-319"""
+    """Implements: TC-319, TC-293"""
     root = _base(tmp_path)
     _record(root, "overruled")
     _spec(root, "WI-051", "Kept, per {}.".format(CITE))
@@ -212,7 +212,7 @@ def test_a_no_verify_overrule_is_refused_at_the_merge_slot(tmp_path):
 def test_a_record_that_does_not_parse_is_refused_at_the_commit_and_the_merge_slot(
     tmp_path,
 ):
-    """Implements: TC-319"""
+    """Implements: TC-319, TC-293"""
     # Fail closed (operator rule: no degenerate path): an overrule behind a syntax
     # error is unreadable, never "no overrule". Both admission points refuse,
     # naming the record and the parse error, and a later commit that repairs
@@ -234,7 +234,7 @@ def test_a_record_that_does_not_parse_is_refused_at_the_commit_and_the_merge_slo
 
 
 def test_a_repair_of_an_unparseable_parent_owes_every_overrule_it_shows(tmp_path):
-    """Implements: TC-319"""
+    """Implements: TC-319, TC-293"""
     # The parent side unreadable reads as overruling nothing, so the commit
     # that makes the record readable owes the work for each overrule in it.
     root = _base(tmp_path)
@@ -342,7 +342,7 @@ def test_a_citing_spec_path_git_would_quote_discharges_the_overrule(tmp_path):
     ],
 )
 def test_the_citation_reads_every_run_name_the_record_path_writes(tmp_path, run):
-    """Implements: TC-319"""
+    """Implements: TC-319, TC-293"""
     # One alphabet: whatever `record_path` keeps of a valid branch name, the
     # citation reader matches, so the exact generated citation discharges.
     rel = decisions.record_path(run)
@@ -360,7 +360,7 @@ def test_the_citation_reads_every_run_name_the_record_path_writes(tmp_path, run)
 
 
 def test_the_citation_reader_takes_no_surrounding_prose():
-    """Implements: TC-319"""
+    """Implements: TC-319, TC-293"""
     text = "(see docs/decisions/a+b.toml#D-002), [docs/decisions/c@d.toml#D-3]."
     assert decisions.citations(text) == {
         "docs/decisions/a+b.toml#D-002",
@@ -383,7 +383,7 @@ NON_ASCII = ["\u0085", " ", " ", "　", "é"]
 
 
 def test_the_run_name_alphabet_is_what_git_refuses_plus_two_delimiters():
-    """Implements: TC-319"""
+    """Implements: TC-319, TC-293"""
     # Pinned against git itself for every ASCII punctuation mark, the space,
     # DEL, three controls and whitespace Unicode adds (which git permits), so
     # the set is git's, matched ASCII-only, and never a guess. Only `/` is
@@ -409,7 +409,7 @@ def test_the_run_name_alphabet_is_what_git_refuses_plus_two_delimiters():
 
 
 def test_a_run_name_carrying_the_citation_delimiter_has_no_record(tmp_path):
-    """Implements: TC-319"""
+    """Implements: TC-319, TC-293"""
     # `operator#cleanup` and `owner.toml#D-002` are valid branches. No record is
     # named by either: `#` is refused, never folded into `operator-cleanup`'s file.
     for run in ("operator#cleanup", "owner.toml#D-002"):

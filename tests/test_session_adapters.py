@@ -236,6 +236,7 @@ def default_home(tmp_path, monkeypatch):
 
 
 def test_codex_occupancy_falls_back_to_codexs_default_home(default_home):
+    """Implements: TC-303"""
     _put_rollout(default_home, _fixture("codex-rollout.jsonl"))
     adapter = adapters.adapter_for(["codex"])
     stream = _fixture("codex-exec-json.jsonl")

@@ -2305,7 +2305,7 @@ def test_an_edited_shipped_reviewer_template_reaches_the_next_rounds_brief(
 def test_a_review_rounds_brief_and_identity_share_one_template_read(
     tmp_path, monkeypatch
 ):
-    """Implements: TC-351"""
+    """Implements: TC-351, TC-322"""
     # F2 (review 002): the loop resolves the reviewer template once per round,
     # at its draw; the launch's governing identity is that same content, so a
     # file edit after the brief rendered is neither half-seen nor hashed new.

@@ -3087,6 +3087,7 @@ def test_a_range_sweep_mints_the_range_and_touches_no_terminal_folder(tmp_path, 
 
 
 def test_a_range_sweep_run_twice_mints_nothing_the_second_time(tmp_path, capsys):
+    """Implements: TC-261"""
     root, before, after = sweep_repo(tmp_path)
     assert _sweep(root, "--before", before, "--after", after) == 0
     capsys.readouterr()
@@ -3321,6 +3322,24 @@ def test_merged_says_by_name_when_the_done_when_arm_cannot_run(tmp_path, capsys)
     assert len(line) == 1 and "Done-when check did not run" in line[0], err
     assert "build/wi-007" in line[0]
     assert not any("Done-when WI-007 changed" in t for t in _titles(root))
+
+
+def test_a_history_sweep_naming_a_branch_labels_its_commit_and_runs_no_done_when_check(
+    tmp_path, capsys
+):
+    """The branch names the mint commit in every shape, but only a sweep
+    naming its merged rows hands the Done-when check a claim identity: a
+    history sweep over the same hand merge, naming the same branch, mints no
+    Done-when row and says nothing about one.
+
+    Implements: TC-261
+    """
+    root, before, after = hand_lane_repo(tmp_path)
+    argv = ("--before", before, "--after", after, "--branch", "wi-007")
+    assert _sweep(root, *argv, "--with-terminal") == 0
+    assert not any("Done-when WI-007 changed" in t for t in _titles(root))
+    assert "Done-when check did not run" not in capsys.readouterr().err
+    assert "wi-007" in _subject(root)
 
 
 # --- `consolidate`: the consolidation census as a command ----------------------

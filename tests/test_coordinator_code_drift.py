@@ -41,6 +41,7 @@ def test_an_unreadable_source_scan_requests_a_typed_restart(monkeypatch):
 
 
 def test_worker_rechecks_after_a_blackout_wait(monkeypatch, tmp_path):
+    """Implements: TC-028"""
     al = load_script("agent_loop")
     moved = {"now": False}
     monkeypatch.setattr(al.agent_common, "running_scripts_moved", lambda: moved["now"])

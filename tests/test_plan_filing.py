@@ -311,6 +311,21 @@ def test_the_dispute_findings_file_refuses_ids_other_than_the_blocking_ones(
     assert git(lane, "status", "--porcelain", "-uall") == "?? " + FINDINGS
 
 
+def test_the_dispute_findings_file_is_never_written_over_an_existing_one(tmp_path):
+    """The dispute findings file is written once: a file already at its path
+    refuses the write with exit 2 and is left as it was.
+
+    Implements: TC-333
+    """
+    lane, _text = second_critique(tmp_path, (MAJOR,))
+    existing = write(lane, FINDINGS, "an earlier file\n")
+    argv = ["plan-file", "--root", str(lane), "--wi", WI]
+    argv += ["--dispute-findings", FINDINGS]
+    argv += ["--positions", str(write(tmp_path, "scratch/pos.md", "F1: Contested.\n"))]
+    assert rb.main(argv) == 2
+    assert existing.read_text(encoding="utf-8") == "an earlier file\n"
+
+
 def test_at_the_cap_an_uncommitted_dispute_verdict_is_refused(tmp_path):
     """Implements: TC-333"""
     lane, _sha = cap(tmp_path)

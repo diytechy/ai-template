@@ -726,6 +726,60 @@ def test_cli_simulate_refuses_a_jobs_ceiling_below_one(tmp_path, capsys):
     assert "WI-001" in capsys.readouterr().out
 
 
+def test_cli_prints_the_frontier_and_the_simulation_as_text_lines(tmp_path, capsys):
+    """Implements: TC-058"""
+    # The text form: one line per frontier record naming its id and rank, and
+    # one line per simulated round naming its work items, beside the JSON form
+    # the tests above read.
+    _write_registry(tmp_path, [row("WI-001"), row("WI-002", preds="WI-001")])
+    assert sched.main(["--root", str(tmp_path), "ready"]) == 0
+    lines = capsys.readouterr().out.splitlines()
+    assert len(lines) == 1
+    assert lines[0].startswith("WI-001") and "rank=" in lines[0]
+    assert sched.main(["--root", str(tmp_path), "simulate", "--jobs", "1"]) == 0
+    assert capsys.readouterr().out.splitlines() == [
+        "round 1   (1): WI-001",
+        "round 2   (1): WI-002",
+    ]
+
+
+def test_no_command_prints_the_usage_and_an_empty_text_answer_says_so(tmp_path, capsys):
+    """Implements: TC-058"""
+    # Given no command the scheduler prints its usage and exits 2. A text
+    # answer with nothing in it is one line saying so, never silence: no ready
+    # work item, an empty registry explained, nothing to schedule.
+    assert sched.main(["--root", str(tmp_path)]) == 2
+    assert capsys.readouterr().out.startswith("usage:")
+    _write_registry(tmp_path, [])
+    assert sched.main(["--root", str(tmp_path), "ready"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["schedule: no ready work items"]
+    assert sched.main(["--root", str(tmp_path), "ready", "--explain"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["schedule: (empty registry)"]
+    assert sched.main(["--root", str(tmp_path), "simulate"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["schedule: nothing to schedule"]
+
+
+def test_a_generated_view_projects_the_frontier_and_omits_it_without_the_scheduler(
+    tmp_path, monkeypatch
+):
+    """Implements: TC-058"""
+    # The status page's generated frontier block is drawn from this derivation,
+    # in its order; a project whose generator finds no scheduler renders no
+    # frontier block rather than failing.
+    _write_registry(
+        tmp_path,
+        [row("WI-001"), row("WI-002", priority="5"), row("WI-003", preds="WI-001")],
+    )
+    status = load_script("traj_status")
+    block = "\n".join(status._frontier_lines(tmp_path))
+    ids = [r["id"] for r in sched.frontier(sched._load(tmp_path))]
+    assert ids == ["WI-002", "WI-001"]
+    assert "Ready frontier" in block
+    assert block.index("WI-002") < block.index("WI-001") and "WI-003" not in block
+    monkeypatch.setattr(status.traj_parse, "schedule", None)
+    assert status._frontier_lines(tmp_path) == []
+
+
 # --- SR-066 (WI-209): PlanMode=dual derives the `high-risk` kind --------------
 def test_planmode_dual_derives_the_high_risk_kind_from_the_signal():
     # Both axes come from the registry PlanMode signal itself — no SafetyClass

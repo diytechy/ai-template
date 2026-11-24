@@ -89,3 +89,39 @@ def test_the_kit_ships_no_payload_so_every_model_gets_the_default_core(tmp_path)
     assert models
     for model in models:
         assert al.guardrails_core(tmp_path, model) == "DEFAULT-CORE", model
+
+
+def test_an_unreadable_chosen_payload_reads_as_no_core_and_the_session_runs_past_it(
+    tmp_path, capsys
+):
+    """Implements: TC-290"""
+    # The chosen payload is not swapped for the default core when it cannot be
+    # read: it reads as no core at all, and the session's prompt composition
+    # reports that once and runs on without one. A directory in the payload's
+    # place matches the payload name and cannot be read as a file.
+    al = load_script("agent_loop")
+    gdir = tmp_path / "docs" / "guardrails"
+    gdir.mkdir(parents=True)
+    (gdir / "core.md").write_text("DEFAULT-CORE\n", encoding="utf-8")
+    (gdir / "core.sonnet.md").mkdir()
+    assert al.guardrails_core(tmp_path, "claude-sonnet-5") is None
+    warned = []
+    for _ in range(2):
+        prompt, guarded = al.compose_session_prompt(
+            "claude-sonnet-5", "BODY", "", "all", tmp_path, warned
+        )
+        assert not guarded and "BODY" in prompt and "DEFAULT-CORE" not in prompt
+    assert capsys.readouterr().err.count("running without the guardrails core") == 1
+
+
+def test_equal_length_substrings_fall_to_name_order(tmp_path):
+    """Implements: TC-290"""
+    # Two vendored substrings of one length that both match: the one first in
+    # name order wins, so the choice never rests on the directory listing.
+    al = load_script("agent_loop")
+    gdir = tmp_path / "docs" / "guardrails"
+    gdir.mkdir(parents=True)
+    (gdir / "core.md").write_text("DEFAULT-CORE\n", encoding="utf-8")
+    (gdir / "core.sonnet.md").write_text("SONNET-PAYLOAD\n", encoding="utf-8")
+    (gdir / "core.claude.md").write_text("CLAUDE-PAYLOAD\n", encoding="utf-8")
+    assert al.guardrails_core(tmp_path, "claude-sonnet-5") == "CLAUDE-PAYLOAD"

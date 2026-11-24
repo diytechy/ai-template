@@ -1145,6 +1145,7 @@ def test_generated_marker_stands_the_rule_down(tmp_path):
 
 
 def test_generated_marker_exempts_only_the_block(tmp_path):
+    """Implements: TC-075"""
     # Repo-review 2026-07-21 H-5: the marker used to stand the rule down for
     # the WHOLE file, leaving the hand-authored remainder of a hybrid
     # status.md (the WI-234 splice shape) enforced by nothing — exactly where

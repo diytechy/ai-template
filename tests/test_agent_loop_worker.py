@@ -407,6 +407,7 @@ def test_worker_brief_resolves_close_commands_at_the_runtime_scripts_path(tmp_pa
 
 
 def test_worker_builds_assignment_and_exits_done(tmp_path):
+    """Implements: TC-028"""
     repo, base, ctl, fake = _setup(tmp_path)
     relocate_as_lane(repo)  # a worker records from its claimed lane (WI-960)
     proc = _worker(repo, fake, ctl, "--wi", "WI-201", "--train", "t1")

@@ -2795,3 +2795,105 @@ def test_stopping_boundary_lines_change_no_ruling(brief, kinds, verdict):
     plain = _rulings(verdict, brief, kinds)
     assert _rulings(verdict + _STOPPING_LINES, brief, kinds) == plain
     assert plain[2], "the fixture verdict authorizes no act"
+
+
+_REVIEWED = "Reviewed: {}\n".format("a" * 40)
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "verdict: APPROVE findings=0",  # the keyword in another case
+        "VERDICT: APPROVED findings=0",  # a label outside the pair
+        "VERDICT: APPROVE findings=0.5",  # a count that is not whole digits
+        "VERDICT: APPROVE findings=0 and more",  # more on the line
+    ],
+)
+def test_the_one_review_line_reader_takes_only_the_exact_form(line):
+    """The sitting grammar's review-line reader is the one reader of a review
+    round's VERDICT line: exactly one line naming the keyword, in any case, is
+    taken, and only in the exact form `VERDICT: <APPROVE|CHANGES-REQUESTED>
+    findings=<digits>`; the review filing boundary refuses every other form and
+    the merge gate's round reader reads it as no verdict.
+
+    Implements: TC-327
+    """
+    review_brief = load_script("review_brief")
+    score_reviews = load_script("score_reviews")
+    sha = "a" * 40
+    approve = _REVIEWED + "VERDICT: APPROVE findings=0\n"
+    changes = (
+        _REVIEWED
+        + "- [MAJOR] a.py:1 -> x -> y\nVERDICT: CHANGES-REQUESTED findings=1\n"
+    )
+    assert ksitting.review_line(approve) == (("APPROVE", 0), None)
+    assert ksitting.review_line(changes) == (("CHANGES-REQUESTED", 1), None)
+    for text in (approve, changes):
+        assert review_brief.review_refusal(text, sha) is None
+        assert score_reviews.parse_verdict(text).verdict is not None
+    twice = approve + "VERDICT: APPROVE findings=0\n"
+    for text in (_REVIEWED + line + "\n", twice):
+        machine, refusal = ksitting.review_line(text)
+        assert machine is None and refusal, text
+        assert review_brief.review_refusal(text, sha), text
+        assert score_reviews.parse_verdict(text).verdict is None, text
+
+
+def test_a_single_kind_verdict_carries_no_kind_section(tmp_path):
+    """A single-kind verdict is valid only with no kind-form section and
+    exactly one complete line of its kind; the same complete line under a
+    `## <kind>` heading, or twice, invalidates it.
+
+    Implements: TC-327
+    """
+    line = "DONE-WHEN: CLARITY changes=1 digest=sha256:ab\n"
+    path = tmp_path / "v.md"
+    path.write_text(line, encoding="utf-8")
+    assert ab.verdict_refusal("done-when", path) is None
+    path.write_text("## done-when\n\n" + line, encoding="utf-8")
+    assert "carries no `## <kind>` section" in ab.verdict_refusal("done-when", path)
+    path.write_text(line + line, encoding="utf-8")
+    assert ab.verdict_refusal("done-when", path)
+
+
+def test_the_loops_binding_carries_its_findings_file_and_identities_through_the_outcome(
+    tmp_path,
+):
+    """The loop's route binds through the one writer, non-exclusively: a
+    dispute brief's findings-file record is written in the same call as its
+    requested ids, an amendment brief's judged-text identities beside its
+    kinds, and the outcome rewrite keeps both unchanged; a dispute brief
+    naming no findings file binds none, which the reader reads as absent.
+
+    Implements: TC-327
+    """
+    findings = "docs/reviews/wi-1/002-DISPUTE-findings.toml"
+    dispute = tmp_path / "001-ADJUDICATE-d.md"
+    prompt = "Rule each finding.\n\nDISPUTE: findings=F1\nFINDINGS-FILE: {}\n".format(
+        findings
+    )
+    kinds = ab.bind_pending(dispute, "dispute", prompt)
+    binding = ksitting.requested_path(dispute)
+    text = open(binding, encoding="utf-8").read()
+    assert ksitting.read_requested(text) == ("dispute", ("F1",), "pending")
+    assert ksitting.read_findings_file(text) == findings
+    assert ab.record_outcome(tmp_path, dispute, "dispute", kinds, False, "s")[0] == (
+        "failed"
+    )
+    text = open(binding, encoding="utf-8").read()
+    assert ksitting.read_requested(text)[2] == "failed"
+    assert ksitting.read_findings_file(text) == findings
+    amended = tmp_path / "001-ADJUDICATE-a.md"
+    shown = "Judge.\nJUDGED-TEXT: LLR-001 sha256:0123456789abcdef\n"
+    kinds = ab.bind_pending(amended, "amendment", shown)
+    ab.record_outcome(tmp_path, amended, "amendment", kinds, False, "s")
+    text = open(ksitting.requested_path(amended), encoding="utf-8").read()
+    assert ksitting.read_requested(text) == ("amendment", ("amendment",), "failed")
+    assert ksitting.read_identities(text) == (
+        {"LLR-001": "sha256:0123456789abcdef"},
+        None,
+    )
+    bare = tmp_path / "001-ADJUDICATE-n.md"
+    ab.bind_pending(bare, "dispute", "Rule each finding.\n\nDISPUTE: findings=F1\n")
+    text = open(ksitting.requested_path(bare), encoding="utf-8").read()
+    assert "findings_file" not in text and ksitting.read_findings_file(text) is None

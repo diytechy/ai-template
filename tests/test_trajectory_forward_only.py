@@ -20,3 +20,20 @@ def test_forward_only_unit_over_the_real_meta_repo():
         0
     ]
     assert ct.status_forward_only_findings(ROOT, wis) == []
+
+
+def test_an_unknown_id_and_an_absent_status_page_draw_no_finding(tmp_path):
+    """Implements: TC-075"""
+    # Only an id the work registry records as done is a finding: with no status
+    # page the rule has nothing to read and stands down, and an id the registry
+    # does not know is not a finding beside a done id that is.
+    ct = load_script("check_trajectory")
+    wis = [{"id": "WI-001", "status": "done"}]
+    assert ct.status_forward_only_findings(tmp_path, wis) == []
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "status.md").write_text(
+        "## Next action\n- WI-999 and WI-001 are both named here.\n",
+        encoding="utf-8",
+    )
+    findings = ct.status_forward_only_findings(tmp_path, wis)
+    assert len(findings) == 1 and findings[0].startswith("WI-001:")

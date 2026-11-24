@@ -90,6 +90,7 @@ def log_text(root):
 
 
 def test_no_fragments_is_a_clean_idempotent_noop(tmp_path, capsys):
+    """Implements: TC-130"""
     # The steady state of a quiet trunk: the step runs on every merge, so the
     # empty case must be cheap, silent-ish and passing — never a "nothing to do"
     # nonzero that would fail the lane for doing its job.
@@ -119,6 +120,7 @@ def test_fragments_compile_in_git_order_and_are_deleted(tmp_path):
 
 
 def test_second_run_is_idempotent(tmp_path):
+    """Implements: TC-130"""
     # §5.5's idempotence rule: re-running after a successful compile must not
     # duplicate an entry — the fragments are gone, so there is nothing to append.
     root = repo(tmp_path)
@@ -131,6 +133,7 @@ def test_second_run_is_idempotent(tmp_path):
 
 
 def test_relative_links_are_rebased_out_of_log_d(tmp_path):
+    """Implements: TC-130"""
     # A fragment is authored in docs/log.d/ and lands in docs/log.md one
     # directory up. Only the targets whose meaning DEPENDS on the holding
     # directory move; an anchor, a URL and a root-absolute path are untouched,
@@ -159,6 +162,7 @@ def test_relative_links_are_rebased_out_of_log_d(tmp_path):
 
 
 def test_uncommitted_fragment_is_a_loud_error(tmp_path, capsys):
+    """Implements: TC-130"""
     # The step is trunk bookkeeping over COMMITTED state: an uncommitted file has
     # no merge position, so ordering it would be inventing one. Loud, named, and
     # the log is untouched.
@@ -172,6 +176,7 @@ def test_uncommitted_fragment_is_a_loud_error(tmp_path, capsys):
 
 
 def test_a_merge_staged_fragment_compiles_from_merge_head_history(tmp_path, capsys):
+    """Implements: TC-130"""
     # The integrator folds the trunk step into the merge commit (--no-ff
     # --no-commit), so a branch's fragment is staged but its adding commit is
     # not yet reachable from HEAD - it lives on MERGE_HEAD. The committed-state
@@ -190,6 +195,7 @@ def test_a_merge_staged_fragment_compiles_from_merge_head_history(tmp_path, caps
 
 
 def test_missing_heading_is_rejected(tmp_path, capsys):
+    """Implements: TC-130"""
     # The fragment carries the narrative AND its own `## ` heading — the log
     # append is verbatim, so a heading-less fragment would fuse into whatever
     # section preceded it.
@@ -202,6 +208,7 @@ def test_missing_heading_is_rejected(tmp_path, capsys):
 
 
 def test_reserved_section_headings_are_rejected(tmp_path, capsys):
+    """Implements: TC-130"""
     # docs/log.md's three structural sections (pinned by test_bootstrap) are not
     # a work branch's to re-open: a fragment claiming one would append a SECOND
     # "## Audit log" and split the surface readers grep.
@@ -222,6 +229,7 @@ def test_reserved_section_headings_are_rejected(tmp_path, capsys):
 
 
 def test_one_bad_fragment_blocks_the_whole_batch(tmp_path, capsys):
+    """Implements: TC-130"""
     # All-or-nothing: validation runs over EVERY fragment before the first
     # append, so a half-compiled log — some fragments folded in, some still on
     # disk, no record of which — is structurally impossible.
@@ -235,6 +243,7 @@ def test_one_bad_fragment_blocks_the_whole_batch(tmp_path, capsys):
 
 
 def test_dry_run_plans_both_operations_without_writing(tmp_path, capsys):
+    """Implements: TC-130"""
     # No operation flag = the whole step (compile, then regen); --dry-run prints
     # the plan and touches nothing, so the order is inspectable before it runs.
     root = repo(tmp_path)
@@ -247,8 +256,78 @@ def test_dry_run_plans_both_operations_without_writing(tmp_path, capsys):
     assert len(ts.fragment_paths(root)) == 1
 
 
+def test_the_step_runs_the_operations_it_is_asked_for_compile_first(tmp_path, capsys):
+    """Implements: TC-130"""
+    # The invocation forms: the compile alone, the regeneration alone, or
+    # neither named, which runs both with the compile first (it can move the
+    # log the generators read). A failing compile exits 1 naming the fragment
+    # on the error stream and stops the step before the regeneration runs.
+    root = repo(tmp_path)
+    fragment(root, "WI-12-asked.md", "## WI-12 — asked for\n", when=1_000_100)
+    assert ts.main(["--root", str(root), "--dry-run", "--compile-log"]) == 0
+    out = capsys.readouterr().out
+    assert "would append 1 fragment(s)" in out and "regen" not in out
+    assert ts.main(["--root", str(root), "--dry-run", "--regen"]) == 0
+    out = capsys.readouterr().out
+    assert "regen" in out and "compile-log" not in out
+    assert ts.main(["--root", str(root), "--dry-run"]) == 0
+    out = capsys.readouterr().out
+    assert out.index("compile-log") < out.index("regen")
+    fragment(root, "WI-13-uncommitted.md", "## WI-13 — not committed\n")
+    assert ts.main(["--root", str(root), "--dry-run"]) == 1
+    captured = capsys.readouterr()
+    assert "WI-13-uncommitted.md" in captured.err
+    assert "regen" not in captured.out
+
+
+def test_fragments_added_by_one_commit_fold_in_file_name_order(tmp_path):
+    """Implements: TC-130"""
+    # A tie on the adding commit falls to the file name, so the order inside one
+    # commit is deterministic: written anti-sorted, folded sorted.
+    root = repo(tmp_path)
+    fragment(root, "WI-21-zulu.md", "## WI-21 — zulu\n")
+    fragment(root, "WI-20-alpha.md", "## WI-20 — alpha\n", when=1_000_100)
+    assert ts.compile_log(root) == 0
+    text = log_text(root)
+    assert text.index("WI-20 — alpha") < text.index("WI-21 — zulu")
+
+
+def test_fragments_are_appended_through_the_shared_log_appender(tmp_path, monkeypatch):
+    """Implements: TC-130"""
+    # The compile appends each fragment through the one appender every log
+    # writer uses (which keeps the log's own line endings), never a write of
+    # its own.
+    root = repo(tmp_path)
+    fragment(root, "WI-14-shared.md", "## WI-14 — shared appender\n", when=1_000_100)
+    pa = ts._plan_artifacts()
+    seen = []
+    real = pa.append_log_summary
+
+    def spy(where, text):
+        seen.append(text)
+        return real(where, text)
+
+    monkeypatch.setattr(pa, "append_log_summary", spy)
+    assert ts.compile_log(root) == 0
+    assert seen == ["## WI-14 — shared appender\n"]
+    assert "WI-14 — shared appender" in log_text(root)
+
+
+def test_the_log_compile_never_commits_the_caller_owns_the_commit(tmp_path):
+    """Implements: TC-130"""
+    # Like the regeneration, the compile writes the log and deletes the
+    # fragments in the working tree and commits nothing: HEAD does not move.
+    root = repo(tmp_path)
+    fragment(root, "WI-15-owned.md", "## WI-15 — caller owns it\n", when=1_000_100)
+    head_before = _git(root, "rev-parse", "HEAD").strip()
+    assert ts.compile_log(root) == 0
+    assert _git(root, "rev-parse", "HEAD").strip() == head_before
+    status = _git(root, "status", "--porcelain")
+    assert "docs/log.md" in status and "WI-15-owned.md" in status
+
+
 def test_regen_fails_loudly_on_a_broken_generator(tmp_path, capsys):
-    """Implements: TC-135"""
+    """Implements: TC-135, TC-130"""
     # The §5.5 fail-loud contract on the regen half: a failing generator stops the
     # step at that step (a later one may read its output), exits nonzero, and
     # prints the child's own diagnosis rather than summarizing it away.
@@ -454,6 +533,7 @@ def test_regen_never_commits_the_caller_owns_the_commit(tmp_path):
 
 
 def test_the_directorys_readme_is_its_declaration_home_not_a_fragment(tmp_path):
+    """Implements: TC-130"""
     # OI-67 slice 4: `docs/log.d/` owns an interface row (the fragment grammar
     # trunk_step consumes), and a directory owner declares through its
     # README.md. A README is not a session fragment: it is neither compiled

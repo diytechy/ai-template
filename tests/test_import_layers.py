@@ -577,7 +577,7 @@ def test_a_view_never_imports_a_lifecycle_service():
     purpose: an edge from a view into a lifecycle service is wrong even when it
     closes no cycle.
 
-    Implements: TC-177, TC-183, TC-194
+    Implements: TC-177, TC-183, TC-194, TC-248
     """
     graph = import_graph()
     offenders = sorted(

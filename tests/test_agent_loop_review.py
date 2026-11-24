@@ -568,6 +568,7 @@ def test_enabled_id_not_in_registry_fails_preflight(managed_repo):
 
 
 def test_two_top_tier_failures_page_the_operator(managed_repo):
+    """Implements: TC-028"""
     # Strong-tier BUILD + reviewer, both rounds CHANGES-REQUESTED -> the
     # shared-failure regime pages the operator; under attended the loop stops
     # NEEDS-OPERATOR (exit 7).
@@ -614,7 +615,7 @@ def test_changes_requested_rework_finding_reaches_the_next_build(managed_repo):
 
 
 def test_absent_enable_list_keeps_legacy_behavior(managed_repo):
-    """Implements: TC-082"""
+    """Implements: TC-082, TC-046"""
     # No agents-enabled -> routing off -> the base --agent-cmd runs and NO review
     # is scheduled (the never-breaking guarantee; managed banner absent).
     repo, ctl, cmd = managed_repo
@@ -1019,6 +1020,7 @@ def _write_registry(repo, cmd, rows):
 def test_reviewer_outage_parks_review_owed_then_resume_draws_the_round(
     managed_repo, tmp_path
 ):
+    """Implements: TC-028"""
     # C1+C2 end to end: the build commits, every review draw fails, and the
     # run ends EXIT_REVIEW_OWED (9) with the lane's work committed and the
     # out/review-owed marker written — never a stall abort of finished work.
@@ -1335,6 +1337,33 @@ def test_default_base_lets_an_undeclared_trunk_refusal_through(tmp_path):
     _git(repo, "commit", "-q", "-m", "seed")
     with pytest.raises(ac.TrunkUndeclared, match=r"\[policies\] trunk"):
         ac.default_base(repo)
+
+
+def test_default_base_is_the_tip_without_a_merge_base_and_none_with_no_commit(
+    tmp_path,
+):
+    """Implements: TC-369"""
+    # With the trunk declared and present, a checkout with no commit of its own
+    # has no integration base, and one whose history shares no commit with the
+    # trunk (no merge base) takes its own tip as the base.
+    ac = load_script("agent_common")
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _git(repo, "init", "-q", "-b", "main")
+    declare_trunk(repo)
+    _git(repo, "config", "user.email", "t@example.com")
+    _git(repo, "config", "user.name", "T")
+    (repo / "seed.txt").write_text("seed\n", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "seed")
+    _git(repo, "checkout", "-q", "--orphan", "unrelated")
+    assert ac.default_base(repo) is None  # no commit on this checkout yet
+    (repo / "other.txt").write_text("other\n", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "unrelated root")
+    # The tip, named by its abbreviated id (the merge-base arm names a full one).
+    base = ac.default_base(repo)
+    assert _git(repo, "rev-parse", base) == _git(repo, "rev-parse", "HEAD")
 
 
 # --- WI: MINOR-only refusals do not block routing (measured 2026-09-03/04) ----

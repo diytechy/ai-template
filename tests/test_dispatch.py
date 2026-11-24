@@ -413,6 +413,7 @@ def test_a_fresh_launch_under_a_pause_resumes_the_lane_in_flight(tmp_path, capfd
 
 
 def test_a_pause_with_nothing_in_flight_exits_paused_at_once(tmp_path, capfd):
+    """Implements: TC-028"""
     # The other half of the same rule, unchanged: with no lane live, none
     # parked and nothing finished-but-unmerged, there is nothing to drain and
     # the run stops on the pause banner without claiming the ready row.

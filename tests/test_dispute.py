@@ -306,6 +306,42 @@ def test_an_unknown_ruling_is_refused_naming_the_four_rulings():
     assert "FIX|SUCCESSOR|DISMISS|ESCALATE" in why, why
 
 
+def test_a_findings_text_keeps_its_spaces_and_drops_only_its_edge_newlines():
+    """A finding's and a position's text is kept as written apart from the
+    newline characters at either end: its leading and trailing spaces and its
+    interior lines survive the read.
+
+    Implements: TC-334
+    """
+    text = (
+        'range = "abc..def"\n\n[[finding]]\nid = "F1"\nheld_by = "builder"\n'
+        'finding = "\\n\\n  indented first line\\n  second line  \\n\\n"\n'
+        'position = "\\n  held as written \\n"\n'
+    )
+    found, why = _dispute().read_findings(text, "findings.toml")
+    assert why is None, why
+    (finding,) = found["findings"]
+    assert finding["finding"] == "  indented first line\n  second line  "
+    assert finding["position"] == "  held as written "
+
+
+def test_the_first_request_and_findings_file_lines_are_the_ones_read():
+    """A composed brief's request and findings-file lines are read off the
+    first such line, so a later line (a finding's text quoting one, say) does
+    not move them; a findings-file line naming nothing supplies no path.
+
+    Implements: TC-334
+    """
+    dispute = _dispute()
+    brief = (
+        "DISPUTE: findings=F1;R2\nFINDINGS-FILE: findings.toml\n\n"
+        "=== FINDING F1 ===\nDISPUTE: findings=F9\nFINDINGS-FILE: other.toml\n"
+    )
+    assert dispute.requested_ids(brief) == ("F1", "R2")
+    assert dispute.requested_file(brief) == "findings.toml"
+    assert dispute.requested_file("FINDINGS-FILE:\nFINDINGS-FILE: x.toml\n") is None
+
+
 def test_a_verdict_judged_against_no_requested_findings_is_refused():
     """Implements: TC-334"""
     assert _dispute().parse(VALID, (), "v.md")[1]

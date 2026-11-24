@@ -424,6 +424,7 @@ def test_a_retained_and_a_fresh_act_turn_take_the_same_act_from_one_verdict(
     assert results["kept"][1] == results["fresh"][1]
     copy = results["kept"][1]["docs/archive/last_accepted/" + taa.SRS]
     assert "add two integers." in copy
+    assert "act: exit 0" in results["kept"][0]
     assert "act: complete" in results["kept"][0]
 
 
@@ -572,6 +573,25 @@ def test_an_act_turn_resumes_the_session_its_sitting_keyed_under_the_entrys_acco
     assert act_turn[act_turn.index("--resume") + 1] == minted
     out = capsys.readouterr().out
     assert "keep: resuming {}".format(minted) in out, out
+
+
+def test_a_retained_act_turn_whose_account_is_not_signed_in_is_refused_apart(
+    tmp_path, launched, monkeypatch, capsys
+):
+    """A retained act turn whose account is not signed in is refused with the
+    sign-in result, distinct from a pre-launch refusal, launching nothing and
+    changing neither HEAD nor the working tree.
+
+    Implements: TC-321
+    """
+    _primary, lane = _amendment(tmp_path)
+    monkeypatch.setattr(svc, "signin_status", lambda root, account, **k: "missing")
+    before = _snapshot_of(lane)
+    assert _act(launched, lane) == svc.agent_common.EXIT_NEEDS_OPERATOR
+    assert svc.agent_common.EXIT_NEEDS_OPERATOR != svc.agent_common.EXIT_PREFLIGHT
+    assert launched["argv"] == [] and _snapshot_of(lane) == before
+    out = capsys.readouterr().out
+    assert "act: " in out and "act: refused:" not in out, out
 
 
 # --- the trailer line (Q4) --------------------------------------------------

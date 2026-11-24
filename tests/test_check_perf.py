@@ -8,6 +8,7 @@ Implements: TC-014
 """
 
 import json
+import re
 
 from conftest import load_script, make_minimal_project, run_py
 
@@ -65,6 +66,8 @@ def test_budgets_present_but_no_metrics_skips(scaffold):
     proc = run_py(["scripts/check_perf.py", "--tier", "full"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "SKIP" in proc.stdout and "no metrics" in proc.stdout
+    # The SKIP line names where the metrics were expected.
+    assert "perf-metrics.json" in proc.stdout, proc.stdout
 
 
 def test_absolute_breach_fails_when_gate_fail(scaffold):
@@ -163,7 +166,12 @@ def test_an_unmeasured_budget_gets_its_own_line_only_when_fail_level(scaffold):
     proc = run_py(["scripts/check_perf.py", "--tier", "full"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     lines = proc.stdout.strip().splitlines()
-    assert [ln for ln in lines if "PB-001" in ln and "no measurement" in ln], lines
+    unmeasured = [ln for ln in lines if "PB-001" in ln and "no measurement" in ln]
+    assert unmeasured, lines
+    # Its own line is a WARN line marked as a skip, and the summary counts it
+    # among the skips, not the warnings.
+    assert unmeasured[0].startswith("check_perf: WARN - PB-001 "), unmeasured
+    assert unmeasured[0].endswith("(SKIP)"), unmeasured
     assert not [ln for ln in lines if "PB-002" in ln], lines
     assert "0 fail, 0 warn, 2 skip(no metric)" in lines[-1], lines
 
@@ -177,6 +185,75 @@ def test_update_baseline_writes_file(scaffold):
         (scaffold / "docs" / "test" / "perf-baseline.json").read_text(encoding="utf-8")
     )
     assert saved == {"PB-001": 488.0, "PB-002": 12.0}
+
+
+def test_update_baseline_with_no_metrics_refuses_and_writes_nothing(scaffold):
+    # The baseline update compares nothing; with no metrics to write from it
+    # says it cannot update, naming where the metrics were expected, exits 1
+    # and writes neither a baseline nor a report.
+    write_budgets(scaffold, pb_row("PB-001", 500))
+    proc = run_py(["scripts/check_perf.py", "--update-baseline"], cwd=scaffold)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "cannot update baseline - no metrics at" in proc.stdout, proc.stdout
+    assert "perf-metrics.json" in proc.stdout, proc.stdout
+    assert not (scaffold / "docs" / "test" / "perf-baseline.json").exists()
+    assert not (scaffold / "docs" / "test" / "perf-report.md").exists()
+
+
+def test_the_report_rows_each_in_tier_budget_and_names_each_fail_and_warn_reason(
+    scaffold,
+):
+    # A run that reaches a comparison writes the report: one table row per
+    # in-tier budget (status, id, metric, measured, baseline, delta, budget,
+    # direction, gate), then a finding naming the reason for each FAIL and
+    # each WARN. Each breaching budget's console line names its status, id,
+    # metric and the reason. The out-of-tier budget has no row.
+    write_budgets(
+        scaffold,
+        pb_row("PB-001", 500, gate="fail", tier="Full"),
+        pb_row("PB-002", 500, gate="warn", tier="Full"),
+        pb_row("PB-003", 500, gate="fail", tier="Release"),
+    )
+    write_baseline(scaffold, {"PB-001": 400})
+    write_metrics(scaffold, {"PB-001": 560, "PB-002": 520, "PB-003": 900})
+    proc = run_py(["scripts/check_perf.py", "--tier", "full"], cwd=scaffold)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    lines = proc.stdout.strip().splitlines()
+    fail_reason = "exceeds budget 500MiB; regressed vs baseline 400MiB"
+    assert f"check_perf: FAIL - PB-001 Metric PB-001: {fail_reason}" in lines, lines
+    assert "check_perf: WARN - PB-002 Metric PB-002: exceeds budget 500MiB" in lines
+    report = perf_report(scaffold)
+    rows = [ln for ln in report.splitlines() if re.match(r"\| \w+ \| PB-\d", ln)]
+    assert rows == [
+        "| FAIL | PB-001 | Metric PB-001 | 560MiB | 400MiB | +160 (+40.0%) "
+        "| 500MiB | ↓ | fail |",
+        "| WARN | PB-002 | Metric PB-002 | 520MiB | — | — | 500MiB | ↓ | warn |",
+    ], rows
+    assert f"- **FAIL** PB-001 — {fail_reason}" in report, report
+    assert "- **WARN** PB-002 — exceeds budget 500MiB" in report, report
+
+
+def test_the_no_budgets_no_metrics_and_baseline_update_runs_write_no_report(
+    scaffold,
+):
+    # Only a run that reaches a comparison writes the report.
+    report = scaffold / "docs" / "test" / "perf-report.md"
+    no_budgets = run_py(["scripts/check_perf.py"], cwd=scaffold)
+    assert no_budgets.returncode == 0, no_budgets.stdout + no_budgets.stderr
+    assert "no performance budgets" in no_budgets.stdout
+    assert not report.exists()
+    write_budgets(scaffold, pb_row("PB-001", 500))
+    no_metrics = run_py(["scripts/check_perf.py", "--tier", "full"], cwd=scaffold)
+    assert no_metrics.returncode == 0, no_metrics.stdout + no_metrics.stderr
+    assert "SKIP" in no_metrics.stdout
+    assert not report.exists()
+    write_metrics(scaffold, {"PB-001": 488})
+    update = run_py(["scripts/check_perf.py", "--update-baseline"], cwd=scaffold)
+    assert update.returncode == 0, update.stdout + update.stderr
+    assert not report.exists()
+    compared = run_py(["scripts/check_perf.py", "--tier", "full"], cwd=scaffold)
+    assert compared.returncode == 0, compared.stdout + compared.stderr
+    assert report.exists()
 
 
 def test_harness_runs_perf_at_g3(scaffold):

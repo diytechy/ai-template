@@ -362,7 +362,7 @@ def test_process_tab_omitted_and_byte_identical_without_stage(tmp_path):
 
 
 def test_process_tab_is_byte_deterministic_and_check_stable(tmp_path):
-    """Implements: TC-051"""
+    """Implements: TC-051, TC-056"""
     # Sorted inputs, no clocks -> a second render is byte-identical and --check
     # passes fresh / trips stale (no new freshness exclusion).
     with_stage(tmp_path)

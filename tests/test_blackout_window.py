@@ -135,6 +135,34 @@ def test_a_disabled_window_answers_neither_question(tmp_path, value):
     assert (reading.inside, reading.last_end, reading.window) == (False, None, value)
 
 
+def test_an_absent_window_answers_neither_question(tmp_path):
+    """No blackout key at all, and no policy file at all, are disabled too.
+
+    Implements: TC-335
+    """
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    reading = at(docs, INSIDE)  # no process configuration
+    assert (reading.inside, reading.last_end, reading.window) == (False, None, "")
+    (docs / "process.toml").write_text("[policies]\npush = 'operator'\n", "utf-8")
+    reading = at(docs, INSIDE)
+    assert (reading.inside, reading.last_end, reading.window) == (False, None, "")
+
+
+def test_with_no_instant_given_the_reading_is_taken_now(root, clock):
+    """Called with no instant, the reading is taken at the current UTC time.
+
+    Implements: TC-335
+    """
+    docs = root / "docs"
+    clock(INSIDE)
+    reading = POLICY.blackout_at(docs)
+    assert reading.at == INSIDE and reading.inside and reading.end == END
+    clock(AFTER)
+    reading = POLICY.blackout_at(docs)
+    assert reading.at == AFTER and not reading.inside and reading.last_end == END
+
+
 def test_a_changed_value_applies_from_the_next_call(root):
     """Implements: TC-335"""
     assert at(root / "docs", INSIDE).inside
@@ -774,7 +802,7 @@ def test_reopening_the_same_session_with_both_drains_needs_the_operators_clear(
     the one blackout close-down, never the relaunch request the window
     refuses; after the window the latch still needs the operator's clear.
 
-    Implements: TC-316
+    Implements: TC-316, TC-318
     """
     root = tmp_path / "repo"
     write_policy(root, guard_pct=50)
