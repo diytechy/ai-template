@@ -380,3 +380,137 @@ def test_the_windows_launcher_runs_the_guards_claude_step_in_the_root(tmp_path):
     assert os.path.samefile(seen["cwd"], work)
     assert seen["argv"] == ["exec-claude", "--prompt-file", str(prompt)]
     assert seen["token"] == "tok123"
+
+
+def _sh_stub(path, body):
+    path.write_text("#!/bin/sh\n" + body, encoding="utf-8", newline="\n")
+    path.chmod(0o755)
+
+
+@env_gate_skipif("posix-shell")
+def test_the_posix_launcher_checks_the_window_on_its_first_floor_interpreter(
+    tmp_path,
+):
+    """The POSIX launcher runs its interpreter candidates in order and takes
+    the first that reports Python 3.11 or later as its executable path (a
+    candidate printing nothing reads as below the floor); it runs the guard's
+    blackout window check on that interpreter, and a refusing check starts
+    nothing, while a passing one opens a new terminal running the launcher's
+    own inner step. With no candidate reporting, it exits nonzero naming the
+    guidance and runs nothing.
+
+    Implements: TC-318
+    """
+    sh = shutil.which("sh")
+    work = tmp_path / "work"
+    work.mkdir()
+    prompt, record = tmp_path / "prompt.txt", tmp_path / "record.txt"
+    launcher = _launcher(tmp_path, "coordinator-relaunch.sh")
+    argv = [sh, launcher.as_posix(), work.as_posix(), prompt.as_posix(), "tok"]
+    guard_args = [
+        work.as_posix() + "/project-trajectory/scripts/coordinator_guard.py",
+        "--root",
+        work.as_posix(),
+        "window-check",
+    ]
+    for window_code in (1, 0):
+        bindir = tmp_path / "bin{}".format(window_code)
+        bindir.mkdir()
+        _sh_stub(bindir / "python3", "exit 0\n")  # below the floor: prints nothing
+        _sh_stub(
+            bindir / "python",
+            'if [ "$1" = "-c" ]; then printf "%s\\n" "$0"; exit 0; fi\n'
+            'printf "python %s\\n" "$*" >> "{}"\nexit {}\n'.format(
+                record.as_posix(), window_code
+            ),
+        )
+        _sh_stub(
+            bindir / "x-terminal-emulator",
+            'printf "terminal %s\\n" "$*" >> "{}"\n'.format(record.as_posix()),
+        )
+        record.write_text("", encoding="utf-8")
+        proc = subprocess.run(
+            argv,
+            capture_output=True,
+            encoding="utf-8",
+            env=_env(PATH=bindir.as_posix()),
+        )
+        lines = record.read_text(encoding="utf-8").splitlines()
+        assert lines[0].split() == ["python"] + guard_args, lines
+        if window_code:  # the window check refused: no terminal, a nonzero exit
+            assert proc.returncode != 0 and lines == lines[:1], proc.stderr
+        else:
+            assert proc.returncode == 0, proc.stderr
+            (terminal,) = lines[1:]
+            assert (
+                terminal.startswith("terminal -e sh -c sh ") and " --inner " in terminal
+            )
+    none = tmp_path / "none"
+    none.mkdir()
+    _sh_stub(none / "python3", "exit 0\n")
+    record.write_text("", encoding="utf-8")
+    proc = subprocess.run(
+        argv, capture_output=True, encoding="utf-8", env=_env(PATH=none.as_posix())
+    )
+    assert proc.returncode != 0
+    assert "no Python 3.11+ interpreter found" in proc.stderr, proc.stderr
+    assert record.read_text(encoding="utf-8") == ""
+
+
+_RECORDING_GUARD = (
+    "import json, os, sys\n"
+    "with open({record!r}, 'a') as out:\n"
+    "    out.write(json.dumps({{'argv': sys.argv[1:], 'exe': sys.executable,\n"
+    "        'floor': sys.version_info >= (3, 11),\n"
+    "        'token': os.environ.get('PT_COORDINATOR_TAKE')}}) + '\\n')\n"
+    "sys.exit({code} if sys.argv[-1] == 'window-check' else 0)\n"
+)
+
+
+@pytest.mark.skipif(os.name != "nt", reason="the .cmd launcher is Windows-only")
+def test_the_windows_launcher_checks_the_window_on_its_interpreter_before_starting(
+    tmp_path,
+):
+    """The Windows launcher runs the guard's blackout window check on the
+    interpreter it resolved, before setting the successor token; a passing
+    check is followed by the guard's prompt-file step on the same interpreter
+    with the token set, and a refusing one exits nonzero and starts nothing.
+    With no candidate resolving, it exits nonzero naming the guidance and runs
+    nothing.
+
+    Implements: TC-318
+    """
+    work = tmp_path / "root"
+    scripts = work / "project-trajectory" / "scripts"
+    scripts.mkdir(parents=True)
+    (work / "scripts").mkdir()
+    shutil.copy(ROOT / "scripts" / "coordinator-relaunch.cmd", work / "scripts")
+    record = tmp_path / "record.jsonl"
+    prompt = work / "out" / "prompt.txt"
+    env = _env(PATH=os.path.dirname(sys.executable) + os.pathsep + os.environ["PATH"])
+    env.pop("PT_COORDINATOR_TAKE", None)
+    _, line, _ = guard.launch_command(work, prompt, "tok9", "nt")
+    for code in (0, 1):
+        (scripts / "coordinator_guard.py").write_text(
+            _RECORDING_GUARD.format(record=str(record), code=code), encoding="utf-8"
+        )
+        record.write_text("", encoding="utf-8")
+        proc = subprocess.run(line, capture_output=True, encoding="utf-8", env=env)
+        calls = [json.loads(x) for x in record.read_text("utf-8").splitlines()]
+        assert calls[0]["argv"] == ["--root", str(work), "window-check"], calls
+        assert calls[0]["floor"] and calls[0]["token"] is None
+        if code:
+            assert proc.returncode != 0 and len(calls) == 1, proc.stdout
+        else:
+            assert proc.returncode == 0, proc.stdout + proc.stderr
+            assert calls[1]["argv"] == ["exec-claude", "--prompt-file", str(prompt)]
+            assert calls[1]["exe"] == calls[0]["exe"] and calls[1]["token"] == "tok9"
+    empty = tmp_path / "empty"
+    empty.mkdir()
+    record.write_text("", encoding="utf-8")
+    proc = subprocess.run(
+        line, capture_output=True, encoding="utf-8", env=dict(env, PATH=str(empty))
+    )
+    assert proc.returncode != 0
+    assert "no Python 3.11+ interpreter found" in proc.stdout, proc.stdout
+    assert record.read_text(encoding="utf-8") == ""

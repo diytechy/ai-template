@@ -209,8 +209,11 @@ def _merge_refusal(trunk, lane):
 # --- the hold: dispatch, hand close, merge ------------------------------------
 
 
-def test_an_edit_with_no_verdict_holds_the_dispatch_and_the_close(tmp_path):
-    """Implements: TC-325"""
+def test_an_edit_with_no_verdict_holds_the_dispatch_and_the_close(tmp_path, capsys):
+    """The Done-when hold command, refusing, prints the refusal's reason and
+    exits nonzero, as each integrator command does.
+
+    Implements: TC-325, TC-132"""
     trunk, lane = _lane(tmp_path)
     held = _dispatch_hold(lane)
     assert held is not None and held[:2] == (agent_loop.EXIT_NEEDS_OPERATOR, "HELD")
@@ -218,7 +221,10 @@ def test_an_edit_with_no_verdict_holds_the_dispatch_and_the_close(tmp_path):
     _stage_close(lane)
     staged = integrate.staged_done_when_refusal(lane)
     assert staged and _digest() in staged
+    capsys.readouterr()
     assert integrate.main(["--root", str(lane), "done-when-hold"]) == 1
+    err = capsys.readouterr().err
+    assert "integrate: REFUSED" in err and _digest() in err, err
     _git(lane, "commit", "-qm", "close")
     merged = integrate._done_when_refusal(trunk, BRANCH, [WI])
     assert merged and merged.endswith("nothing was merged")
@@ -648,7 +654,7 @@ def test_at_merge_a_combined_successor_mints_the_done_when_sections_own_draft(
     carries a RETURN draft BEFORE the done-when section's SUCCESSOR draft. The
     merge mints the done-when section's own draft, never the first one.
 
-    Implements: TC-328
+    Implements: TC-328, TC-327
     """
     verdict = (
         "## first-acceptance\n\nOUTCOME: RETURN rows=1\n\n"
@@ -1111,7 +1117,7 @@ def test_the_entry_point_binds_the_requested_kinds_beside_the_verdict(tmp_path):
     requested kinds beside the verdict, exclusively; a combined brief naming
     no kinds refuses, and a refused call's release removes both files.
 
-    Implements: TC-327
+    Implements: TC-327, TC-321
     """
     cli = load_script("coordinator_adjudicate")
     verdict = tmp_path / "reviews" / "001-ADJUDICATE-x.md"
@@ -1242,7 +1248,7 @@ def test_the_loop_route_records_its_verdicts_outcome(tmp_path, valid, outcome):
     its session's verdict it records the outcome through the same writer and
     commits the binding, so the holds read the recorded fact.
 
-    Implements: TC-326
+    Implements: TC-326, TC-257
     """
     _trunk_root, lane = _lane(tmp_path)
     line = "DONE-WHEN: BLESSED changes=2 digest={}\n".format(_digest())
@@ -1265,7 +1271,7 @@ def test_the_loop_records_a_failed_calls_verdict_failed(tmp_path, code, timed_ou
     a matching BLESSED verdict, then exited 1 or timed out. One rule for both
     routes: accepted only when the CALL succeeded and the verdict validates.
 
-    Implements: TC-326
+    Implements: TC-326, TC-257
     """
     from types import SimpleNamespace
 
@@ -1308,7 +1314,7 @@ def test_a_call_reporting_an_error_is_failed_on_both_routes(tmp_path, monkeypatc
     the call failed: `session_service.call_succeeded`, the one derivation both
     routes share, reads the real signals, so both record FAILED.
 
-    Implements: TC-326
+    Implements: TC-326, TC-321, TC-327
     """
     from types import SimpleNamespace
 
@@ -1364,7 +1370,7 @@ def test_a_refused_reservation_leaves_a_binding_it_does_not_own(tmp_path):
     and the cleanup removes only what THIS call created - its empty
     reservation - leaving the other binding untouched.
 
-    Implements: TC-327
+    Implements: TC-327, TC-321
     """
     cli = load_script("coordinator_adjudicate")
     verdict = tmp_path / "reviews" / "001-ADJUDICATE-x.md"
@@ -1420,7 +1426,7 @@ def test_a_failed_loop_call_keeps_its_obligation_and_reads_no_verdict(
     the re-sit is not lost), the binding records failed, and the verdict the
     failed call left behind is never read.
 
-    Implements: TC-326
+    Implements: TC-326, TC-257, TC-327
     """
     _trunk_root, lane = _lane(tmp_path)
     line = "DONE-WHEN: BLESSED changes=2 digest={}\n".format(_digest())
@@ -1448,7 +1454,7 @@ def test_the_loop_route_takes_a_combined_sitting_on_its_bound_kinds(
     reservation, and records the call against the SAME binding, so a valid
     combined verdict is accepted, clears the obligation and blesses.
 
-    Implements: TC-326, TC-327
+    Implements: TC-326, TC-327, TC-257
     """
     _trunk_root, lane = _lane(tmp_path)
     _fake_spine_assemblers(monkeypatch)
@@ -2120,3 +2126,26 @@ def test_a_commit_touching_no_claim_copy_is_not_refused_over_the_key(tmp_path):
     _git(trunk, "add", "--", "notes.txt")
     assert integrate.staged_done_when_refusal(trunk) is None
     assert plan_gate.staged_lines(trunk) == []
+
+
+def test_the_entry_point_commits_its_recorded_binding_in_its_own_telemetry_commit(
+    tmp_path, monkeypatch
+):
+    """The coordinator's entry point, after a successful call, rewrites the
+    binding with its outcome and commits it in a telemetry commit of its own,
+    carrying the binding and nothing else, above the session's verdict commit.
+
+    Implements: TC-321, TC-327
+    """
+    _trunk_root, lane = _lane(tmp_path)
+    line = "DONE-WHEN: BLESSED changes=2 digest={}\n".format(_digest())
+    returned, verdict = _entry_point_call(lane, monkeypatch, 0, False, line)
+    assert returned == 0
+    binding = Path(ab.ksitting.requested_path(verdict))
+    rel = binding.relative_to(lane).as_posix()
+    subject = _git(lane, "log", "-1", "--format=%s")
+    assert subject.startswith("telemetry: ") and subject.endswith("verdict recorded")
+    assert _git(lane, "show", "--name-only", "--format=", "HEAD").splitlines() == [rel]
+    assert _git(lane, "log", "-1", "--format=%s", "HEAD~1") == "the session's verdict"
+    committed = _git(lane, "show", "HEAD:" + rel)
+    assert ab.ksitting.read_requested(committed)[2] == "recorded"

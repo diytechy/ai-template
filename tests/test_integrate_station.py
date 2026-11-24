@@ -1185,6 +1185,42 @@ def test_integrate_is_a_noop_when_no_claimed_branch_has_finished(tmp_path):
     assert "no finished claimed branches" in out, out
 
 
+def test_the_queue_restricted_to_named_branches_merges_only_those(tmp_path):
+    """The dispatcher merges each lane's branch as its own refresh completes,
+    so the queue takes a restriction to named branches: a finished branch the
+    restriction leaves out is not merged, and naming it merges it. Run as a
+    SUBPROCESS, through a one-line driver, since integrate() takes the
+    process-global lock fd and the command line carries no restriction.
+
+    Implements: TC-145"""
+    root = station_repo(tmp_path)
+    driver = (
+        root / "out" / "drive_restricted.py"
+    )  # out/ is ignored: the trunk stays clean
+    driver.parent.mkdir(exist_ok=True)
+    driver.write_text(
+        "import sys\n"
+        "from pathlib import Path\n"
+        "sys.path.insert(0, sys.argv[1])\n"
+        "import integrate\n"
+        "root = Path(sys.argv[2]).resolve()\n"
+        "sys.exit(integrate.integrate(root, 'smoke', branches=sys.argv[3:]))\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    proc = run_py([driver, str(SCRIPTS), str(root), "wi-999"], cwd=root)
+    out = proc.stdout + proc.stderr
+    assert proc.returncode == 0, out
+    assert "nothing to merge" in out, out
+    assert "wi-401" in _branches(root)
+
+    proc = run_py([driver, str(SCRIPTS), str(root), "wi-401"], cwd=root)
+    out = proc.stdout + proc.stderr
+    assert proc.returncode == 0, out
+    assert "integrate: wi-401 merged (WI-401=merged)" in out, out
+    assert "wi-401" not in _branches(root)
+
+
 def test_integrate_refuses_and_holds_the_trunk_when_the_checks_are_undeclared(tmp_path):
     # The §4 refusal reached through the real CLI, on a finished branch: the
     # queue would otherwise be free to merge, and a repo with no declared checks are

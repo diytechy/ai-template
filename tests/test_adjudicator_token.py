@@ -304,7 +304,15 @@ def test_competing_ambient_credentials_never_reach_the_retained_launch(
 
 
 @pytest.mark.parametrize(
-    "declared", ["ANTHROPIC_API_KEY", "CLAUDE_CODE_USE_VERTEX", "--bare"]
+    # The token account's own token variable is declared by no route either:
+    # only the launch carries it, read from the file at launch.
+    "declared",
+    [
+        "ANTHROPIC_API_KEY",
+        "CLAUDE_CODE_USE_VERTEX",
+        "CLAUDE_CODE_OAUTH_TOKEN",
+        "--bare",
+    ],
 )
 def test_a_route_declaring_a_competing_credential_is_refused_before_launch(
     tmp_path, monkeypatch, declared

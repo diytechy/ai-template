@@ -574,6 +574,25 @@ def test_an_act_turn_resumes_the_session_its_sitting_keyed_under_the_entrys_acco
     assert "keep: resuming {}".format(minted) in out, out
 
 
+def test_a_retained_act_turn_whose_account_is_not_signed_in_is_refused_apart(
+    tmp_path, launched, monkeypatch, capsys
+):
+    """A retained act turn whose account is not signed in is refused with the
+    sign-in result, distinct from a pre-launch refusal, launching nothing and
+    changing neither HEAD nor the working tree.
+
+    Implements: TC-321
+    """
+    _primary, lane = _amendment(tmp_path)
+    monkeypatch.setattr(svc, "signin_status", lambda root, account, **k: "missing")
+    before = _snapshot_of(lane)
+    assert _act(launched, lane) == svc.agent_common.EXIT_NEEDS_OPERATOR
+    assert svc.agent_common.EXIT_NEEDS_OPERATOR != svc.agent_common.EXIT_PREFLIGHT
+    assert launched["argv"] == [] and _snapshot_of(lane) == before
+    out = capsys.readouterr().out
+    assert "act: " in out and "act: refused:" not in out, out
+
+
 # --- the trailer line (Q4) --------------------------------------------------
 
 BRIEF_TEXT = {

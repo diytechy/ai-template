@@ -166,6 +166,28 @@ def test_a_build_after_its_pass_record_is_not_refused_anywhere(tmp_path):
     assert gate.staged_lines(trunk) == []
 
 
+def test_the_gate_command_prints_fail_and_exits_1_then_ok_and_exits_0(tmp_path):
+    """Run as the plan-gate step, the gate prints one step line, FAIL with the
+    hold or ok, and exits 1 when the commit being made is held and 0 when it
+    is not.
+
+    Implements: TC-367
+    """
+    _trunk, lane = make_lane(tmp_path)
+    (line,) = build(lane)
+    proc = run_py([SCRIPTS / "plan_gate.py", "--root", str(lane)], lane)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    (step,) = [ln for ln in proc.stdout.splitlines() if "plan-gate" in ln]
+    assert step.split()[0] == "FAIL" and WI in step and "src/app.py" in step
+    unbuild(lane)
+    plan_and_pass(lane)
+    assert build(lane) == []
+    proc = run_py([SCRIPTS / "plan_gate.py", "--root", str(lane)], lane)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    (step,) = [ln for ln in proc.stdout.splitlines() if "plan-gate" in ln]
+    assert step.split()[0] == "ok"
+
+
 _EARLIER_RUNGS = (
     "_close_record_refusal",
     "_done_when_refusal",

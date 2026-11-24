@@ -304,6 +304,90 @@ def test_which_closes_owe_a_record(mode, outcomes, owed):
     assert kd.owed(mode, outcomes) is owed
 
 
+def test_the_missing_record_refusal_names_the_run_the_path_and_the_dial():
+    """The merge slot's refusal of an owed close with no record names the run,
+    its record path and the dial, or, for a run name no record can carry, the
+    run and why; each ends saying nothing was merged.
+
+    Implements: TC-293
+    """
+    refusal = kd.missing_record_refusal("escalate-first", "wi-401-x")
+    assert "wi-401-x" in refusal and "docs/decisions/wi-401-x.toml" in refusal
+    assert "'escalate-first'" in refusal
+    assert refusal.endswith("nothing was merged")
+    refused = kd.missing_record_refusal("record", "operator#cleanup")
+    assert "operator#cleanup" in refused and "'#'" in refused
+    assert refused.endswith("nothing was merged")
+
+
+def test_the_decisions_library_imports_only_the_standard_library_and_the_kernel():
+    """The record's library reads no file, git or environment: it imports the
+    standard library's text readers and the shared kernel's id reading alone,
+    and opens nothing.
+
+    Implements: TC-293
+    """
+    import ast
+
+    tree = ast.parse((SCRIPTS / "kitlib" / "decisions.py").read_text(encoding="utf-8"))
+    absolute, relative = set(), set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            absolute.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            (relative if node.level else absolute).add(node.module or "")
+    assert absolute <= {"re", "tomllib"}, absolute
+    assert relative <= {"spine"}, relative
+    called = {
+        node.func.id
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+    }
+    assert "open" not in called
+
+
+def test_each_queued_entry_carries_its_id_hoist_fields_and_raw_operator_value():
+    """Implements: TC-293"""
+    text = (
+        'high_risk = ["D-002"]\n\n'
+        '[decision.D-001]\ndecided = "a"\nalternative = "b"\nreversal_cost = "c"\n'
+        'why_not_escalated = "d"\nreview = ""\noperator = "maybe"\n\n'
+        '[decision.D-002]\ndecided = "e"\nalternative = "f"\nreversal_cost = "g"\n'
+        'why_not_escalated = "h"\nreview = "undo it"\noperator = "overruled"\n'
+    )
+    unseen, overruled, confirmed = kd.review_queue(text)
+    assert confirmed == 0
+    (seen,) = unseen
+    assert (seen["id"], seen["high_risk"], seen["operator"]) == (
+        "D-001",
+        False,
+        "maybe",
+    )
+    assert seen["fields"]["decided"] == "a"
+    (over,) = overruled
+    assert (over["id"], over["high_risk"], over["operator"]) == (
+        "D-002",
+        True,
+        "overruled",
+    )
+    assert over["fields"]["review"] == "undo it"
+
+
+def test_the_newly_overruled_entries_come_in_id_order_whatever_else_they_carry():
+    """An entry overruled after and not before is newly overruled, listed in id
+    order, whether its review note is blank or it still carries the retired
+    key.
+
+    Implements: TC-293
+    """
+    after = (
+        "high_risk = []\n\n"
+        '[decision.D-10]\noperator = "overruled"\nreview = "undo it"\n\n'
+        '[decision.D-9]\noperator = "overruled"\nreview = "  "\nreviewed = true\n'
+    )
+    assert kd.newly_overruled("high_risk = []\n", after) == ["D-9", "D-10"]
+
+
 def test_the_session_note_names_the_path_only_under_a_recording_dial():
     assert kd.session_note("off", "wi-1-x") == ""
     note = kd.session_note("record", "wi-1-x")
@@ -318,6 +402,13 @@ def test_the_session_note_names_the_path_only_under_a_recording_dial():
     ask_more = kd.session_note("escalate-first", "wi-1-x")
     assert "docs/decisions/wi-1-x.toml" in ask_more
     assert len(ask_more) > len(note), "escalate-first adds the prefer-the-exits rule"
+    # A call the session is unsure of is recorded too, the record is never an
+    # exit, and only escalate-first prefers the exits over deciding.
+    flat = " ".join(note.split())
+    assert "or that you are unsure of" in flat
+    assert "The record is not an exit" in flat
+    assert "prefer the exits over deciding" in ask_more
+    assert "prefer the exits over deciding" not in note
 
 
 ROUTING_HOME = "Delegated decisions record"

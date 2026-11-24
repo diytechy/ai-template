@@ -335,7 +335,7 @@ def test_each_run_launcher_searches_what_its_dev_setup_searches(launcher, devset
     one: after the .venv entries, the launcher probes the same interpreters, in
     the same order, as that dev-setup's own runtime search.
 
-    Implements: TC-021, TC-342
+    Implements: TC-021, TC-342, TC-318
     """
     ours = _launcher_search(launcher)
     theirs = _devsetup_search(devsetup)

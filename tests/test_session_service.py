@@ -947,6 +947,58 @@ def test_the_writer_guard_bites_on_a_second_session_log_writer(planted, which):
     assert session_log_writers(planted)[which]
 
 
+# The service's two launches: headless (the launch layer's, which the service
+# binds) and attached to the terminal (the service's own).
+SESSION_LAUNCHES = {"run_session", "run_attached"}
+
+
+def test_only_the_service_calls_the_headless_or_attached_launch():
+    """No kit module but the service calls either session launch, so every
+    model session is launched, and accounted, through it; the launch layer
+    defines the headless one and calls neither. Adequacy witness: a call of
+    either planted in another module is named here.
+
+    Implements: TC-265
+    """
+    offenders = {
+        name: sorted(
+            node.lineno
+            for node in ast.walk(ast.parse(text))
+            if isinstance(node, ast.Call) and _callee(node) in SESSION_LAUNCHES
+        )
+        for name, text in _kit_sources()
+        if name != "session_service.py"
+    }
+    assert {name: lines for name, lines in offenders.items() if lines} == {}
+
+
+# The two audit columns `_identity` fills on every call and the log writer
+# orders in the header (WI-887): whether the session was minted fresh or
+# resumed, and the scope a retained session is kept under.
+AUDIT_COLUMNS = {"session-mode", "keep-scope"}
+
+
+def test_no_gate_or_scheduler_names_the_session_mode_or_keep_scope_column():
+    """The audit columns are named only where they are written: the service
+    fills them and the shared primitives' log writer orders them. No other
+    kit module, a gate or the scheduler included, names either as a string,
+    so none reads them. Adequacy witness: a read of either planted in another
+    module is named here.
+
+    Implements: TC-265
+    """
+    offenders = {
+        name: sorted(
+            node.value
+            for node in ast.walk(ast.parse(text))
+            if isinstance(node, ast.Constant) and node.value in AUDIT_COLUMNS
+        )
+        for name, text in _kit_sources()
+        if name not in WRITER_CALLERS | WRITER_HOMES
+    }
+    assert {name: cols for name, cols in offenders.items() if cols} == {}
+
+
 def test_the_retired_launch_and_logging_paths_are_gone():
     for name in (
         "invoke_and_persist",

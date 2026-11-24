@@ -1142,6 +1142,31 @@ def test_a_login_account_whose_route_or_account_declares_a_competing_source_is_r
     assert (status, ran) == ("unknown", [])  # refused: never probed, never ready
 
 
+def test_only_a_token_accounts_template_is_refused_for_the_bare_flag(
+    tmp_path, config_dir
+):
+    """The bare-mode flag reads no long-lived token, so a token account's
+    template carrying it is refused before launch; a login account reads its
+    own home, so the same template under it composes its launch environment.
+    Adequacy witness: a check that refused the flag for every account would
+    refuse the login account here.
+
+    Implements: TC-362
+    """
+    registry, errors = _registry(tmp_path)
+    assert errors == []
+    row = SimpleNamespace(**vars_of(registry["CLAUDE-A"]))
+    row.cmd_template += " --bare"
+    _home(config_dir, "WORK").mkdir(parents=True)
+    env = _folded(svc.launch_env(tmp_path, row, registry.accounts["WORK"]))
+    assert env[route.env_name_key("CLAUDE_CONFIG_DIR")] == str(
+        _home(config_dir, "WORK")
+    )
+    with pytest.raises(svc.SigninRefused) as refused:
+        svc.refuse_competing(registry.accounts["TOK"], row.cmd_template, {})
+    assert "--bare" in str(refused.value)
+
+
 def test_a_gemini_login_account_whose_route_declares_a_vertex_source_is_refused(
     tmp_path, config_dir
 ):

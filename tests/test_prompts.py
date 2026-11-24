@@ -82,6 +82,34 @@ def test_preflight_is_clean_and_bites_on_a_missing_file(tmp_path, monkeypatch):
     assert any(pr.WORKER in r for r in refusals)
 
 
+def test_an_operator_override_is_loaded_in_place_of_the_shipped_template(tmp_path):
+    """A key given an operator override loads the override's body, not the
+    shipped template's; a missing override refuses by name."""
+    override = tmp_path / "worker.md"
+    override.write_text("the operator's own brief, {slot}\n", encoding="utf-8")
+    assert pr.load(pr.WORKER, override) == "the operator's own brief, {slot}"
+    assert pr.load(pr.WORKER) != pr.load(pr.WORKER, override)
+    with pytest.raises(pr.PromptError):
+        pr.load(pr.WORKER, tmp_path / "absent.md")
+
+
+def test_the_catalogue_rows_give_each_prompt_its_file_slots_and_digest_in_key_order():
+    """The catalogue's row source: one row per shipped prompt, sorted by key,
+    giving its file, its slots and its digest, and one row per composed
+    fragment giving its file, the slot it fills and its digest."""
+    rows = pr.catalog_rows()
+    assert [r[0] for r in rows] == sorted(pr.KIT_PROMPTS)
+    for key, filename, slots, digest in rows:
+        text = pr.load(key)
+        assert filename == pr.KIT_PROMPTS[key], key
+        assert slots == ";".join(sorted(pr.slots(text))), key
+        assert digest == pr.digest(text), key
+    fragments = pr.fragment_rows()
+    assert [(f, s) for f, s, _d in fragments] == sorted(pr.KIT_FRAGMENTS.items())
+    for name, _slot, digest in fragments:
+        assert digest.startswith("sha256:"), name
+
+
 def test_an_unknown_key_refuses_by_name():
     with pytest.raises(pr.PromptError) as exc:
         pr.load("NO-SUCH-PROMPT")

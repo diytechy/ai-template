@@ -614,7 +614,7 @@ def test_changes_requested_rework_finding_reaches_the_next_build(managed_repo):
 
 
 def test_absent_enable_list_keeps_legacy_behavior(managed_repo):
-    """Implements: TC-082"""
+    """Implements: TC-082, TC-046"""
     # No agents-enabled -> routing off -> the base --agent-cmd runs and NO review
     # is scheduled (the never-breaking guarantee; managed banner absent).
     repo, ctl, cmd = managed_repo

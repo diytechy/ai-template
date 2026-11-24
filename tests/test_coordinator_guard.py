@@ -803,6 +803,34 @@ def test_only_the_holder_requests_a_relaunch_naming_a_real_handoff(root, tx, tmp
     assert set(request) == {"session_id", "repo_root", "handoff", "created"}
 
 
+def test_a_relaunch_request_whose_write_fails_leaves_no_request(
+    root, tx, tmp_path, monkeypatch
+):
+    """The request is written atomically: a write that fails before its final
+    replace leaves no request file and no partial copy beside it.
+
+    Implements: TC-318
+    """
+    import functools
+
+    held(root, tx)
+    handoff = tmp_path / "h.md"
+    handoff.write_text(HANDOFF, encoding="utf-8")
+
+    def refuse(_src, _dst):
+        raise OSError("replace refused")
+
+    atomic = functools.partial(guard.write_atomic, replace=refuse, attempts=1)
+    monkeypatch.setattr(guard, "write_atomic", atomic)
+    with pytest.raises(OSError):
+        guard.request_relaunch(root, handoff, COORD)
+    directory = guard.lease_dir(root)
+    assert not (directory / "relaunch.json").exists()
+    assert not [p.name for p in directory.iterdir() if "relaunch" in p.name], list(
+        directory.iterdir()
+    )
+
+
 # --- the holder's hand-back (WI-842) ---------------------------------------------
 
 

@@ -902,6 +902,58 @@ def test_the_cli_refuses_a_manual_merge_checkpoint(tmp_path, capsys):
     assert _queued_rejudges(root) == []
 
 
+def test_the_release_command_names_its_count_and_a_refused_mint_exits_1(
+    tmp_path, monkeypatch, capsys
+):
+    """The release command exits 0 naming how many rows it minted, or that
+    nothing is due without an open row; a mint refusal mints nothing, prints
+    its reason on standard error and exits 1.
+
+    Implements: TC-248
+    """
+    root, _ = judged_repo(tmp_path, expired=("TC-003",))
+    head = _git(root, "rev-parse", "HEAD").strip()
+    argv = ["--root", str(root), "rejudge", "--checkpoint", "release"]
+    monkeypatch.setattr(
+        intake, "_pre_mint_refusal", lambda *args: "SENTINEL mint-check refusal"
+    )
+    capsys.readouterr()
+    assert intake.main(argv) == 1
+    refused = capsys.readouterr()
+    assert "SENTINEL mint-check refusal" in refused.err
+    assert _git(root, "rev-parse", "HEAD").strip() == head
+    assert _queued_rejudges(root) == []
+    monkeypatch.undo()
+    assert intake.main(argv) == 0
+    assert "re-judge at release: minted 1 row(s)." in capsys.readouterr().out
+    assert intake.main(argv) == 0
+    assert "re-judge at release: nothing due without an open row." in (
+        capsys.readouterr().out
+    )
+
+
+def test_the_cadence_reads_one_history_per_result_commit(tmp_path):
+    """Two cases whose latest records share one adding commit are judged over
+    one read of that commit's history, not one read per case.
+
+    Implements: TC-306
+    """
+    root, sha = cadence_repo(tmp_path, "files:src/*")
+    since = _git(root, "rev-parse", "HEAD~1").strip()
+    snap = tmp_path / "snap"
+    _write(snap, "docs/process.toml", "[checks]\nobservation_min_work_items = 0\n")
+    calls = []
+
+    def counting_git(root_, *args):
+        calls.append(args[0])
+        return rejudge._run_git(root_, *args)
+
+    cadence = observation_cadence.Cadence(root, sha, snap, "merge", counting_git)
+    cadence.eligible({"Trigger": "files:src/*"}, since, "merge")
+    cadence.eligible({"Trigger": "files:other/*"}, since, "merge")
+    assert calls.count("log") == 1 and calls.count("diff") == 1, calls
+
+
 # --- review follow-up: the mint path's checks and its staging -----------------
 
 

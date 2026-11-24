@@ -149,6 +149,7 @@ def _seen(ctl):
 
 
 def test_pair_row_env_is_merged_into_the_launch(tmp_path):
+    """Implements: TC-046"""
     # A declared Env reaches the launched session.
     repo, ctl, cmd = _make_repo(tmp_path, "AGENT_TEST_ENV_MARKER=hello")
     proc = _loop(repo, cmd)
@@ -157,6 +158,7 @@ def test_pair_row_env_is_merged_into_the_launch(tmp_path):
 
 
 def test_empty_env_inherits_the_ambient_environment(tmp_path):
+    """Implements: TC-046"""
     # No Env column value -> the session inherits the ambient environment exactly
     # (session_env stays None; the marker is not injected). This is today's call.
     repo, ctl, cmd = _make_repo(tmp_path, "")

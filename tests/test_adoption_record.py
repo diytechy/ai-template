@@ -437,6 +437,51 @@ def test_a_squash_whose_index_edits_the_tips_record_is_refused(tmp_path):
     assert _hook(root) == 1
 
 
+def test_a_malformed_record_is_refused_and_the_commit_dropping_it_is_not(tmp_path):
+    """The tree under judgement is read strictly, so a record that does not
+    parse is refused; a parent's malformed record holds no record, so the
+    commit that drops it is not refused for its parent.
+
+    Implements: TC-383
+    """
+    root = adopting_repo(tmp_path)
+
+    def malformed(wt):
+        path = wt / ACTIVE_SPEC
+        head, sep, body = path.read_text(encoding="utf-8").partition("\n+++\n")
+        path.write_text(
+            head + '\nadopted = "WI-450"' + sep + body, encoding="utf-8", newline="\n"
+        )
+
+    bad = _lane_commit(root, malformed, "a record that is not a list")
+    assert ar.commit_adoption_record_lines(root, bad) != []
+    dropped = _lane_commit(
+        root, lambda wt: _edit_record(wt / ACTIVE_SPEC, None), "drop the record"
+    )
+    assert ar.commit_adoption_record_lines(root, dropped) == []
+
+
+def test_the_step_prints_fail_or_ok_with_its_exit(tmp_path, capsys):
+    """Run as the adoption-record step over the commit being made, the rule
+    prints one step line, FAIL with each refusal or ok, and exits 1 when it
+    refuses a record change and 0 otherwise.
+
+    Implements: TC-383
+    """
+    root = adopting_repo(tmp_path)
+    capsys.readouterr()
+    assert _hook(root) == 0
+    (step,) = [
+        ln for ln in capsys.readouterr().out.splitlines() if "adoption-record" in ln
+    ]
+    assert step.split()[0] == "ok"
+    _edit_record(root / ACTIVE_SPEC, ("WI-450",))
+    _git(root, "add", "-A")
+    assert _hook(root) == 1
+    out = capsys.readouterr().out
+    assert out.split()[0] == "FAIL" and "WI-401" in out, out
+
+
 # --- wiring ---------------------------------------------------------------------
 
 
