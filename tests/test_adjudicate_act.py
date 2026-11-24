@@ -508,6 +508,77 @@ def test_a_held_CLARITY_act_whose_binding_has_no_identity_is_refused(tmp_path):
     assert "SR-001" in why and _sr_digest(repo) in why, why
 
 
+# A routed link (here SR-001's `SN-Refs`) is in the identity a verdict binds:
+# an act naming the row records the link with its accepted text, so a link
+# moved after the verdict is text no sitting judged (WI-1069).
+
+
+def _move_link(repo):
+    _replace(repo, SRS, "SR-001,Adds,SN-001,", "SR-001,Adds,SN-001;SN-002,")
+    _commit(repo, "re-point SR-001's needs after its verdict")
+
+
+def test_a_held_CLARITY_act_whose_link_moved_after_the_verdict_is_refused(tmp_path):
+    """Implements: TC-398"""
+    repo = _repo(tmp_path, dial="DevStg-Release")
+    _amend(repo)
+    bound = _sr_digest(repo)
+    _bound_verdict(repo, {"SR-001": bound})
+    _move_link(repo)
+    committed = _sr_digest(repo)
+    acts, why = act.owed_acts(repo, VERDICT, "HEAD")
+    assert acts is None, acts
+    for word in ("SR-001", bound, committed):
+        assert word in why, (word, why)
+
+
+def test_a_binding_over_accepted_cells_alone_refuses_a_row_carrying_a_link(tmp_path):
+    """Implements: TC-398"""
+    # The shape every binding written before WI-1069 has: a digest of the
+    # accepted cells alone. A row carrying a link reads as moved text, so the
+    # held act fails closed and the verdict is re-sat.
+    repo = _repo(tmp_path, dial="DevStg-Release")
+    _amend(repo)
+    row = acceptance_record.rows_at(repo, "HEAD", SR_REL, "SR-ID")["SR-001"]
+    assert row["SN-Refs"], "the premise: SR-001 carries a link"
+    old = acceptance_record.accepted_text_digest(
+        SR_REL, "SR-ID", dict(row, **{"SN-Refs": ""})
+    )
+    _bound_verdict(repo, {"SR-001": old})
+    acts, why = act.owed_acts(repo, VERDICT, "HEAD")
+    assert acts is None, acts
+    for word in ("SR-001", old, _sr_digest(repo)):
+        assert word in why, (word, why)
+
+
+def _claim_lines(repo):
+    """The lane rule's lines for the HEAD commit against its parent."""
+    held_status = load_script("held_status")
+    head = _git(repo, "rev-parse", "HEAD")
+    parent = _git(repo, "rev-parse", "HEAD~1")
+    lines = held_status.held_acceptance_lines(repo, [parent], head, "DevStg-Release")
+    return [line for line in lines if "SR-001" in line]
+
+
+def test_a_held_claim_whose_link_moved_after_its_verdict_is_not_excepted(tmp_path):
+    """Implements: TC-398"""
+    bound = tmp_path / "bound"
+    bound.mkdir()
+    repo = _repo(bound, dial="DevStg-Release")
+    _amend(repo)
+    _bound_verdict(repo, {"SR-001": _sr_digest(repo)})
+    _take_amendment_act(repo, ["SR-001"])
+    assert _claim_lines(repo) == []  # the premise: the bound act is excepted
+    moved = tmp_path / "moved"
+    moved.mkdir()
+    repo = _repo(moved, dial="DevStg-Release")
+    _amend(repo)
+    _bound_verdict(repo, {"SR-001": _sr_digest(repo)})
+    _move_link(repo)
+    _take_amendment_act(repo, ["SR-001"])
+    assert _claim_lines(repo), "a link moved after the verdict was excepted"
+
+
 # --- order, re-runs and the committed tree --------------------------------
 
 

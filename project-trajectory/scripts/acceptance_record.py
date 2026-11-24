@@ -122,11 +122,13 @@ Contract IF-129: the ONE cell-comparison basis.
     are content or which half of the remainder arms an act. The dependency runs
     one way only: nothing in this module imports the readers that call it.
     `accepted_text_digest(registry_path, id_col, row)` is the row's
-    accepted-text identity on the same basis: `sha256:` and 16 lowercase hex
-    over the row's nonempty cells `spine_cell_class` classes accepted, the id
-    column and `Status` excluded, serialized as sorted JSON. So a carrier
-    change, an empty cell against an absent one, a status move or a traced
-    cell's move leaves it unchanged, and any accepted cell's move changes it.
+    judged-text identity on the same basis: `sha256:` and 16 lowercase hex
+    over the row's nonempty cells `spine_cell_class` classes accepted and its
+    nonempty routed traced cells (`record_rows.routed_cells`), the id column
+    and `Status` excluded, serialized as sorted JSON. So a carrier change, an
+    empty cell against an absent one, a status move or a move of a traced cell
+    no adjudicator judges leaves it unchanged, and any accepted cell's or
+    routed link's move changes it.
 Contract IF-308: the parent-first commit judgement, offered as a call.
     `staged_parent_first_lines(root)` judges the index against HEAD (and
     MERGE_HEAD during a merge) and `commit_parent_first_lines(root, rev)` one
@@ -585,7 +587,9 @@ def traced_cells(csv_path):
 # the sitting saw. The identity is not an on-row cell: it lives in the
 # verdict's binding. It needs no separator, because JSON escapes every cell.
 # And it keeps no exclusion list of its own: it hashes exactly the cells
-# `spine_cell_class` classes accepted, the classes this comparison uses.
+# `spine_cell_class` classes accepted, the classes this comparison uses, and
+# the routed traced cells the record already holds to the same standard
+# (`record_rows.routed_cells`; WI-1069).
 
 # The Status values whose ROW TEXT is accepted — the population the
 # amend-without-flip guard scans. ONE MEMBER SINCE D-9 STEP 5, and it is a
@@ -624,21 +628,31 @@ def split_changed_cells(csv_path, id_col, head, row):
 
 
 def accepted_text_digest(csv_path, id_col, row):
-    """The identity of one row's accepted text: `sha256:` and the first 16
-    lowercase hex of SHA-256 over its nonempty accepted cells, the id column
+    """The identity of the text a sitting judges on one row: `sha256:` and
+    the first 16 lowercase hex of SHA-256 over its nonempty accepted cells and
+    its nonempty adjudicated links (`record_rows.routed_cells`), the id column
     and `Status` excluded, serialized as sorted JSON. The cells are classed by
     `spine_cell_class`, as `split_changed_cells` classes them, so the identity
     a verdict binds and the drift that comparison reports read one split; an
     empty cell is dropped, as that comparison reads it like an absent one.
 
+    THE LINKS ARE IN IT (WI-1069): an act naming the row records them with its
+    accepted text, so a link moved after the verdict is text the verdict never
+    judged, and every reader of a binding (the held act, the held-claim
+    exception, the held-MEANING mint) reads it as moved text. A trace cell no
+    adjudicator judges is not in it. A row carrying no link digests as it did
+    before, so a binding written before the links joined still binds it; a row
+    carrying one reads as moved under such a binding, and fails closed.
+
     Implements: SR-178, LLR-359
     """
+    routed = record_rows.routed_cells(csv_path)
     cells = {
         str(key): value
         for key, value in row.items()
         if key not in (id_col, "Status")
         and value
-        and spine_cell_class(csv_path, key) == "accepted"
+        and (key in routed or spine_cell_class(csv_path, key) == "accepted")
     }
     text = json.dumps(cells, sort_keys=True, ensure_ascii=True, separators=(",", ":"))
     hexed = hashlib.sha256(text.encode("utf-8")).hexdigest()

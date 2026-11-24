@@ -8,13 +8,18 @@
 
      Slots (single-brace, strict fill — a missing one refuses):
        {rows}      the per-cell before/after listing, rendered from
-                   trace.reaccept_model — ACCEPTED cells only, since a traced
-                   cell is ruled outside acceptance (section A5.1). Registry-derived ONLY.
+                   trace.reaccept_model — the ACCEPTED cells and the moved
+                   ADJUDICATED LINKS (the routed traced cells, each marked
+                   `(link)`), since an act naming the row records its links
+                   with its text (WI-1069); every other trace cell is ruled
+                   outside acceptance (section A5.1). Registry-derived ONLY.
                    SCOPE-BOUNDED: only the rows in this row's own `Adjudicates`
                    cell (the rows the amendment mint routed), each once, so a
                    verdict counts its own rows rather than the whole tree's
-                   drift. A row with no scope, or a scope with nothing left
-                   drifted, refuses rather than composing.
+                   drift. A scoped row with nothing to judge is named on one
+                   closing line, never dropped unnamed. A row with no scope, or
+                   a scope with nothing left to judge, refuses rather than
+                   composing.
        {baseline}  the accepted anchor this diff is measured against: the
                    docs/archive/last_accepted/ snapshot and, for EACH registry
                    the listing shows, the reviewed commit that last copied that
@@ -54,8 +59,8 @@
                    A roster that exists and does not parse refuses the render,
                    naming it.
        {identity}  one `JUDGED-TEXT: <row id> <digest>` line per row {rows}
-                   shows: the digest of that row's accepted text as the
-                   brief's own reader loaded it. The route that binds this
+                   shows: the digest of that row's accepted text and
+                   adjudicated links as the brief's own reader loaded it. The route that binds this
                    call reads these lines off the composed prompt and records
                    them in the verdict's binding, so a held CLARITY
                    re-acceptance is bound to the text this sitting judged:
@@ -103,9 +108,9 @@ Judge the CELLS BELOW and nothing else. You have no access to the session that m
 
 --- ACCEPTED ANCHOR ---
 {baseline}
---- AMENDED CELLS (before/after, per row) ---
+--- AMENDED CELLS AND MOVED LINKS (before/after, per row) ---
 {rows}
---- JUDGED TEXT (the identity of each row's accepted text shown above) ---
+--- JUDGED TEXT (the identity of each row's accepted text and links shown above) ---
 {identity}
 --- END ---
 
@@ -115,6 +120,8 @@ Method:
 - Compare the two obligations, not the two paragraphs. Diff noise is not the subject; the obligation is.
 - When the two obligations differ AT ALL, the answer is `meaning`. Fail toward `meaning`: a wrongly-kept acceptance is a silent false claim that an operator blessed this text, and that is the failure this rung exists to prevent. A wrongly-owed re-accept costs one sitting.
 - If the diff is mixed — one cell clarified, another moved the obligation — the answer for the ROW is `meaning`, and you say which cell carried it.
+
+LINKS. A cell marked `(link)` is an adjudicated link: a pointer to other rows (the needs, boundary crossings or interfaces a requirement names, the requirements or interfaces a design row names, the rows a test case verifies). It carries no prose, so the one question you ask of it is the one its routing exists for: does the row's text state what the link now points at? If it does, the link moved no obligation, and the cell is clarity. If it does not, the row now claims something its text does not say: the cell is meaning, and a row whose text does not state what its link points at is not one to bless. A row shown with links alone is judged on its links alone; name the link's cell in its row line as you would any other cell.
 
 Whether a `MEANING` row's new text is one you would bless — or recommend to the operator — is judged by the questions for its tier, the same ones a first acceptance puts. A `CLARITY` verdict owes them nothing new: the obligation is the one already blessed.
 

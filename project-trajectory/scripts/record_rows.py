@@ -90,6 +90,17 @@ ROUTED_TRACED_CELLS = {
     "docs/test/test-cases.toml": frozenset({"Verifies"}),
 }
 
+
+def routed_cells(rel):
+    """The routed traced cells of registry `rel`, carrier-suffix insensitive:
+    `frozenset()` for a registry that routes none. The one lookup the record,
+    the acceptance model and the text identity read (WI-1069).
+
+    Implements: SR-178, LLR-484"""
+    routed = {spine_carrier.stem(k): v for k, v in ROUTED_TRACED_CELLS.items()}
+    return routed.get(spine_carrier.stem(rel), frozenset())
+
+
 # Every row table a registry carries, mapped to its tier's id column, so a row
 # is keyed `(id column, id)` whichever carrier it was read from.
 _TIER_OF_TABLE = {table: col for col, table in spine_carrier.REGISTRY_TABLE.items()}
@@ -233,10 +244,7 @@ def _settled(rel, col, before, after, split):
     """Do the accepted cells and the routed traced cells of a row equal its
     recorded copy's? `split` is the cell comparison the caller owns."""
     changed = split(rel, col, before, after)
-    routed = {spine_carrier.stem(k): v for k, v in ROUTED_TRACED_CELLS.items()}
-    return not changed["accepted"] and not (
-        set(changed["traced"]) & routed.get(spine_carrier.stem(rel), frozenset())
-    )
+    return not changed["accepted"] and not (set(changed["traced"]) & routed_cells(rel))
 
 
 def row_rule(rel, prev, live, named, split):

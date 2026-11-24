@@ -265,6 +265,7 @@ except ImportError:  # pragma: no cover - in-process fallback
 try:
     import baseline_snapshot
     import check_trajectory
+    import record_rows
     import spine_carrier
     from coherence import (
         PhaseScope,
@@ -324,6 +325,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import baseline_snapshot
     import check_trajectory
+    import record_rows
     import spine_carrier
     from coherence import (
         PhaseScope,
@@ -3699,25 +3701,74 @@ def _anchor_lines(sr_row):
     return out
 
 
-def _cell_diff_lines(changed, accepted=frozenset(), drafted=False):
-    """The per-cell before/after bullets, split into the §A5.1 two groups.
+# The three groups a changed row's cells render under, in order (WI-1069): an
+# accepted cell owes a re-acceptance, an adjudicated link (a routed traced
+# cell) goes to a sitting, and every other trace cell follows live and owes no
+# act. The one statement both operator surfaces read (`changed_cell_groups`).
+CELL_GROUP_LABELS = (
+    "accepted — re-acceptance owed",
+    "adjudicated link — goes to a sitting",
+    "other trace cell — owes no act",
+)
 
-    The split is a capability the snapshot comparison hands the reader for free
-    (D-9 step 4): an ACCEPTED cell that moved owes an acceptance, a TRACED one
-    routes to adjudication and arms no window. Rendering them in one
-    undifferentiated list asked the operator to make that judgement per cell, from
-    memory, mid-sitting. Headings appear only when BOTH groups are present —
-    a lone heading over the only group is noise.
 
-    `drafted` COLLAPSES THE SPLIT (OI-71 defect 1). The two group labels are a
-    property of a row that HAS been accepted: an accepted cell of it "owes a
-    re-acceptance", a traced one "routes to adjudication". A `Drafted` row was
-    never accepted — none of its cells owes a re-acceptance and none arms a
-    window; the whole row owes a FIRST acceptance, which its own section heading
-    already states. Keyed on the cell's COLUMN class alone, the split rendered a
-    Drafted row's accepted-class cells under "accepted — re-acceptance owed" —
-    the exact false label round 019 of the wi508 lane caught. For a Drafted row
-    the cells therefore render in one plain list, no group heading.
+def _ordered_cells(rel, split):
+    """`(cells, routed)`: a changed row's `(name, before, after)` triples from
+    the cell split `split` of registry `rel`, its accepted cells first, then
+    its moved adjudicated links, then its other trace cells, each by name; and
+    the set of those links. The reader's question is "what do I have to
+    re-bless?", and the order answers it.
+
+    Implements: SR-178, LLR-484"""
+    routed = frozenset(split["traced"]) & record_rows.routed_cells(rel)
+    names = [(n, "accepted") for n in sorted(split["accepted"])]
+    names += [(n, "traced") for n in sorted(routed)]
+    names += [(n, "traced") for n in sorted(set(split["traced"]) - routed)]
+    return [(n, *split[half][n]) for n, half in names], routed
+
+
+def changed_cell_groups(cells, accepted=frozenset(), routed=frozenset(), drafted=False):
+    """`[(label | None, cells)]`: a changed row's moved cells split into
+    `CELL_GROUP_LABELS`' three groups, empty groups left out, each labelled
+    unless the row is `Drafted` or its only group is its accepted cells.
+
+    THE ONE GROUPING both operator surfaces render (the acceptance brief here
+    and the open-items page), so a cell cannot read one way on one and another
+    way on the other. The split is a capability the snapshot comparison hands
+    the reader for free (D-9 step 4): rendering the cells in one
+    undifferentiated list asked the operator to judge each cell's class from
+    memory, mid-sitting. A lone accepted group stays unlabelled (a heading over
+    the only group is noise there); a lone link or trace group is labelled,
+    because it is the reason the row is listed, or says it owes nothing.
+
+    `drafted` COLLAPSES THE SPLIT (OI-71 defect 1). The labels are a property
+    of a row that HAS been accepted. A `Drafted` row was never accepted — none
+    of its cells owes a re-acceptance and none goes to a sitting; the whole row
+    owes a FIRST acceptance, which its own section heading already states.
+    Keyed on the cell's COLUMN class alone, the split rendered a Drafted row's
+    accepted-class cells under "accepted — re-acceptance owed", the exact false
+    label round 019 of the wi508 lane caught. So its cells form one plain group.
+
+    Implements: SR-178, LLR-484"""
+    if drafted:
+        return [(None, list(cells))]
+    picks = (
+        lambda c: c[0] in accepted,
+        lambda c: c[0] in routed and c[0] not in accepted,
+        lambda c: c[0] not in accepted and c[0] not in routed,
+    )
+    groups = [
+        (label, [c for c in cells if pick(c)])
+        for label, pick in zip(CELL_GROUP_LABELS, picks)
+    ]
+    groups = [(label, rows) for label, rows in groups if rows]
+    if len(groups) == 1 and groups[0][0] == CELL_GROUP_LABELS[0]:
+        return [(None, groups[0][1])]
+    return groups
+
+
+def _cell_diff_lines(changed, accepted=frozenset(), drafted=False, routed=frozenset()):
+    """The per-cell before/after bullets under `changed_cell_groups`' labels.
 
     The before/after render WHOLE, never through `truncate_cell` (OI-71 defect
     2). A changed cell is the one thing the reader must see entire: clipping it
@@ -3726,25 +3777,9 @@ def _cell_diff_lines(changed, accepted=frozenset(), drafted=False):
     generous cap stays on the CONTEXT surfaces — the anchor Requirement /
     Rationale and the whole-row `_full_row_bullets` dumps — not on the targeted
     diff a signer rules from."""
-    if drafted:
-        groups = [(None, changed)]
-    else:
-        groups = [
-            (
-                "accepted — re-acceptance owed",
-                [c for c in changed if c[0] in accepted],
-            ),
-            (
-                "traced — routes to adjudication",
-                [c for c in changed if c[0] not in accepted],
-            ),
-        ]
-    show_headings = not drafted and all(rows for _label, rows in groups)
     lines = []
-    for label, rows in groups:
-        if not rows:
-            continue
-        if show_headings:
+    for label, rows in changed_cell_groups(changed, accepted, routed, drafted):
+        if label:
             lines.append("_{}_".format(label))
         for cell, b, a in rows:
             lines.append("- **{}**".format(cell))
@@ -3816,13 +3851,21 @@ def sr_chain_drifts(sid, chain, snapshot):
     is "LLR-### has no SR parent", the TC arm is the same pair on `Verifies`,
     and an explicitly EMPTY ref cell is refused outright by the carrier. Those
     are orphan findings, so they GATE under `--strict`, where the retired arm
-    only warned. No successor detector is owed here."""
+    only warned. No successor detector is owed here.
+
+    A MOVED ADJUDICATED LINK SELECTS THE CHAIN TOO (WI-1069), as its second
+    arm: an act leaves a row whose routed traced cell moved at its recorded
+    text until an act names it, so it owes a sitting although its accepted
+    text, the drift arm's whole subject, did not move. A trace cell no
+    adjudicator judges selects nothing (`baseline_snapshot.routed_moved`).
+
+    Implements: SR-178, LLR-484"""
     return any(
-        baseline_snapshot.is_drifted(
-            rel, id_col, row, baseline_snapshot.rows_for(snapshot, rel, id_col)
-        )
+        baseline_snapshot.is_drifted(rel, id_col, row, recorded)
+        or baseline_snapshot.routed_moved(rel, id_col, row, recorded)
         for kind, _rid, row in chain
         for rel, id_col in (SPINE_FILES[_KIND_IX[kind]],)
+        for recorded in (baseline_snapshot.rows_for(snapshot, rel, id_col),)
     )
 
 
@@ -3870,8 +3913,9 @@ def reaccept_model(root, srs, llrs, tcs, snapshot=_UNSET):
     because a brief that selects a literal returns a clean bill forever once
     that literal is retired, at exit 0, with nothing to notice. A row now owes
     an act when it is `Drafted` (a first acceptance is owed) — or when its chain
-    has DRIFTED from `docs/archive/last_accepted/`, which is a property of two
-    files rather than of a word, and which no rename can silence.
+    has DRIFTED from `docs/archive/last_accepted/`, or carries a row whose
+    adjudicated link moved from it (WI-1069), each a property of two files
+    rather than of a word, and which no rename can silence.
 
     THE `Drafted` ARM IS CHAIN-WIDE, NOT SR-ONLY (the OI-61-sitting widening,
     `docs/log.d/2026-08-23-oi61-rule-and-spine-approval.md`). The selector used
@@ -3902,9 +3946,13 @@ def reaccept_model(root, srs, llrs, tcs, snapshot=_UNSET):
     `changed` | `added` | `removed` | `current` | `drafted` (the last: a
     `Drafted` row with no cell diff against the snapshot — it owes only because
     it was never accepted, not because its text moved), `cells` is the
-    `(name, before, after)` triples ORDERED accepted-first, `accepted` is the
+    `(name, before, after)` triples ORDERED accepted-first, then the moved
+    adjudicated links, then the other trace cells, `accepted` is the
     subset of those names §A5.1 rules accepted (so a renderer groups by one
-    membership test rather than re-deriving the split), `full` is the row dict
+    membership test rather than re-deriving the split), `routed` (on a
+    `changed` or `drafted` row) the subset that are adjudicated links (WI-1069;
+    a row whose link alone moved is selected by `sr_chain_drifts`' second arm),
+    `full` is the row dict
     for the states that render whole rows, and `drafted` is whether THIS row
     (independent of `state`) is in the pre-acceptance `Drafted` state — the
     per-row "why" a renderer needs to say "Drafted, never accepted" rather than
@@ -4018,15 +4066,7 @@ def reaccept_model(root, srs, llrs, tcs, snapshot=_UNSET):
                 continue
             rel, id_col = SPINE_FILES[_KIND_IX[kind]]
             split = check_trajectory.split_changed_cells(rel, id_col, before, row)
-            # ACCEPTED FIRST, then traced — the reader's question is "what do I
-            # have to re-bless?", and the §A5.1 split answers it: an accepted
-            # cell owes acceptance, a traced one routes to adjudication and
-            # arms no window (the WI-388 ruling).
-            cells = [
-                (name, split[half][name][0], split[half][name][1])
-                for half in ("accepted", "traced")
-                for name in sorted(split[half])
-            ]
+            cells, routed = _ordered_cells(rel, split)
             # WIDENED: a `Drafted` row present in the snapshot with no cell
             # diff (the snapshot copies every registry wholesale, not only
             # accepted rows — `intake.py snapshot` — so a never-accepted row
@@ -4041,6 +4081,7 @@ def reaccept_model(root, srs, llrs, tcs, snapshot=_UNSET):
                         "state": "changed" if cells else "drafted",
                         "cells": cells,
                         "accepted": frozenset(split["accepted"]),
+                        "routed": routed,
                         "full": row,
                         "drafted": drafted,
                     }
@@ -4461,7 +4502,10 @@ def _entry_lines(entry, srs_by_id):
                 "### {} {}{}".format(row["kind"], row["id"], suffix),
             ]
             out += _cell_diff_lines(
-                row["cells"], row["accepted"], drafted=row.get("drafted", False)
+                row["cells"],
+                row["accepted"],
+                drafted=row.get("drafted", False),
+                routed=row.get("routed", frozenset()),
             )
         elif row["state"] == "removed":
             out += [
@@ -4758,10 +4802,11 @@ def reaccept_lines(root, srs, llrs, tcs):
     walk dies by construction once an accepted row stops flipping on amendment,
     and a snapshot cannot sit after the amendment it is supposed to precede.
 
-    Each changed row renders its ACCEPTED cells first and its TRACED cells
-    after, under their own heading — the capability the split buys a reader:
-    accepted cells owe an acceptance, traced cells route to adjudication and
-    arm no window (§A5.1, the WI-388 ruling).
+    Each changed row renders its ACCEPTED cells first, then its moved
+    adjudicated links, then its other trace cells, under `changed_cell_groups`'
+    labels: accepted cells owe an acceptance, a link goes to a sitting, and the
+    other trace cells arm no window and owe no act (§A5.1, the WI-388 ruling;
+    WI-1069).
 
     Deterministic given the working tree and the snapshot; a generator mode like
     `acceptance_lines` — runs no checks. The markdown RENDERER over `reaccept_model`
@@ -4777,7 +4822,8 @@ def reaccept_lines(root, srs, llrs, tcs):
         "_GENERATED by `trace.py --accept modified` (WI-316) — do not"
         " hand-edit; cite the spine registries, not this rendering. One section"
         " per SR that is itself `Drafted`, has a `Drafted` LLR or TC anywhere"
-        " in its chain, or whose chain has DRIFTED from the accepted snapshot;"
+        " in its chain, or whose chain has DRIFTED from the accepted snapshot or"
+        " carries a moved adjudicated link that goes to a sitting;"
         " each chain row shows only its CHANGED cells, before (the snapshot) vs"
         " after (the working tree), accepted cells first — or, for a `Drafted`"
         " row with no cell diff, its full current content, since it owes only"

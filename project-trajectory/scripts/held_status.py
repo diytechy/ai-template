@@ -349,7 +349,8 @@ _REVIEWS = "docs/reviews"
 MARKED_SPINE = acceptance_record.PARENT_FIRST_CSVS
 HELD_REMEDY = (
     "a held-rung row's acceptance lands from a lane only as a CLARITY "
-    "re-acceptance whose recorded verdict binds the row's accepted text; "
+    "re-acceptance whose recorded verdict binds the row's accepted text and "
+    "adjudicated links; "
     "leave the acceptance to the operator, or re-sit the row and take the act "
     "from that verdict"
 )

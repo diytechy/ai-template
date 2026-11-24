@@ -1016,7 +1016,8 @@ and still live.
 `SR-Refs` is traced and ROUTED (WI-388): "the same shape of pointer as the
 ruled-traced `SN-Refs` / `Verifies`", so re-pointing a top-level row at another
 SR opens no re-accept window and the merge's amendment mint routes it to
-adjudication. `Parent` is ACCEPTED (WI-1027, decisions record maint-wi-1027
+adjudication; until an act names the row, the acceptance model lists it as
+owing a sitting and the amendment brief shows the link (WI-1069). `Parent` is ACCEPTED (WI-1027, decisions record maint-wi-1027
 D-001): which row a child decomposes is what its detail is read against, so a
 re-parent drifts the row and is judged with its whole text.
 

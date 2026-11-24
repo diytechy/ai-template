@@ -5,12 +5,14 @@ A held-rung row's acceptance lands from a lane only as a CLARITY re-acceptance
 bound to the text its verdict judged. Two pieces of that rule need no git and
 are pinned here:
 
-  * THE ROW-TEXT IDENTITY. One digest of a row's accepted text
+  * THE ROW-TEXT IDENTITY. One digest of the text a sitting judges on a row,
+    its accepted cells and its routed links
     (`acceptance_record.accepted_text_digest`), classed by the same cell split
     the amendment comparison uses, and the binding's `rows` cell that records
-    it beside a verdict (`kitlib.sitting`). The digest must ignore what is not
-    accepted text (the id, `Status`, traced cells, an empty cell versus an
-    absent one) and move for what is, or a verdict would bind the wrong thing.
+    it beside a verdict (`kitlib.sitting`). The digest must ignore what no
+    sitting judges (the id, `Status`, the other trace cells, an empty cell
+    versus an absent one) and move for what it does, or a verdict would bind
+    the wrong thing.
   * THE CLAIM PREDICATE (`held_status.held_claims`). Which rows a tree makes an
     acceptance claim on against one parent: a live move into acceptance, or a copy
     entering, moving in its accepted cells or `Status`, or retiring. The cases
@@ -62,19 +64,26 @@ def _sr_row(**cells):
     return row
 
 
-def test_the_digest_ignores_the_id_status_and_traced_cells():
+def test_the_digest_ignores_the_id_status_and_unjudged_trace_cells():
     """Implements: TC-398"""
+    # An adjudicated link (a routed traced cell) is in the identity, because
+    # an act naming the row records it with the row's accepted text (WI-1069);
+    # a trace cell no adjudicator judges is not.
     digest = ar.accepted_text_digest
     base = digest(SR_REL, "SR-ID", _sr_row())
     for cells in (
         {"Status": "Drafted"},
         {"SR-ID": "SR-002"},
         {"Phase": "9"},
-        {"SN-Refs": "SN-002"},
+        {"Hat-Refs": "SECURITY"},
     ):
         assert digest(SR_REL, "SR-ID", _sr_row(**cells)) == base, cells
-    moved = digest(SR_REL, "SR-ID", _sr_row(Requirement="The kit shall add."))
-    assert moved != base
+    for cells in (
+        {"Requirement": "The kit shall add."},
+        {"SN-Refs": "SN-002"},
+        {"Constrains": "IF-001"},
+    ):
+        assert digest(SR_REL, "SR-ID", _sr_row(**cells)) != base, cells
 
 
 _TOML_SR = (

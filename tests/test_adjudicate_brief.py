@@ -764,9 +764,11 @@ def test_the_amendment_brief_carries_the_snapshot_as_its_anchor(tmp_path):
 
 
 def test_only_ACCEPTED_cells_reach_the_judge(tmp_path):
-    # A traced cell is ruled outside acceptance (§A5.1), so asking a judge to rule
-    # "meaning or clarity" on a re-pointed Phase cell asks a question the
-    # ruling already answers. Drive it: move ONLY a traced cell.
+    # A trace cell no adjudicator judges is ruled outside acceptance (§A5.1),
+    # so asking a judge to rule "meaning or clarity" on a moved Phase cell asks
+    # a question the ruling already answers. Drive it: move ONLY such a cell.
+    # (A routed link is shown beside the accepted cells since WI-1069:
+    # `tests/test_amendment_brief_links.py`.)
     repo = _spine_repo(tmp_path)
     baseline_snapshot.copy_live(repo, seed=True)
     srs = repo / "docs" / "requirements" / "system-requirements.csv"
@@ -1311,7 +1313,9 @@ def test_a_scope_token_in_neither_home_refuses_naming_it(tmp_path):
     assert "TC-002" not in why, why
 
 
-def test_a_present_undrifted_scoped_row_still_drops_beside_a_removal(tmp_path):
+def test_a_present_undrifted_scoped_row_is_named_not_shown_beside_a_removal(
+    tmp_path,
+):
     """Implements: TC-161"""
     repo = _removed_tc_repo(tmp_path)
     values, why = ab.amendment_brief.amendment_values(
@@ -1321,6 +1325,11 @@ def test_a_present_undrifted_scoped_row_still_drops_beside_a_removal(tmp_path):
     shown = re.findall(r"^- (\S+) (\S+)", values["rows"], re.M)
     assert shown == [("TC", "TC-002")], values["rows"]
     assert [rid for rid, _d in _JUDGED.findall(values["identity"])] == ["TC-002"]
+    # Not shown is not dropped unnamed (WI-1069): the scope names SR-001.
+    last = values["rows"].splitlines()[-1]
+    assert last == (
+        "Scoped, nothing to judge (not shown; rule no line for them): SR-001."
+    ), values["rows"]
 
 
 def test_an_amended_row_under_two_SRs_is_rendered_once(tmp_path):

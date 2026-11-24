@@ -75,8 +75,10 @@ and a wrong wait leaves a flip owed and reported, never lost. ("Waits", not
 "held": held names the rung below.)
 
 A HELD CLARITY ACT IS BOUND TO THE TEXT ITS VERDICT JUDGED. The binding beside
-the verdict records the digest of each judged row's accepted text
-(`kitlib.sitting.recorded_identities`); a re-accept owed on a held rung is
+the verdict records the digest of each judged row's accepted text and
+adjudicated links (`kitlib.sitting.recorded_identities`; the links since
+WI-1069, so a binding written before then refuses a held row carrying one,
+and that row is re-sat); a re-accept owed on a held rung is
 owed only while the committed row still has that digest
 (`acceptance_record.accepted_text_digest`). A binding with no identity, a
 malformed one, one that does not name the row, or a different digest refuses
@@ -335,7 +337,7 @@ def _unbound_text(row, tier, rid, bound):
     """Why the held re-accept of row `rid` is not bound to its committed text,
     or None: the verdict's binding (`bound`, `(identities, why)`) records no
     identity, does not name the row, or names another digest than the
-    committed row's accepted text has.
+    committed row's accepted text and adjudicated links have.
 
     Implements: SR-178, LLR-359"""
     committed = acceptance_record.accepted_text_digest(tier[0], tier[1], row)
@@ -349,7 +351,7 @@ def _unbound_text(row, tier, rid, bound):
             rid, committed
         )
     if identities[rid] != committed:
-        return "{} is held and its accepted text moved after the verdict: bound {}, committed {}".format(
+        return "{} is held and its judged text (accepted cells and adjudicated links) moved after the verdict: bound {}, committed {}".format(
             rid, identities[rid], committed
         )
     return None
