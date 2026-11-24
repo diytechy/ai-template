@@ -31,7 +31,7 @@ from conftest import (
 )
 from test_parent_first import PAIRS, TIERS, registries
 
-ar = load_script("acceptance_record")
+ar = load_script("landing_rules")
 integrate = load_script("integrate")
 tta = load_script("text_then_act")
 

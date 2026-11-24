@@ -70,7 +70,6 @@ sr_refs = [
   "SR-228",
   "SR-232",
   "SR-241",
-  "SR-246",
   "SR-247",
 ]
 sr_shared_refs = [
@@ -133,7 +132,6 @@ llr_refs = [
   "LLR-288",
   "LLR-299",
   "LLR-310",
-  "LLR-358",
   "LLR-359",
   "LLR-360",
   "LLR-361",
@@ -310,7 +308,6 @@ seam_boundary_refs = [
   "IF-233",
   "IF-242",
   "IF-255",
-  "IF-256",
   "IF-257",
   "IF-258",
   "IF-265",
@@ -318,7 +315,6 @@ seam_boundary_refs = [
   "IF-270",
   "IF-287",
   "IF-290",
-  "IF-308",
   "IF-310",
   "IF-311",
   "IF-312",
@@ -563,6 +559,7 @@ sr_refs = [
   "SR-241",
   "SR-243",
   "SR-244",
+  "SR-246",
 ]
 sr_shared_refs = [
   "SR-031",
@@ -645,6 +642,7 @@ llr_refs = [
   "LLR-354",
   "LLR-355",
   "LLR-356",
+  "LLR-358",
   "LLR-359",
   "LLR-364",
   "LLR-367",
@@ -700,6 +698,7 @@ modules = [
   "project-trajectory/scripts/kitlib/station.py",
   "project-trajectory/scripts/kitlib/verdict.py",
   "project-trajectory/scripts/kitlib/winjob.py",
+  "project-trajectory/scripts/landing_rules.py",
   "project-trajectory/scripts/lane.py",
   "project-trajectory/scripts/migrate_decisions.py",
   "project-trajectory/scripts/observation_cadence.py",

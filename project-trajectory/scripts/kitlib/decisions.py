@@ -43,7 +43,7 @@ coupled to its citing row (OI-102 Q3): the commit that sets an entry
 whose spec cites the entry as `docs/decisions/<run>.toml#D-NNN` (`citation`,
 `citations`, `newly_overruled`, and the coupling itself, `overrule_sync_lines`,
 handed the two trees as readers; the git read is the ruling sync's, in
-`acceptance_record`, which asks it of the same diff). Amending the queued row the decision was scoped to is
+`landing_rules`, which asks it of the same diff). Amending the queued row the decision was scoped to is
 enough; nothing has to be minted. The coupling reads the `operator` key as
 written, and FAILS CLOSED: a record the commit's tree carries but cannot parse
 is refused, since an unreadable verdict is never "no overrule". Who sets the key stays a convention: git

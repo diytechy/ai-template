@@ -225,6 +225,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/acceptance_record.py",
         "scripts/text_then_act.py",
         "scripts/held_status.py",
+        "scripts/landing_rules.py",
         "scripts/agent_session.py",
         "scripts/session_adapters.py",
         "scripts/session_service.py",

@@ -10,7 +10,8 @@ in) and the merge slot of each lane commit (`commit_text_then_act_lines`).
 A separate judgement from the acceptance record's, moved here whole and
 unchanged by WI-892. It reads that module's acceptance-act registries, record
 directory and row reader, and shares `acceptance_record._commit_parents`, the
-ruling sync's parent reader, which stays there as its one home.
+per-commit rules' parent reader, which stays there as its one home. Its
+parent-first rider is `landing_rules`' (WI-1045).
 
 THE LANE-COMMIT WALK is `kitlib.git`'s (`lane_commit_walk`, with the staged
 squash's HEAD..tip step `squash_lines`): each listed lane commit, oldest
@@ -36,10 +37,10 @@ try:
         SNAPSHOT_DIR,
         _commit_parents,
         _spine_rows_at,
-        commit_parent_first_lines,
     )
     from held_status import commit_held_acceptance_lines
     from kitlib import git as _kitgit
+    from landing_rules import commit_parent_first_lines
 except ImportError:  # pragma: no cover - in-process fallback
     import sys
     from pathlib import Path
@@ -52,10 +53,10 @@ except ImportError:  # pragma: no cover - in-process fallback
         SNAPSHOT_DIR,
         _commit_parents,
         _spine_rows_at,
-        commit_parent_first_lines,
     )
     from held_status import commit_held_acceptance_lines
     from kitlib import git as _kitgit
+    from landing_rules import commit_parent_first_lines
 
 # The kit's one `git, or None` read, and a tier's carriers, as the acceptance
 # record aliases them.
@@ -180,7 +181,7 @@ def commit_text_then_act_lines(root, rev):
 # `lane_commit_walk`), each `rule(root, rev) -> lines` judging one commit
 # against its own parents. Text then act is the
 # first rider; the adoption record's rule (WI-969) the second, the
-# parent-first rule (`acceptance_record.commit_parent_first_lines`) the third
+# parent-first rule (`landing_rules.commit_parent_first_lines`) the third
 # and the held-rung lane rule (`held_status.commit_held_acceptance_lines`) the
 # fourth, each carrying its own remedy. The merge slot walks every rider; each
 # hook step's squash path walks only its own rule (`squash_walk`), and the

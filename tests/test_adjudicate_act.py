@@ -31,6 +31,7 @@ from conftest import (
 
 act = load_script("adjudicate_act")
 acceptance_record = load_script("acceptance_record")
+landing_rules = load_script("landing_rules")
 baseline_snapshot = load_script("baseline_snapshot")
 from kitlib import sitting as ksitting  # noqa: E402  (scripts/ is on the path)
 from kitlib import verdict as kverdict  # noqa: E402
@@ -1079,7 +1080,7 @@ def test_a_flip_under_a_returned_parent_waits_and_the_listed_flips_pass_the_pare
     text, why = act.compose_act(repo, VERDICT, WI)
     assert why is None and LLR_003_WAITS in text, why
     _take_listed(repo, acts, values)
-    assert acceptance_record.commit_parent_first_lines(repo, "HEAD") == []
+    assert landing_rules.commit_parent_first_lines(repo, "HEAD") == []
 
 
 def test_a_parent_accepted_in_the_same_act_lets_its_child_be_listed(tmp_path):
@@ -1100,7 +1101,7 @@ def test_a_parent_accepted_in_the_same_act_lets_its_child_be_listed(tmp_path):
     values, why = act.act_values(repo, VERDICT, WI)
     assert why is None and "Not in this act" not in values["acceptance_act"], why
     _take_listed(repo, acts, values)
-    assert acceptance_record.commit_parent_first_lines(repo, "HEAD") == []
+    assert landing_rules.commit_parent_first_lines(repo, "HEAD") == []
     assert act.left_owed(repo, VERDICT, "HEAD") is None
 
 
@@ -1183,7 +1184,7 @@ def test_a_child_design_row_waits_on_its_returned_parent_design_row(tmp_path):
     waits = "LLR-004 ({}) waiting on LLR-003 (Drafted)".format(LLR_REL)
     assert waits in values["acceptance_act"], values["acceptance_act"]
     _take_listed(repo, acts, values)
-    assert acceptance_record.commit_parent_first_lines(repo, "HEAD") == []
+    assert landing_rules.commit_parent_first_lines(repo, "HEAD") == []
 
 
 def test_a_verdict_whose_only_remaining_act_waits_is_refused_naming_each_row_and_parent(
@@ -1254,6 +1255,6 @@ def test_the_wait_is_read_from_the_parent_first_rules_one_predicate():
     # no second statement of the rule's edges in the act assembler.
     source = inspect.getsource(act)
     assert "kspine.parent_first_findings(" in source
-    assert "acceptance_record.parent_first_tiers(" in source
+    assert "landing_rules.parent_first_tiers(" in source
     for edge in ("PARENT_EDGES", '"SR-Refs"', '"Parent"', '"Verifies"', '"SN-Refs"'):
         assert edge not in source, edge

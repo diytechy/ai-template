@@ -24,7 +24,7 @@ Five triggers, plus the drafts-not-mints arm:
       traced cells are silent by ruling. A record the merged range already
       settled (an act it added re-accepts the row, and the row equals its
       accepted-snapshot copy) is dropped through
-      `acceptance_record.settled_amendments`. One `adjudication` row per merge,
+      `landing_rules.settled_amendments`. One `adjudication` row per merge,
       listing each changed row, cell and before/after — the long form in the
       `## Context` body section, because R-A forbids a filled Deliverable on
       an open row.
@@ -65,8 +65,8 @@ Five triggers, plus the drafts-not-mints arm:
   (f) **a held row a sitting ruled MEANING** — a recorded verdict in the
       merged range whose latest amendment ruling on a row is MEANING, on a
       rung the dial holds, with the row differing from its snapshot copy
-      (`acceptance_record.unanchored_rows`) and still at the text the verdict
-      bound (`acceptance_record.text_as_bound`): the act cannot land from a
+      (`landing_rules.unanchored_rows`) and still at the text the verdict
+      bound (`landing_rules.text_as_bound`): the act cannot land from a
       lane, so one queued operator row per registry citing one pending open
       item, and those rows leave the amendment row.
 
@@ -187,6 +187,7 @@ import bookkeeping
 import census
 import consolidate
 import hats
+import landing_rules
 import record_rows
 import rejudge
 import schedule
@@ -708,7 +709,7 @@ def _routed_amendments(root, before, after):
     ruling. A record the merged range already settled (re-accepted by an act
     it added and equal to its snapshot copy at `after`) is dropped, and a
     ledger or copy that cannot be read or does not parse refuses the mint:
-    `acceptance_record.settled_amendments` decides both.
+    `landing_rules.settled_amendments` decides both.
 
     Implements: SR-178, LLR-364"""
     routed = []
@@ -726,7 +727,7 @@ def _routed_amendments(root, before, after):
         }
         if rec["accepted"] or routed_cells:
             routed.append(dict(rec, routed=routed_cells))
-    settled, refusal = acceptance_record.settled_amendments(
+    settled, refusal = landing_rules.settled_amendments(
         root, before, after, routed, ROUTED_TRACED_CELLS
     )
     if refusal:
@@ -940,7 +941,7 @@ def _held_act_drafts(root, before, after):
     Implements: SR-174, LLR-153"""
     ruled = _latest_rulings(root, before, after)
     meaning = {rid: path for rid, (word, path) in ruled.items() if word == "MEANING"}
-    unanchored, refusal = acceptance_record.unanchored_rows(
+    unanchored, refusal = landing_rules.unanchored_rows(
         root, after, meaning, ROUTED_TRACED_CELLS
     )
     if refusal:
@@ -952,7 +953,7 @@ def _held_act_drafts(root, before, after):
         return [], (), refusal
     docs = Path(root) / "docs"
     by_registry = {}
-    for rid in acceptance_record.text_as_bound(
+    for rid in landing_rules.text_as_bound(
         root, after, {rid: meaning[rid] for rid in unanchored}
     ):
         if ac.operator_accepts_spine(docs, unanchored[rid]):

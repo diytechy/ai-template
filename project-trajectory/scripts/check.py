@@ -2018,9 +2018,9 @@ def _ruling_sync_refusal(root="."):
     """
     if _git_out(root, ["rev-parse", "--is-inside-work-tree"]) is None:
         return None
-    import acceptance_record  # a leaf reader of two git trees, sibling of this one
+    import landing_rules  # the landing's two-tree rules, a sibling of this one
 
-    lines = acceptance_record.staged_ruling_sync_lines(root)
+    lines = landing_rules.staged_ruling_sync_lines(root)
     return "; ".join(lines) if lines else None
 
 
@@ -2079,9 +2079,9 @@ def _parent_first_refusal(root="."):
     """
     if _git_out(root, ["rev-parse", "--is-inside-work-tree"]) is None:
         return None
-    import acceptance_record  # a leaf reader of two git trees, sibling of this one
+    import landing_rules  # the landing's two-tree rules, a sibling of this one
 
-    lines = acceptance_record.staged_parent_first_lines(root)
+    lines = landing_rules.staged_parent_first_lines(root)
     return "; ".join(lines) if lines else None
 
 

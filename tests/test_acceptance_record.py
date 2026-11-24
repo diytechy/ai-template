@@ -194,6 +194,105 @@ def test_held_status_owns_IF_196():
     }
 
 
+# The definitions WI-1045 moved, verbatim, to `landing_rules`: the ruling sync,
+# the parent-first judgement and the trunk mint's acceptance arms. EXPLICIT for
+# the reason `MOVED` is: a derived list would shrink with what it guards.
+LANDING_RULES = (
+    "OPEN_ITEMS_REGISTRY",
+    "WORK_DIR",
+    "ARCHIVE_WORK_DIR",
+    "_PENDING",
+    "_git_paths",
+    "_show",
+    "_tree_specs",
+    "_registry_states",
+    "_ruled_items",
+    "_citing_rows",
+    "_sync_gap",
+    "_raw_done_when",
+    "ruling_sync_lines",
+    "_judged_lines",
+    "_sync_lines",
+    "staged_ruling_sync_lines",
+    "commit_ruling_sync_lines",
+    "parent_first_tiers",
+    "_parent_first_names",
+    "_status_moved",
+    "_parent_statuses",
+    "parent_first_lines",
+    "staged_parent_first_lines",
+    "commit_parent_first_lines",
+    "_latest_reaccept",
+    "_no_later_writer",
+    "_row_settled",
+    "_routed_unmoved",
+    "_tier_sides",
+    "_settled_row",
+    "settled_amendments",
+    "unanchored_rows",
+    "text_as_bound",
+)
+
+
+def _defined(tree):
+    """The names a module defines at module scope: functions and assignments."""
+    return {
+        getattr(node, "name", None) or getattr(node.targets[0], "id", None)
+        for node in tree.body
+        if isinstance(node, (ast.FunctionDef, ast.Assign))
+    }
+
+
+def _imported_from(tree, module):
+    """The names a module imports from `module`, anywhere in it."""
+    return {
+        alias.name
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ImportFrom) and node.module == module
+        for alias in node.names
+    }
+
+
+def _rule_calls(tree):
+    """The bare names a module's functions call."""
+    return {
+        node.func.id
+        for top in tree.body
+        if isinstance(top, ast.FunctionDef)
+        for node in ast.walk(top)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+    }
+
+
+def test_landing_rules_own_IF_308_and_the_rules_that_moved():
+    """The landing rules moved out whole (WI-1045), so IF-308 has one home.
+
+    `landing_rules` declares CMP-008 and the seam, and carries its contract
+    body; this module declares neither, since a body left in both docstrings
+    would be two owners of one row. Every moved name is defined there and none
+    here, so the move was a cut, not a copy, and left no second name behind.
+    The import runs one way. The judged-text identity stays one function: the
+    rules import it from here and define none. And the rules, like this
+    module's, read two git trees and never the working tree.
+    """
+    tree = ast.parse((SCRIPTS / "landing_rules.py").read_text(encoding="utf-8"))
+    doc = ast.get_docstring(tree)
+    own_doc = ast.get_docstring(TREE)
+    assert "Component: CMP-008" in doc.splitlines()
+    assert "Contracts: IF-308 " in doc
+    assert "Contract IF-308:" in doc
+    declared = next(ln for ln in own_doc.splitlines() if ln.startswith("Contracts:"))
+    assert "IF-308" not in declared
+    assert "Contract IF-308:" not in own_doc
+    assert "landing_rules" not in _imported_roots()
+    moved = set(LANDING_RULES)
+    assert moved <= _defined(tree), sorted(moved - _defined(tree))
+    assert not moved & _defined(TREE), sorted(moved & _defined(TREE))
+    assert "accepted_text_digest" not in _defined(tree)
+    assert "accepted_text_digest" in _imported_from(tree, "acceptance_record")
+    assert not {"open", "Path"} & _rule_calls(tree)
+
+
 def test_the_checker_re_exports_the_same_objects_not_copies():
     """Identity, not equality — a copy is how a second opinion starts.
 

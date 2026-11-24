@@ -522,7 +522,7 @@ def test_each_spec_view_keeps_its_shape_over_one_tree(tmp_path):
 
     Implements: TC-383
     """
-    acceptance = load_script("acceptance_record")
+    acceptance = load_script("landing_rules")
     root = tmp_path / "repo"
     root.mkdir()
     _git(root, "init", "-q")

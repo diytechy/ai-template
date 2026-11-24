@@ -12876,6 +12876,50 @@ adjudicator drains.
 **Kit-owned files — overwrite:** `scripts/adjudicate_brief.py`,
 `scripts/coordinator_adjudicate.py`.
 
+### The landing rules move out of the acceptance record into their own module [since 9e8eb6e57]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** The rules the landing runs on top of the acceptance record
+move, unchanged, out of `scripts/acceptance_record.py` into a new
+`scripts/landing_rules.py`. These 33 names move, and `acceptance_record` no
+longer defines any of them:
+
+- the ruling sync (17): the constants `OPEN_ITEMS_REGISTRY`, `WORK_DIR`,
+  `ARCHIVE_WORK_DIR` and `_PENDING`; the git aliases `_git_paths` and
+  `_show`; and `_tree_specs`, `_registry_states`, `_ruled_items`,
+  `_citing_rows`, `_sync_gap`, `_raw_done_when`, `ruling_sync_lines`,
+  `_judged_lines`, `_sync_lines`, `staged_ruling_sync_lines` and
+  `commit_ruling_sync_lines`;
+- the parent-first judgement (7): `parent_first_tiers`,
+  `_parent_first_names`, `_status_moved`, `_parent_statuses`,
+  `parent_first_lines`, `staged_parent_first_lines` and
+  `commit_parent_first_lines`;
+- the trunk mint's settled-amendment filter and held-act arms (9):
+  `_latest_reaccept`, `_no_later_writer`, `_row_settled`, `_routed_unmoved`,
+  `_tier_sides`, `_settled_row`, `settled_amendments`, `unanchored_rows` and
+  `text_as_bound`.
+
+Every finding, refusal, its wording and its order are unchanged. `acceptance_record` keeps
+the two-tree comparison, the mirror rules, the merge slot's acceptance-act
+refusal, the judged-text identity (`accepted_text_digest`) and the readers
+the new module calls. `integrate.py`, `intake.py` and `text_then_act.py`
+import the new module unguarded, so a scaffold without it cannot merge, mint
+or run the hook's text-then-act step.
+
+**What to do.** Copy the new file in with the overwrite. There is no
+compatibility shim: `acceptance_record` keeps no second name for any of the
+33, so a script or test of your project that imports one of them from
+`acceptance_record` (or reads it as an attribute of that module, or
+monkeypatches it there) fails until it imports it from `landing_rules`
+instead. No registry or setting changes.
+
+**Kit-owned files — overwrite:** `scripts/landing_rules.py` (new),
+`scripts/acceptance_record.py`, `scripts/check.py`, `scripts/integrate.py`,
+`scripts/intake.py`, `scripts/text_then_act.py`, `scripts/adjudicate_act.py`,
+`scripts/kitlib/bootstrap_manifest.py`, `scripts/kitlib/git.py`,
+`scripts/kitlib/decisions.py`, `README.md`.
+
 **Project-owned files — edit:** none.
 
 ## 5. Promotion: when this pack stops being prose
