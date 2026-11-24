@@ -61,3 +61,4 @@ acts owed.
 <!-- fig: cmd="python -m pytest -q -p no:randomly tests/test_judged_identity_lines.py --basetemp D:/rt1072/red|green; python -m pytest -q -n auto -p no:randomly <the 11 modules> --basetemp D:/rt1072/run" rev="57f1194e2 plus the uncommitted tests (red) and 0bf1310a8's tree, 2026-11-24" -->
 - Deferred open items: none — the operator owes no decision from this row;
   the amended rows go to the next sitting as owed acts.
+- **Review round 2** (narrow): Sol and Hydrogen APPROVE findings=0.

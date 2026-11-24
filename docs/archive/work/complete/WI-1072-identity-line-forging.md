@@ -253,6 +253,8 @@ OK. `adjudicate_brief.py` is at 892 SLOC.
   and that section's heading. The unfiltered suite is the coordinator's,
   before the merge.
 
+Round 2 (narrow, over `57f1194e2..562f5f572`, round 1's findings and the coordinator's rulings prepended): OpenAI Sol APPROVE findings=0; Gemini Hydrogen APPROVE findings=0.
+
 ## Context
 
 Filed on trunk on 2026-11-24 by the queue drill's coordinator, from
