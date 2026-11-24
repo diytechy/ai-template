@@ -3104,7 +3104,7 @@ title = "A design row hangs from one parent row or from its system requirements,
 detail = "A design row's parent cell, when present, names one other design row: the row is then a child and names no system requirement, its requirements being read up its parent chain; a row with no parent cell is top-level and names at least one system requirement. The strict check reports each of these, naming the row, whatever its status: a top-level row naming no system requirement; a child naming one; a parent cell naming anything but exactly one live design row, an example row not being live; each row on a cycle of parent links, naming the cycle's rows; and each row whose parent chain reaches such a parent cell or such a cycle, naming the row where the chain breaks."
 rationale = "A child naming its own system requirements would give its parentage two homes that can disagree, so the chain is the one home. A row on a cycle or under a missing parent reaches no requirement, so every derivation starting from a requirement would drop it and its test cases; reporting it at the strict check keeps that loss visible."
 test_refs = "TC-560"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [design.LLR-481]
@@ -3113,7 +3113,7 @@ title = "One walk over the requirement tree answers both directions, below every
 detail = "One derivation relates system requirements and design rows. Down, from a system requirement or a design row, it returns every design row below it, each once, in registry order: the top-level rows naming the requirement, or the rows whose parent cell names the design row, and every row below those. Up, from a design row, it returns the system requirements its chain reaches: a top-level row's own, a child's those of the top-level row its parent chain ends at, and none for a row whose chain meets a missing parent or a cycle. It answers every input without raising and without looping, following each chain until a top-level row, a missing parent or a row the chain has already passed. The checker's rules and reports and the stage derivation take the relation from it, so a row below a top-level row counts wherever a top-level row counts."
 rationale = "A reader taking a design row's requirements from its own cell would lose every child, and two copies of the walk could disagree about which rows a requirement holds; one walk below its readers keeps a child's test cases in every derivation that starts from a requirement."
 test_refs = "TC-561; TC-567"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [design.LLR-482]
@@ -3122,7 +3122,7 @@ title = "The state view draws a child design row inside its parent"
 detail = "In the state view's requirement decomposition, a child design row is drawn inside its parent row's span, one column further in than its parent; the test-case column follows the deepest design column, so a decomposition with no child row keeps one design column."
 rationale = "A child drawn beside its parent would read as a second decomposition of the requirement; drawn inside it, the view shows which row the child refines, as the component view shows a part inside its whole."
 test_refs = "TC-562"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [design.LLR-483]
@@ -3131,5 +3131,5 @@ title = "The required-field check asks a top-level design row, not a child, for 
 detail = "The required-field check asks a design row for its system-requirement references only when the row names no parent row: a child, whose requirements are read up its parent chain, is not reported for leaving them empty. Every other required cell of a design row is asked of a child as of a top-level row."
 rationale = "A child stating its own requirements would give its parentage a second home, so the one cell the check asks of every top-level row is one a child leaves empty; the rest of a child's row is held to the same cells, since it is a design row like any other."
 test_refs = "TC-568"
-status = "Drafted"
+status = "Accepted"
 phase = 6
