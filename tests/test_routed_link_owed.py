@@ -158,3 +158,10 @@ def test_both_surfaces_label_the_three_groups_alike(tmp_path, surface):
     text = _brief(root) if surface == "brief" else gen_open_items.render(root)
     positions = [text.index(label) for label in (fx.REACCEPT, fx.SITTING, fx.NO_ACT)]
     assert positions == sorted(positions), positions
+    # The rendered row's moved phase cell, before and after, sits under the
+    # label owing no act.
+    under = {
+        "brief": "_{}_\n- **Phase**\n  - before: 1\n  - after: 2",
+        "page": '{}</div><div class="cellname">Phase ',
+    }[surface].format(fx.NO_ACT)
+    assert under in text, text[positions[-1] - 200 : positions[-1] + 200]

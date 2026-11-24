@@ -1,5 +1,7 @@
 # WI-1071 plan, revision 1: the eighth sitting's verdict answered
 
+**Approved by the coordinator 2026-11-24, D1 to D13 confirmed.**
+
 Written in the worktree `D:/ai-template-wt-wi1071`, branch `maint/wi-1071`,
 cut from `refactor_again` at `ec188f984`. `planmode = "single"`: this commit
 carries the plan alone, and nothing else changes until the coordinator's

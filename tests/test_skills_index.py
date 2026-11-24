@@ -110,6 +110,36 @@ def test_check_refuses_a_description_under_the_floor(tmp_path, capsys, monkeypat
     err = capsys.readouterr().err
     assert "terse" in err and "ample" not in err
     assert str(gen.DESCRIPTION_FLOOR) in err
+    # One line marked SHORT per short skill, naming it, its length ("Use it."
+    # is 7 characters) and the floor.
+    (line,) = [ln for ln in err.splitlines() if "SHORT" in ln]
+    assert "SHORT - terse:" in line
+    assert " 7 characters" in line and str(gen.DESCRIPTION_FLOOR) in line
+
+
+def test_the_floor_is_checked_before_the_index_is_compared(
+    tmp_path, capsys, monkeypatch
+):
+    """Implements: TC-291"""
+    # With no index written the index is stale too, yet the check refuses on
+    # the floor alone: it applies the floor first and exits before comparing.
+    gen = load_script("gen_skills_index")
+    skills = tmp_path / "skills"
+    (skills / "terse").mkdir(parents=True)
+    (skills / "terse" / "SKILL.md").write_text(
+        "---\nname: terse\ndescription: Use it.\n---\nbody\n", encoding="utf-8"
+    )
+    monkeypatch.setattr(
+        "sys.argv", ["gen_skills_index.py", "--skills", str(skills), "--check"]
+    )
+    try:
+        gen.main()
+        assert False, "expected --check to refuse the short description"
+    except SystemExit as e:
+        assert e.code == 1
+    err = capsys.readouterr().err
+    assert "SHORT - terse:" in err
+    assert "STALE" not in err, err
 
 
 def test_every_shipped_description_clears_the_floor():

@@ -10,6 +10,8 @@ free for non-adopters (placeholder-only registries are vacuous; [checks] okf_exp
 Implements: TC-042
 """
 
+import json
+
 from conftest import SCRIPTS, make_minimal_project, run_py, set_process_key
 
 
@@ -97,6 +99,85 @@ def test_opt_out_silences(scaffold):
     set_process_key(scaffold, "checks", "okf_export", False)
     proc = okf(scaffold, "--check")
     assert proc.returncode == 0 and "off" in proc.stdout
+
+
+def _edit_sr_registry(root):
+    srs = root / "docs" / "requirements" / "system-requirements.csv"
+    srs.write_text(
+        srs.read_text(encoding="utf-8").replace("Addition", "Summation"),
+        encoding="utf-8",
+    )
+
+
+def test_front_matter_scalars_are_json_strings(scaffold):
+    # Each front-matter value is a JSON string, which YAML reads as a scalar:
+    # a cell holding a double quote, a backslash and a non-ASCII letter reads
+    # back from its line through a JSON parser, escapes and all.
+    make_minimal_project(scaffold)
+    title = 'Adds "two" a\\b café'
+    srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
+    srs.write_text(
+        srs.read_text(encoding="utf-8").replace(
+            "SR-001,Addition,", 'SR-001,"Adds ""two"" a\\b café",'
+        ),
+        encoding="utf-8",
+    )
+    assert okf(scaffold).returncode == 0
+    sr = (bundle(scaffold) / "system-requirements" / "SR-001.md").read_text(
+        encoding="utf-8"
+    )
+    (line,) = [ln for ln in sr.splitlines() if ln.startswith("title: ")]
+    assert json.loads(line[len("title: ") :]) == title
+    assert '\\"two\\"' in line and "\\\\" in line and "\\u00e9" in line
+
+
+def test_check_trips_on_a_guide_edit_and_a_missing_bundle_file(scaffold):
+    # The freshness check fails after an edit to a guide document's first
+    # paragraph and on a deleted bundle file, naming each, and passes again
+    # after regeneration.
+    make_minimal_project(scaffold)
+    assert okf(scaffold, "--check").returncode == 0
+    flows = scaffold / "docs" / "runtime-flows.md"
+    first_prose = next(
+        ln.strip()
+        for ln in flows.read_text(encoding="utf-8").splitlines()
+        if ln.strip() and not ln.startswith(("#", "|", "<!--", "-", ">", "`"))
+    )
+    flows.write_text(
+        flows.read_text(encoding="utf-8").replace(
+            first_prose, first_prose + " Edited.", 1
+        ),
+        encoding="utf-8",
+    )
+    stale = okf(scaffold, "--check")
+    assert stale.returncode == 1, stale.stdout + stale.stderr
+    assert "STALE - docs/okf/process-guides/runtime-flows.md" in stale.stderr
+    assert okf(scaffold).returncode == 0
+    assert okf(scaffold, "--check").returncode == 0
+    (bundle(scaffold) / "system-requirements" / "SR-001.md").unlink()
+    missing = okf(scaffold, "--check")
+    assert missing.returncode == 1, missing.stdout + missing.stderr
+    assert "STALE - docs/okf/system-requirements/SR-001.md" in missing.stderr
+    assert okf(scaffold).returncode == 0
+    assert okf(scaffold, "--check").returncode == 0
+
+
+def test_the_legacy_opt_out_file_silences_only_with_no_declared_choice(scaffold):
+    # With no bundle choice declared in the process settings, the legacy
+    # one-word file reading off silences even a stale bundle; a declared
+    # choice overrides that file.
+    make_minimal_project(scaffold)
+    policy = scaffold / "docs" / "process.toml"
+    text = policy.read_text(encoding="utf-8")
+    assert text.count("\nokf_export = true\n") == 1, "the premise: one declaration"
+    policy.write_text(text.replace("\nokf_export = true\n", "\n"), encoding="utf-8")
+    (scaffold / "docs" / "okf-export").write_text("off\n", encoding="utf-8")
+    _edit_sr_registry(scaffold)
+    silenced = okf(scaffold, "--check")
+    assert silenced.returncode == 0 and "off" in silenced.stdout, silenced.stdout
+    set_process_key(scaffold, "checks", "okf_export", True)
+    declared = okf(scaffold, "--check")
+    assert declared.returncode == 1 and "STALE" in declared.stderr
 
 
 def test_process_guides_emit_with_derived_summaries(scaffold):

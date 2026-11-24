@@ -350,12 +350,16 @@ def test_the_dials_are_declared_here_and_in_the_template():
     assert guard.guard_config(ROOT) == guard.GuardConfig(50, 1000000)
 
 
-def test_a_malformed_threshold_leaves_the_guard_off(tmp_path):
+@pytest.mark.parametrize("threshold", ['"half"', "-5", "150"])
+def test_a_malformed_threshold_leaves_the_guard_off(tmp_path, threshold):
     """Implements: TC-317"""
+    # A wrong-typed, a negative and an over-100 threshold each read as off.
     root = tmp_path / "r"
     (root / "docs").mkdir(parents=True)
     (root / "docs" / "process.toml").write_text(
-        '[coordinator]\ncontext_guard_pct = "half"\ncontext_window_tokens = -1\n',
+        "[coordinator]\ncontext_guard_pct = {}\ncontext_window_tokens = -1\n".format(
+            threshold
+        ),
         encoding="utf-8",
     )
     assert guard.guard_config(root) == guard.GuardConfig(0, guard.DEFAULT_WINDOW)
@@ -411,7 +415,7 @@ def test_a_non_holders_claim_refuses_naming_the_holder_and_the_release(root, tx)
 
 
 def test_a_claim_names_its_caller_by_claude_code_session_id(root, tx):
-    """Implements: TC-316"""
+    """Implements: TC-533"""
     # The literal key the agent CLI exports, never guard.SESSION_ENV, so a
     # renamed constant fails here.
     held(root, tx)

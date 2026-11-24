@@ -155,6 +155,46 @@ def test_list_on_empty_run_is_empty_and_exit_0(tmp_path):
     assert proc.stdout == ""
 
 
+def test_the_run_section_reads_values_literally_and_keeps_a_names_case(tmp_path):
+    """Implements: TC-047"""
+    # No interpolation: a percent sign in a value is literal, even one that
+    # spells an interpolation reference. A name keeps its case, and the launch
+    # matches that exact spelling.
+    (tmp_path / "echo_args.py").write_text(ECHO_ARGS, encoding="utf-8")
+    _write_stack(
+        tmp_path,
+        "Serve = {py} echo_args.py served\nServe.desc = 100% of %(home)s\n".format(
+            py=PY
+        ),
+    )
+    listed = _run(["--list"], tmp_path)
+    assert listed.returncode == 0, listed.stderr
+    assert listed.stdout == "Serve\t100% of %(home)s\n"
+    launched = _run(["Serve"], tmp_path)
+    assert launched.returncode == 0, launched.stderr
+    args = (tmp_path / "args.txt").read_text(encoding="utf-8").splitlines()
+    assert args == ["served"]
+    assert _run(["serve"], tmp_path).returncode == 2
+
+
+def test_an_orphan_description_and_an_empty_command_are_dropped(tmp_path):
+    """Implements: TC-047"""
+    # A description row naming no command, and a command with an empty value,
+    # are neither listed nor launchable.
+    (tmp_path / "echo_args.py").write_text(ECHO_ARGS, encoding="utf-8")
+    _write_stack(
+        tmp_path,
+        "serve = {py} echo_args.py served\n"
+        "ghost.desc = a description with no command\n"
+        "blank =\n".format(py=PY),
+    )
+    listed = _run(["--list"], tmp_path)
+    assert listed.returncode == 0, listed.stderr
+    assert listed.stdout == "serve\t\n"
+    for name in ("ghost", "blank"):
+        assert _run([name], tmp_path).returncode == 2, name
+
+
 def test_shell_quoting_sanity(tmp_path):
     # A declared command with a quoted, space-bearing argument must reach the
     # program as one argv element on both cmd.exe and POSIX sh (shell=True).
