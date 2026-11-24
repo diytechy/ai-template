@@ -39,6 +39,7 @@ holds the per-item record, the approval, the measure and the acts owed.
   coordinator's, before the merge.
 
 <!-- fig: cmd="python -m pytest -q -n auto -p no:cacheprovider --basetemp <scratch> <the 42 modules>; scripts/check_smoke_budget.py --mode warn; scripts/coordinator/compose_lane.py WI-1068 combined <the 28 owed tokens> ..." rev="maint/wi-1070 at dda7a821f (modules, measure) and 674492855 (smoke steps), 2026-11-24" -->
+- **Review round 1:** Sol and Hydrogen APPROVE findings=0; the import window's re-stamp confirmed.
 - Deferred open items: none — the operator owes no decision from this row;
   the amended rows go to the next sitting as owed acts, and the coordinator
   filed the verbatim-cell identity finding (the plan's D12) as its own row.

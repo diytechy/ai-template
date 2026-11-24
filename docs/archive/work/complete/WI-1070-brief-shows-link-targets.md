@@ -204,6 +204,8 @@ sitting that re-judges them is filed when this row and WI-1071 land.
   uses 'such as'` (LLR-484 was accepted at the eighth sitting's act). Shown
   on an export of `ec188f984` with no change of this branch.
 
+**Review.** Round 1 over `ec188f984..310f85701` (Sol the whole diff, Hydrogen the prose with each amended row's accepted text): OpenAI Sol APPROVE findings=0; Gemini Hydrogen APPROVE findings=0. The coordinator confirmed the deferred-import window's re-stamp 44 -> 46 (both reviewers were asked; neither objected). LLR-484's `trace.py --strict` finding was fixed on trunk (`855b4388f`) and resolves at the merge; the verbatim-cell identity finding is WI-1072.
+
 ## Context
 
 Filed on trunk on 2026-11-24 by the queue drill's coordinator, to answer
