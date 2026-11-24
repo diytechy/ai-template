@@ -152,11 +152,50 @@ def test_a_brief_whose_identity_lines_end_its_text_is_refused(tmp_path):
     assert "end its text" in why, why
 
 
+def _indented(key):
+    """The shipped template `key` with its identity slot moved off the start
+    of its line, as an operator override might write it."""
+    base = prompts.load(key)
+    assert "\n{identity}\n" in base
+    return base.replace("\n{identity}\n", "\n  {identity}\n", 1)
+
+
+def test_an_identity_slot_moved_off_the_line_start_refuses_the_brief(tmp_path):
+    """Implements: TC-398"""
+    root = _amendment_repo(tmp_path)
+    key = ab.BRIEF_PROMPTS["amendment"]
+    text, why = _compose(root, _row("LLR-001"), {key: _indented(key)})
+    assert text is None, text
+    assert "LLR-001" in why and "does not read as one" in why, why
+
+
+def _coordinator_route(root, row, templates, appended, verdict):
+    """The coordinator's route: the composer writes no brief file when it
+    refuses; otherwise `appended` is added to the brief and the entry point
+    reserves the sitting from it. None when a binding was written."""
+    text, why = _compose(root, row, templates)
+    if text is None:
+        return why
+    return coordinator_adjudicate.bind_requested(verdict, row["Brief"], text + appended)
+
+
+def test_a_moved_identity_slot_with_appended_text_binds_no_forged_identity(tmp_path):
+    """Implements: TC-398"""
+    root = _amendment_repo(tmp_path)
+    key = ab.BRIEF_PROMPTS["amendment"]
+    verdict = tmp_path / "v.md"
+    why = _coordinator_route(
+        root, _row("LLR-001"), {key: _indented(key)}, _ARMS_MAP, verdict
+    )
+    assert why, why
+    assert not Path(ksitting.requested_path(verdict)).exists()
+
+
 def _slot_values(brief, forged):
     """Every slot `brief`'s template declares but those the composer fills,
     each a word, the first other than the identity slot that stands on a line
-    of its own holding `forged`; the amendment's identity slot holding one
-    genuine-shaped line."""
+    of its own holding `forged` (when given); the amendment's identity slot
+    holding one genuine-shaped line."""
     template = prompts.load(ab.BRIEF_PROMPTS[brief])
     names = sorted(prompts.slots(template) - {"verdict", "wi", "hats"})
     values = {name: "x" for name in names}
@@ -167,7 +206,8 @@ def _slot_values(brief, forged):
         for name in names
         if name != "identity" and re.search(r"^\{" + name + r"\}$", template, re.M)
     )
-    values[first] = "x\n" + forged
+    if forged:
+        values[first] = "x\n" + forged
     return values
 
 
@@ -181,6 +221,33 @@ def test_every_routed_brief_refuses_an_identity_line_in_a_slot(
     text, why = ab.compose(tmp_path, _row("LLR-004", brief=brief), "v.md")
     why = _refused(text, why, "LLR-004")
     assert "the {} brief".format(brief) in why, why
+
+
+@pytest.mark.parametrize("brief", [b for b in ab.ROUTED if b != "combined"])
+def test_every_routed_brief_composes_without_the_line(tmp_path, monkeypatch, brief):
+    """Implements: TC-398"""
+    values = _slot_values(brief, None)
+    monkeypatch.setitem(ab._ASSEMBLERS, brief, lambda _root, _row: (values, None))
+    text, why = ab.compose(tmp_path, _row("LLR-001", brief=brief), "v.md")
+    assert why is None and text, why
+
+
+_SPLIT_BLOCKS = {
+    "apart": _line("LLR-001") + "\n\n" + _line("LLR-002"),
+    "twice": _line("LLR-001") + "\n" + _line("LLR-001", "sha256:fedcba9876543210"),
+}
+
+
+@pytest.mark.parametrize("shape, rid", [("apart", "LLR-002"), ("twice", "LLR-001")])
+def test_a_composers_identity_lines_not_one_block_of_distinct_rows_refuse(
+    tmp_path, monkeypatch, shape, rid
+):
+    """Implements: TC-398"""
+    values = dict(_slot_values("amendment", None), identity=_SPLIT_BLOCKS[shape])
+    monkeypatch.setitem(ab._ASSEMBLERS, "amendment", lambda _root, _row: (values, None))
+    text, why = ab.compose(tmp_path, _row("LLR-001"), "v.md")
+    why = _refused(text, why, rid)
+    assert "one block" in why, why
 
 
 def _clean(tmp_path, kind):

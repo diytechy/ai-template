@@ -12819,8 +12819,12 @@ composition when a line of its composed text has the shape of a judged-text
 identity line (`JUDGED-TEXT: <row id> <digest>`) and is not one its own
 identity section wrote: a line of a registry cell shown verbatim, of a later
 section of a combined sitting (a first-acceptance row's cell, a Done-when
-change's context), of the perspectives or of a template override. A brief
-whose identity lines end its text is refused too. The refusal names the row
+change's context), of the perspectives or of a template override. The
+composed text must read as exactly the identity lines its composer wrote, as
+one block naming each row once: a line the composer wrote that a template
+override moved off the start of its line (so the reader skips it) refuses
+the brief, and so do lines split apart or naming a row twice. A brief whose
+identity lines end its text is refused too. The refusal names the row
 id the line names and where it sits: its line, the row whose shown text
 holds it, and the heading above it (in a combined sitting, the section).
 Reserving a sitting from a brief file now refuses, writing no binding, a
@@ -12838,8 +12842,14 @@ holds such a line at the start of a line, or you append text holding one to
 a composed brief: the sitting is then held (the loop stops asking for an
 operator with the reason; a composer prints it and writes no brief; the
 coordinator's command refuses before launch). Reword that line, for example
-by indenting it or quoting it inline, and compose again. Bindings written
-before the upgrade read as before. No template changes, so no retained
+by indenting it or quoting it inline, and compose again. If you override an
+adjudication template (the amendment brief's, or any whose sections a
+combined sitting composes), keep closing text after its `{identity}` slot,
+since a brief whose identity block ends its text now refuses, and keep
+`{identity}` alone at the start of its line, so every identity line sits at
+column 0: an indented or inlined slot now refuses, where before the binding
+silently recorded nothing for the rows it hid. Bindings written before the
+upgrade read as before. No shipped template changes, so no retained
 adjudicator drains.
 
 **Kit-owned files — overwrite:** `scripts/adjudicate_brief.py`,

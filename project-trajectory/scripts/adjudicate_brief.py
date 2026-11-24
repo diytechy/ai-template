@@ -109,10 +109,12 @@ Contract IF-115: `compose(root, row, verdict_path, prompt_templates)` returns
     lists as context for a moved link, together as one block; `bind_pending`
     records those lines in the binding (IF-287) and `record_outcome` keeps
     them when it rewrites the outcome, so a held CLARITY act is bound to the
-    text judged. A composed brief of any kind whose text carries another line
-    of that shape (in a shown cell, a later section, a template), or whose
-    identity block ends its text, is refused, naming the row that line names
-    and where it sits; and `bind_pending` raises ValueError for a prompt whose
+    text judged. A composed brief of any kind whose text reads as identity
+    lines other than exactly the ones its composer wrote, as one block of
+    distinct rows (a line of that shape in a shown cell, a later section or a
+    template; a composer's line its template moved off the start of a line),
+    or whose identity block ends its text, is refused, naming each such
+    line's row and where it sits; and `bind_pending` raises ValueError for a prompt whose
     identity lines are not one block of distinct rows, or that carries any
     while requesting no amendment, so text added to a composed brief after
     its composition can neither add an identity nor replace one.
@@ -396,7 +398,7 @@ def identity_refusal(kinds, prompt):
     Implements: SR-178, LLR-359
     """
     lines = (prompt or "").split("\n")
-    at = [i for i, line in enumerate(lines) if _JUDGED_TEXT_RE.match(line)]
+    at = _identity_lines(lines)
     if AMENDMENT not in kinds:
         stray, rule = at, "a brief requesting no amendment carries none"
     else:
@@ -427,35 +429,86 @@ def _outside_one_block(lines, at):
 
 
 def _composed_identity_refusal(brief, text, written):
-    """Why the composed `text` of `brief` may not be sent, or None. Every line
-    of it the binding's reader reads as a judged-text identity must be one the
-    composer wrote (`written`: the identity slot's lines, or a combined
-    sitting's sections, each checked as it was composed), as often as it
-    wrote it: a judged cell is shown verbatim and may span lines, and other
-    text (a later section, a spec's context, a template) is not the
-    composer's. The block may not end the text either, where a line appended
-    to the brief would join it.
+    """Why the composed `text` of `brief` may not be sent, or None. The lines
+    of it the binding's reader reads as judged-text identities must be
+    exactly the ones the composer wrote (`written`: the identity slot's
+    lines, or a combined sitting's sections, each checked as it was
+    composed), each as often as it wrote it, none missing and none extra. An
+    extra line is text no composer wrote as one: a judged cell is shown
+    verbatim and may span lines, and other text (a later section, a spec's
+    context, a template) is not the composer's. A missing one is a line the
+    composer wrote that its template moved off the start of a line, so the
+    reader skips it and a line appended to the brief would stand in its
+    place. They must then be one block of distinct rows that does not end the
+    text, where an appended line would join it (`_identity_layout_refusal`).
 
     Implements: SR-178, LLR-359
     """
     lines = text.split("\n")
-    extra = Counter(_JUDGED_TEXT_RE.findall(text))
-    extra.subtract(Counter(_JUDGED_TEXT_RE.findall(written)))
-    stray = [
-        i
-        for i, line in enumerate(lines)
-        if (found := _JUDGED_TEXT_RE.match(line)) and extra[found.groups()] > 0
-    ]
-    if stray:
+    found = Counter(_JUDGED_TEXT_RE.findall(text))
+    wrote = Counter(_JUDGED_TEXT_RE.findall(written))
+    extra, missing = found - wrote, wrote - found
+    if extra:
+        stray = [i for i in _identity_lines(lines) if _pair(lines[i]) in extra]
+        return _EXTRA_REFUSAL.format(brief, _stray_lines(lines, stray))
+    if missing:
+        return _MISSING_REFUSAL.format(brief, _missing_lines(lines, missing))
+    return _identity_layout_refusal(brief, lines)
+
+
+# The compose refusals' wording: an identity line the composer did not write,
+# and one it wrote that does not read as one.
+_EXTRA_REFUSAL = (
+    "the {} brief's text carries a line shaped as a judged-text identity line "
+    "that its composer did not write, which a sitting's binding would record "
+    "as judged text: {}. Reword it in its source (the row's cell, the spec or "
+    "the template it came from) so no line opens as an identity line does, "
+    "then compose again"
+)
+_MISSING_REFUSAL = (
+    "the {} brief's composer wrote a judged-text identity line that does not "
+    "read as one in the composed brief, so the binding would miss it and a "
+    "line added to the brief could stand in its place: {}. Keep the "
+    "template's identity slot alone at the start of a line, then compose again"
+)
+
+
+def _identity_lines(lines):
+    """The indices of `lines` the binding's reader reads as identity lines."""
+    return [i for i, line in enumerate(lines) if _JUDGED_TEXT_RE.match(line)]
+
+
+def _pair(line):
+    """`(row id, digest)` of an identity line."""
+    return _JUDGED_TEXT_RE.match(line).groups()
+
+
+def _missing_lines(lines, missing):
+    """Each composer's identity line `missing` from what the reader reads,
+    with where its text sits in the brief (`_where`), or that it is nowhere.
+
+    Implements: SR-178, LLR-359"""
+    out = []
+    for rid, digest in sorted(missing):
+        quoted = "{}: {} {}".format(amendment_brief.JUDGED_TEXT, rid, digest)
+        at = next((i for i, line in enumerate(lines) if quoted in line), None)
+        where = "nowhere in the brief" if at is None else _where(lines, at)
+        out.append("`{}` (for {}) at {}".format(quoted, rid, where))
+    return "; ".join(out)
+
+
+def _identity_layout_refusal(brief, lines):
+    """Why the composer's identity lines, read exactly, are laid out so a
+    line added to the brief could pass as one, or None: not one block naming
+    each row once, or a block ending the text.
+
+    Implements: SR-178, LLR-359"""
+    apart = _outside_one_block(lines, _identity_lines(lines))
+    if apart:
         return (
-            "the {} brief's text carries a line shaped as a judged-text identity "
-            "line that its composer did not write, which a sitting's binding "
-            "would record as judged text: {}. Reword it in its source (the "
-            "row's cell, the spec or the template it came from) so no line "
-            "opens as an identity line does, then compose again".format(
-                brief, _stray_lines(lines, stray)
-            )
-        )
+            "the {} brief's identity lines are not one block naming each row "
+            "once: {}. Its composer must write them together, each row once"
+        ).format(brief, _stray_lines(lines, apart))
     last = next((line for line in reversed(lines) if line.strip()), "")
     if _JUDGED_TEXT_RE.match(last):
         return (
@@ -1722,10 +1775,11 @@ def compose(root, row, verdict_path, prompt_templates=None, sitting=None):
     sections share, so their perspectives are carried once after them.
 
     ONLY THE COMPOSER'S IDENTITY LINES. The composed text is read back with
-    the binding reader's own pattern: a line of the judged-text identity's
-    shape the composer did not write, or an identity block ending the text,
-    refuses the brief (`_composed_identity_refusal`), naming that line's row
-    and where it sits, so no binding records it.
+    the binding reader's own pattern: identity lines other than exactly the
+    ones the composer wrote, as one block of distinct rows, or an identity
+    block ending the text, refuse the brief (`_composed_identity_refusal`),
+    naming each such line's row and where it sits, so a binding records
+    exactly the composer's lines.
 
     Implements: SR-146, SR-161, SR-178, LLR-167, LLR-360, LLR-359
     """
