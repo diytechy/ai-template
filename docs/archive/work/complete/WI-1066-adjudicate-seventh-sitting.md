@@ -2,7 +2,7 @@
 id = "WI-1066"
 title = "adjudicate: WI-1060's 15 amendments and F-7's three amendments and 13 new rows, in one combined sitting"
 workstream = "process"
-specref = "docs/archive/work/complete/WI-1027-parent-llr-link.md"
+specref = ""
 sr_refs = ["SR-049", "SR-140", "SR-157", "SR-168", "SR-178", "SR-179", "SR-207", "SR-212", "SR-217", "SR-228", "SR-241", "SR-248"]
 needs = []
 buildtier = "medium"
