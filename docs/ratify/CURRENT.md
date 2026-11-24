@@ -6,14 +6,14 @@ _Baseline: `docs/archive/last_accepted` — each registry's copy, named by the c
 
 _Baseline: `docs/requirements/stakeholder-needs.toml` copied 2026-11-16 (db12d3857)._
 _Baseline: `docs/requirements/system-requirements.toml` copied 2026-11-24 (86cb4f806)._
-_Baseline: `docs/requirements/low-level-requirements.toml` copied 2026-11-24 (d4554561b)._
-_Baseline: `docs/test/test-cases.toml` copied 2026-11-24 (d4554561b)._
+_Baseline: `docs/requirements/low-level-requirements.toml` copied 2026-11-24 (ed5ea710a)._
+_Baseline: `docs/test/test-cases.toml` copied 2026-11-24 (ed5ea710a)._
 _Baseline: `docs/requirements/interfaces.toml` copied 2026-11-20 (0e67ffffb)._
 _Baseline: `docs/requirements/external.toml` copied 2026-11-16 (675f5b7a4)._
 _Baseline: `docs/requirements/components.toml` copied 2026-11-20 (0e67ffffb)._
 _Baseline: `docs/requirements/assumptions.toml` copied 2026-11-20 (46d518b56)._
 
-_Acceptance provenance: the last acceptance act is the act ledger's seq 198, dated 2026-11-24; its commit is not in the available history: no commit adds it yet, so the act is not committed._
+_Acceptance provenance: the last acceptance act is the act ledger's seq 199, dated 2026-11-24; its commit is not in the available history: no commit adds it yet, so the act is not committed._
 
 ## Off-spine census
 
@@ -30,7 +30,7 @@ _No chain on a rung the operator-acceptance dial holds owes an act; every chain 
 _Every owing row of these chains sits on a rung `[authority] operator_accepts_through` releases, so an adjudication session accepts them and this sitting does not. Shown in full for sight; collapsed by default._
 
 <details>
-<summary>Waiting for automated adjudication — 9 chain(s): SR-006, SR-017, SR-018, SR-040, SR-150, SR-157, SR-167, SR-178, SR-229</summary>
+<summary>Waiting for automated adjudication — 3 chain(s): SR-006, SR-157, SR-167</summary>
 
 ## SR-006 — Gate/tier harness enforces required steps
 
@@ -48,134 +48,6 @@ _adjudicated link — goes to a sitting_
 - **Constrains**
   - before: (empty)
   - after: IF-004;IF-147;IF-167
-
-## SR-017 — Always-on secrets floor
-
-> **Requirement.** When a session attempts to commit or push content matching a secret pattern, the system shall refuse at the hook floor — scanning every commit's staged diff, message and outgoing range regardless of the privacy toggle, and naming the finding — unless the declared secrets_scan dial is explicitly false.
-
-> **Rationale.** Realizes SN-009 — a credential that reaches a shared branch must be treated as disclosed and rotated, and expunging it from history is a rewrite every clone has to follow, so the cheap moment to catch it is before the commit and the expensive one is any moment after. Folding the scan into the privacy toggle was rejected: that makes the highest-severity check opt-in alongside a preference. The one opt-out is an explicit declaration, so turning it off is a visible act.
-
-
-### LLR LLR-493 — Drafted, never accepted
-_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
-- **LLR-ID**: LLR-493
-- **SR-Refs**: SR-017;SR-018
-- **Title**: The privacy scan names each leak by its location and class, and its exit code reports whether it found one
-- **Detail**: Each leak the privacy scan finds, in the staged diff, a commit message, an outgoing commit range or the sweep over the tracked files, prints on its own line naming its location (a tracked file's path and line, or the commit) and its class label, and the run then prints one summary line counting the findings and naming the scan and the layers that ran; a clean run prints one clean line naming the scan and the layers. With both layers off it scans nothing, says so and exits 0. A scan it runs exits 1 when it printed a finding and 0 when it found none.
-- **Rationale**: The hooks and the harness step read the scan's verdict from its exit code alone, and a person reads the lines to find the leak; naming the layers that ran keeps a run with a layer off from reading as a clean one.
-- **TestRefs**: TC-586
-- **Status**: Drafted
-- **Phase**: 6
-- **Constrains**: IF-005;IF-043;IF-148
-
-### TC TC-586 — Drafted, never accepted
-_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
-- **TC-ID**: TC-586
-- **Verifies**: SR-017;SR-018;LLR-493
-- **Level**: Integration
-- **Method**: Stage a private key and scan the staged diff; seed it in a tracked file and sweep the tracked files; seed it in an outgoing commit and scan the range; seed a home directory path in a commit message with the privacy layer on and scan the range; sweep a clean scaffold with the privacy layer on, then seed a leak and sweep again; and scan with both layers off.
-- **Tier**: Full
-- **Expected**: Each leak prints on its own line naming its location, the file's path and line or the commit, and its class label, and the run exits 1; the clean sweep prints one clean line naming the scan and both layers and exits 0, and the seeded sweep's summary counts its finding and names the same layers; with both layers off nothing is scanned, the run says so and exits 0.
-- **Automated**: Yes
-- **Status**: Drafted
-- **Phase**: 6
-- **Evidence**: tests/test_check_privacy.py::test_a_sweep_names_the_scan_and_the_layers_that_ran_clean_or_not; tests/test_check_privacy.py::test_range_mode_catches_history_and_messages; tests/test_check_privacy.py::test_repo_sweep_fresh_scaffold_passes_then_seeded_leak_fails; tests/test_check_privacy.py::test_secrets_floor_in_repo_and_range_modes_with_privacy_off; tests/test_check_privacy.py::test_secrets_floor_runs_with_privacy_off; tests/test_check_privacy.py::test_secrets_scan_off_opts_out
-
-## SR-018 — Privacy gate two-axis
-
-> **Requirement.** When the declared privacy_check dial is on, the system shall additionally refuse, at the same hook floor, a commit or push carrying a PII/identity class — exempting configured author identities.
-
-> **Rationale.** Realizes SN-009 — identity and PII classes are a policy choice a repo makes about its own contributors, unlike a leaked credential, which is a defect in every repo. Making them always-on was rejected because the exemption list they need is project-specific: a repo that has not declared its author identities would have the layer firing on its own commit metadata, and the fix would be to silence the scanner rather than to configure it.
-
-
-### LLR LLR-493 — Drafted, never accepted
-_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
-- **LLR-ID**: LLR-493
-- **SR-Refs**: SR-017;SR-018
-- **Title**: The privacy scan names each leak by its location and class, and its exit code reports whether it found one
-- **Detail**: Each leak the privacy scan finds, in the staged diff, a commit message, an outgoing commit range or the sweep over the tracked files, prints on its own line naming its location (a tracked file's path and line, or the commit) and its class label, and the run then prints one summary line counting the findings and naming the scan and the layers that ran; a clean run prints one clean line naming the scan and the layers. With both layers off it scans nothing, says so and exits 0. A scan it runs exits 1 when it printed a finding and 0 when it found none.
-- **Rationale**: The hooks and the harness step read the scan's verdict from its exit code alone, and a person reads the lines to find the leak; naming the layers that ran keeps a run with a layer off from reading as a clean one.
-- **TestRefs**: TC-586
-- **Status**: Drafted
-- **Phase**: 6
-- **Constrains**: IF-005;IF-043;IF-148
-
-### TC TC-586 — Drafted, never accepted
-_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
-- **TC-ID**: TC-586
-- **Verifies**: SR-017;SR-018;LLR-493
-- **Level**: Integration
-- **Method**: Stage a private key and scan the staged diff; seed it in a tracked file and sweep the tracked files; seed it in an outgoing commit and scan the range; seed a home directory path in a commit message with the privacy layer on and scan the range; sweep a clean scaffold with the privacy layer on, then seed a leak and sweep again; and scan with both layers off.
-- **Tier**: Full
-- **Expected**: Each leak prints on its own line naming its location, the file's path and line or the commit, and its class label, and the run exits 1; the clean sweep prints one clean line naming the scan and both layers and exits 0, and the seeded sweep's summary counts its finding and names the same layers; with both layers off nothing is scanned, the run says so and exits 0.
-- **Automated**: Yes
-- **Status**: Drafted
-- **Phase**: 6
-- **Evidence**: tests/test_check_privacy.py::test_a_sweep_names_the_scan_and_the_layers_that_ran_clean_or_not; tests/test_check_privacy.py::test_range_mode_catches_history_and_messages; tests/test_check_privacy.py::test_repo_sweep_fresh_scaffold_passes_then_seeded_leak_fails; tests/test_check_privacy.py::test_secrets_floor_in_repo_and_range_modes_with_privacy_off; tests/test_check_privacy.py::test_secrets_floor_runs_with_privacy_off; tests/test_check_privacy.py::test_secrets_scan_off_opts_out
-
-## SR-040 — Per-phase routing and review dial
-
-> **Requirement.** The delivered coordinator shall route each in-process session phase (PLAN/BUILD/REVIEW-A/REVIEW-B/DESIGN-CHECK/CRITIQUE) through its declared per-phase command template, falling back to the single declared command — surfacing the declared reviewer dial at run start without enforcing it.
-
-> **Rationale.** Realizes SN-026 (several model families selected per job, so that work benefiting from an independent second opinion is routed to a different family wherever that is configured) — two samples of one model share blind spots, so a review by the family that built the change agrees with it for the wrong reasons; cross-family routing is what makes the second opinion independent, and one model for every phase was rejected on that basis. Dispatch stays keyed off the in-process session phase because the alternative, a per-phase code branch, makes adding a phase a code change and so discourages adding one. THIS ROW CARRIED A RESUME-SURFACE SIZE TRIPWIRE AND NO LONGER DOES, and the two lenses that reached it are answered here rather than deleted with it. Both were premised on a session INHERITING a resume surface that grows across runs: a view must stay usable as its content volume grows (hat.UX-ENGINEER), and at 3am the reader of that surface is another automated step, which needs the growth legible from the artifact rather than from a human noticing (hat.UNATTENDED-OPS). Neither premise survives the one-engine coordinator — no session inherits a resume surface any more, and the status page is a generated integrator artifact whose size the generator owns, so there is no growing view to keep usable and no 3am artifact whose growth an automated reader must judge. The lenses are not overruled; their subject is gone. If a per-session resume surface is ever reintroduced, both apply again o… [187 more chars — read the registry row]
-
-
-### LLR LLR-495 — Drafted, never accepted
-_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
-- **LLR-ID**: LLR-495
-- **SR-Refs**: SR-040
-- **Title**: The session engine's model dials resolve from the command line, then the environment, then the stack profile
-- **Detail**: The session engine's model tier and its per-phase model map each resolve from the command line, else the environment's slot for that dial, else the stack profile's agent-loop section; with none of them set there is no model, and a session template needing one fails preflight naming it. An absent or malformed profile, a profile without the agent-loop section, and a blank value each read as no declaration.
-- **Rationale**: One declared home for the dials lets the launchers carry no copy of their own, and an operator who sets a dial for one run on the command line or in the environment still overrides the declared value without editing it.
-- **TestRefs**: TC-588
-- **Status**: Drafted
-- **Phase**: 6
-- **Constrains**: IF-068
-
-### TC TC-588 — Drafted, never accepted
-_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
-- **TC-ID**: TC-588
-- **Verifies**: SR-040;LLR-495
-- **Level**: Integration
-- **Method**: With the stack profile declaring a model tier, run the session engine with neither the environment slot nor the command line set, with the environment slot set, and with both set; resolve the per-phase model map with each of its three sources set and unset; run with no model anywhere and a template needing one; and read the agent-loop section from an absent profile, a malformed one, one without the section and one declaring a dial with a blank value.
-- **Tier**: Full
-- **Expected**: The declared tier reaches the session when nothing else is set, the environment's beats it and the command line's beats both, the model map following the same order; with no model the run fails preflight naming the missing model; and the absent, malformed and section-less profiles and the blank value each read as no declaration of that dial.
-- **Automated**: Yes
-- **Status**: Drafted
-- **Phase**: 6
-- **Evidence**: tests/test_agent_loop.py::test_model_dial_precedence; tests/test_agent_loop.py::test_model_placeholder_without_model_fails_preflight; tests/test_agent_loop_policy.py::test_read_agent_loop_config_reads_declared_dials; tests/test_agent_loop_policy.py::test_resolve_coordinator_dials_precedence; tests/test_agent_loop_policy.py::test_the_model_map_resolves_from_the_command_line_then_environment_then_profile
-
-## SR-150 — Stakeholder-need cells stay in stakeholder language
-
-> **Requirement.** The harness shall report each stakeholder-need `need` cell that contains an internal path, an implementation-only identifier or a process citation, naming the row and the offending phrase — at a severity that warns by default and fails only under --strict, exempting a name declared on a reviewed exception list that ships empty (a name that is itself a user-facing interface belongs in a need), and reporting nothing for acceptance or engineering-requirement cells, which SN-033 exempts by its own text.
-
-> **Rationale.** Realizes SN-033 — its accepted acceptance commissions exactly this check, and until this row it did not exist. The need tier was measured clean when this landed (0 of 27 cells), and the row sits deliberately AHEAD of the SR re-tier's churn: locking the clean state in costs one warn-first step now; trusting a large re-statement pass not to dirty it costs an audit later. Warn-first is the ruled posture, not a softness — a form heuristic over accepted stakeholder prose must not gate without an operator ruling, and that ruling has not been made.
-
-
-### LLR LLR-494 — Drafted, never accepted
-_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
-- **LLR-ID**: LLR-494
-- **SR-Refs**: SR-150
-- **Title**: The need-form check exits 0 at its default severity and, in its strict mode, 1 on anything it reports
-- **Detail**: The need-form check exits 0 at its default severity, whatever it reports. In its strict mode it exits 1 when it reports a finding, an exception-list line its grammar cannot read, or a present registry with no need cell to scan, and 0 when its scan is clean.
-- **Rationale**: The requirement fixes the severity, warning by default and failing only in the declared strict mode; the exit code is how the harness and a person's shell read it, so it is stated where the check's output is.
-- **TestRefs**: TC-587
-- **Status**: Drafted
-- **Phase**: 6
-- **Constrains**: IF-121
-
-### TC TC-587 — Drafted, never accepted
-_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
-- **TC-ID**: TC-587
-- **Verifies**: SR-150;LLR-494
-- **Level**: Integration
-- **Method**: Run the need-form check at both severities over a need cell carrying offending phrases, over an exception list holding lines its grammar cannot read and then a well-formed one, and over a present registry with no need cell; run it at its default severity over the live registry and over a project with no needs registry.
-- **Tier**: Full
-- **Expected**: Every default-severity run exits 0, findings included; the strict run exits 1 on the offending phrases, on the unreadable exception lines and on the empty registry, and 0 once the exception list is well-formed and the scan is clean.
-- **Automated**: Yes
-- **Status**: Drafted
-- **Phase**: 6
-- **Evidence**: tests/test_check_need_form.py::test_a_malformed_allow_line_is_reported_by_name_and_line; tests/test_check_need_form.py::test_a_present_but_vacuous_registry_is_reported_not_clean; tests/test_check_need_form.py::test_an_absent_needs_registry_is_a_clean_skip; tests/test_check_need_form.py::test_dirty_need_cell_names_the_row_and_each_offending_phrase; tests/test_check_need_form.py::test_strict_promotes_the_same_findings_to_exit_1; tests/test_check_need_form.py::test_the_live_registry_is_clean_at_zero_findings
 
 ## SR-157 — Spine and work-registry rules fail the harness verdict
 
@@ -248,75 +120,5 @@ _adjudicated link — goes to a sitting_
 - **Constrains**
   - before: (empty)
   - after: IF-004;IF-147;IF-167
-
-## SR-178 — Text that has moved away from its acceptance record is reported
-
-> **Requirement.** The kit shall report any recorded artifact whose text has moved away from the
-copy recording its acceptance - stakeholder needs included - regardless of any
-Status movement.
-
-> **Rationale.** THE DRIFT half, separable from SR-140 in the direction that matters: a record that exists and rides its acceptance commit, with nothing ever comparing live text against it, satisfies SR-140 completely and leaves every later amendment invisible. That is not a hypothetical - it is precisely the failure the git-history derivation had, and the reason a baseline on disk was owed at all.
-REGARDLESS OF STATUS MOVEMENT is the load-bearing clause, not a qualifier. The amendment machinery watches the Status flip, and the sanctioned staged-amendment path deliberately does not flip - so a rule keyed off the flip returns nothing on exactly the rows a sitting exists to judge. Reporting against the recorded copy is the only reading that survives that, because the copy is a baseline OUTSIDE the live file and a walk over the live file can never be one.
-THE STAKEHOLDER-NEED RIDER is in the normative text rather than left to the acceptance because the need tier is the one a sitting most wants to hold and the one the amendment-watching rules were last to reach: each rule walks the tiers it is given, so without the clause the need tier is left off the walk and no rule reaches it. Needs are compared row by row under the same accepted and traced split as every other tier.
-WHAT COUNTS AS MOVEMENT is one definition with one home, shared with the amend-without-flip guard: the id column and the Status cell are excluded STRUCTURALLY (the id is the join key rather than content, and folding Status in woul… [817 more chars — read the registry row]
-
-
-### TC TC-530 — Drafted, never accepted
-_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
-- **TC-ID**: TC-530
-- **Verifies**: SR-178;LLR-420
-- **Level**: Integration
-- **Method**: Read the class of the constrains cell on the requirement and design-row registries and of the two companion cells, and whether the merge's amendment walk routes each. Then commit a project whose requirement and first design row are accepted with no constrains cell and whose second design row is accepted constraining an interface. In a second commit add a constrains cell, and nothing else, to the requirement and to the first design row; in a third add a dimensions cell and an out-of-domain cell, and nothing else, to the second design row. Run the amendment walk and the trunk's amendment mint over the first range and, separately, over the second.
-- **Tier**: Smoke
-- **Expected**: The constrains cell is traced and routed on both registries and the two companion cells are accepted. Over the first range the walk records each constrains change in its row's traced half with no accepted cell moved, and the mint routes both rows by their constrains cell alone and drafts one adjudication row naming them; over the second range the walk records the dimensions and out-of-domain changes in the second design row's accepted half with no traced cell moved, and the mint drafts the adjudication row naming it with no traced cell routed.
-- **Automated**: Yes
-- **Evidence**: tests/test_constrains.py::test_constrains_is_traced_and_routed_and_its_companions_are_accepted; tests/test_constrains.py::test_a_companion_cell_change_amends_accepted_text_alone; tests/test_constrains.py::test_a_constrains_only_change_routes_with_no_accepted_cell_moved
-- **Status**: Drafted
-- **Phase**: 6
-
-### TC TC-571 — Drafted, never accepted
-_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
-- **TC-ID**: TC-571
-- **Verifies**: SR-178;LLR-484
-- **Level**: Unit
-- **Method**: Over a project whose accepted requirements each carry one accepted design row and one test case, record an acceptance copy. For each adjudicated link of each tier, move that link alone on one accepted row and read the acceptance model; check the links moved are the routing table's. Then move only the first design row's detail, add an interface to the second design row's constrains cell, move the third's detail and add an interface to its constrains cell, and move only the fourth's phase and perspective cells; read the model, and render the acceptance brief and the operator's decision page. Then, from a fresh copy, move the third design row's detail, add an interface to its constrains cell and move its phase cell, so a rendered row also moves a trace cell no adjudicator judges; read the model and render both surfaces.
-- **Tier**: Smoke
-- **Expected**: Each single moved link lists its row's chain, the row carrying that link as moved with no moved accepted cell. The model lists the first three chains and not the fourth; the second row carries its constrains cell, before and after, as a moved link alone, the third its detail as an accepted cell and its constrains cell as a link, and the first its detail alone. The brief and the page show the second and third rows' constrains cell by name with its before and after under the sitting label, the third's detail under the re-acceptance label and the first's detail with no label. Where the third row also moves its phase cell, the model lists that cell after its detail and constrains cell, and both surfaces show it under the label owing no act, after the re-acceptance and sitting labels.
-- **Automated**: Yes
-- **Status**: Drafted
-- **Phase**: 6
-- **Evidence**: tests/test_routed_link_owed.py::test_a_link_moved_alone_puts_its_chain_in_the_model; tests/test_routed_link_owed.py::test_a_row_moving_only_unjudged_trace_cells_lists_no_chain; tests/test_routed_link_owed.py::test_a_rows_other_trace_cells_come_last; tests/test_routed_link_owed.py::test_both_surfaces_label_the_three_groups_alike; tests/test_routed_link_owed.py::test_each_row_carries_its_accepted_cells_and_links_apart; tests/test_routed_link_owed.py::test_the_acceptance_brief_labels_a_row_with_both; tests/test_routed_link_owed.py::test_the_acceptance_brief_lists_a_link_only_row_naming_its_link; tests/test_routed_link_owed.py::test_the_model_lists_the_moved_chains_and_not_the_unjudged_one; tests/test_routed_link_owed.py::test_the_moved_links_are_the_routing_table; tests/test_routed_link_owed.py::test_the_operator_page_lists_a_link_only_row_naming_its_link
-
-## SR-229 — Coordinator claim admission respects a blackout pause
-
-> **Requirement.** Where a blackout window is armed, the delivered work-item admission shall refuse a new claim inside that window on every route at any context-guard dial; outside a blackout window, where the declared coordinator context guard is enabled, it admits a coordinator claim only from the current lease holder while that holder's context drain is not latched, the drain latching once the holder's context occupancy reaches the declared threshold and holding across compaction and resume until the operator records a clear or a release, the holder records a hand-back naming its handoff, or a relaunched successor takes the lease.
-
-> **Rationale.** A DERIVED requirement, and labelled so. SN-027 asks that a declared pause stop claiming and drain what is already in flight, and that recovery never double-assign work; it does not name the coordinating session's own context, so this obligation arrives through two lenses rather than through the need's text. The unattended-operations lens listens for a silent degrade: a coordinator whose context has crossed its declared limit keeps claiming after compaction has degraded the context it needs to close the work it already holds, and nothing pages anyone. The integrity lens listens for a recovery path written only for the unattended run when the same corruption is reachable attended, and for a claim nothing can reclaim once its holder is gone: a retained adjudicator session already drains on occupancy while the attended coordinator does not, and a second or missing holder leaves claim authority ambiguous, so one lease names the coordinator and only the operator's recorded release frees a lease whose holder has gone. A latched single-holder admission boundary was chosen over a one-time event observation because every claim must remain protected when an event is missed or the transcript later reports a lower reading. Fed back to the need: SN-027's acceptance could name the coordinating session's own capacity as a declared reason to stop claiming and drain; until it does, this row is derived and says so.
-
-
-### LLR LLR-423 — Drafted, never accepted
-_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
-- **LLR-ID**: LLR-423
-- **SR-Refs**: SR-229
-- **Title**: The coordinator guard identifies a claim's caller by the agent tool's session variable
-- **Detail**: The coordinator guard identifies a claim's caller by the session-identity variable the agent command-line tool exports to its tool processes; a variable under any other name identifies no one.
-- **Rationale**: The tool's documentation is not ours to write, so our reading of the variable naming the caller is stated where the guard depends on it.
-- **TestRefs**: TC-533
-- **Status**: Drafted
-- **Phase**: 6
-- **Constrains**: IF-277
-
-### TC TC-533 — Drafted, never accepted
-_No cell differs from the accepted snapshot; this row owes because its own `Status` has never been `Accepted`._
-- **TC-ID**: TC-533
-- **Verifies**: SR-229;LLR-423;IF-277
-- **Level**: Unit
-- **Method**: Run a guarded claim whose environment names the lease holder's session under the agent tool's session variable, and again under another variable name.
-- **Tier**: Smoke
-- **Expected**: The claim under the tool's variable passes and the one under another name reads its caller as unknown.
-- **Automated**: Yes
-- **Evidence**: tests/test_coordinator_guard.py::test_the_guard_reads_its_caller_from_the_agent_tools_session_variable; tests/test_coordinator_guard.py::test_a_claim_names_its_caller_by_claude_code_session_id
-- **Status**: Drafted
-- **Phase**: 6
 
 </details>

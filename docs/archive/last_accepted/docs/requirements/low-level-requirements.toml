@@ -3122,7 +3122,7 @@ title = "The coordinator guard identifies a claim's caller by the agent tool's s
 detail = "The coordinator guard identifies a claim's caller by the session-identity variable the agent command-line tool exports to its tool processes; a variable under any other name identifies no one."
 rationale = "The tool's documentation is not ours to write, so our reading of the variable naming the caller is stated where the guard depends on it."
 test_refs = "TC-533"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 constrains = ["IF-277"]
 
@@ -3187,7 +3187,7 @@ title = "The privacy scan names each leak by its location and class, and its exi
 detail = "Each leak the privacy scan finds, in the staged diff, a commit message, an outgoing commit range or the sweep over the tracked files, prints on its own line naming its location (a tracked file's path and line, or the commit) and its class label, and the run then prints one summary line counting the findings and naming the scan and the layers that ran; a clean run prints one clean line naming the scan and the layers. With both layers off it scans nothing, says so and exits 0. A scan it runs exits 1 when it printed a finding and 0 when it found none."
 rationale = "The hooks and the harness step read the scan's verdict from its exit code alone, and a person reads the lines to find the leak; naming the layers that ran keeps a run with a layer off from reading as a clean one."
 test_refs = "TC-586"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 constrains = ["IF-005", "IF-043", "IF-148"]
 
@@ -3197,7 +3197,7 @@ title = "The need-form check exits 0 at its default severity and, in its strict 
 detail = "The need-form check exits 0 at its default severity, whatever it reports. In its strict mode it exits 1 when it reports a finding, an exception-list line its grammar cannot read, or a present registry with no need cell to scan, and 0 when its scan is clean."
 rationale = "The requirement fixes the severity, warning by default and failing only in the declared strict mode; the exit code is how the harness and a person's shell read it, so it is stated where the check's output is."
 test_refs = "TC-587"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 constrains = ["IF-121"]
 
@@ -3207,6 +3207,6 @@ title = "The session engine's model dials resolve from the command line, then th
 detail = "The session engine's model tier and its per-phase model map each resolve from the command line, else the environment's slot for that dial, else the stack profile's agent-loop section; with none of them set there is no model, and a session template needing one fails preflight naming it. An absent or malformed profile, a profile without the agent-loop section, and a blank value each read as no declaration."
 rationale = "One declared home for the dials lets the launchers carry no copy of their own, and an operator who sets a dial for one run on the command line or in the environment still overrides the declared value without editing it."
 test_refs = "TC-588"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 constrains = ["IF-068"]

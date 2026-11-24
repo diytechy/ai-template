@@ -4810,7 +4810,7 @@ tier = "Smoke"
 expected = "The constrains cell is traced and routed on both registries and the two companion cells are accepted. Over the first range the walk records each constrains change in its row's traced half with no accepted cell moved, and the mint routes both rows by their constrains cell alone and drafts one adjudication row naming them; over the second range the walk records the dimensions and out-of-domain changes in the second design row's accepted half with no traced cell moved, and the mint drafts the adjudication row naming it with no traced cell routed."
 automated = "Yes"
 evidence = "tests/test_constrains.py::test_constrains_is_traced_and_routed_and_its_companions_are_accepted; tests/test_constrains.py::test_a_companion_cell_change_amends_accepted_text_alone; tests/test_constrains.py::test_a_constrains_only_change_routes_with_no_accepted_cell_moved"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-531]
@@ -4843,7 +4843,7 @@ tier = "Smoke"
 expected = "The claim under the tool's variable passes and the one under another name reads its caller as unknown."
 automated = "Yes"
 evidence = "tests/test_coordinator_guard.py::test_the_guard_reads_its_caller_from_the_agent_tools_session_variable; tests/test_coordinator_guard.py::test_a_claim_names_its_caller_by_claude_code_session_id"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-534]
@@ -4963,7 +4963,7 @@ method = "Over a project whose accepted requirements each carry one accepted des
 tier = "Smoke"
 expected = "Each single moved link lists its row's chain, the row carrying that link as moved with no moved accepted cell. The model lists the first three chains and not the fourth; the second row carries its constrains cell, before and after, as a moved link alone, the third its detail as an accepted cell and its constrains cell as a link, and the first its detail alone. The brief and the page show the second and third rows' constrains cell by name with its before and after under the sitting label, the third's detail under the re-acceptance label and the first's detail with no label. Where the third row also moves its phase cell, the model lists that cell after its detail and constrains cell, and both surfaces show it under the label owing no act, after the re-acceptance and sitting labels."
 automated = "Yes"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 evidence = "tests/test_routed_link_owed.py::test_a_link_moved_alone_puts_its_chain_in_the_model; tests/test_routed_link_owed.py::test_a_row_moving_only_unjudged_trace_cells_lists_no_chain; tests/test_routed_link_owed.py::test_a_rows_other_trace_cells_come_last; tests/test_routed_link_owed.py::test_both_surfaces_label_the_three_groups_alike; tests/test_routed_link_owed.py::test_each_row_carries_its_accepted_cells_and_links_apart; tests/test_routed_link_owed.py::test_the_acceptance_brief_labels_a_row_with_both; tests/test_routed_link_owed.py::test_the_acceptance_brief_lists_a_link_only_row_naming_its_link; tests/test_routed_link_owed.py::test_the_model_lists_the_moved_chains_and_not_the_unjudged_one; tests/test_routed_link_owed.py::test_the_moved_links_are_the_routing_table; tests/test_routed_link_owed.py::test_the_operator_page_lists_a_link_only_row_naming_its_link"
 
@@ -4974,7 +4974,7 @@ method = "Stage a private key and scan the staged diff; seed it in a tracked fil
 tier = "Full"
 expected = "Each leak prints on its own line naming its location, the file's path and line or the commit, and its class label, and the run exits 1; the clean sweep prints one clean line naming the scan and both layers and exits 0, and the seeded sweep's summary counts its finding and names the same layers; with both layers off nothing is scanned, the run says so and exits 0."
 automated = "Yes"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 evidence = "tests/test_check_privacy.py::test_a_sweep_names_the_scan_and_the_layers_that_ran_clean_or_not; tests/test_check_privacy.py::test_range_mode_catches_history_and_messages; tests/test_check_privacy.py::test_repo_sweep_fresh_scaffold_passes_then_seeded_leak_fails; tests/test_check_privacy.py::test_secrets_floor_in_repo_and_range_modes_with_privacy_off; tests/test_check_privacy.py::test_secrets_floor_runs_with_privacy_off; tests/test_check_privacy.py::test_secrets_scan_off_opts_out"
 
@@ -4985,7 +4985,7 @@ method = "Run the need-form check at both severities over a need cell carrying o
 tier = "Full"
 expected = "Every default-severity run exits 0, findings included; the strict run exits 1 on the offending phrases, on the unreadable exception lines and on the empty registry, and 0 once the exception list is well-formed and the scan is clean."
 automated = "Yes"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 evidence = "tests/test_check_need_form.py::test_a_malformed_allow_line_is_reported_by_name_and_line; tests/test_check_need_form.py::test_a_present_but_vacuous_registry_is_reported_not_clean; tests/test_check_need_form.py::test_an_absent_needs_registry_is_a_clean_skip; tests/test_check_need_form.py::test_dirty_need_cell_names_the_row_and_each_offending_phrase; tests/test_check_need_form.py::test_strict_promotes_the_same_findings_to_exit_1; tests/test_check_need_form.py::test_the_live_registry_is_clean_at_zero_findings"
 
@@ -4996,6 +4996,6 @@ method = "With the stack profile declaring a model tier, run the session engine 
 tier = "Full"
 expected = "The declared tier reaches the session when nothing else is set, the environment's beats it and the command line's beats both, the model map following the same order; with no model the run fails preflight naming the missing model; and the absent, malformed and section-less profiles and the blank value each read as no declaration of that dial."
 automated = "Yes"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 evidence = "tests/test_agent_loop.py::test_model_dial_precedence; tests/test_agent_loop.py::test_model_placeholder_without_model_fails_preflight; tests/test_agent_loop_policy.py::test_read_agent_loop_config_reads_declared_dials; tests/test_agent_loop_policy.py::test_resolve_coordinator_dials_precedence; tests/test_agent_loop_policy.py::test_the_model_map_resolves_from_the_command_line_then_environment_then_profile"
