@@ -2644,6 +2644,51 @@ def test_a_REMOVED_accepted_row_is_KEPT_until_an_act_retires_it(tmp_path):
     assert _copy_of(root, SR_REL) == (root / SR_REL).read_bytes()
 
 
+def _linked_block(id_col, rid, status, interface):
+    """One appended row of a requirement or design tier whose constrains cell
+    names `interface`."""
+    return '\n[{}.{}]\ntitle = "Row {}"\nconstrains = ["{}"]\nstatus = "{}"\n'.format(
+        _SPINE_CARRIER.REGISTRY_TABLE[id_col], rid, rid, interface, status
+    )
+
+
+@pytest.mark.parametrize("rel,id_col", [(SR_REL, "SR-ID"), (LLR_REL, "LLR-ID")])
+def test_a_row_whose_constrains_link_alone_moved_is_KEPT_until_an_act_names_it(
+    tmp_path, rel, id_col
+):
+    """A requirement's or design row's constrains link routes to adjudication
+    (WI-1024), so it is held like accepted text (WI-1067): an act accepting row
+    A while row B's constrains link alone moved keeps B's recorded bytes,
+    prints B as left owed and lists it kept; a later act naming B records it
+    from live and keeps nothing.
+
+    Implements: TC-240
+    """
+    a, b = _ids(id_col, 2)
+    recorded_b = _linked_block(id_col, b, "Accepted", "IF-001")
+    seeded = _linked_block(id_col, a, "Drafted", "IF-001") + recorded_b
+    root, _git = _git_tree(tmp_path, lambda r: _append(r, rel, seeded))
+    _rewrite(
+        root,
+        rel,
+        _linked_block(id_col, a, "Drafted", "IF-001"),
+        _linked_block(id_col, a, "Accepted", "IF-001"),
+    )
+    _rewrite(root, rel, recorded_b, _linked_block(id_col, b, "Accepted", "IF-002"))
+    proc = _snapshot_cli(root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "LEFT OWED: " + b in proc.stdout, proc.stdout
+    live = (root / rel).read_bytes()
+    moved = _linked_block(id_col, b, "Accepted", "IF-002").encode()
+    assert _copy_of(root, rel) == live.replace(moved, recorded_b.encode())
+    assert _last_act(root).get("kept") == [b], _last_act(root)
+    proc = _snapshot_cli(root, "--reaccepts", b)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "LEFT OWED" not in proc.stdout, proc.stdout
+    assert _copy_of(root, rel) == (root / rel).read_bytes()
+    assert _last_act(root).get("kept") == [], _last_act(root)
+
+
 @pytest.mark.parametrize("attempt", ["unnamed-drift", "named-edit", "dropped"])
 def test_each_laundering_attempt_is_refused_at_the_hook_and_on_the_history(
     tmp_path, attempt
