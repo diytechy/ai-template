@@ -21,11 +21,11 @@
 
 [derived]
 components = 4
-design_rows = 166
-design_rows_unplaced = 227
+design_rows = 169
+design_rows_unplaced = 226
 seam_rows = 239
-requirements_placed = 85
-requirements_unplaced = 56
+requirements_placed = 86
+requirements_unplaced = 55
 seams_unplaced = 0
 
 [component_view.CMP-006]
@@ -337,6 +337,7 @@ sr_refs = [
   "SR-018",
   "SR-019",
   "SR-020",
+  "SR-022",
   "SR-031",
   "SR-040",
   "SR-043",
@@ -367,11 +368,14 @@ sr_shared_refs = [
 llr_refs = [
   "LLR-006",
   "LLR-007",
+  "LLR-012",
+  "LLR-013",
   "LLR-014",
   "LLR-016",
   "LLR-019",
   "LLR-020",
   "LLR-021",
+  "LLR-022",
   "LLR-031",
   "LLR-038",
   "LLR-040",
@@ -1030,7 +1034,6 @@ seam_boundary_refs = [
 sr_refs = [
   "SR-009",
   "SR-011",
-  "SR-022",
   "SR-026",
   "SR-027",
   "SR-028",
@@ -1096,7 +1099,6 @@ llr_refs = [
   "LLR-011",
   "LLR-017",
   "LLR-018",
-  "LLR-022",
   "LLR-023",
   "LLR-026",
   "LLR-027",

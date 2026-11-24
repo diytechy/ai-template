@@ -99,7 +99,7 @@ detail = "Resolves intra-repository links, requires the project-vision tag, and 
 test_refs = "(see TC-012)"
 status = "Accepted"
 phase = 1
-constrains = ["IF-030"]
+constrains = ["IF-002", "IF-030"]
 
 [design.LLR-013]
 sr_refs = ["SR-158"]
@@ -108,7 +108,7 @@ detail = "Validates an authored runtime-flow document against its structural con
 test_refs = "(see TC-013)"
 status = "Accepted"
 phase = 1
-constrains = ["IF-029"]
+constrains = ["IF-003", "IF-029"]
 
 [design.LLR-014]
 sr_refs = ["SR-006", "SR-167"]
@@ -175,11 +175,11 @@ phase = 1
 [design.LLR-022]
 sr_refs = ["SR-022"]
 title = "Vendored-doc drift check"
-detail = "Compares a vendored doc copy against its recorded upstream source and reports drift."
+detail = "Compares a vendored doc copy against its recorded upstream source and reports drift: each copy missing or differing from its source prints one warning line naming it, and the run then prints a summary line, OK when every copy matches and a count of the findings when one does not, and exits 0; under its strict mode a missing or differing copy makes the summary a FAIL line and the exit 1. A source it cannot fetch skips that copy rather than failing, and a project declaring no vendored copy exits 0."
 test_refs = "(see TC-022)"
 status = "Accepted"
 phase = 1
-constrains = ["IF-036"]
+constrains = ["IF-016", "IF-036"]
 
 [design.LLR-023]
 sr_refs = ["SR-070"]

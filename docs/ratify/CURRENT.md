@@ -233,10 +233,14 @@ _adjudicated link — goes to a sitting_
 
 
 ### LLR LLR-022
+_accepted — re-acceptance owed_
+- **Detail**
+  - before: Compares a vendored doc copy against its recorded upstream source and reports drift.
+  - after: Compares a vendored doc copy against its recorded upstream source and reports drift: each copy missing or differing from its source prints one warning line naming it, and the run then prints a summary line, OK when every copy matches and a count of the findings when one does not, and exits 0; under its strict mode a missing or differing copy makes the summary a FAIL line and the exit 1. A source it cannot fetch skips that copy rather than failing, and a project declaring no vendored copy exits 0.
 _adjudicated link — goes to a sitting_
 - **Constrains**
   - before: (empty)
-  - after: IF-036
+  - after: IF-016;IF-036
 
 ## SR-024 — Permutation case generation
 
@@ -693,7 +697,7 @@ _accepted — re-acceptance owed_
 _adjudicated link — goes to a sitting_
 - **Constrains**
   - before: (empty)
-  - after: IF-030
+  - after: IF-002;IF-030
 
 ### LLR LLR-013
 _accepted — re-acceptance owed_
@@ -703,7 +707,7 @@ _accepted — re-acceptance owed_
 _adjudicated link — goes to a sitting_
 - **Constrains**
   - before: (empty)
-  - after: IF-029
+  - after: IF-003;IF-029
 
 ### LLR LLR-038
 _accepted — re-acceptance owed_
