@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """amendment_brief.py — the AMENDMENT brief's evidence: the spine rows whose
-accepted text moved after they were accepted, shown against the accepted
-anchor, with the identity of each row's judged text and what each verdict owes
+accepted text or adjudicated links moved after they were accepted, shown
+against the accepted anchor, with the identity of each row's judged text and what each verdict owes
 next.
 
 Stack-agnostic, standard-library only (Python 3.11+, Windows/POSIX).
@@ -61,7 +61,8 @@ def adjudicates(row):
 
 
 # The amendment brief's identity line, one per row it shows: the row and the
-# digest of its accepted text (`acceptance_record.accepted_text_digest`).
+# digest of its accepted text and adjudicated links
+# (`acceptance_record.accepted_text_digest`).
 JUDGED_TEXT = "JUDGED-TEXT"
 
 
@@ -153,12 +154,18 @@ def amendment_values(root, row):
     only have been written by copying a live registry in a reviewed acceptance
     commit.
 
-    `{rows}` is `trace.reaccept_model`'s ACCEPTED cells — the same model behind
-    `trace.py --accept` and `open-items.html`, so the judge, the brief and the
-    operator surface can never show three different diffs. Traced cells are
-    deliberately excluded: §A5.1 rules them outside acceptance, and a judge asked to
-    rule "meaning or clarity" on a re-pointed `Module` cell is being asked a
-    question the ruling already answers. The need, assumption and surrogate
+    `{rows}` is `trace.reaccept_model`'s ACCEPTED cells and its moved
+    ADJUDICATED LINKS (the routed traced cells, marked `(link)`) — the same
+    model behind `trace.py --accept` and `open-items.html`, so the judge, the
+    brief and the operator surface can never show three different diffs. A
+    link is shown because an act naming the row records it with the row's
+    accepted text: unshown, blessing the text would carry the link into the
+    record unjudged (WI-1069), so a row whose only change is a link is shown
+    too. Every other trace cell is deliberately excluded: §A5.1 rules them
+    outside acceptance, and a judge asked to rule "meaning or clarity" on a
+    moved `Phase` cell is being asked a question the ruling already answers.
+    A scoped row with nothing to judge is named after the blocks, never
+    dropped unnamed (`_not_shown_lines`). The need, assumption and surrogate
     tiers, which that model does not hold, are read beside it from the same
     recorded copy (`_unchained_amended_rows`; OI-100 gap 1, WI-791), so a row
     the widened mint routes is briefed rather than held.
@@ -189,9 +196,9 @@ def amendment_values(root, row):
     last wrote ITS copy.
 
     `{identity}` states one `JUDGED-TEXT: <row id> <digest>` line per row the
-    brief shows, the digest of that row's accepted text as the brief's own
-    reader loads it (`acceptance_record.accepted_text_digest`), so the binding
-    records the text this sitting judged.
+    brief shows, the digest of that row's accepted text and adjudicated links
+    as the brief's own reader loads it (`acceptance_record.accepted_text_digest`),
+    so the binding records the text this sitting judged.
 
     Implements: SR-146, SR-178, LLR-167, LLR-359
     """
@@ -223,15 +230,17 @@ def amendment_values(root, row):
         why = "the scope names ({}), which neither the live registries nor their {} copy hold, so it names no row to rule on: re-mint the row"
         return None, why.format(", ".join(unknown), baseline_snapshot.SNAPSHOT_DIR)
     lines, tiers = lines + more + gone, tiers | more_tiers | gone_tiers
+    shown = [rid for _kind, rid in chained] + [r[0] for r in unchained + removed]
     if not lines:
         # One refusal for every way the SCOPED population empties, naming the
         # scope: a repo-wide "nothing to judge" beside it would be two answers
         # to one question (`first_acceptance_values`' rule).
         return None, (
             "none of the {} row(s) this adjudication was minted over ({}) still "
-            "carries accepted text that differs from its {} copy — re-anchored, "
-            "withdrawn or renumbered since the mint, awaiting a FIRST acceptance, "
-            "or moved only TRACED cells — so there is no amendment in its scope "
+            "carries accepted text or an adjudicated link that differs from its "
+            "{} copy — re-anchored, withdrawn or renumbered since the mint, "
+            "awaiting a FIRST acceptance, or moved only trace cells no "
+            "adjudicator judges — so there is no amendment in its scope "
             "to rule on".format(
                 len(scope), ", ".join(sorted(scope)), baseline_snapshot.SNAPSHOT_DIR
             )
@@ -242,7 +251,7 @@ def amendment_values(root, row):
     needs = [r[0] for r in unchained if r[2] == "SN-ID"]
     return {
         "baseline": _amendment_baseline(root, tiers),
-        "rows": "\n".join(lines),
+        "rows": "\n".join(lines + _not_shown_lines(scope, shown)),
         "aftermath": _aftermath(root, tiers),
         "questions": questions,
         "identity": _identity(root, chained, unchained + removed),
@@ -253,9 +262,10 @@ def amendment_values(root, row):
 
 
 def _amended_rows(model, scope):
-    """`(lines, tiers, shown)`: the accepted-cell before/after of each drifted
-    row IN `scope`, the spine tiers those rows sit in, and the `(tier, row id)`
-    each block shows.
+    """`(lines, tiers, shown)`: the before/after of each moved accepted cell
+    and each moved adjudicated link of every row IN `scope` the model holds,
+    the spine tiers those rows sit in, and the `(tier, row id)` each block
+    shows.
 
     ONE BLOCK PER ROW, naming every chain it hangs under. The model groups by
     owning SR, so a row with two parents sits in two entries with the same
@@ -265,38 +275,71 @@ def _amended_rows(model, scope):
     lines = []
     for (kind, rid), sids in chains.items():
         head = "- {} {} (chain of {})".format(kind, rid, ", ".join(sids))
-        lines += _cell_block(head, cells_of[(kind, rid)])
+        lines += _cell_block(head, *cells_of[(kind, rid)])
     return lines, {kind for kind, _rid in chains}, list(chains)
 
 
-def _cell_block(head, cells):
+def _cell_block(head, cells, links=()):
     """One shown row's block: `head`, then each accepted cell's name and its
-    before and after, an empty side shown as `(empty)`.
+    before and after, then each moved adjudicated link the same way, its name
+    marked `(link)`; an empty side is shown as `(empty)`.
 
     Implements: SR-146, LLR-167"""
     lines = [head]
-    for name, before, after in cells:
+    named = list(cells) + [(name + " (link)", b, a) for name, b, a in links]
+    for name, before, after in named:
         lines += ["  - " + name, "    - before: " + (before or "(empty)")]
         lines.append("    - after: " + (after or "(empty)"))
     return lines
 
 
 def _scoped_chain_rows(model, scope):
-    """`(chains, cells_of)`: each drifted row IN `scope` with accepted cells
-    to show, keyed `(tier, row id)`, mapped to the SR chains it hangs under
-    and to those accepted cells. Split out of `_amended_rows` so the selection
-    and the rendering each stay under the complexity limit."""
+    """`(chains, cells_of)`: each row IN `scope` with a moved accepted cell or
+    a moved adjudicated link to show, keyed `(tier, row id)`, mapped to the SR
+    chains it hangs under and to `(accepted cells, links)`. A row whose only
+    moved cells are links is shown: blessing it records the link, so the
+    sitting must see it (WI-1069). Other trace cells are not shown. Split out
+    of `_amended_rows` so the selection and the rendering each stay under the
+    complexity limit.
+
+    Implements: SR-146, LLR-167"""
     chains, cells_of = {}, {}
     for entry in model:
         for chain_row in entry["rows"]:
-            accepted = chain_row.get("accepted") or frozenset()
-            cells = [c for c in chain_row["cells"] if c[0] in accepted]
-            if chain_row["id"] not in scope or not cells:
+            cells, links = _judged_cells(chain_row)
+            if chain_row["id"] not in scope or not (cells or links):
                 continue
             key = (chain_row["kind"], chain_row["id"])
             chains.setdefault(key, []).append(entry["id"])
-            cells_of[key] = cells
+            cells_of[key] = (cells, links)
     return chains, cells_of
+
+
+def _judged_cells(chain_row):
+    """`(accepted cells, links)`: the moved cells of one model row a sitting
+    judges, its accepted cells and its adjudicated links, each as the model's
+    `(name, before, after)` triples.
+
+    Implements: SR-146, LLR-167"""
+    accepted = chain_row.get("accepted") or frozenset()
+    routed = chain_row.get("routed") or frozenset()
+    cells = chain_row["cells"]
+    return [c for c in cells if c[0] in accepted], [c for c in cells if c[0] in routed]
+
+
+# The line naming the scoped rows a brief does not show, after its blocks. It
+# does not open with `- `, so no count of shown rows reads it.
+NOT_SHOWN = "Scoped, nothing to judge (not shown; rule no line for them): {}."
+
+
+def _not_shown_lines(scope, shown):
+    """`[line]` naming each id of `scope` not in `shown`, after a blank line,
+    or `[]`: a scoped row with nothing to judge is named, never dropped
+    unnamed (WI-1069).
+
+    Implements: SR-146, LLR-167"""
+    idle = sorted(set(scope) - set(shown))
+    return ["", NOT_SHOWN.format(", ".join(idle))] if idle else []
 
 
 # The amended tiers the requirement-chain model does not hold (OI-100 gap 1,
@@ -364,8 +407,8 @@ def _identity(root, chained, unchained):
     """`{identity}`: one `JUDGED-TEXT: <row id> <digest>` line per row the
     brief shows, the requirement-chain rows (`(tier, row id)`, read from the
     live registry the chain model reads) and the unchained ones (already
-    loaded by `tier_owing`), each digest that row's accepted text
-    (`acceptance_record.accepted_text_digest`).
+    loaded by `tier_owing`), each digest that row's accepted text and
+    adjudicated links (`acceptance_record.accepted_text_digest`).
 
     Implements: SR-178, LLR-359"""
     rows, loaded = list(unchained), {}

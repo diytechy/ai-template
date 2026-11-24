@@ -228,7 +228,8 @@ section.band{display:flex;flex-direction:column;gap:1rem;}
 .cellname{font-family:var(--mono);font-size:var(--xsmall);font-weight:700;
   color:var(--muted);}
 /* The §A5.1 group label above a run of cells (D-9 step 4) — accepted cells owe
-   an acceptance, traced ones route to adjudication. Set apart from .cellname
+   an acceptance, an adjudicated link goes to a sitting, other trace cells owe
+   no act (WI-1069). Set apart from .cellname
    by weight and a rule rather than by colour alone, so the grouping survives a
    monochrome print and a low-contrast display. */
 .cellgroup{font-size:var(--xsmall);font-weight:600;letter-spacing:.04em;
@@ -625,34 +626,21 @@ ROW_STATE_TAGS = {
 
 
 def _changed_cell_groups(row):
-    """The `(label, cells)` groups a `changed` row's cells render under.
+    """The `(label | None, cells)` groups a `changed` row's cells render
+    under: `trace.changed_cell_groups`, the one grouping the `--accept
+    modified` markdown brief renders too, so this HTML view and that brief
+    cannot label one cell two ways (IF-074). Accepted cells owe an acceptance,
+    a moved adjudicated link goes to a sitting, and every other trace cell owes
+    no act (§A5.1; WI-1069); a `Drafted` row's cells form one unlabelled group
+    (OI-71 defect 1), its row tag already saying it owes a first acceptance.
 
-    TWO GROUPS, §A5.1 (D-9 step 4). An ACCEPTED cell that moved owes an
-    acceptance; a TRACED one routes to adjudication and arms no window (the
-    WI-388 ruling). Rendering them in one undifferentiated list asked the operator
-    to make that judgement per cell, from memory, mid-sitting — and the snapshot
-    comparison hands the split over for free.
-
-    A `Drafted` row was never accepted, so no cell of it "owes a re-acceptance"
-    and none "routes to adjudication" — the whole row owes a FIRST acceptance,
-    which the row tag already states. The §A5.1 split is a property of an
-    accepted row; keyed on the cell's COLUMN class alone it mislabelled a
-    Drafted row's accepted-class cells (OI-71 defect 1, the wi508 round-019
-    finding). For a Drafted row the cells collapse to ONE unlabelled group, so
-    this HTML view and the `--accept modified` markdown brief agree (IF-074)."""
-    if row.get("drafted"):
-        return [(None, row["cells"])]
-    accepted = row.get("accepted") or frozenset()
-    return [
-        (
-            "accepted — re-acceptance owed",
-            [c for c in row["cells"] if c[0] in accepted],
-        ),
-        (
-            "traced — routes to adjudication",
-            [c for c in row["cells"] if c[0] not in accepted],
-        ),
-    ]
+    Implements: SR-178, LLR-484"""
+    return tr.changed_cell_groups(
+        row["cells"],
+        row.get("accepted") or frozenset(),
+        row.get("routed") or frozenset(),
+        bool(row.get("drafted")),
+    )
 
 
 def _cell_diff_html(cells):
@@ -689,16 +677,12 @@ def _changed_cell_lines(row):
     Split out of `_chain_row` so its own branch count stays under the C901
     ratchet — decomposition rather than a baseline bump, the escape the ratchet
     exists to force (the same move that first split `_chain_row` off
-    `_acceptance_cards`). The group heading appears only when BOTH groups are
-    present; a lone heading over the only group is noise (and a Drafted row's
-    single collapsed group never shows one)."""
-    groups = _changed_cell_groups(row)
-    both = all(cells for _label, cells in groups)
+    `_acceptance_cards`). A group carries its heading when the grouping
+    labels it (`trace.changed_cell_groups`: never a lone accepted group, never
+    a Drafted row's single collapsed group)."""
     inner = []
-    for label, cells in groups:
-        if not cells:
-            continue
-        if both and label:
+    for label, cells in _changed_cell_groups(row):
+        if label:
             inner.append('<div class="cellgroup">{}</div>'.format(esc(label)))
         inner.append(_cell_diff_html(cells))
     inner.append(

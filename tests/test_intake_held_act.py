@@ -626,16 +626,25 @@ def test_a_retired_row_has_no_text_to_differ_and_still_mints(tmp_path):
 # --- every other state writes nothing --------------------------------------------
 
 
-@pytest.mark.parametrize("state", ["edited-after", "binds-nothing", "names-another"])
+@pytest.mark.parametrize(
+    "state", ["edited-after", "link-moved-after", "binds-nothing", "names-another"]
+)
 def test_a_row_off_its_bound_text_stays_on_the_amendment_row(tmp_path, state):
     """A verdict rules the text its binding records. The row moved after the
-    sitting, or the binding records no text for it, so no sitting saw this text
-    and it is sat again. Witness: an arm reading the ruling alone mints here."""
+    sitting (its accepted text, or a routed link the binding's identity covers,
+    WI-1069), or the binding records no text for it, so no sitting saw this
+    text and it is sat again. Witness: an arm reading the ruling alone mints
+    here."""
     root, before = _held_repo(tmp_path, extra=_sr002(SR2_ORIGINAL))
     _write_srs(root, requirement=AMENDED, extra=_sr002(SR2_ORIGINAL))
     if state == "edited-after":
         _sit(root, {"SR-001": "MEANING"})
         _write_srs(root, requirement=AMENDED + " Edited.", extra=_sr002(SR2_ORIGINAL))
+    elif state == "link-moved-after":
+        _sit(root, {"SR-001": "MEANING"})
+        _write_srs(
+            root, requirement=AMENDED, sn_refs="SN-002", extra=_sr002(SR2_ORIGINAL)
+        )
     elif state == "binds-nothing":
         _sit(root, {"SR-001": "MEANING"}, identities={})
     else:

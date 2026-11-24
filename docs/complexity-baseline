@@ -124,7 +124,6 @@ project-trajectory/scripts/score_reviews.py	corroboration	16	21
 project-trajectory/scripts/score_reviews.py	main	26	95
 project-trajectory/scripts/spine_carrier.py	needs_from_markdown	32	30
 project-trajectory/scripts/spine_rules.py	spine_stage	19	45	ABSORBED FROM TRUNK at the WI-657 re-stamp (2026-09-27), not introduced by it (the census went unrun at the commit bar and at the repo's effective stage): 17 -> 19 with WI-633 (6ee918f5): the stakeholder, assumption and surrogate tiers each hold a rung (SR-204), two `or` operands in the existing needs and boundary tests. The predicates are already siblings; the growth is the two operands.
-project-trajectory/scripts/trace.py	_cell_diff_lines	18	26	ABSORBED FROM TRUNK, not introduced here: measured over the untouched tree at the WI-572 integration base 4d0b972d, where `check_complexity` already FAILED on this row, so the census this branch re-stamped was stale before the branch existed. WI-572 does not touch this function; the stamp records the debt so the loosening is a reviewed act rather than a side effect of regenerating. Repair is owed on trunk.
 project-trajectory/scripts/trace.py	_csv_ids	16	14
 project-trajectory/scripts/trace.py	_offspine_row_diff	16	20
 project-trajectory/scripts/trace.py	_retired_cell_findings	17	26

@@ -993,7 +993,7 @@ rationale = """Split out of reaccept_lines rather than reimplemented, because a 
 owner = "CMP-006"
 requestors = ["CMP-009", "CMP-008"]
 channel = "call"
-data = "reaccept_model entries (chain rows, changed cells, baseline, copy stamps); assumption_owing_model rows (id, why, moved cells, chain); an empty model is valid"
+data = "reaccept_model entries (chain rows; changed cells with each row's accepted and routed subsets; baseline; copy stamps); assumption_owing_model rows (id, why, moved cells, chain); an empty model is valid"
 version = "v1"
 status = "Drafted"
 
@@ -1465,7 +1465,7 @@ channel = "call"
 data = "split_changed_cells; accepted_text_digest(registry, id_col, row) -> sha256:<16 lowercase hex>"
 version = "v1"
 status = "Drafted"
-notes = "The digest uses the same accepted-cell classification as split_changed_cells, so a carrier representation and an absent versus empty cell do not change it."
+notes = "The digest uses the cell classification split_changed_cells uses and adds the routed traced cells (record_rows.ROUTED_TRACED_CELLS), so a carrier representation, an absent versus empty cell and a silent traced cell do not change it, and a moved accepted cell or routed link does."
 
 [interface.IF-131]
 rationale = """The rules read the live source AST instead of parsing the retired docs/architecture.md MODULE MAP block back. One walk, one grammar: the module keys and import names are exactly what the map rendered, so every downstream join (import resolution, CMP membership) is unchanged."""

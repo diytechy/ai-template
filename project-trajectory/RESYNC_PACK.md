@@ -12649,6 +12649,59 @@ To decompose a row, write each child with `parent = "LLR-###"` and no
 `skills/gate-advance/`.
 
 **Project-owned files — edit:** none.
+### A moved routed link puts its row on the acceptance surfaces and in the amendment brief, and a verdict's identity covers it [since d62f3c74b]
+
+*(Anchored at the preceding commit: the change lands in the commits after it.)*
+
+**What changed.** The acceptance model (`trace.reaccept_model`) now lists the
+chain of a row that claims acceptance and whose routed traced cell
+(`SN-Refs`, `Boundary-Refs` or `Constrains` on a requirement; `SR-Refs` or
+`Constrains` on a design row; `Verifies` on a test case) differs from its
+recorded copy, even when none of its accepted cells moved; a row whose only
+moved cells are other trace cells is still not listed. Each model row carries
+a new `routed` set, and its `cells` run accepted, then routed, then the other
+trace cells. The acceptance brief (`trace.py --accept modified`) and
+`open-items.html` group a changed row's cells under three labels, from one
+shared function (`trace.changed_cell_groups`): accepted (re-acceptance owed),
+adjudicated link (goes to a sitting) and other trace cell (owes no act). The
+amendment brief shows each moved routed link beside the accepted cells,
+marked `(link)`, shows a row whose only change is a link, and names on one
+closing line every scoped row it does not show; its template asks of a link
+whether the row's text states what it now points at. The verdict's row
+grammar is unchanged. `acceptance_record.accepted_text_digest` now digests a
+row's routed cells with its accepted cells, so a verdict's binding covers the
+links, and a link moved after a verdict refuses a held act, a held claim and
+the held-MEANING operator row as moved text does.
+
+**What to do.** Regenerate the acceptance brief and the operator page: they
+may now list chains they did not. After the upgrade, a verdict's binding
+written before it no longer matches a held row that carries any routed link,
+so every consumer of that binding fails closed for the row. So before
+upgrading, take every held CLARITY act still owed under a verdict you have
+already bound, **and land it on trunk**: the merge slot judges each lane
+commit again with the upgraded code, so an act taken on a lane but not yet
+landed is refused at landing, naming both digests. Any such row left over
+after the upgrade (an act not taken, or taken and refused at landing; drop
+the refused act commit from its lane) is re-sat: compose the amendment brief
+again, which now shows the row's links, and bind the new verdict. A held
+MEANING verdict bound before the upgrade on such a row mints no operator row
+after it, so that row stays owed and is re-sat the same way. A binding on a
+row with no routed link reads as before. If you override
+`adjudicate-amendment.template.md`, carry its new LINKS paragraph and labels
+into your copy. The template edit moves the retained-session identity, which
+hashes the template file's bytes, so a retained adjudicator whose classes
+include the amendment brief drains once, at its next clear point. A script of
+yours that reads `reaccept_model` can read `routed`; the other keys are
+unchanged.
+
+**Kit-owned files — overwrite:** `scripts/trace.py`,
+`scripts/baseline_snapshot.py`, `scripts/record_rows.py`,
+`scripts/acceptance_record.py`, `scripts/amendment_brief.py`,
+`scripts/gen_open_items.py`, `scripts/adjudicate_act.py`,
+`scripts/held_status.py`, `prompts/adjudicate-amendment.template.md`,
+`prompts/CATALOG.md`.
+
+**Project-owned files — edit:** none.
 
 ### The parent-first rule reads a child design row's parent link [since c7d6bd6f4]
 

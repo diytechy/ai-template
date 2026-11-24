@@ -1803,6 +1803,31 @@ def drifted_cells(rel, id_col, live_row, snapshot_rows):
     )["accepted"]
 
 
+def routed_moved(rel, id_col, live_row, snapshot_rows):
+    """`{cell: (before, after)}` for the routed traced cells (the adjudicated
+    links, `record_rows.routed_cells`) of a row that claims acceptance and
+    differs from its copy in the snapshot in them; `{}` otherwise.
+
+    THE SECOND REASON A ROW OWES, beside `is_drifted` and not folded into it
+    (WI-1069). A link carries no prose, so drift stays the accepted half; but
+    an act leaves a row whose link moved at its recorded text until an act
+    names it, so the acceptance model lists that row for a sitting. The guards
+    are `is_drifted`'s: a row below acceptance, or absent from the snapshot,
+    answers `{}`. A trace cell no adjudicator judges is never read.
+
+    Implements: SR-178, LLR-484"""
+    if not _claims_acceptance(live_row):
+        return {}
+    before = snapshot_rows.get(str(live_row.get(id_col) or "").strip())
+    if before is None:
+        return {}
+    traced = check_trajectory.split_changed_cells(rel, id_col, before, live_row)[
+        "traced"
+    ]
+    routed = record_rows.routed_cells(rel)
+    return {cell: pair for cell, pair in traced.items() if cell in routed}
+
+
 def owing_rows(rel, id_col, rows, snapshot_rows):
     """`[(id, why, cells, row)]` for each row of one tier owing an act: a
     `Drafted` row, a row with no `Status` cell at all, and a row claiming
