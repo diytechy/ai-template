@@ -95,6 +95,8 @@ bullet) and `tests/test_llr_trace_cells.py` (its WI-1023 summary).
 Docstrings only, no test behaviour; neither file ships. The two modules:
 `44 passed in 5.54s`.
 
+**Review.** Round 1 over `d1571e8fc..910064bbb` (Sol the whole diff; Hydrogen the prose with the generator's diff and LLR-403, LLR-199 and TC-195 appended): OpenAI Sol APPROVE findings=0; Gemini Hydrogen APPROVE findings=0.
+
 ## Context
 
 Filed on trunk on 2026-11-24 by the queue drill's coordinator, from

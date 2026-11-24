@@ -25,3 +25,4 @@ plan (`planmode = "none"`). The spec's Deliverable holds the per-item record.
   `run_menu.py smoke` exit 0, the tier `3956 passed, 3 skipped, 18 warnings
   in 254.02s` (its CPU-seconds over `[smoke-budget]`, a warning for the
   audit).
+- **Review round 1:** Sol and Hydrogen APPROVE findings=0.
