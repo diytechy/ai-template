@@ -518,7 +518,7 @@ def _load_tier(root, rel, id_col):
     its carrier-aware tier loader, every other through the row loader."""
     path = Path(root) / rel
     if id_col == "SN-ID":
-        return spine_carrier.load_need_tier(path, id_col, False)
+        return spine_carrier.load_need_tier(path, id_col, keep_examples=False)
     return spine_carrier.load(path, id_col, keep_examples=False)
 
 
