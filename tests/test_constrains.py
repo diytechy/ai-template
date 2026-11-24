@@ -51,6 +51,14 @@ def _llr(**cells):
     return row
 
 
+def _child(parent, **cells):
+    """A design row below `parent` in the requirement tree: it names its
+    parent and no requirement."""
+    row = _llr(parent=parent, **cells)
+    row.pop("sr_refs")
+    return row
+
+
 def _tc(verifies, automated="Yes", **cells):
     row = {"verifies": verifies, "level": "Unit", "method": "m", "tier": "Smoke"}
     row.update({"expected": "e", "automated": automated, "status": "Accepted"})
@@ -439,6 +447,73 @@ def test_the_interface_check_opt_out_silences_coverage(tmp_path, monkeypatch, ca
     code, out = _strict(monkeypatch, capsys, tmp_path)
     assert code == 0, out
     assert "interface coverage" not in out
+
+
+def test_a_constraining_design_row_brings_the_cases_of_the_design_rows_below_it(
+    tmp_path, monkeypatch, capsys
+):
+    """Implements: TC-531"""
+    # IF-001 is constrained only by LLR-001, whose only run case verifies its
+    # child; IF-002 only by LLR-003, whose only run case verifies its
+    # grandchild. Each parent's own case is an observation case.
+    llrs = {
+        "LLR-001": _llr(constrains=["IF-001"]),
+        "LLR-002": _child("LLR-001"),
+        "LLR-003": _llr(constrains=["IF-002"]),
+        "LLR-004": _child("LLR-003"),
+        "LLR-005": _child("LLR-004"),
+    }
+    tcs = {
+        "TC-001": _tc(["LLR-002"]),
+        "TC-002": _tc(["LLR-005"]),
+        "TC-003": _tc(["LLR-001", "LLR-003", "LLR-004"], automated="No"),
+    }
+    _project(tmp_path, llrs, tcs)
+    srs_, llrs_ = _rows(tmp_path, SR_REL, "SR-ID"), _rows(tmp_path, LLR_REL, "LLR-ID")
+    tcs_, ifs_ = _rows(tmp_path, TC_REL, "TC-ID"), _rows(tmp_path, IF_REL, "IF-ID")
+    reach = spine.interface_reach(ifs_, srs_, llrs_, tcs_)
+    assert reach["IF-001"] == (["LLR-001"], ["TC-001", "TC-003"])
+    assert reach["IF-002"] == (["LLR-003"], ["TC-002", "TC-003"])
+    assert coherence.interface_coverage(srs_, llrs_, tcs_, ifs_) == {
+        "IF-001": "design row",
+        "IF-002": "design row",
+    }
+    code, out = _strict(monkeypatch, capsys, tmp_path)
+    assert code == 0, out
+    assert (
+        "interface coverage: 2 interface(s): 2 through a constraining design row, "
+        "0 through a constraining requirement, 0 through a naming test case, "
+        "0 by observation alone, 0 unreached"
+    ) in out
+    assert "reach no test case" not in out
+    assert "reached by observation cases alone" not in out
+
+
+def test_a_row_only_observed_at_an_interface_brings_its_own_cases_alone(tmp_path):
+    """Implements: TC-531"""
+    # LLR-001 constrains IF-001 and is only observed at IF-002, beside its
+    # requirement, through an observation case naming both; the run cases of
+    # its child and grandchild reach IF-001 and not IF-002.
+    llrs = {
+        "LLR-001": _llr(constrains=["IF-001"]),
+        "LLR-002": _child("LLR-001"),
+        "LLR-003": _child("LLR-002"),
+    }
+    tcs = {
+        "TC-001": _tc(["LLR-002"]),
+        "TC-002": _tc(["LLR-003"]),
+        "TC-003": _tc(["SR-001", "LLR-001", "IF-002"], automated="No"),
+    }
+    _project(tmp_path, llrs, tcs)
+    srs_, llrs_ = _rows(tmp_path, SR_REL, "SR-ID"), _rows(tmp_path, LLR_REL, "LLR-ID")
+    tcs_, ifs_ = _rows(tmp_path, TC_REL, "TC-ID"), _rows(tmp_path, IF_REL, "IF-ID")
+    reach = spine.interface_reach(ifs_, srs_, llrs_, tcs_)
+    assert reach["IF-001"] == (["LLR-001"], ["TC-001", "TC-002", "TC-003"])
+    assert reach["IF-002"] == (["LLR-001", "SR-001"], ["TC-003"])
+    assert coherence.interface_coverage(srs_, llrs_, tcs_, ifs_) == {
+        "IF-001": "design row",
+        "IF-002": "observation",
+    }
 
 
 # --- LLR-422: the per-pair repeat check, warn-first -------------------------
