@@ -6,6 +6,7 @@ specref = "docs/reviews/wi-1068-adjudicate-eighth-sitting/001-ADJUDICATE-fbd50be
 sr_refs = ["SR-022", "SR-046", "SR-070", "SR-178", "SR-224", "SR-229"]
 needs = []
 buildtier = "medium"
+planmode = "single"
 safety_class = "ordinary"
 priority = 2
 +++
@@ -62,10 +63,15 @@ coordinator guard identifies a claim's caller by the agent tool's exported
 session variable; the accepted LLR-300 states the same, and TC-316 checks
 it beside TC-533. One decision gets one home. WI-1024's slice 1 wrote
 LLR-423 as a focused row for IF-277 beside the large LLR-300 (its record,
-§6 item 1); the scope critique settles which side keeps the clause:
-LLR-423 kept and the clause removed from LLR-300 (and TC-316's check moved
-to TC-533), or LLR-423 and TC-533 withdrawn and its `constrains` link moved
-to LLR-300.
+§6 item 1). **Settled at the scope critique:** LLR-423 and TC-533 stay the
+one home; the session-variable clause is removed from LLR-300 (text only,
+still `Accepted`, owed), whose lease-admission obligations stay, and
+TC-316's check of it moves to TC-533 (TC-316 amended in text, owed).
+LLR-423 and TC-533 stay `Drafted` for the next sitting.
+
+Critiqued 2026-11-24 (Sol and Hydrogen;
+`docs/reviews/2026-11-24-scope-critiques/WI-1071.md`): `planmode` is `single`, and the
+session-variable decision's home is settled (above).
 
 ## Done-when
 
@@ -80,8 +86,9 @@ to LLR-300.
       accepted-cell change.
 - [ ] TC-571's method names a rendered row that moves another trace cell,
       matching its expected.
-- [ ] The session-variable decision has one home between LLR-300 and
-      LLR-423 (and TC-316 and TC-533), as the critique settles.
+- [ ] The session-variable decision has one home, LLR-423 (verified by
+      TC-533): LLR-300 no longer states it and TC-316 no longer checks it,
+      and each test that drove it is named by TC-533.
 - [ ] Each row it touches keeps the three row rules (no code names,
       inherited ones included; one obligation with every clause tested; a
       child within its parent).

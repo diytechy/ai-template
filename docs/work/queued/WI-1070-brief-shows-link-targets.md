@@ -6,6 +6,7 @@ specref = "docs/reviews/wi-1068-adjudicate-eighth-sitting/001-ADJUDICATE-fbd50be
 sr_refs = ["SR-146", "SR-178"]
 needs = []
 buildtier = "medium"
+planmode = "single"
 safety_class = "ordinary"
 priority = 2
 +++
@@ -34,6 +35,10 @@ owed (the act `WI: WI-1068` left them owed). F-4's slices 2 to 4 add many
 more `constrains` links; every one meets the same gap at its sitting
 unless this row lands first.
 
+Critiqued 2026-11-24 (Sol and Hydrogen;
+`docs/reviews/2026-11-24-scope-critiques/WI-1070.md`): `planmode` is `single`, and the
+coverage bound is a Done-when item.
+
 ## Done-when
 
 - [ ] For each row in an amendment brief's scope with a moved routed link,
@@ -57,6 +62,10 @@ unless this row lands first.
 - [ ] Tests, red first, over a link-only row and a row with both, through
       the amendment brief and the combined brief; a RESYNC entry if a
       shipped file or template changes.
+- [ ] Coverage bound: the promises reach registries, records and bindings
+      as supported workflows and the kit's own routes write them;
+      hand-edited kit-written state (a record copy, a ledger, a binding) is
+      outside them (PROCESS.md §6, "Review threat model").
 - [ ] The Deliverable measures the brief over WI-1068's 54 tokens before
       and after (characters), so the next sitting's split is known.
 

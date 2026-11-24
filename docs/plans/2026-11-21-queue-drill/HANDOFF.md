@@ -9,100 +9,68 @@ reading before starting.
 WI-1037 beside F-1. Variant F is filed (WI-1021 to WI-1030), critiqued, and
 its cut approved (§3.4). F-1 (WI-1021), F-2 (WI-1022), F-3 (WI-1023) and
 F-7 (WI-1027) are merged, and so is F-4's slice 1 (WI-1024), with the rows
-beside them. Seven adjudication sittings have run; the seventh (WI-1066)
-was the first under the row-scoped copy (WI-1060): it took its act with
-SR-207 and sitting A's rows left owed, no revert needed. F-4's sitting A
-(WI-1068) is filed but waits on WI-1069: the amendment brief shows no
-routed link change, so its 21 routed `constrains` links would land
-unjudged. WI-1067 (SR-207's and TC-560's answer) merged; WI-1064 is
-reviewed and ready; WI-1065 owes a narrow round 2; WI-1069 is built and
-owes its review. **Start at §0.**
+beside them. Eight adjudication sittings have run. The eighth (WI-1068,
+F-4's sitting A with 16 rows four branches owed) blessed 15 amendments and
+accepted 11 rows, but left 24 rows owed: the amendment brief shows a moved
+link without the row it points at, so no `constrains` link could be judged.
+WI-1070 (that brief fix) and WI-1071 (the verdict's text answers) are filed
+and critiqued, ready to build. WI-1064, WI-1065, WI-1067 and WI-1069 are
+merged. **Start at §0.**
 
-## 0. Resume here (2026-11-23, end of the fifth session)
+## 0. Resume here (2026-11-24, end of the sixth session)
 
-Trunk `refactor_again` is clean (`f78cb0a57` plus this hand-off's commit).
-Four branches are open in D: worktrees, each committed and clean when the
-fifth session ended. **First run `git log --oneline -3` and `git status
---short` in each worktree** and read its spec's
-Deliverable before acting: a dirty tree is a builder's unfinished work.
-Finish it in a fresh builder from its brief (the scratchpad's
-`brief-NNNN.md`), or discard it and re-brief; never commit someone else's
-half-done tree blind.
+Trunk `refactor_again` is clean at this hand-off's commit. One drill
+worktree is open, `D:/ai-template-wt-wi1024` (F-4, `maint/wi-1024` at
+`286ad02b4`, clean, nothing unmerged). **First run `git log --oneline -3`
+and `git status --short` in it**; a dirty tree is a builder's unfinished
+work (finish it from its brief, or discard and re-brief).
 
-1. **WI-1064 (the parent-first rule reads a child's parent link): merge
-   it.** `maint/wi-1064` at `4d11e2e2b`, `D:/ai-template-wt-wi1064`, clean.
-   Review round 1 over `c7d6bd6f4..4d11e2e2b`: Sol APPROVE, Hydrogen
-   APPROVE (`rev/sol-1064.md`, `rev/hyd-1064.md`). Record that in its
-   Deliverable during the merge (§7). Expect a byte-budget/ratchet/RESYNC
-   hunk or two against WI-1067; keep both RESYNC entries. The builder's
-   red in `test_snapshot_readers.py` (`-n 8`) is not real: on trunk
-   `f78cb0a57` the module gives `57 passed` (§9, a worktree's reds).
-   Smoke after the merge: the membership budget (`max-tests = 3890`) is
-   nearly full; re-stamp with about 4% headroom if it trips (§9).
-   Owed to a sitting: SR-245, LLR-357 and TC-396 (amendments).
-2. **WI-1065 (the migrator in a row-by-row record): round 1 fixes.**
-   `maint/wi-1065`, `D:/ai-template-wt-wi1065`, built to `e425d4173`.
-   Round 1: Hydrogen APPROVE; Sol three MINORs, ruled: (1) adopted, the
-   link step must leave code spans' contents alone (LLR-369's inherited
-   clause says so; Sol confirmed by execution), red-first test; (2)
-   adopted, SR-247's acceptance criteria state the scratchpad exception;
-   (3) adopted in part, LLR-369 states the copy-skip rule once, and its
-   decomposition is not done here (noted below). Fixed in `809e610f2`
-   (red line recorded in the Deliverable; inline spans and fenced blocks
-   handled, indented blocks not; the migrator modules `93 passed`; no
-   smoke-tier test added, since the tier is at its 3,890 ceiling). Next: a
-   narrow round 2 (`build_review.py 1065 e425d4173 809e610f2 --round 2
-   --findings <file>`, Sol and Hydrogen; the findings file states the three
-   rulings above), then the merge. The builder read this repository's
-   scratchpad once through the migrator before the fix (nothing printed or
-   written); its Deliverable says so. Delete `D:/review-tmp/2026-11-23-wi1065/`
-   after the merge. Owed: SR-247, LLR-369, TC-427 (amendments).
-3. **WI-1069 (the model and amendment brief show routed links): review
-   it.** `maint/wi-1069` at `c277c4185`, `D:/ai-template-wt-wi1069`, built
-   and closed out (plan `1fd247ee0`, D1 to D12 approved). Red first `27
-   failed, 8 passed`; the 86 importing modules `3134 passed` after three
-   fixes; smoke `3902 passed, 3 skipped`. Over WI-1068's 26 tokens the
-   brief now shows 26 rows (23 before), 21 with a `Constrains` link.
-   Review round 1 over `d62f3c74b..c277c4185` (Sol, split code and docs if
-   the brief passes about 150K; Sol and Hydrogen on the prose; check the
-   identity change's RESYNC guidance: take held acts before upgrading, else
-   re-sit). Confirm or overrule the builder's two calls: the smoke
-   `max-tests` re-stamp 3890 -> 4060 (29 new in-process tests, about 4%
-   headroom), and the new in-process module `test_amendment_brief_links.py`.
-   It is wide (86 importing modules): consider the unfiltered suite on its
-   merge commit, trunk-first (§9). Owed: SR-178, LLR-167, LLR-359, TC-161,
-   TC-398 (amendments); LLR-484, TC-571 (first acceptance); IF-075 and
-   IF-129 (off-spine). SR-178 now has 9 direct design rows (advisory).
-4. **Sitting A (WI-1068), once WI-1069 lands.** Re-read its scope: a dry
-   compose must show LLR-017, LLR-022 and LLR-024 and every routed
-   `constrains` change. Fix its Context first: 18 (not 20) of its 23
-   text-amended rows also gained a link (WI-1069's measurement). Add the
-   rows owed by then: SR-207, LLR-245 (WI-1067, amendments) and TC-560
-   (first acceptance); WI-1064's three; WI-1065's three; WI-1069's seven.
-   If the brief passes about 400K characters, split it in two. Scripts:
-   `sit/prepare_1066.py`, `sit/record_1066.py` and
-   `sit/preface-1066-src.md` with the ids and paths changed; `sit/flip.py`
-   for the flips. A done row's `specref` is cleared at its close.
-5. **F-4 slices 2 to 4 wait for sitting A's verdict** (the four questions
-   in `docs/plans/WI-1024/slice-1.md` §6; the coordinator's large-row
-   ruling stands). `D:/ai-template-wt-wi1024` is kept at `286ad02b4`;
-   merge trunk into it before slice 2.
-6. **Then:** WI-1045 (not beside WI-1069; both may touch
-   `acceptance_record.py`), WI-1039 on a quiet box, F-5 (WI-1025) after
-   F-4 closes. Brief every builder with the scratchpad's `common-rules.md`.
-7. **For the operator:**
-   - **SR-207 is shown to you**, as WI-1060's record says (the acceptance
-     act's rule, now per row). The seventh sitting ruled WI-1060's
-     amendment MEANING and did not bless it; WI-1067 then fronted its
-     event condition ("When the kit takes an acceptance act, it shall
-     leave the recorded text of every row the act does not accept,
-     re-accept or retire whose accepted text or adjudicated links differ
-     from its live text"), stated the retirement rule in its acceptance
-     criteria and named the constrains link among its adjudicated links.
-     It goes to the next sitting unless you take its act yourself.
+1. **WI-1070 (the amendment brief shows a linked row's own text and the
+   row each moved link names): build it.** Critiqued (Sol 2, Hydrogen 1,
+   all adopted; `planmode = "single"`, so the builder writes its plan first
+   and the coordinator approves it before the build). Ranges at launch from
+   §8. It is the gate for every later sitting that judges a link.
+2. **WI-1071 (WI-1068's text answers): build it beside WI-1070.** Critiqued
+   (Sol 2, Hydrogen 1, all adopted; `single`). The coordinator settled the
+   session-variable home at the critique: LLR-423 and TC-533 keep it,
+   LLR-300 loses the clause, TC-316's check moves to TC-533 (Sol's reading
+   over Hydrogen's). It shares the registries with WI-1070 in distinct
+   rows; land one at a time, each with `check3way.py`.
+3. **The ninth sitting, once both land.** File it then. Its scope: the 24
+   rows WI-1068 left owed (the 21 link rows LLR-010, LLR-012, LLR-013,
+   LLR-017, LLR-022, LLR-024, LLR-025, LLR-026, LLR-033, LLR-039, LLR-047,
+   LLR-118, LLR-124, LLR-130, LLR-171, LLR-198, LLR-199, LLR-258, LLR-279,
+   LLR-281, LLR-320; LLR-167, TC-161, TC-398), WI-1070's and WI-1071's
+   amended rows (LLR-300 and TC-316 at least), and the four WI-1068
+   returned (TC-530, TC-571, LLR-423, TC-533) as first acceptances. Read the
+   scope with `sit/scope.py`; derive `sr_refs` with `sit/mkspec.py`; dry
+   compose with `sit/prepare_sit.py <spec>` and split above about 400K
+   characters (WI-1070's Deliverable measures the growth). Run with
+   `sit/prepare_sit.py <spec> --bind`, `sit/record_sit.py` (write, record,
+   act) and `sit/flip.py`.
+4. **F-4's slices 2 to 4 may build now; their sittings wait on WI-1070.**
+   The coordinator's answers to slice 1's four questions
+   (`docs/plans/WI-1024/slice-1.md` §6), from WI-1068's verdict:
+   (1) a focused new row beside a large one is kept only if the same slice
+   removes the clause from the large row (LLR-423 was returned for
+   duplicating LLR-300), and a rewrite that removes code names keeps every
+   clause (LLR-039, LLR-047, LLR-199 and LLR-281 were not blessed for
+   dropped obligations); (2) file-level evidence stands: no row was
+   returned for it; (3) no companion cells in slices 2 to 4: the
+   warn-first ruling (§3.6, its second question) stands and the counts are
+   the evidence; (4) LLR-300's overlap is WI-1071's. Before slice 2,
+   fast-forward the branch to trunk (`git -C D:/ai-template-wt-wi1024
+   merge --ff-only refactor_again`; it has no unmerged commit), which
+   avoids a merge commit and the staged mirror check (§9).
+5. **Then:** WI-1045 (WI-1069 has landed, so it may go), WI-1039 on a
+   quiet box, F-5 (WI-1025) after F-4 closes. Brief every builder with the
+   scratchpad's `common-rules.md`.
+6. **For the operator:**
+   - SR-207's rewrite (WI-1067; the acceptance act's per-row rule) was
+     blessed by the eighth sitting and re-accepted (`86cb4f806`). WI-1060's
+     record shows it to you; read it there if you want to see it.
    - A push: trunk is ahead of the remote from `80d64a5f3`.
-   - Scratch folders: `D:/rt*`, `D:/review-tmp/2026-11-23-wi1060`, and
-     `D:/review-tmp/2026-11-23-wi1065` once WI-1065 merges.
+   - Scratch folders: `D:/rt*` and `D:/review-tmp/2026-11-23-wi1060`.
 
 Not filed, noted for WI-1018's list or a later row:
 - IF-231's notes still describe the reach as through the owner's design
@@ -112,10 +80,9 @@ Not filed, noted for WI-1018's list or a later row:
 - No standing report shows verdicts with waiting flips.
 - A first-acceptance act does not check that the row's text is the text
   its verdict judged (§9).
-- LLR-300's session clause overlaps F-4's new LLR-423.
 - LLR-369 (the vocabulary migrator's design row) states one obligation per
-  migrator step, a decomposition WI-1065 left out of scope; if a sitting
-  returns it, re-cut it into focused rows.
+  migrator step, a decomposition WI-1065 left out of scope; the eighth
+  sitting blessed it as is, so re-cut it only if a later sitting returns it.
 - A merge of trunk into a branch is refused by the staged mirror check
   when trunk took an act and the branch amends rows (§9).
 - The commit hook let through a closed row with its `specref` still set
@@ -123,10 +90,9 @@ Not filed, noted for WI-1018's list or a later row:
   `check_trajectory --strict` reports them, so run it before each filing
   or closing commit.
 
-Scratch tools, in the fifth session's scratchpad
-(`C:/Users/Peter/AppData/Local/Temp/claude/9919beaa12ed540b/99f332bf-ac46-4df4-8552-891df3af275a/scratchpad`,
-which may be cleared; the fourth session's, `.../bd25539d-91be-47a0-bd0e-11b24ab55e25/scratchpad`,
-still holds the earlier ones):
+Scratch tools, in the sixth session's scratchpad
+(`C:/Users/Peter/AppData/Local/Temp/claude/9919beaa12ed540b/595f0495-61dc-43c7-99df-cb7bd17b730a/scratchpad`,
+which may be cleared; it holds copies of the fifth session's tools too):
 - `resolve.py <file> ours|theirs|both ...` resolves conflict hunks in
   order; `showhunks.py <file> [width]` prints them with long lines cut;
   `check3way.py <base> <ours> <theirs> <registry>...` checks a merged TOML
@@ -136,14 +102,20 @@ still holds the earlier ones):
   `--keep-plan <path>`); it withholds the spec's diff, so append it when a
   round changes the Deliverable. For a merge of trunk into a branch, give
   the reviewer `git show --remerge-diff <merge>` (only the resolutions),
-  with the ratchet's long lines cut.
-- `mkbundle.py` and `crit/write_crit.py` build the critique bundles and
-  records; `crit/apply_crit.py` shows how dispositions were applied.
+  with the ratchet's long lines cut. `checks-NNNN.md` are the per-row
+  extra checks.
+- `mkbundle.py` and `crit2/write_crit.py` build the critique bundles and
+  records (`crit2/` holds this session's, with `pre.txt`, Sol's launcher
+  preamble); `crit2/apply.py` shows how dispositions were applied.
 - `common-rules.md` holds the row rules, the close-out and §5's builder
-  rules for appending to a builder's brief; `brief-1069.md`,
-  `brief-1067.md` and `brief-1027-blast.md` are this session's briefs.
-- Under `sit/`: `scope.py` (drifted and Drafted rows); `prepare_1066.py`,
-  `preface-1066-src.md` and `record_1066.py` (combined); `flip.py`.
+  rules for appending to a builder's brief; `brief-1069.md` is the last
+  build brief.
+- Under `sit/`, generalized this session: `scope.py` (drifted and Drafted
+  rows), `mkspec.py <out> amendment:ID,... first-acceptance:ID,...` (the
+  SRs above each token), `prepare_sit.py <spec> [--bind]` (dry compose, or
+  compose, reserve, bind and bundle), `preface-1068-src.md` (the combined
+  preface), `record_sit.py <spec> <verdict> write|record|act [ids]`,
+  `flip.py`, and `close_1068.py` (a close in place).
 
 Each is small enough to rebuild from §4, §6 and §3.7 if lost.
 
@@ -205,12 +177,10 @@ adjudication sittings by Gemini Neon through `agy` (operator, 2026-11-21;
 
 | Item | What | Wave | Notes |
 |---|---|---|---|
-| WI-1069 | The acceptance model and the amendment brief show each routed link change, link-only rows too | Building (§0 step 1) | Filed while preparing sitting A; critiqued (Sol 3 findings adopted, Hydrogen APPROVE); `planmode = "single"` |
-| WI-1067 | WI-1066's verdict answered: SR-207's text, TC-560's two faults | Building (§0 step 2) | Critiqued (Sol 1 finding adopted, Hydrogen APPROVE) |
-| WI-1068 | Sitting A: F-4's slice 1, 26 amended rows and 12 new rows | After WI-1069 (§0 step 3) | Filed `d79578657`; add WI-1067's rows if it has landed |
-| WI-1024 slices 2 to 5 | The rest of F-4 | After sitting A's verdict (§0 step 4) | Slice 1 merged `6ed2cfc28`; worktree kept |
-| WI-1064 | The parent-first rule reads a child design row's parent link | Ready to build | Critiqued (Sol 2, Hydrogen 1, all adopted); `planmode = "single"` |
-| WI-1065 | The vocabulary migrator's record step in a record holding a row-by-row act | Ready to build | Choice ruled (refined (c), 2026-11-23); critiqued (Sol 2, Hydrogen 1, all adopted); `planmode = "single"` |
+| WI-1070 | The amendment brief shows a linked row's own text and the row each moved link names | Ready to build (§0 step 1) | Filed from WI-1068's verdict; critiqued (Sol 2, Hydrogen 1, all adopted); `planmode = "single"` |
+| WI-1071 | WI-1068's verdict answered: dropped clauses, three test cases, LLR-423's home | Ready to build (§0 step 2) | Critiqued (Sol 2, Hydrogen 1, all adopted; the home settled); `planmode = "single"` |
+| Ninth sitting | WI-1068's 24 owed rows, its four returned, WI-1070's and WI-1071's rows | After WI-1070 and WI-1071 (§0 step 3) | Not filed yet |
+| WI-1024 slices 2 to 5 | The rest of F-4 | May build (§0 step 4); sittings after WI-1070 | Slice 1 merged `6ed2cfc28`; worktree kept, fast-forward to trunk first |
 | WI-1021 to WI-1030 | Variant F's rows (F-1 to F-10, §3.3 N6, §3.4) | F, after the N6 stop | Filed and critiqued (round 1, Sol and Argon, all findings applied, `a57782d59`). Order by `needs`: 1021; 1022; 1023; then 1024 and 1027 (either order); 1025; then 1026, 1028 and 1030; then 1029. Built side by side where `needs` allows, landing one at a time (plan revision 37). F-1 merged (`147fed185`), F-2 merged (`b2b0d9476`), F-3 merged (`4335c1a4d`); F-4 slice 1 merged (`6ed2cfc28`), F-7 merged (`0303183a3`); next F-4's slices 2 to 5, then 1025 |
 | WI-1016 | A repository can switch off the implementation layer | After F | Re-critiqued once F lands; reverses SR-186, so its amendment is drafted for the operator |
 | WI-1018 | Row text a lane leaves stale is filed, and the first set is brought up to the code | After F-8 | F-8's text migration takes B1, B7 and B9 and likely more; this row then fixes what is left |
@@ -851,6 +821,11 @@ Fifth session: both merged; trunk's marks are SR 251, LLR 483, TC 568,
 IF 326, WI 1069 (WI-1066 to WI-1069 filed). Ranges at launch: WI-1069 LLR
 484 to 489 and TC 571 to 580; WI-1067 TC 569 to 570 (none expected). Next
 free: LLR 490, TC 581.
+Sixth session: WI-1069 used LLR-484 and TC-571; trunk's marks are SR 251,
+LLR 484, TC 571, IF 326, WI 1071 (WI-1070 and WI-1071 filed). Ranges for
+the next launches: WI-1070 LLR 485 to 489 and TC 572 to 580; WI-1071 LLR
+490 to 492 and TC 581 to 585 (it expects none; a re-cut needs them);
+F-4's slice 2 from LLR 493 and TC 586.
 
 WI-1019 used LLR-395 only; its TC range went unused and passes to WI-1021,
 which used LLR-396 and LLR-397, TC-457 to TC-461 and IF-326; the rest of its
@@ -951,6 +926,16 @@ stops and asks.
   `docs/ratify/CURRENT.md` and `docs/open-items.html` predate the copy. Run
   `trunk_step.py --root . --regen` after `intake.py snapshot` and stage
   both in the act's commit.
+
+- **Never write into trunk's tree while a background commit runs there.**
+  A `git add -A` in a running command sweeps in whatever is written before
+  it runs: at WI-1068's act a new spec was staged into the act's commit;
+  the coordinator stopped the commit (no lock left), unstaged the spec,
+  moved it out, regenerated and recommitted. Stage named paths, or wait.
+- **The amendment brief shows a moved link without its target** (until
+  WI-1070 lands): a sitting judges a link-only row and a `constrains`
+  link from the bare id, so it rules MEANING and does not bless. Do not
+  send link rows to a sitting before WI-1070.
 
 ## 10. Progress log
 
@@ -1425,3 +1410,40 @@ Append one line per step taken: the item, what happened, the commit.
   refusal; D7 the link step never opens the scratchpad), built, round 1
   Hydrogen APPROVE and Sol three MINORs ruled (§0 step 2). The hand-off
   written at the session's end with two builders still running (§0).
+- 2026-11-23/24 (sixth session): WI-1064 merged `42519b754` (review
+  recorded at the merge: Sol and Hydrogen APPROVE; the builder's
+  `test_snapshot_readers` red not reproduced on trunk), regen `fb07bcaba`;
+  smoke `3886 passed, 3 skipped`. WI-1069 review round 1: Hydrogen APPROVE;
+  Sol, split in code and documents halves (the whole brief was 164K), one
+  MAJOR in both (the RESYNC guidance: an act taken on a lane but not landed
+  is refused at landing, since the merge slot re-judges each lane commit;
+  now "take and land", with the recovery) and one MINOR (LLR-484's lone
+  accepted group stays unlabelled; TC-571 names it; the `Drafted` collapse
+  left to OI-71's case), both adopted, fixed `a8d4baad9`; round 2 both
+  APPROVE. The builder's smoke re-stamp 3890 -> 4060 and new in-process
+  module confirmed. Merged trunk-first on a temporary branch (`d4bc87a41`,
+  regen `db107c829`); the unfiltered suite there gave `8514 passed, 31
+  skipped` (36:10), no failure; trunk fast-forwarded. WI-1065 round 2:
+  Hydrogen APPROVE, Sol one MINOR (a backslash-escaped backtick opened a
+  code span), adopted, red first, fixed `54579f85e` (TC-427's method names
+  the cases); round 3 both APPROVE. Merged `e489f8a03` (status.md's
+  generated queue line took trunk's), regen `6fc3042b8`; smoke `3927
+  passed, 3 skipped`. Worktrees wi1064, wi1065 and wi1069 removed, with
+  `D:/review-tmp/2026-11-23-wi1065` and `-wi1069`.
+- 2026-11-24 (sixth session): WI-1068 (sitting A) re-scoped `fbd50be29`:
+  the 38 slice-1 tokens plus the 16 rows WI-1064, WI-1065, WI-1067 and
+  WI-1069 owe (39 amendments, 15 first acceptances, 32 SRs); the brief
+  387,509 characters, under the split bound, so one sitting; it shows the
+  three link-only rows and all 21 constrains links.
+- 2026-11-24 (sixth session): the eighth sitting, WI-1068 (Neon 589 s,
+  combined): 15 amendments blessed (SR-211 CLARITY; SR-178, SR-207, SR-245,
+  SR-247, SR-249, LLR-245, LLR-357, LLR-359, LLR-369, LLR-403, TC-195,
+  TC-396, TC-427, TC-480 MEANING+BLESS), 24 MEANING not blessed (the 21
+  link rows, since the brief shows neither the linked interface nor a
+  link-only row's text, confirmed from the brief; LLR-167, TC-161; TC-398;
+  four link rows also dropped clauses); 11 ACCEPT, 4 RETURN (TC-530,
+  TC-571, LLR-423, TC-533). Verdict `51c6db6eb`, recorded `87746787d`,
+  re-acceptance `86cb4f806` (LEFT OWED the 24, no revert), first
+  acceptance `d4554561b`. Closed `d35dc2a52` with WI-1070 and WI-1071
+  filed; both critiqued (Sol and Hydrogen, every finding adopted; the
+  session-variable home settled on LLR-423), with this hand-off.
