@@ -2,7 +2,7 @@
 id = "WI-1074"
 title = "adjudicate: the ninth sitting, the eighth's owed rows, WI-1070's and WI-1071's, and F-4's slice 2: 50 amended, 10 new"
 workstream = "process"
-specref = "docs/reviews/wi-1068-adjudicate-eighth-sitting/001-ADJUDICATE-fbd50be.md"
+specref = ""
 sr_refs = ["SR-006", "SR-007", "SR-010", "SR-017", "SR-018", "SR-019", "SR-020", "SR-022", "SR-024", "SR-026", "SR-031", "SR-032", "SR-033", "SR-035", "SR-040", "SR-043", "SR-046", "SR-049", "SR-070", "SR-112", "SR-144", "SR-146", "SR-148", "SR-150", "SR-157", "SR-158", "SR-167", "SR-168", "SR-170", "SR-178", "SR-205", "SR-208", "SR-209", "SR-216", "SR-217", "SR-218", "SR-224", "SR-229", "SR-237", "SR-238"]
 needs = ["WI-1070", "WI-1071"]
 buildtier = "medium"
@@ -11,6 +11,48 @@ brief = "combined"
 adjudicates = ["amendment:LLR-006", "amendment:LLR-007", "amendment:LLR-010", "amendment:LLR-012", "amendment:LLR-013", "amendment:LLR-014", "amendment:LLR-016", "amendment:LLR-017", "amendment:LLR-019", "amendment:LLR-020", "amendment:LLR-022", "amendment:LLR-024", "amendment:LLR-025", "amendment:LLR-026", "amendment:LLR-031", "amendment:LLR-033", "amendment:LLR-038", "amendment:LLR-039", "amendment:LLR-040", "amendment:LLR-047", "amendment:LLR-077", "amendment:LLR-098", "amendment:LLR-118", "amendment:LLR-124", "amendment:LLR-130", "amendment:LLR-146", "amendment:LLR-167", "amendment:LLR-171", "amendment:LLR-198", "amendment:LLR-199", "amendment:LLR-242", "amendment:LLR-247", "amendment:LLR-256", "amendment:LLR-257", "amendment:LLR-258", "amendment:LLR-261", "amendment:LLR-279", "amendment:LLR-281", "amendment:LLR-291", "amendment:LLR-300", "amendment:LLR-320", "amendment:LLR-359", "amendment:LLR-484", "amendment:TC-042", "amendment:TC-047", "amendment:TC-161", "amendment:TC-195", "amendment:TC-291", "amendment:TC-316", "amendment:TC-398", "first-acceptance:LLR-423", "first-acceptance:LLR-493", "first-acceptance:LLR-494", "first-acceptance:LLR-495", "first-acceptance:TC-530", "first-acceptance:TC-533", "first-acceptance:TC-571", "first-acceptance:TC-586", "first-acceptance:TC-587", "first-acceptance:TC-588"]
 priority = 2
 +++
+
+## Deliverable
+
+Run on trunk by the queue drill's coordinator on 2026-11-24. The ninth
+combined adjudication sitting judged the 60 rows its `adjudicates` names
+(Gemini Neon, 587 seconds, one session, on a 344,194-character brief
+composed at `ee3f5288e`, the first composed after WI-1070). Its verdict
+(`docs/reviews/wi-1074-adjudicate-ninth-sitting/001-ADJUDICATE-ee3f528.md`,
+`efcdbed4f`) was recorded by `record_outcome` (`e8c7896c1`), and the act
+it derives is taken whole. No operator ruling was needed: the act's first
+snapshot was tested read-only and read no refusal, and the one unblessed
+row stayed owed without blocking it.
+
+- **Re-accepted (`ed5ea710a`), 49 rows.** CLARITY: LLR-010, LLR-012,
+  LLR-013, LLR-017, LLR-019, LLR-020, LLR-024, LLR-025, LLR-026, LLR-031,
+  LLR-033, LLR-047, LLR-118, LLR-124, LLR-130, LLR-146, LLR-171, LLR-198,
+  LLR-256, LLR-258, LLR-261, LLR-279, LLR-281, LLR-291, LLR-320, LLR-484.
+  MEANING+BLESS: LLR-006, LLR-007, LLR-016, LLR-022, LLR-038, LLR-039,
+  LLR-040, LLR-077, LLR-098, LLR-167, LLR-199, LLR-242, LLR-247, LLR-257,
+  LLR-300, LLR-359, TC-042, TC-047, TC-161, TC-195, TC-291, TC-316, TC-398.
+  Every one of the 40 rows with a moved `constrains` link is among them:
+  with WI-1070's brief (the row shown whole, the linked interfaces listed
+  as context) the sitting answered the link question for each. The eighth
+  sitting's 24 owed rows, WI-1070's and WI-1071's amendments, LLR-484 and
+  WI-1024's slice 2 all leave the owed list but LLR-014.
+- **Accepted (`8fb0840df`), 10 rows:** LLR-423, LLR-493, LLR-494,
+  LLR-495, TC-530, TC-533, TC-571, TC-586, TC-587 and TC-588, flipped
+  together in one commit. The four the eighth sitting returned (TC-530,
+  TC-571, LLR-423, TC-533) are accepted on WI-1071's text; the
+  session-variable decision now has one accepted home (LLR-423, TC-533),
+  and LLR-300's re-accepted text no longer states it.
+- **MEANING, not blessed, left owed at its recorded text (the ledger's
+  `kept`):** LLR-014. Its unmeasured fail-level budget line says "a skip"
+  where IF-004 and the code say WARN (marked as a skip), and it omits
+  IF-147's baseline-update refusal with no metrics and IF-167's report
+  behaviour. Follow-up: WI-1024's slice 3 answers it (the coordinator
+  added it to that slice's scope).
+- **Held out of this sitting** (WI-1024's plan, D11): LLR-421, LLR-422,
+  TC-531 and TC-532 stay `Drafted` until slice 5.
+- **Not shown:** IF-312 and CMP-006 still drift in their off-spine
+  registries, and the `Drafted` interface rows stay so; the brief shows no
+  off-spine row.
 
 ## Context
 
@@ -68,11 +110,11 @@ session, never fanned out (PROCESS.md §6).
 
 ## Done-when
 
-- [ ] The verdict is recorded beside its binding under
+- [x] The verdict is recorded beside its binding under
       `docs/reviews/wi-1074-adjudicate-ninth-sitting/`, as the adjudicator
       returned it, and `record_outcome` reads it recorded.
-- [ ] The act `compose_act` derives is taken, each part in its own commit;
+- [x] The act `compose_act` derives is taken, each part in its own commit;
       a row the act leaves owed is listed. A refusal of any other kind goes
       to the operator.
-- [ ] Each MEANING amendment and RETURN row is listed in the Deliverable
+- [x] Each MEANING amendment and RETURN row is listed in the Deliverable
       with its finding, and its follow-up is filed or named.

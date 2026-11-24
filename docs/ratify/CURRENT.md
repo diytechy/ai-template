@@ -6,14 +6,14 @@ _Baseline: `docs/archive/last_accepted` — each registry's copy, named by the c
 
 _Baseline: `docs/requirements/stakeholder-needs.toml` copied 2026-11-16 (db12d3857)._
 _Baseline: `docs/requirements/system-requirements.toml` copied 2026-11-24 (86cb4f806)._
-_Baseline: `docs/requirements/low-level-requirements.toml` copied 2026-11-24 (ed5ea710a)._
-_Baseline: `docs/test/test-cases.toml` copied 2026-11-24 (ed5ea710a)._
+_Baseline: `docs/requirements/low-level-requirements.toml` copied 2026-11-24 (8fb0840df)._
+_Baseline: `docs/test/test-cases.toml` copied 2026-11-24 (8fb0840df)._
 _Baseline: `docs/requirements/interfaces.toml` copied 2026-11-20 (0e67ffffb)._
 _Baseline: `docs/requirements/external.toml` copied 2026-11-16 (675f5b7a4)._
 _Baseline: `docs/requirements/components.toml` copied 2026-11-20 (0e67ffffb)._
 _Baseline: `docs/requirements/assumptions.toml` copied 2026-11-20 (46d518b56)._
 
-_Acceptance provenance: the last acceptance act is the act ledger's seq 199, dated 2026-11-24; its commit is not in the available history: no commit adds it yet, so the act is not committed._
+_Acceptance provenance: the last acceptance act is the act ledger's seq 199, dated 2026-11-24, added by commit 8fb0840dfc65._
 
 ## Off-spine census
 
