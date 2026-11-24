@@ -819,6 +819,42 @@ def test_two_calls_naming_one_verdict_path_never_share_its_verdict(
     assert verdict.read_bytes() == b""  # A's reservation, left for inspection
 
 
+def test_the_adjudicate_reading_names_the_keep_the_exit_and_the_verdict(
+    tmp_path, monkeypatch, launched, capsys
+):
+    """Implements: TC-321"""
+    # The reading a coordinator reads: the call's retention, its exit, then,
+    # for a successful call, the verdict and its validity or that it wrote
+    # none; a failed call says its verdict is not read.
+    root = _repo(tmp_path)
+    _signed_in(monkeypatch)
+    assert _adjudicate(root) == 0
+    lines = capsys.readouterr().out.splitlines()
+    assert "keep: minting a retained session" in lines, lines
+    assert "adjudicate: exit 0" in lines, lines
+    assert "adjudicate: verdict valid" in lines, lines
+    assert lines.index("adjudicate: exit 0") < lines.index("adjudicate: verdict valid")
+
+    def failed(argv, root_, timeout, **kw):
+        VERDICT["path"].write_text("VERDICT: MEANING rows=SR-1\n", encoding="utf-8")
+        return 1, _claude_stream(10), False
+
+    monkeypatch.setattr(svc, "run_session", failed)
+    assert _adjudicate(root) == 1
+    lines = capsys.readouterr().out.splitlines()
+    assert [ln for ln in lines if ln.startswith("keep: ")], lines
+    assert "adjudicate: exit 1" in lines, lines
+    assert "adjudicate: the call failed; its verdict is not read" in lines, lines
+
+    def wrote_nothing(argv, root_, timeout, **kw):
+        return 0, _claude_stream(10), False
+
+    monkeypatch.setattr(svc, "run_session", wrote_nothing)
+    assert _adjudicate(root) == 1
+    out = capsys.readouterr().out
+    assert "adjudicate: verdict missing: the call wrote nothing to" in out, out
+
+
 def test_a_call_whose_session_writes_into_its_reservation_succeeds(
     tmp_path, monkeypatch, launched
 ):

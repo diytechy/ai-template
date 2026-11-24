@@ -743,6 +743,22 @@ def test_cli_prints_the_frontier_and_the_simulation_as_text_lines(tmp_path, caps
     ]
 
 
+def test_no_command_prints_the_usage_and_an_empty_text_answer_says_so(tmp_path, capsys):
+    """Implements: TC-058"""
+    # Given no command the scheduler prints its usage and exits 2. A text
+    # answer with nothing in it is one line saying so, never silence: no ready
+    # work item, an empty registry explained, nothing to schedule.
+    assert sched.main(["--root", str(tmp_path)]) == 2
+    assert capsys.readouterr().out.startswith("usage:")
+    _write_registry(tmp_path, [])
+    assert sched.main(["--root", str(tmp_path), "ready"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["schedule: no ready work items"]
+    assert sched.main(["--root", str(tmp_path), "ready", "--explain"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["schedule: (empty registry)"]
+    assert sched.main(["--root", str(tmp_path), "simulate"]) == 0
+    assert capsys.readouterr().out.splitlines() == ["schedule: nothing to schedule"]
+
+
 def test_a_generated_view_projects_the_frontier_and_omits_it_without_the_scheduler(
     tmp_path, monkeypatch
 ):

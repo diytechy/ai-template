@@ -424,6 +424,7 @@ def test_a_retained_and_a_fresh_act_turn_take_the_same_act_from_one_verdict(
     assert results["kept"][1] == results["fresh"][1]
     copy = results["kept"][1]["docs/archive/last_accepted/" + taa.SRS]
     assert "add two integers." in copy
+    assert "act: exit 0" in results["kept"][0]
     assert "act: complete" in results["kept"][0]
 
 

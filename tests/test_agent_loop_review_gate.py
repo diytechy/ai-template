@@ -590,7 +590,7 @@ def test_the_failure_count_survives_a_resume_and_a_pass_resets_it(tmp_path):
 
 
 def test_the_failure_count_survives_a_resume_to_the_cap_and_exits_12(tmp_path):
-    """Implements: TC-378"""
+    """Implements: TC-378, TC-028"""
     # TC-378. Two failures in one run and a third in a fresh process reach a cap
     # of 3: the resumed worker ends with the cap's own code and banner.
     lane, ctl, cmd = _lane(tmp_path)

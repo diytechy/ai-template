@@ -205,7 +205,7 @@ def test_route_and_account_environments_that_collide_are_refused(tmp_path):
 def test_an_unreadable_enable_list_is_an_error_and_an_absent_one_is_routing_off(
     tmp_path,
 ):
-    """Implements: TC-361"""
+    """Implements: TC-361, TC-046"""
     docs = _docs(tmp_path)
     assert route.load_enabled_entries(docs / "agents-enabled") == ([], [])  # absent
     (docs / "agents-enabled").mkdir()  # exists, cannot be read as a file
