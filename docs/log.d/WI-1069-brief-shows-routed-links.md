@@ -47,3 +47,9 @@ Deliverable holds the per-item record, the approval and the acts owed.
 <!-- fig: cmd="python -m pytest -q -n auto -p no:cacheprovider --basetemp <scratch> <the 86 modules>; python project-trajectory/scripts/run_menu.py smoke" rev="maint/wi-1069 at 144f9d8ef (module run) and 5f3907bb7 (smoke), 2026-11-23" -->
 - Deferred open items: none — the operator owes no decision from this row;
   every amended and minted row goes to the next sitting as an owed act.
+- Review round 1: Hydrogen APPROVE; Sol (code and docs halves) one MAJOR,
+  adopted (the RESYNC entry now says to take and land held CLARITY acts
+  before upgrading, and how a leftover row is re-sat), and one MINOR,
+  adopted (LLR-484 states that a lone accepted group stays unlabelled;
+  TC-571's expected names it). The builder's smoke re-stamp and new module
+  confirmed.

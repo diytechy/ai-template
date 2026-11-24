@@ -12674,11 +12674,19 @@ links, and a link moved after a verdict refuses a held act, a held claim and
 the held-MEANING operator row as moved text does.
 
 **What to do.** Regenerate the acceptance brief and the operator page: they
-may now list chains they did not. Before upgrading, take any held CLARITY act
-still owed under a verdict you have already bound: after the upgrade, a
-binding written before it refuses a held row that carries any routed link,
-naming both digests, and that row's verdict is re-sat. A binding on a row
-with no routed link reads as before. If you override
+may now list chains they did not. After the upgrade, a verdict's binding
+written before it no longer matches a held row that carries any routed link,
+so every consumer of that binding fails closed for the row. So before
+upgrading, take every held CLARITY act still owed under a verdict you have
+already bound, **and land it on trunk**: the merge slot judges each lane
+commit again with the upgraded code, so an act taken on a lane but not yet
+landed is refused at landing, naming both digests. Any such row left over
+after the upgrade (an act not taken, or taken and refused at landing; drop
+the refused act commit from its lane) is re-sat: compose the amendment brief
+again, which now shows the row's links, and bind the new verdict. A held
+MEANING verdict bound before the upgrade on such a row mints no operator row
+after it, so that row stays owed and is re-sat the same way. A binding on a
+row with no routed link reads as before. If you override
 `adjudicate-amendment.template.md`, carry its new LINKS paragraph and labels
 into your copy. The template edit moves the retained-session identity, which
 hashes the template file's bytes, so a retained adjudicator whose classes

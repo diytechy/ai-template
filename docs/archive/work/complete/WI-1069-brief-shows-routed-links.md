@@ -175,6 +175,41 @@ operator.
 WI-1068 waits on this row; with it landed, its scope shows 26 rows, and the
 seven rows above are owed beside it.
 
+**Review record.** Round 1 (2026-11-23, over `d62f3c74b..c277c4185`), the
+coordinator's brief: OpenAI Sol (low) in two halves, the code
+(`CHANGES-REQUESTED findings=2`) and the registries and documents
+(`CHANGES-REQUESTED findings=1`); Gemini Hydrogen (low) over the prose, the
+rows and this record, `APPROVE findings=0`. The coordinator's rulings:
+
+1. **Adopted** (MAJOR, both Sol halves, confirmed by reading): the RESYNC
+   entry told an adopter to *take* a held CLARITY act before upgrading. That
+   is not enough: the merge slot judges each lane commit again with the
+   upgraded code (`held_status.commit_held_acceptance_lines`, whose
+   exception recomputes the widened identity), so an act taken on a lane but
+   not landed is refused at landing for a row carrying a routed link. The
+   entry now says to take and land each such act on trunk before upgrading,
+   and how a row left over is re-sat (an act not taken, or taken and refused
+   at landing, and a held MEANING verdict on such a row, which mints no
+   operator row after the upgrade).
+2. **Adopted** (MINOR, Sol's code half): LLR-484 said the accepted cells are
+   labelled as owing a re-acceptance, but a row whose only moved cells are
+   accepted ones keeps today's unlabelled list, as
+   `test_the_acceptance_brief_labels_a_row_with_both` pins. LLR-484's detail
+   now states that exception, and TC-571's expected names the unlabelled
+   first row. The `Drafted` row's single group is OI-71's rule, tested under
+   its own case, so LLR-484 does not restate it.
+3. **The builder's two calls, confirmed:** the smoke tier's `max-tests`
+   3890 -> 4060 (29 new in-process cases, about 4% headroom, with its
+   reason) and the new in-process module
+   `tests/test_amendment_brief_links.py`. Hydrogen judged both sound and Sol
+   raised neither. SR-178's nine direct design rows are an existing
+   condition this branch adds one to; Hydrogen judged it not a finding
+   against this branch.
+
+Fixed in the commit after `c277c4185`: the RESYNC entry, LLR-484 `detail`
+and TC-571 `expected` (both `Drafted`, still owed a first acceptance). No
+code changed.
+
 ## Context
 
 Filed on trunk on 2026-11-23 by the queue drill's coordinator, while
