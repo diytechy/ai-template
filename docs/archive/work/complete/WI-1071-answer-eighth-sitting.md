@@ -27,9 +27,12 @@ stated by a spine row or by the plan the coordinator approved. The specref
   the plan's approval line.
 - `dcb748c9a`: the row text, the regenerated evidence and the regenerated
   views.
-- The close-out commit: TC-533 cites IF-277 (the deviation below), this
-  Deliverable, the move to `docs/archive/work/complete/`, the log
+- `b5ed556d9`: the close-out: TC-533 cites IF-277 (the deviation below),
+  this Deliverable, the move to `docs/archive/work/complete/`, the log
   fragment, the views.
+- The round-1 commit after it: the fixes review round 1 asked for (the
+  review record, at the end), with this record, the log fragment and the
+  views.
 
 **1. The four rows' dropped clauses (Done-when 1).** Each row's live
 `detail` was diffed against its acceptance-record copy and every dropped
@@ -42,7 +45,7 @@ Its `constrains` link is unchanged (WI-1070 makes the brief show it).
 | LLR-047 | a capability name keeps its case | restated | the same test (`Serve` lists and launches; `serve` exits 2) |
 | LLR-047 | an orphan description row and an empty-value command are dropped | restated | `test_an_orphan_description_and_an_empty_command_are_dropped` (new) |
 | LLR-039 | front matter as JSON-quoted YAML scalars | restated ("as JSON-quoted strings, which YAML reads as scalars") | `test_front_matter_scalars_are_json_strings` (new) |
-| LLR-039 | the freshness check fails after a document edit and on a missing bundle file | restated, the edit bounded to a guide document's first heading or paragraph (an edit elsewhere moves no bundle byte) | `test_check_trips_on_a_guide_edit_and_a_missing_bundle_file` (new) |
+| LLR-039 | the freshness check fails after a document edit and on a missing bundle file | restated, bounded (round 1) to "an edit that changes a guide's derived title or summary": the summary is clipped to 240 characters and its links stripped, so an edit outside the derived text moves no bundle byte | `test_check_trips_on_a_guide_edit_and_a_missing_bundle_file` (new; round 1 adds the title arm) |
 | LLR-039 | the legacy opt-out file | restated as the precedence the code holds: with no declared choice a legacy one-word file reading off silences the step, and a declared choice overrides it (no "migration window" wording, D4) | `test_the_legacy_opt_out_file_silences_only_with_no_declared_choice` (new) |
 | LLR-039 | small loaders duplicated, no new sibling import | **reported, no longer enforced**: the generator imports the spine carrier and the shared package; the text says nothing of it | none |
 | LLR-199 | unplaced design rows in the counted unplaced table | **home: LLR-403** (accepted), which states that the component view lists each unplaced row in its unplaced table, counted in its census; LLR-199's text now names LLR-403 for both placement and the unplaced rows ("as LLR-403 states") | TC-480's `tests/test_llr_trace_cells.py::test_the_views_show_where_each_design_row_sits` |
@@ -64,7 +67,8 @@ The verifying test cases now state what their rows state (D12), each with
 its inherited code names scrubbed: TC-047 (`method`, `expected`: literal
 values, kept case, dropped rows; `--list`, `run_menu.py`, `[run]`,
 `RUN_CMD`, `PATH`, `python.exe` gone), TC-042 (`method`, `expected`: JSON
-round trip, guide edit, missing file, legacy file; `--check` and
+round trip, an edit changing a guide's derived title or summary, missing
+file, legacy file; `--check` and
 "gen-okf" gone), TC-195 (`method`: THE HEADER and THE TRUNK WIRING
 sentences), TC-291 (`method`, `expected`: the SHORT line with its length,
 the floor first; `--check` and `short_descriptions` gone). TC-342, TC-460
@@ -169,13 +173,21 @@ TC-533) is the one home; its text is unchanged and it and TC-533 stay
 
 **6. The three row rules (Done-when 6).** Every row touched: LLR-039,
 LLR-047, LLR-199, LLR-281, LLR-300, TC-042, TC-047, TC-195, TC-291,
-TC-316, TC-398, TC-530, TC-571, and TC-533 (evidence only). No text
-written here names a code file, module, function, symbol, CLI flag or
-test name, and the inherited ones in every cell touched are gone (a scan
-of the added lines for underscores, flags, `.py` names and backticks
-finds none); `SHORT` is a printed marker, and LLR-403 a row id. Each
-clause each row states is driven by a test its test cases name (items 1
-to 5). Each amended LLR stays inside its parents (LLR-047 in SR-046,
+TC-316, TC-398, TC-530, TC-571, and TC-533 (evidence and `verifies`).
+No text written here names a code file, module, function, symbol, CLI flag
+or test name, and the inherited ones in every cell touched are gone: the
+first pass's scan (underscores, flags, `.py` names, backticks) missed
+LLR-047's inherited "dev-setup", the setup script's name, which round 1
+restates as "the development setup's" (twice); a scan of every touched
+row's whole text for hyphenated and mixed-case names then finds only
+"OKF" in LLR-039's untouched title (the bundle format's own name, not
+code), "PowerShell" (a shell), "DevStg-Impl" (a stage name) and
+"AcceptanceCriteria" (a cell name used as vocabulary). `SHORT` is a
+printed marker, and LLR-403 a row id. Each clause each row states is
+driven by a test its test cases name (items 1 to 5). **The one-obligation
+rule is not claimed for LLR-300**: it stays one row by the coordinator's
+ruling (D8), a sitting may judge it as several obligations, and a split
+would be its own row. Every other touched row states one obligation. Each amended LLR stays inside its parents (LLR-047 in SR-046,
 which gives it the declaration grammar by name; LLR-039 and LLR-199 in
 SR-070's generated-view contract; LLR-281 in SR-224; LLR-300 in SR-229 and
 SR-237, from which it only lost a clause), and each test case states
@@ -208,6 +220,9 @@ was committed (D1).
 | `trace.py`: the no-act group's cells dropped, its label kept | `test_both_surfaces_label_the_three_groups_alike` | `tests/test_routed_link_owed.py:167: AssertionError` (the new assertion: no phase cell under the label) |
 | `coordinator_guard.py`: the threshold's range unbounded | `test_a_malformed_threshold_leaves_the_guard_off` | `[-5]` and `[150]`: `assert GuardConfig(t...window=200000) == GuardConfig(t...window=200000)`; `2 failed, 1 passed` (the wrong type still off) |
 | `kitlib/shell_line.py`: an unclosed double quote read as closed | `test_an_unreadable_command_line_is_denied_inside_the_window` | `AssertionError: echo "unbalanced; claude -p x` |
+
+| (round 1) `trace.py`: each cell's before and after swapped | `test_both_surfaces_label_the_three_groups_alike` (the phase cell's values inside the no-act section) | `[page]`: `tests/test_routed_link_owed.py:175: AssertionError: <div class="cellname">Phase <span class="pill">100% of the words changed</span></div><div class="diff"><del>2</del><ins>1</ins></div>`; `[brief]`: `:172`, its section reading "before: 2", "after: 1" |
+| (round 1) `gen_okf.py`: a guide's title not derived | `test_check_trips_on_a_guide_edit_and_a_missing_bundle_file` (the title arm) | `tests/test_gen_okf.py:158: AssertionError: gen_okf: OKF bundle up to date (17 file(s)).` |
 
 Not red, being no new assertion: TC-398's tests (item 2), the re-tag to
 TC-533 and the window-check test's TC-339 tag.
@@ -295,6 +310,42 @@ regenerated):
 - TC-533 citing IF-277 (above) is a choice the coordinator may overrule.
 - LLR-300 stays one row (D8): a sitting may still judge it as several
   obligations, and a split would be its own row.
+
+**Review.** Round 1: Gemini Hydrogen APPROVE findings=0; OpenAI Sol four
+MINORs, ruled by the coordinator and fixed in the round-1 commit:
+1. Adopted: LLR-039's "after an edit to a guide document's first heading
+   or paragraph" promised more than the code does (the summary is clipped
+   to 240 characters and its links stripped). The row, TC-042's method and
+   expected, and item 1 now say "an edit that changes a guide's derived
+   title or summary". The test's summary edit lands inside the derived
+   summary: after regeneration the guide carries it (`assert derived in
+   guide.read_text(encoding="utf-8"), derived` for `" Edited."` appended
+   to the first prose line); a title arm (the first heading plus
+   `" Retitled"`) was added so both halves of the clause are driven. No
+   boundary test: an edit that changes nothing is not a clause the row
+   states.
+2. Adopted: LLR-047's inherited "dev-setup" (the setup script's name) now
+   reads "the development setup's ordinary runtime search" and "the
+   development setup's readiness operation", every obligation kept. No
+   other touched row carried it (item 6's scan).
+3. Partly adopted: LLR-300 stays one row (D8), and item 6 no longer claims
+   the one-obligation rule for it.
+4. Adopted: `test_both_surfaces_label_the_three_groups_alike` now asserts
+   the phase cell's name and its before (1) and after (2) inside the
+   no-act section on both surfaces, red against a mutant that swaps each
+   cell's before and after (the red-first table, round 1).
+
+Round 1's tests: `tests/test_routed_link_owed.py`,
+`tests/test_gen_okf.py`, `tests/test_run_menu.py`,
+`tests/test_run_devsetup.py` and `tests/test_bootstrap.py` (the modules of
+the rows whose text changed: TC-571; LLR-039 and TC-042; LLR-047 through
+TC-047 and TC-342): `235 passed, 18 skipped in 323.09s (0:05:23)`.
+`trace.py --root . --regen-evidence`: "trace: every evidence cell is
+current". `check_trajectory.py --root . --strict`: exit 0,
+"check_trajectory: clean (1068 work item(s), 941 done (88%), 37
+cancelled, graph acyclic)."
+
+<!-- fig: cmd="python -m pytest -q -n auto tests/test_routed_link_owed.py tests/test_gen_okf.py tests/test_run_menu.py tests/test_run_devsetup.py tests/test_bootstrap.py; python project-trajectory/scripts/check_trajectory.py --root . --strict; mutant.py (scratch) on the two round-1 assertions" rev="maint/wi-1071 at b5ed556d9 plus the round-1 fixes" -->
 
 ## Context
 

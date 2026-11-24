@@ -39,6 +39,14 @@ per-item record, the mutants and the acts owed.
 - **Left:** the component view header's stale placement sentence (D13);
   `trace.py --strict` fails on LLR-484's "such as" form finding, on this
   branch and its base alike, outside this row.
+- **Review round 1:** Hydrogen APPROVE; Sol four MINORs, ruled by the
+  coordinator and fixed: LLR-039 (and TC-042) bound to an edit that
+  changes a guide's derived title or summary, with a title arm in its
+  test; LLR-047's inherited "dev-setup" restated; the Deliverable no
+  longer claims one obligation for LLR-300 (D8); TC-571's test asserts the
+  phase cell's before and after under the no-act label on both surfaces.
+  Round-1 modules `235 passed, 18 skipped in 323.09s (0:05:23)`;
+  `check_trajectory.py --strict` exit 0.
 - Deferred open items: none — no decision owed to the operator.
 - **Tests:** the twenty-one touched and ratchet modules `942 passed, 3
   skipped in 745.71s (0:12:25)`; `check_trajectory.py --strict` exit 0;

@@ -132,28 +132,36 @@ def test_front_matter_scalars_are_json_strings(scaffold):
 
 
 def test_check_trips_on_a_guide_edit_and_a_missing_bundle_file(scaffold):
-    # The freshness check fails after an edit to a guide document's first
-    # paragraph and on a deleted bundle file, naming each, and passes again
-    # after regeneration.
+    # The freshness check fails after an edit that changes a guide's derived
+    # title, after one that changes its derived summary, and on a deleted
+    # bundle file, naming each, and passes again after regeneration.
     make_minimal_project(scaffold)
     assert okf(scaffold, "--check").returncode == 0
     flows = scaffold / "docs" / "runtime-flows.md"
+    lines = flows.read_text(encoding="utf-8").splitlines()
+    first_heading = next(ln for ln in lines if ln.startswith("# "))
     first_prose = next(
         ln.strip()
-        for ln in flows.read_text(encoding="utf-8").splitlines()
+        for ln in lines
         if ln.strip() and not ln.startswith(("#", "|", "<!--", "-", ">", "`"))
     )
-    flows.write_text(
-        flows.read_text(encoding="utf-8").replace(
-            first_prose, first_prose + " Edited.", 1
-        ),
-        encoding="utf-8",
-    )
-    stale = okf(scaffold, "--check")
-    assert stale.returncode == 1, stale.stdout + stale.stderr
-    assert "STALE - docs/okf/process-guides/runtime-flows.md" in stale.stderr
-    assert okf(scaffold).returncode == 0
-    assert okf(scaffold, "--check").returncode == 0
+    guide = bundle(scaffold) / "process-guides" / "runtime-flows.md"
+    for old, new, derived in (
+        (first_heading, first_heading + " Retitled", "Retitled"),
+        (first_prose, first_prose + " Edited.", "Edited."),
+    ):
+        assert derived not in guide.read_text(encoding="utf-8")
+        flows.write_text(
+            flows.read_text(encoding="utf-8").replace(old, new, 1), encoding="utf-8"
+        )
+        stale = okf(scaffold, "--check")
+        assert stale.returncode == 1, stale.stdout + stale.stderr
+        assert "STALE - docs/okf/process-guides/runtime-flows.md" in stale.stderr
+        assert okf(scaffold).returncode == 0
+        # The edit landed inside the derived title or summary: the
+        # regenerated guide carries it.
+        assert derived in guide.read_text(encoding="utf-8"), derived
+        assert okf(scaffold, "--check").returncode == 0
     (bundle(scaffold) / "system-requirements" / "SR-001.md").unlink()
     missing = okf(scaffold, "--check")
     assert missing.returncode == 1, missing.stdout + missing.stderr

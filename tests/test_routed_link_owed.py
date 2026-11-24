@@ -158,10 +158,18 @@ def test_both_surfaces_label_the_three_groups_alike(tmp_path, surface):
     text = _brief(root) if surface == "brief" else gen_open_items.render(root)
     positions = [text.index(label) for label in (fx.REACCEPT, fx.SITTING, fx.NO_ACT)]
     assert positions == sorted(positions), positions
-    # The rendered row's moved phase cell, before and after, sits under the
-    # label owing no act.
-    under = {
-        "brief": "_{}_\n- **Phase**\n  - before: 1\n  - after: 2",
-        "page": '{}</div><div class="cellname">Phase ',
-    }[surface].format(fx.NO_ACT)
-    assert under in text, text[positions[-1] - 200 : positions[-1] + 200]
+    # The rendered row's moved phase cell, its name, its before (1) and its
+    # after (2), sits in the section under the label owing no act, which ends
+    # at the row's unchanged context on the page and at the next heading in
+    # the brief.
+    start = positions[-1] + len(fx.NO_ACT)
+    end = text.find('<div class="ctx">' if surface == "page" else "\n#", start)
+    section = text[start : end if end >= 0 else len(text)]
+    phase = {
+        "brief": "- **Phase**\n  - before: 1\n  - after: 2",
+        "page": '<div class="cellname">Phase ',
+    }[surface]
+    assert phase in section, section
+    if surface == "page":
+        tail = section[section.index(phase) :]
+        assert '<div class="diff"><del>1</del><ins>2</ins></div>' in tail, tail
