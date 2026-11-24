@@ -22,8 +22,11 @@ terminal row's is.
 
 - `5cf590b93`: the build: SR-207's and TC-560's text, the new tests, the
   regenerated evidence and the regenerated views.
-- The commit after it: this close-out (the Deliverable, the move to
+- `8b3f62154`: the close-out (the Deliverable, the move to
   `docs/archive/work/complete/`, the log fragment, the views).
+- The commit after it: LLR-245's routed-cell list gains the constrains
+  cell, on the coordinator's ruling of 2026-11-23 (item 5 below), with this
+  record, the log fragment and the views.
 
 **1. SR-207 (text only; still `Accepted`, owed at its recorded copy).**
 - `requirement`: "The kit shall leave, in an acceptance act, the recorded
@@ -112,8 +115,35 @@ what LLR-480 says for both branches, so the stop rule did not fire.
 module, function, symbol, CLI flag or test name, and neither row inherited
 one. SR-207 keeps one `shall`. Each clause is driven by a test its test
 case names (table above). TC-560 drives LLR-480's stated branches and no
-more. SR-207's child LLR-245 is not amended here, and its list of routed
-cells does not name the constrains link; see "Left for the coordinator".
+more. SR-207's child LLR-245 now names the constrains link as its parent
+does (item 5).
+
+**5. LLR-245 (text only; still `Accepted`), on the coordinator's ruling.**
+The first build left LLR-245 alone and reported that its list of routed
+trace cells, "`SN-Refs` and `Boundary-Refs` on a requirement, `SR-Refs` on
+a design row, `Verifies` on a test case", did not name the constrains
+cell, which the code routes and keeps on both tiers and SR-207's amended
+rationale now names: read literally, it said a row whose constrains link
+alone moved follows live. The gap predates this row: WI-1060 wrote that
+list on a branch built beside WI-1024, which routed the cell. The
+coordinator ruled on 2026-11-23 that LLR-245 is amended on this branch, so
+that a sitting does not judge SR-207's new rationale beside a child that
+disagrees with it.
+- `detail`: the parenthesis now reads "(`SN-Refs`, `Boundary-Refs` and
+  `Constrains` on a requirement, `SR-Refs` and `Constrains` on a design
+  row, `Verifies` on a test case)". Nothing else in the row moved. The
+  cells it names are registry cell names used as vocabulary, as the row
+  already used them; it names no code file, function, symbol or flag, and
+  inherited none in the cell touched (its options are "the re-accept
+  option" and "the verdict option").
+- It stays inside SR-207: it now names the same adjudicated links as
+  SR-207's rationale, and states no behaviour SR-207 does not. Its other
+  parent, SR-228 (held-rung re-acceptance), is not touched by the list.
+- The clause is driven by
+  `test_a_row_whose_constrains_link_alone_moved_is_KEPT_until_an_act_names_it`,
+  which TC-240 names; TC-240 is LLR-245's one verifying test case
+  (`verifies = ["SR-207", "SR-228", "LLR-245"]`), so no tag was added and
+  the evidence is unchanged ("trace: every evidence cell is current").
 
 **Red first.** The new tests passed on the code as it stood: the behaviour
 existed (`24 passed, 55 deselected in 0.78s` for the TC-560 selection;
@@ -153,6 +183,17 @@ it byte-identical. None was committed.
 
 <!-- fig: cmd="python -m pytest -q -n auto <the seven modules above>; python project-trajectory/scripts/trace.py --root . --strict; python project-trajectory/scripts/check_trajectory.py --root . --strict; python project-trajectory/scripts/run_menu.py smoke" rev="maint/wi-1067 at 5cf590b93's tree, and its close-out tree for the smoke run" -->
 
+After LLR-245's amendment (a text-only registry change, no test moved, so
+no smoke rerun, as the coordinator ruled):
+- `tests/test_requirement_tree.py`, `tests/test_baseline_snapshot.py`,
+  `tests/test_record_rows.py`: `261 passed in 83.71s (0:01:23)`.
+- `trace.py --root . --strict`: exit 0, "Traceability: SN=31 SR=141
+  LLR=368 TC=444 orphans=0 integrity=0 ...".
+- `check_trajectory.py --root . --strict`: exit 0, "check_trajectory:
+  clean (1066 work item(s), 936 done (88%), 37 cancelled, graph acyclic)."
+
+<!-- fig: cmd="python -m pytest -q -n auto tests/test_requirement_tree.py tests/test_baseline_snapshot.py tests/test_record_rows.py; python project-trajectory/scripts/trace.py --root . --strict; python project-trajectory/scripts/check_trajectory.py --root . --strict" rev="maint/wi-1067 at 8b3f62154 plus LLR-245's amendment" -->
+
 **Acts owed to the next automated adjudication sitting.**
 - SR-207: an amendment of an `Accepted` row, cells `Requirement`,
   `AcceptanceCriteria` and `Rationale` here, on top of WI-1060's still
@@ -160,26 +201,19 @@ it byte-identical. None was committed.
   amendment is `Title`, `Requirement`, `Rationale`, `AcceptanceCriteria`
   and `Coincident`. WI-1060's record says its amendment is shown to the
   operator; this rewrite is shown with it.
+- LLR-245: an amendment of an `Accepted` row, cell `Detail` (its list of
+  routed trace cells gains the constrains cell on both tiers). It sits in
+  SR-207's chain and SR-228's, so the acceptance brief now shows SR-228's
+  chain waiting as well.
 - TC-560: a `Drafted` row with its `method` and `expected` rewritten, owed a
   first acceptance.
 - Routed traced changes to an `Accepted` row: none. TC-240's `evidence`
   gains one test name; it is a silent trace cell, which follows live when an
   act next writes the test-case registry, so it owes nothing.
 
-**Left for the coordinator.**
-- LLR-245 (`Accepted`, SR-207's design row) lists the routed trace cells as
-  "`SN-Refs` and `Boundary-Refs` on a requirement, `SR-Refs` on a design
-  row, `Verifies` on a test case", without the constrains cell. The code
-  routes and keeps that cell on both tiers, and SR-207's rationale now
-  names it, so LLR-245 read literally says a row whose constrains link
-  alone moved follows live, which the code and its parent contradict. The
-  gap predates this row: WI-1060 wrote that list on a branch built beside
-  WI-1024, which routed the cell. LLR-245 is outside this row's scope and was not amended: whether
-  it is amended (text only, one more owed amendment) here or in its own
-  row is the coordinator's call.
-- TC-240's `expected` summarizes SR-207's acceptance without the retirement
-  clause; its `method` and evidence drive it. Left as it was, since it
-  verifies the clause and does not exceed SR-207.
+**Noted, not changed.** TC-240's `expected` summarizes SR-207's acceptance
+without the retirement clause; its `method` and tests drive it. The
+coordinator ruled on 2026-11-23 that it stays as it is.
 
 ## Context
 

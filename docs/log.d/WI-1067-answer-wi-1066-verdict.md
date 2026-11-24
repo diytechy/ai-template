@@ -19,21 +19,24 @@ the acts owed.
   cycle, at both statuses through the orphan pass and the strict check. The
   code already did both; each new test was shown to bite under a temporary
   mutation, none committed.
-- **Rows.** SR-207 amended (owed to the next sitting with WI-1060's
-  amendment); TC-560 rewritten (owed a first acceptance). No id minted, no
-  status moved, no kit file changed.
-- **Left for the coordinator:** LLR-245's list of routed cells does not name
-  the constrains cell, which the code routes and SR-207 now names; not
-  amended here.
-- **Deviations from spec:** none.
+- **LLR-245** (text only, still `Accepted`), on the coordinator's ruling of
+  2026-11-23: its list of routed trace cells gains `Constrains` on a
+  requirement and on a design row, so it says what the code does and what
+  SR-207's amended rationale says. TC-240's new constrains test drives it.
+- **Rows.** SR-207 and LLR-245 amended (owed to the next sitting, SR-207
+  with WI-1060's amendment); TC-560 rewritten (owed a first acceptance). No
+  id minted, no status moved, no kit file changed.
+- **Deviations from spec:** LLR-245's amendment, outside the spec's
+  Done-when, added on the coordinator's ruling.
 - **Byte deltas on budgeted files:** none touched.
 - **Tests:** the seven touched and ratchet modules `317 passed, 1 skipped in
   79.30s (0:01:19)`; `trace.py --strict` and `check_trajectory.py --strict`
   exit 0; `run_menu.py smoke` `3882 passed, 3 skipped, 18 warnings in
   138.61s (0:02:18)`, exit 0 (CPU 720.6 s over the 540 s budget, reported
-  only).
+  only). After LLR-245's amendment: the three touched modules `261 passed in
+  83.71s (0:01:23)`; `trace.py --strict` and `check_trajectory.py --strict`
+  exit 0.
 
-<!-- fig: cmd="python -m pytest -q -n auto tests/test_requirement_tree.py tests/test_baseline_snapshot.py tests/test_record_rows.py tests/test_import_layers.py tests/test_module_size_ratchet.py tests/test_complexity_ratchet.py tests/test_dogfood_sync.py; python project-trajectory/scripts/run_menu.py smoke" rev="maint/wi-1067 at 5cf590b93 and its close-out tree" -->
-- Deferred open items: none — SR-207's amendment and TC-560's first
-  acceptance go to the next sitting as owed acts, and LLR-245's gap is the
-  coordinator's to route.
+<!-- fig: cmd="python -m pytest -q -n auto tests/test_requirement_tree.py tests/test_baseline_snapshot.py tests/test_record_rows.py tests/test_import_layers.py tests/test_module_size_ratchet.py tests/test_complexity_ratchet.py tests/test_dogfood_sync.py; python project-trajectory/scripts/run_menu.py smoke; the first three modules again after LLR-245's amendment" rev="maint/wi-1067 at 5cf590b93, its close-out tree, and 8b3f62154 plus LLR-245's amendment" -->
+- Deferred open items: none — SR-207's and LLR-245's amendments and TC-560's
+  first acceptance go to the next sitting as owed acts.
