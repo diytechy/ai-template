@@ -3030,7 +3030,7 @@ title = "A design or system-requirement row names the interfaces it constrains, 
 detail = "A design row or a system requirement may carry a constrains cell listing one or more interface ids, written as its other reference lists are. Each id must name a live interface row, the example row excluded; one that does not is a finding that fails the strict check, naming the row and the id. An empty list is refused when the registry is read, naming the row and the cell, as any explicit empty cell is."
 rationale = "The interface row states only its form; the row stating what must be true of what crosses it names it, so the relation points from requirement to interface and has one home."
 test_refs = "TC-527"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [design.LLR-418]
@@ -3039,7 +3039,7 @@ title = "A design row's input-set and out-of-domain cells parse, and sit only be
 detail = "A design row carrying a constrains cell may carry a dimensions cell, one string in the permutation grammar of ranges, sets and booleans with an optional combination strategy, and an out-of-domain cell, one sentence saying what the interface does with an input outside those dimensions. A dimensions cell the grammar does not parse or whose strategy is not one of the grammar's three, an out-of-domain cell that is not one line ending in a full stop with no full stop, question mark or exclamation mark followed by a space inside, and either cell on a design row with no constrains cell are each a finding that fails the strict check, naming the row and the cell. The cell is parsed by the parser the case generator uses, so the two accept and refuse the same strings."
 rationale = "One grammar with one parser means an input set the generator can expand is exactly one the check accepts."
 test_refs = "TC-528"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [design.LLR-419]
@@ -3048,7 +3048,7 @@ title = "A design row constraining an interface without both companion cells is 
 detail = "Each design row carrying a constrains cell but lacking a dimensions cell or an out-of-domain cell is reported on one warning line that names the first ten such rows and counts the rest, and that counts, by the channel of each interface a design row constrains, the pairs whose row carries both cells and those whose row lacks one or both. The warning does not change the strict check's exit code."
 rationale = "Most interfaces carry a schema or a document rather than a closed set, so the companion cells are counted before they are required; the count by channel is the evidence that decision reads."
 test_refs = "TC-529"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [design.LLR-420]
@@ -3057,7 +3057,7 @@ title = "The constrains cell is traced and routed to adjudication, and the input
 detail = "A requirement's or design row's constrains cell is a traced cell: a change to it on an accepted row moves no accepted text, and the merge's amendment walk routes it to adjudication as it routes a changed requirement or verifies reference. A design row's dimensions and out-of-domain cells are accepted cells: a change to either on an accepted row amends its accepted text."
 rationale = "The pointer re-points no prose, but whether the row's text states the behaviour across the interface it now names is a judgement on the row; the input set and the out-of-domain rule are statements the row makes."
 test_refs = "TC-530"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [design.LLR-421]
@@ -3094,7 +3094,7 @@ title = "A coordinator guard command acts on the repository root the agent tool 
 detail = "A coordinator guard command acts on the repository root it is given, else on the project-root variable the agent command-line tool sets for its hook processes, else on the working directory."
 rationale = "A hook process is started by the tool, not from the repository, so the tool's project-root variable is how the guard finds the declared repository; the tool's documentation is not ours to write."
 test_refs = "TC-534"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 constrains = ["IF-277"]
 
@@ -3140,5 +3140,5 @@ title = "A row whose adjudicated link moved is owed on the acceptance surfaces, 
 detail = "An adjudicated link is a trace cell whose change goes to an adjudicator: a requirement's needs, boundary crossings and constrained interfaces, a design row's requirements and constrained interfaces, and a test case's verified rows. The acceptance model lists the chain of every row that claims acceptance and whose adjudicated link differs from its recorded copy, as it lists a row whose accepted text moved, even when none of its accepted cells moved. It gives each listed row its moved accepted cells, its moved adjudicated links and its other moved trace cells as three groups, each cell with its before and after. A row whose only moved cells are trace cells no adjudicator judges, such as its perspectives, phase or evidence, lists no chain. The acceptance brief and the operator's decision page show each listed row in its chain with each moved link by its cell name, before and after, under a label saying it goes to a sitting, apart from its accepted cells, labelled as owing a re-acceptance, and its other trace cells, labelled as owing no act; a row whose only moved cells are accepted ones shows them unlabelled, as before. The contract covers registries and recorded copies the kit's own routes write; a hand-edited recorded copy is outside it."
 rationale = "An acceptance act leaves a row whose adjudicated link moved at its recorded text until an act names it (LLR-245), so the snapshot command reports it left owed and the act ledger lists it kept; a model selecting on accepted text alone put it on no surface, and two answers to what is owed disagreed. The link carries no prose, so it arms no re-acceptance of its own; whether its move changed what the row claims is a sitting's judgement, so the row is listed for one rather than re-anchored without one."
 test_refs = "TC-571"
-status = "Drafted"
+status = "Accepted"
 phase = 6

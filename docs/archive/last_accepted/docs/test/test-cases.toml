@@ -4777,7 +4777,7 @@ tier = "Smoke"
 expected = "Each id naming no live interface row is a finding naming its row and the id and the check exits 1, while a live id on either tier draws none; the second project passes; the empty list is refused on read, naming the row and the cell."
 automated = "Yes"
 evidence = "tests/test_constrains.py::test_a_constrains_id_naming_no_live_interface_fails_the_strict_check; tests/test_constrains.py::test_a_live_constrains_cell_passes_and_an_empty_one_is_refused_on_read"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-528]
@@ -4788,7 +4788,7 @@ tier = "Smoke"
 expected = "Each malformed cell, and each companion cell on a row constraining nothing, is a finding naming its row and cell, and the check exits 1, while the well-formed row and the one stating a decimal number draw none; the two parsers accept the same strings with the same result and refuse the same strings with the same message."
 automated = "Yes"
 evidence = "tests/test_constrains.py::test_a_companion_cell_that_does_not_parse_or_constrains_nothing_fails; tests/test_constrains.py::test_the_cell_and_the_generator_read_one_grammar"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-529]
@@ -4799,7 +4799,7 @@ tier = "Smoke"
 expected = "One warning line names the first ten of the eleven rows lacking a companion cell and counts one more, and counts the pairs by channel with both cells and without: command-line one and one, exit-code one and ten; the check exits 0."
 automated = "Yes"
 evidence = "tests/test_constrains.py::test_a_constraining_row_without_its_companions_is_counted_and_passes"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-530]
@@ -4854,7 +4854,7 @@ tier = "Smoke"
 expected = "The root is the one given, else the variable's, else the working directory."
 automated = "Yes"
 evidence = "tests/test_coordinator_guard.py::test_a_guard_command_reads_its_root_from_the_agent_tools_project_variable"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 
 [test.TC-560]
@@ -4864,7 +4864,7 @@ method = "Run the orphan pass and the strict check over a three-level tree of de
 tier = "Smoke"
 expected = "The well-formed tree produces no report. Each faulty row is reported once, naming the row and its fault, at both statuses, and the strict check fails on each fault at both statuses: the row naming an example row is reported as naming no live design row; each row on a cycle names the cycle's rows; and each row below a broken chain names the row where its chain breaks, the row naming the missing parent for the row below it and the cycle's row it hangs from for the row below the cycle. The registry loads."
 automated = "Yes"
-status = "Drafted"
+status = "Accepted"
 phase = 6
 evidence = "tests/test_requirement_tree.py::test_a_design_registry_whose_rows_carry_a_parent_loads; tests/test_requirement_tree.py::test_a_row_below_a_missing_parent_names_where_its_chain_breaks; tests/test_requirement_tree.py::test_a_well_formed_tree_is_silent; tests/test_requirement_tree.py::test_each_fault_is_reported_once_at_either_status; tests/test_requirement_tree.py::test_each_row_on_a_two_row_cycle_names_the_cycle; tests/test_requirement_tree.py::test_a_well_formed_tree_passes_the_strict_check; tests/test_requirement_tree.py::test_the_strict_check_fails_on_each_fault; tests/test_requirement_tree.py::test_a_row_below_a_cycle_names_where_its_chain_breaks; tests/test_requirement_tree.py::test_a_row_naming_an_example_row_as_its_parent_is_reported_once"
 

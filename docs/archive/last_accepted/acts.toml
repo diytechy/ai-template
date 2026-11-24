@@ -1223,3 +1223,11 @@ accepted = []
 reaccepted = ["LLR-245", "LLR-357", "LLR-359", "LLR-369", "LLR-403", "SR-178", "SR-207", "SR-211", "SR-245", "SR-247", "SR-249", "TC-195", "TC-396", "TC-427", "TC-480"]
 copied = ["docs/requirements/low-level-requirements.toml", "docs/requirements/system-requirements.toml", "docs/test/test-cases.toml"]
 kept = ["LLR-010", "LLR-012", "LLR-013", "LLR-017", "LLR-022", "LLR-024", "LLR-025", "LLR-026", "LLR-033", "LLR-039", "LLR-047", "LLR-118", "LLR-124", "LLR-130", "LLR-167", "LLR-171", "LLR-198", "LLR-199", "LLR-258", "LLR-279", "LLR-281", "LLR-320", "TC-161", "TC-398"]
+
+[[act]]
+seq = 197
+date = "2026-11-24"
+accepted = ["LLR-417", "LLR-418", "LLR-419", "LLR-420", "LLR-424", "LLR-484", "TC-527", "TC-528", "TC-529", "TC-534", "TC-560"]
+reaccepted = []
+copied = ["docs/requirements/low-level-requirements.toml", "docs/test/test-cases.toml"]
+kept = ["LLR-010", "LLR-012", "LLR-013", "LLR-017", "LLR-022", "LLR-024", "LLR-025", "LLR-026", "LLR-033", "LLR-039", "LLR-047", "LLR-118", "LLR-124", "LLR-130", "LLR-167", "LLR-171", "LLR-198", "LLR-199", "LLR-258", "LLR-279", "LLR-281", "LLR-320", "TC-161", "TC-398"]
