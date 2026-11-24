@@ -19,7 +19,26 @@
                    drift. A scoped row with nothing to judge is named on one
                    closing line, never dropped unnamed. A row with no scope, or
                    a scope with nothing left to judge, refuses rather than
-                   composing.
+                   composing. A row with a moved link also lists, after its
+                   moved cells, its other nonempty accepted cells labelled
+                   unmoved, so its whole accepted text is shown (WI-1070):
+                   judged text, inside its identity, never clipped.
+       {linked}    the rows the moved links name, CONTEXT for the LINKS
+                   question and never under judgement (WI-1070): each id a
+                   moved link names, before or after, listed once in tier
+                   then id order, naming the rows, cells and sides that name
+                   it, with its title where its tier has one and the cell
+                   that states what it is (a need's statement; a crossing's
+                   direction, entity and what it carries; a requirement's
+                   requirement; a design row's detail; an interface's
+                   channel, owner and stated contract, or its data cell where
+                   no single file states one). BOUNDED: each listed cell on
+                   one line, clipped at 2,400 characters with the clip and
+                   its full length stated. An id naming no live row says so;
+                   a row also shown for judgement is listed as shown above.
+                   Registry- and contract-derived; no listed row has an
+                   identity line. When no shown row moved a link, one line
+                   says so.
        {baseline}  the accepted anchor this diff is measured against: the
                    docs/archive/last_accepted/ snapshot and, for EACH registry
                    the listing shows, the reviewed commit that last copied that
@@ -59,7 +78,8 @@
                    A roster that exists and does not parse refuses the render,
                    naming it.
        {identity}  one `JUDGED-TEXT: <row id> <digest>` line per row {rows}
-                   shows: the digest of that row's accepted text and
+                   shows for judgement, and none for a row {linked} lists:
+                   the digest of that row's accepted text and
                    adjudicated links as the brief's own reader loaded it. The route that binds this
                    call reads these lines off the composed prompt and records
                    them in the verdict's binding, so a held CLARITY
@@ -110,7 +130,9 @@ Judge the CELLS BELOW and nothing else. You have no access to the session that m
 {baseline}
 --- AMENDED CELLS AND MOVED LINKS (before/after, per row) ---
 {rows}
---- JUDGED TEXT (the identity of each row's accepted text and links shown above) ---
+--- ROWS THE MOVED LINKS NAME (context for the LINKS question: not under judgement, and in no JUDGED-TEXT identity) ---
+{linked}
+--- JUDGED TEXT (the identity of each row shown for judgement: its accepted cells and adjudicated links; the rows listed as context above are not in it) ---
 {identity}
 --- END ---
 
@@ -121,7 +143,7 @@ Method:
 - When the two obligations differ AT ALL, the answer is `meaning`. Fail toward `meaning`: a wrongly-kept acceptance is a silent false claim that an operator blessed this text, and that is the failure this rung exists to prevent. A wrongly-owed re-accept costs one sitting.
 - If the diff is mixed — one cell clarified, another moved the obligation — the answer for the ROW is `meaning`, and you say which cell carried it.
 
-LINKS. A cell marked `(link)` is an adjudicated link: a pointer to other rows (the needs, boundary crossings or interfaces a requirement names, the requirements or interfaces a design row names, the rows a test case verifies). It carries no prose, so the one question you ask of it is the one its routing exists for: does the row's text state what the link now points at? If it does, the link moved no obligation, and the cell is clarity. If it does not, the row now claims something its text does not say: the cell is meaning, and a row whose text does not state what its link points at is not one to bless. A row shown with links alone is judged on its links alone; name the link's cell in its row line as you would any other cell.
+LINKS. A cell marked `(link)` is an adjudicated link: a pointer to other rows (the needs, boundary crossings or interfaces a requirement names, the requirements or interfaces a design row names, the rows a test case verifies). It carries no prose, so the one question you ask of it is the one its routing exists for: does the row's text state what the link now points at? If it does, the link moved no obligation, and the cell is clarity. If it does not, the row now claims something its text does not say: the cell is meaning, and a row whose text does not state what its link points at is not one to bless. A row shown with links alone is judged on its links alone; name the link's cell in its row line as you would any other cell. A row with a moved link is shown with its unmoved accepted cells too, so you read the link against the row's whole text, and each row a moved link names, before or after, is listed once under ROWS THE MOVED LINKS NAME by its title and the cell that states what it is. That listing is context: judge the shown row's text against it, never the listed row itself, and write no verdict line for a listed row.
 
 Whether a `MEANING` row's new text is one you would bless — or recommend to the operator — is judged by the questions for its tier, the same ones a first acceptance puts. A `CLARITY` verdict owes them nothing new: the obligation is the one already blessed.
 

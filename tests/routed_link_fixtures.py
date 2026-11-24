@@ -12,7 +12,11 @@ moves one row of each chain the four ways a row can differ from its copy:
     judges).
 
 `LINK_MOVES` moves one routed link of one tier instead, one per cell of the
-routing table. No `test_` prefix, so it is never collected.
+routing table. `seed(root, context=True)` also writes, before the record is
+taken, the rows a link can name beyond the four chains (WI-1070): two needs,
+a boundary crossing and its entity, and two interfaces, IF-001 with a data
+cell alone and IF-002 whose contract a module under the default scan root
+states. No `test_` prefix, so it is never collected.
 """
 
 from conftest import load_script
@@ -94,12 +98,96 @@ def write(root, rows):
         path.write_bytes(text.encode("utf-8"))
 
 
-def seed(root):
-    """The four chains written under `root` and recorded whole. `rows`."""
-    rows = base_rows()
+def seed(root, context=False, rows=None, **named):
+    """The four chains (`rows`, else `base_rows()`) written under `root`, with
+    the rows a link names when `context` (`write_context`, given `named`),
+    and recorded whole. `rows`."""
+    rows = rows or base_rows()
     write(root, rows)
+    if context:
+        write_context(root, **named)
     snap.copy_live(root, seed=True)
     return rows
+
+
+SN_REL = "docs/requirements/stakeholder-needs.toml"
+EXT_REL = "docs/requirements/external.toml"
+IF_REL = "docs/requirements/interfaces.toml"
+NEEDS = ("A user is served one.", "A user is served two.")
+CARRIES = "Read: the demo report."
+IF_DATA = ("the demo record, one per call", "the demo seam's typed summary")
+CONTRACT = "the demo seam's stated form: one record per call, never two."
+
+
+def _table(kind, rid, pairs):
+    return "[{}.{}]\n{}\n".format(kind, rid, spine.toml_fields(pairs))
+
+
+def write_context(root, needs=NEEDS, contract=CONTRACT):
+    """The rows a link can name beyond the chains: needs SN-001 and SN-002
+    (`needs`), the entity EXT-001 and the crossing B-01, the interfaces
+    IF-001 (data only) and IF-002, whose `contract` the module `src/demo.py`
+    states (each line of it indented as a continuation)."""
+    texts = {
+        SN_REL: "".join(
+            _table(
+                "need",
+                "SN-00{}".format(n),
+                [
+                    ("status", "Accepted"),
+                    ("need", text),
+                    ("why", "why"),
+                    ("priority", "M"),
+                    ("acceptance", "ac"),
+                ],
+            )
+            for n, text in enumerate(needs, 1)
+        ),
+        EXT_REL: _table(
+            "entity",
+            "EXT-001",
+            [
+                ("name", "Person"),
+                ("class", "operational"),
+                ("description", "The person."),
+                ("status", "Accepted"),
+            ],
+        )
+        + _table(
+            "boundary",
+            "B-01",
+            [
+                ("entity", "EXT-001"),
+                ("direction", "out"),
+                ("system", "operation"),
+                ("carries", CARRIES),
+                ("status", "Accepted"),
+            ],
+        ),
+        IF_REL: "".join(
+            _table(
+                "interface",
+                "IF-00{}".format(n),
+                [
+                    ("owner", "CMP-001"),
+                    ("consumers", ["CMP-002"]),
+                    ("channel", "file"),
+                    ("data", data),
+                    ("version", "v1"),
+                    ("status", "Drafted"),
+                ],
+            )
+            for n, data in enumerate(IF_DATA, 1)
+        ),
+        "src/demo.py": '"""A demo module stating one seam.\n\nContracts: IF-002 '
+        '— the demo seam.\n\nContract IF-002: {}\n"""\n'.format(
+            "\n    ".join(contract.splitlines())
+        ),
+    }
+    for rel, text in texts.items():
+        path = root / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(text.encode("utf-8"))
 
 
 def move_all(root, rows):

@@ -411,6 +411,7 @@ def _fake_spine_assemblers(monkeypatch):
         return {
             "baseline": "B",
             "rows": "- LLR LLR-1 drifted",
+            "linked": "(no moved link in this brief names a row)",
             "aftermath": "A",
             "questions": "Q",
             "identity": "JUDGED-TEXT: LLR-1 sha256:0123456789abcdef",

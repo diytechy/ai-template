@@ -448,9 +448,18 @@ def test_the_graph_sees_imports_inside_function_bodies():
     # of it; deferred so every other step still imports nothing from the kit.
     # kitlib.config imports no migrator, so no cycle or layer edge grew. Reason
     # in HANDOFF §9.14.
-    assert 14 <= deferred <= 44, (
+    # RE-STAMPED 44 -> 46 (2026-11-24, WI-1070): amendment_brief ->
+    # arch_interfaces and amendment_brief -> gen_arch_map join deferred, inside
+    # `_stated_contracts`, their one user. The amendment brief lists an
+    # interface a moved link names by the contract one file states, read
+    # through the kit's own harvest (`contract_homes`, `file_contracts`)
+    # rather than a copy of it; deferred so a brief whose links name no
+    # interface, and every other brief, pays nothing for the scan (the
+    # approved plan's D9). Neither module reaches amendment_brief, so no
+    # cycle or layer edge grew. Reason in the WI-1070 spec's Deliverable.
+    assert 14 <= deferred <= 46, (
         "deferred function-body imports read {}, outside the stamped window "
-        "14..44 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
+        "14..46 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
         "stopped descending into function bodies and every cycle measured in "
         "this file is understated — fix the walker, do not re-stamp. A rise "
         "means the deferred-import population grew, which is the coupling "
