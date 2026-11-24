@@ -13,8 +13,11 @@ plan (`planmode = "none"`). The spec's Deliverable holds the per-item record.
   entry is anchored `[since d1571e8fc]`.
 - **Rows.** None changed; no id minted; no act owed.
 - **Deviations from spec:** the build function's docstring, which carried
-  the same stale sentence, is corrected beside the module docstring. Two
-  test-module docstrings with the old wording are left and reported.
+  the same stale sentence, is corrected beside the module docstring. At the
+  coordinator's request, two test-module docstrings with the old wording
+  (`tests/test_gen_components.py`, `tests/test_llr_trace_cells.py`) now
+  describe placement through `constrains` and through the verifying test
+  cases; docstrings only, the two modules `44 passed in 5.54s`.
 - **Byte deltas on budgeted files:** none (no budgeted file touched).
 - **Tests:** red first `1 failed, 18 deselected in 8.18s`; the 13 importer,
   spine-linked and named modules `309 passed, 2 skipped in 62.41s`;

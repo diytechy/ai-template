@@ -20,7 +20,9 @@ record was written: the choice is the one LLR-403 already states.
 
 - `541f32d5b`: the build: the header and the docstrings, the test, the
   regenerated view, the RESYNC entry.
-- The commit after it: this close-out.
+- `3263f8d37`: the close-out.
+- The commit after it: the two test-module docstrings, at the coordinator's
+  request.
 
 **1. The placement sentence.** The component view's header (the
 generator's `BANNER`) said "A design row sits at the owner component of
@@ -84,11 +86,14 @@ lane.
 amended, no traced change is routed, and no `Drafted` row is new or
 rewritten.
 
-**Left, not fixed here (findings).** Two test-module docstrings still
-describe placement through the verifying test cases alone:
-`tests/test_gen_components.py` (its "the JOIN" bullet) and
-`tests/test_llr_trace_cells.py` (its WI-1023 summary). Neither ships nor is
-named by the Done-when.
+**Deviations from spec.** The `build` docstring above. Also, at the
+coordinator's request after the close-out, two test-module docstrings that
+described placement through the verifying test cases alone now describe
+it as the header does, through the `constrains` cell and through the
+verifying test cases: `tests/test_gen_components.py` (its "the JOIN"
+bullet) and `tests/test_llr_trace_cells.py` (its WI-1023 summary).
+Docstrings only, no test behaviour; neither file ships. The two modules:
+`44 passed in 5.54s`.
 
 ## Context
 

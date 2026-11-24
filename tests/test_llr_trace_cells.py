@@ -4,11 +4,11 @@ An LLR row carries no `module`, `code_symbol` or `component` cell, and the
 loader refuses a key a requirement tier does not declare (LLR-404). The files
 realizing a row are read up from the code's `Implements:` tags, one index every
 former reader of the cells reads (LLR-405). A row's placement is derived: the
-owner component of each interface a test case verifying it names, and a row
-placed nowhere is listed and counted, never refused (LLR-403). A test case's
-`evidence` cell is generated from the test files' tags, its other parts kept
-verbatim (LLR-406), and a migration removes the three cells from an adopter's
-registry (LLR-407).
+owner component of each interface its `constrains` cell names and of each
+interface a test case verifying it names, and a row placed by neither is
+listed and counted, never refused (LLR-403). A test case's `evidence` cell is
+generated from the test files' tags, its other parts kept verbatim (LLR-406),
+and a migration removes the three cells from an adopter's registry (LLR-407).
 
 In-process: synthetic registries under `tmp_path`, plus the live test-case
 registry read as data, so the module rides the per-commit smoke tier.
